@@ -96,3 +96,32 @@
 .animate-voice-pulse {
   animation: voice-pulse 1.4s ease-in-out infinite;
 }
+
+/* Accessibility: Dyslexia-friendly font */
+.dyslexia-font body {
+  font-family: 'Comic Sans MS', 'OpenDyslexic', system-ui, sans-serif !important;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+  line-height: 1.8;
+}
+
+/* Accessibility: Larger text */
+.large-text body {
+  font-size: 1.125rem;
+}
+.large-text .text-sm {
+  font-size: 0.938rem;
+}
+.large-text .text-xs {
+  font-size: 0.813rem;
+}
+
+/* Accessibility: High contrast */
+.high-contrast {
+  --foreground: 0 0% 0%;
+  --background: 0 0% 100%;
+  --chat-mine: 220 80% 30%;
+  --chat-theirs: 0 0% 95%;
+  --muted-foreground: 0 0% 25%;
+  --border: 0 0% 70%;
+}
