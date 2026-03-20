@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 import VoiceButton from "./VoiceButton";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -12,6 +13,7 @@ interface ChatInputProps {
 
 const ChatInput = ({ onSend, isListening, onVoiceToggle, transcript }: ChatInputProps) => {
   const [text, setText] = useState("");
+  const { t } = useI18n();
 
   const currentText = isListening ? transcript : text;
 
@@ -37,7 +39,7 @@ const ChatInput = ({ onSend, isListening, onVoiceToggle, transcript }: ChatInput
           value={currentText}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isListening ? "Ich höre zu..." : "Nachricht schreiben..."}
+          placeholder={isListening ? t("chat.listening") : t("chat.placeholder")}
           rows={1}
           className={cn(
             "w-full resize-none rounded-2xl bg-secondary px-4 py-3 text-[0.938rem]",
@@ -46,6 +48,7 @@ const ChatInput = ({ onSend, isListening, onVoiceToggle, transcript }: ChatInput
             isListening && "border-2 border-accent/40 bg-accent/5"
           )}
           readOnly={isListening}
+          aria-label={t("chat.placeholder")}
         />
       </div>
       <button
@@ -59,7 +62,7 @@ const ChatInput = ({ onSend, isListening, onVoiceToggle, transcript }: ChatInput
             ? "bg-primary text-primary-foreground shadow-md hover:shadow-lg"
             : "bg-secondary text-muted-foreground"
         )}
-        aria-label="Nachricht senden"
+        aria-label={t("chat.send")}
       >
         <Send className="w-5 h-5" />
       </button>
