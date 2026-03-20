@@ -11,7 +11,7 @@ interface UseSpeechRecognitionReturn {
 const useSpeechRecognition = (lang = "de-DE"): UseSpeechRecognitionReturn => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const isSupported =
     typeof window !== "undefined" &&
@@ -20,9 +20,9 @@ const useSpeechRecognition = (lang = "de-DE"): UseSpeechRecognitionReturn => {
   useEffect(() => {
     if (!isSupported) return;
 
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+    const SpeechRecognitionCtor =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognitionCtor();
     recognition.lang = lang;
     recognition.interimResults = true;
     recognition.continuous = true;
