@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +49,12 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        chat: {
+          mine: "hsl(var(--chat-mine))",
+          "mine-foreground": "hsl(var(--chat-mine-foreground))",
+          theirs: "hsl(var(--chat-theirs))",
+          "theirs-foreground": "hsl(var(--chat-theirs-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
