@@ -1,9 +1,10 @@
-import { Volume2, VolumeX, Languages, Loader2, Check, CheckCheck, Headphones } from "lucide-react";
+import { Volume2, VolumeX, Languages, Loader2, Check, CheckCheck, Headphones, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useI18n } from "@/contexts/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaMessage } from "./MediaPreview";
+import { usePremiumGate } from "@/hooks/usePremiumGate";
 
 interface ChatBubbleProps {
   message: string;
@@ -27,10 +28,11 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
+  const { isPremium, requirePremium, PaywallGate } = usePremiumGate();
 
   const isMedia = messageType === "image" || messageType === "video";
 
-  const handleTranslate = async () => {
+  const doTranslate = async () => {
     if (translated) {
       setShowTranslation(!showTranslation);
       return;
@@ -50,7 +52,15 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     }
   };
 
+  const handleTranslate = () => requirePremium(doTranslate);
+
+  const handlePlayCloned = (text: string, sid: string, mid: string) => {
+    requirePremium(() => onPlayClonedVoice?.(text, sid, mid));
+  };
+
   return (
+    <>
+    <PaywallGate />
     <div className={cn("flex w-full mb-3", isMine ? "justify-end" : "justify-start")}>
       <div className={cn("max-w-[75%] animate-reveal-up")}>
         {!isMine && senderName && (
@@ -111,15 +121,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               {/* Cloned voice button */}
               {!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
                 <button
-                  onClick={() => onPlayClonedVoice(message, senderId, msgId)}
+                  onClick={() => handlePlayCloned(message, senderId, msgId)}
                   className={cn(
                     "p-1 rounded-full transition-colors",
                     "hover:bg-foreground/5",
-                    isPlayingCloned ? "text-accent" : "text-muted-foreground"
+                    isPlayingCloned ? "text-accent" : "text-muted-foreground",
+                    !isPremium && "opacity-50"
                   )}
                   aria-label="Mit geklonter Stimme anhören"
                 >
-                  <Headphones className="w-3.5 h-3.5" />
+                  {isPremium ? <Headphones className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                 </button>
               )}
               {!isMine && message && (
@@ -160,7 +171,8 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
         </div>
       </div>
     </div>
-  );
+    </>
+   );
 };
 
 export default ChatBubble;

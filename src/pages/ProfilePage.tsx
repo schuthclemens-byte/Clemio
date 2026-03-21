@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Check, LogOut } from "lucide-react";
+import { ArrowLeft, Camera, Check, LogOut, Crown } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,9 @@ import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
 import VoiceConsentManager from "@/components/voice/VoiceConsentManager";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/useSubscription";
+import { usePremiumGate } from "@/hooks/usePremiumGate";
+import { Badge } from "@/components/ui/badge";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -22,6 +25,8 @@ const ProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [voiceProfile, setVoiceProfile] = useState<{ voice_name: string; elevenlabs_voice_id: string } | null>(null);
+  const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
+  const { requirePremium, PaywallGate } = usePremiumGate();
 
   const loadVoiceProfile = async () => {
     if (!user) return;
@@ -154,8 +159,53 @@ const ProfilePage = () => {
         </div>
       </header>
 
+      <PaywallGate />
       <div className="flex-1 p-4 space-y-6">
-        {/* Avatar */}
+        {/* Subscription Status */}
+        <section className="animate-reveal-up">
+          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+            Abo-Status
+          </label>
+          <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-12 h-12 rounded-xl flex items-center justify-center",
+                isPremium ? "gradient-primary" : "bg-secondary"
+              )}>
+                <Crown className={cn("w-6 h-6", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-[0.938rem]">{planLabel}</p>
+                  {isFoundingUser && (
+                    <Badge variant="default" className="text-[0.625rem]">Founding User</Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {isPremium
+                    ? daysRemaining > 0
+                      ? `Noch ${daysRemaining} Tage Premium`
+                      : "Premium aktiv"
+                    : "Upgrade für alle Funktionen"
+                  }
+                </p>
+              </div>
+              {!isPremium && (
+                <button
+                  onClick={() => requirePremium(() => {})}
+                  className="h-9 px-4 rounded-xl gradient-primary text-primary-foreground text-sm font-medium shadow-soft hover:shadow-elevated transition-all"
+                >
+                  Upgrade
+                </button>
+              )}
+            </div>
+            {isFoundingUser && isPremium && (
+              <p className="text-xs text-muted-foreground mt-3 bg-primary/5 rounded-xl p-3">
+                🎉 Du bist einer der ersten 50 Nutzer. Du erhältst 6 Monate Premium kostenlos.
+              </p>
+            )}
+          </div>
+        </section>
         <section className="flex flex-col items-center animate-reveal-up">
           <div className="relative">
             <div className="w-28 h-28 rounded-3xl overflow-hidden shadow-elevated">
