@@ -98,7 +98,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const hasContent = currentText.trim() || attachments.length > 0;
+  const hasContent = currentText.trim() || attachments.length > 0 || showVoiceRecorder;
 
   return (
     <>
