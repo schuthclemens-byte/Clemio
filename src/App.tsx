@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/contexts/I18nContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -19,6 +20,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <I18nProvider>
+      <ThemeProvider>
       <AccessibilityProvider>
         <AuthProvider>
           <TooltipProvider>
@@ -37,6 +39,7 @@ const App = () => (
           </TooltipProvider>
         </AuthProvider>
       </AccessibilityProvider>
+      </ThemeProvider>
     </I18nProvider>
   </QueryClientProvider>
 );
