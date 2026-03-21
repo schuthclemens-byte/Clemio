@@ -57,6 +57,21 @@ const SettingsPage = () => {
           </div>
         </button>
 
+        {/* Focus Mode link */}
+        <button
+          onClick={() => navigate("/focus-mode")}
+          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+          style={{ animationDelay: "30ms" }}
+        >
+          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
+            <Shield className="w-6 h-6 text-accent" />
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-[0.938rem]">Fokus-Modus</p>
+            <p className="text-xs text-muted-foreground">Nur wichtige Kontakte vorlesen</p>
+          </div>
+        </button>
+
         {/* Theme */}
         <section className="animate-reveal-up">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
