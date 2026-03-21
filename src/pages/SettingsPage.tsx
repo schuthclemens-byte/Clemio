@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
+import { useChatBackground } from "@/contexts/ChatBackgroundContext";
+import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import { cn } from "@/lib/utils";
 
 const SettingsPage = () => {
