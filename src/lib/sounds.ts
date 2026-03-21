@@ -99,6 +99,7 @@ export function playVoiceStopClick() {
 
 /** Very subtle pop – played when speech playback starts */
 export function playStartListenPop() {
+  if (isMuted()) return;
   try {
     const ctx = getCtx();
     const now = ctx.currentTime;
