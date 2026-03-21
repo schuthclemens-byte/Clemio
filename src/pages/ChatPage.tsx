@@ -67,6 +67,7 @@ const ChatPage = () => {
   const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned } = useVoiceTTS();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
+  const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
 
   // Typing indicator
   const { sendTyping, clearTyping, typingNames } = useTypingIndicator(conversationId);
