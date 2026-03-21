@@ -155,8 +155,13 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             />
           )}
 
+          {/* Audio content */}
+          {isAudio && message && (
+            <AudioPlayer url={message} isMine={isMine} />
+          )}
+
           {/* Text */}
-          {message && !(isMedia && !message.trim()) && (() => {
+          {message && !isMedia && !isAudio && (() => {
             const isLong = compactMode && displayText.length > 120 && !expanded;
             const truncated = isLong ? displayText.slice(0, 120) + "…" : displayText;
             return (
