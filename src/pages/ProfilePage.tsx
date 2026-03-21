@@ -305,6 +305,21 @@ const ProfilePage = () => {
             Stimme
           </label>
           <VoiceCloneUpload existingVoice={voiceProfile} onCloned={loadVoiceProfile} />
+          {voiceProfile && (
+            <button
+              onClick={handleDeleteVoice}
+              className="w-full mt-3 flex items-center justify-center gap-2 h-11 rounded-xl bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors active:scale-[0.97]"
+            >
+              <Trash2 className="w-4 h-4" />
+              Stimme löschen
+            </button>
+          )}
+          <div className="flex items-start gap-2.5 mt-3 p-3 rounded-xl bg-accent/5 border border-accent/10">
+            <ShieldCheck className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Deine Stimme wird nur mit deiner ausdrücklichen Zustimmung verwendet. Du kannst sie jederzeit löschen.
+            </p>
+          </div>
         </section>
 
         {/* Voice Consent */}
