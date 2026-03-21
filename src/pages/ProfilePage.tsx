@@ -111,6 +111,26 @@ const ProfilePage = () => {
     navigate("/login");
   };
 
+  const handleDeleteVoice = async () => {
+    if (!user || !voiceProfile) return;
+    const confirmed = window.confirm("Möchtest du deine geklonte Stimme wirklich löschen? Das kann nicht rückgängig gemacht werden.");
+    if (!confirmed) return;
+
+    await supabase
+      .from("voice_profiles" as any)
+      .delete()
+      .eq("user_id", user.id);
+
+    // Also revoke all consents
+    await supabase
+      .from("voice_consents" as any)
+      .delete()
+      .eq("voice_owner_id", user.id);
+
+    setVoiceProfile(null);
+    toast.success("Deine Stimme wurde gelöscht");
+  };
+
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
