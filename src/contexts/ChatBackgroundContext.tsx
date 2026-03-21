@@ -35,6 +35,13 @@ export const backgroundPresets: { label: string; bg: ChatBackground }[] = [
   { label: "Dunkel", bg: { type: "color", value: "hsl(220,15%,12%)" } },
 ];
 
+export const animatedPresets: { label: string; bg: ChatBackground; premium: true }[] = [
+  { label: "Aurora", bg: { type: "animated", value: "aurora" }, premium: true },
+  { label: "Partikel", bg: { type: "animated", value: "particles" }, premium: true },
+  { label: "Wellen", bg: { type: "animated", value: "waves" }, premium: true },
+  { label: "Nebel", bg: { type: "animated", value: "nebula" }, premium: true },
+];
+
 const STORAGE_KEY = "hearo-chat-bg-global";
 const PER_CHAT_KEY = "hearo-chat-bg-";
 
