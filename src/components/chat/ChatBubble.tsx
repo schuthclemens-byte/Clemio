@@ -59,6 +59,8 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   };
 
   return (
+    <>
+    <PaywallGate />
     <div className={cn("flex w-full mb-3", isMine ? "justify-end" : "justify-start")}>
       <div className={cn("max-w-[75%] animate-reveal-up")}>
         {!isMine && senderName && (
