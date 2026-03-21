@@ -103,11 +103,18 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             </div>
             <span
               className={cn(
-                "text-[0.688rem]",
+                "text-[0.688rem] flex items-center gap-0.5",
                 isMine ? "text-chat-mine-foreground/60" : "text-muted-foreground"
               )}
             >
               {timestamp}
+              {isMine && (
+                isRead ? (
+                  <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                ) : (
+                  <CheckCheck className="w-3.5 h-3.5" />
+                )
+              )}
             </span>
           </div>
         </div>
