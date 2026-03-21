@@ -57,26 +57,24 @@ const DEMO_TEXT = "Hey! Schön, dass du da bist. So klingt es, wenn dir jemand e
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isPlaying, setIsPlaying] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playDemo = useCallback(() => {
-    if (!("speechSynthesis" in window)) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio(demoVoice);
+      audioRef.current.onended = () => setIsPlaying(false);
+      audioRef.current.onerror = () => setIsPlaying(false);
+    }
 
     if (isPlaying) {
-      window.speechSynthesis.cancel();
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
       setIsPlaying(false);
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(DEMO_TEXT);
-    utterance.lang = "de-DE";
-    utterance.rate = 0.95;
-    utterance.pitch = 1.05;
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    audioRef.current.play();
+    setIsPlaying(true);
   }, [isPlaying]);
 
   const fadeUp = {
