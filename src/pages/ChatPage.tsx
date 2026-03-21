@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Headphones, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAutoPlayQueue } from "@/hooks/useAutoPlayQueue";
 import { playMessageTone } from "@/lib/sounds";
 
 interface Message {
