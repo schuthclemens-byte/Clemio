@@ -433,6 +433,13 @@ const SettingsPage = () => {
           </div>
         </section>
       </div>
+
+      <BackgroundPicker
+        open={bgPickerOpen}
+        onClose={() => setBgPickerOpen(false)}
+        current={globalBackground}
+        onSelect={setGlobalBackground}
+      />
     </div>
   );
 };
