@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Search, Plus } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
+import NewChatDialog from "@/components/chat/NewChatDialog";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ const ChatListPage = () => {
   const { user, signOut } = useAuth();
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNewChat, setShowNewChat] = useState(false);
 
   const fetchConversations = async () => {
     if (!user) return;
@@ -132,44 +134,7 @@ const ChatListPage = () => {
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleNewChat = async () => {
-    const phone = prompt(t("chat.enterPhone") || "Handynummer des Kontakts eingeben:");
-    if (!phone || !user) return;
-
-    // Find user by phone number
-    const { data: targetProfile } = await supabase
-      .from("profiles")
-      .select("id, display_name")
-      .eq("phone_number", phone.trim())
-      .maybeSingle();
-
-    if (!targetProfile) {
-      alert(t("chat.userNotFound") || "Nutzer nicht gefunden");
-      return;
-    }
-
-    if (targetProfile.id === user.id) {
-      alert("Du kannst nicht mit dir selbst chatten");
-      return;
-    }
-
-    // Create conversation
-    const { data: conv, error: convErr } = await supabase
-      .from("conversations")
-      .insert({ created_by: user.id, name: null, is_group: false })
-      .select()
-      .single();
-
-    if (convErr || !conv) return;
-
-    // Add both members
-    await supabase.from("conversation_members").insert([
-      { conversation_id: conv.id, user_id: user.id },
-      { conversation_id: conv.id, user_id: targetProfile.id },
-    ]);
-
-    navigate(`/chat/${conv.id}`);
-  };
+  const handleNewChat = () => setShowNewChat(true);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -242,6 +207,8 @@ const ChatListPage = () => {
           </div>
         )}
       </div>
+
+      <NewChatDialog open={showNewChat} onClose={() => setShowNewChat(false)} />
     </div>
   );
 };
