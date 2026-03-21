@@ -138,27 +138,27 @@ const ChatListPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
-        <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-xl font-bold">{t("chat.chats")}</h1>
-          <div className="flex items-center gap-1">
+      <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
+        <div className="flex items-center justify-between px-5 py-4">
+          <h1 className="text-2xl font-extrabold tracking-tight">{t("chat.chats")}</h1>
+          <div className="flex items-center gap-1.5">
             <button
               onClick={handleNewChat}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
+              className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-soft transition-all duration-200 active:scale-95"
               aria-label="Neuer Chat"
             >
-              <Plus className="w-5 h-5 text-muted-foreground" />
+              <Plus className="w-5 h-5 text-primary-foreground" />
             </button>
             <button
               onClick={() => navigate("/settings")}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
+              className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors active:scale-95"
               aria-label={t("a11y.settings")}
             >
               <Settings className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
         </div>
-        <div className="px-4 pb-3">
+        <div className="px-5 pb-3.5">
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -166,7 +166,7 @@ const ChatListPage = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("chat.search")}
-              className="w-full h-10 rounded-xl bg-secondary pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full h-11 rounded-xl bg-secondary/70 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:bg-card transition-all duration-200"
               aria-label={t("chat.search")}
             />
           </div>
