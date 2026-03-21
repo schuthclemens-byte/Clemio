@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
+import { playMessageTone } from "@/lib/sounds";
 
 interface Message {
   id: string;
@@ -241,8 +242,9 @@ const ChatPage = () => {
             return [...prev, newMsg];
           });
 
-          // Mark as read if from other user
+          // Play notification sound & mark as read if from other user
           if (m.sender_id !== user.id) {
+            playMessageTone();
             supabase
               .from("messages")
               .update({ is_read: true })
