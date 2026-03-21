@@ -23,13 +23,26 @@ interface ChatInputProps {
   onStopTyping?: () => void;
 }
 
-const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript }: ChatInputProps) => {
+const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping }: ChatInputProps) => {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [showMediaMenu, setShowMediaMenu] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useI18n();
+
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+    if (onTyping) {
+      onTyping();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        onStopTyping?.();
+      }, 3000);
+    }
+  }, [onTyping, onStopTyping]);
 
   const currentText = isListening ? transcript : text;
 
