@@ -1,13 +1,15 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2 } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
+  const { theme, setTheme } = useTheme();
 
   const languages = Object.entries(localeNames) as [Locale, string][];
 
@@ -18,10 +20,16 @@ const SettingsPage = () => {
     { key: "autoRead" as const, icon: Volume2, label: t("settings.autoRead") },
   ];
 
+  const themeOptions = [
+    { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") || "System" },
+    { value: "light" as const, icon: Sun, label: t("settings.themeLight") || "Hell" },
+    { value: "dark" as const, icon: Moon, label: t("settings.themeDark") || "Dunkel" },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
-        <div className="flex items-center gap-3 px-2 py-3">
+      <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
+        <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={() => navigate(-1)}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
@@ -34,8 +42,34 @@ const SettingsPage = () => {
       </header>
 
       <div className="flex-1 p-4 space-y-6">
-        {/* Language */}
+        {/* Theme */}
         <section className="animate-reveal-up">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Moon className="w-4 h-4" />
+            {t("settings.theme") || "Design"}
+          </h2>
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
+            {themeOptions.map(({ value, icon: Icon, label }) => (
+              <button
+                key={value}
+                onClick={() => setTheme(value)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-2 py-4 transition-all duration-200",
+                  "hover:bg-secondary/50 active:scale-[0.97]",
+                  theme === value && "bg-primary/10"
+                )}
+              >
+                <Icon className={cn("w-5 h-5", theme === value ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("text-xs font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
+                  {label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Language */}
+        <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
             <Globe className="w-4 h-4" />
             {t("settings.language")}
@@ -62,7 +96,7 @@ const SettingsPage = () => {
         </section>
 
         {/* Accessibility */}
-        <section className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
+        <section className="animate-reveal-up" style={{ animationDelay: "120ms" }}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             {t("settings.accessibility")}
           </h2>
