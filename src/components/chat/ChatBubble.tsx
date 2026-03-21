@@ -15,6 +15,11 @@ interface ChatBubbleProps {
   isRead?: boolean;
   messageType?: string;
   mediaUrl?: string;
+  senderId?: string;
+  onPlayClonedVoice?: (text: string, senderId: string, msgId: string) => void;
+  isPlayingCloned?: boolean;
+  msgId?: string;
+  hasClonedVoice?: boolean;
 }
 
 const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl }: ChatBubbleProps) => {
