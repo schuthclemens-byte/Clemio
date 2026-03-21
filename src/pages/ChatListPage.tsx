@@ -207,6 +207,8 @@ const ChatListPage = () => {
           </div>
         )}
       </div>
+
+      <NewChatDialog open={showNewChat} onClose={() => setShowNewChat(false)} />
     </div>
   );
 };
