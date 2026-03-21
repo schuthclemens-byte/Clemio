@@ -1,8 +1,10 @@
 import { useCallback, useRef, useState } from "react";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 
 const useTextToSpeech = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const { speechRate } = useAccessibility();
 
   const speak = useCallback((text: string, lang = "de-DE") => {
     if (!("speechSynthesis" in window)) return;
@@ -12,7 +14,7 @@ const useTextToSpeech = () => {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
-    utterance.rate = 0.95;
+    utterance.rate = speechRate;
     utterance.pitch = 1;
 
     utterance.onstart = () => setIsSpeaking(true);
@@ -21,7 +23,7 @@ const useTextToSpeech = () => {
 
     utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [speechRate]);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();
