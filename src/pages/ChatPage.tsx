@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MoreVertical, Mic, Users } from "lucide-react";
+import { ArrowLeft, MoreVertical, Mic, Users, Phone, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -537,12 +537,28 @@ const ChatPage = () => {
               )}
             </p>
           </div>
-          <button
-            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
-            aria-label={t("a11y.more")}
-          >
-            <MoreVertical className="w-5 h-5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => navigate(`/call/${conversationId}?video=false`)}
+              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
+              aria-label="Audioanruf"
+            >
+              <Phone className="w-4.5 h-4.5 text-muted-foreground" />
+            </button>
+            <button
+              onClick={() => navigate(`/call/${conversationId}?video=true`)}
+              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
+              aria-label="Videoanruf"
+            >
+              <Video className="w-4.5 h-4.5 text-muted-foreground" />
+            </button>
+            <button
+              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
+              aria-label={t("a11y.more")}
+            >
+              <MoreVertical className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </div>
         </div>
       </header>
 
