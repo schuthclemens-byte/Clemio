@@ -15,6 +15,7 @@ interface Message {
   text: string;
   timestamp: string;
   isMine: boolean;
+  isRead: boolean;
 }
 
 const ChatPage = () => {
