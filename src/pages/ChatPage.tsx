@@ -59,6 +59,54 @@ const ChatPage = () => {
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
 
+  // Typing indicator
+  const { sendTyping, clearTyping, typingNames } = useTypingIndicator(conversationId);
+
+  // Reactions
+  const messageIds = messages.map((m) => m.id);
+  const { reactions, toggleReaction } = useMessageReactions(messageIds);
+
+  // Delete message
+  const handleDeleteMessage = async (msgId: string) => {
+    const { error } = await supabase.from("messages").delete().eq("id", msgId);
+    if (error) {
+      toast.error("Nachricht konnte nicht gelöscht werden");
+    } else {
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    }
+  };
+
+  // Voice message
+  const handleSendVoiceMessage = async (file: File) => {
+    if (!user || !conversationId) return;
+
+    const filePath = `${user.id}/${conversationId}/${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("chat-media")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error("Upload fehlgeschlagen");
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("chat-media")
+      .getPublicUrl(filePath);
+
+    await supabase.from("messages").insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      content: urlData.publicUrl,
+      message_type: "audio",
+    });
+
+    await supabase
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
+  };
+
   // Auto-play queue
   const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
   const { enqueue, clearQueue, currentItem, queueLength } = useAutoPlayQueue({
