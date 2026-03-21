@@ -22,11 +22,13 @@ const defaultSettings: AccessibilitySettings = {
   autoRead: false,
   headphoneAutoPlay: false,
   focusMode: false,
+  speechRate: 1,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
   ...defaultSettings,
   toggle: () => {},
+  setSpeechRate: () => {},
 });
 
 export const useAccessibility = () => useContext(AccessibilityContext);
