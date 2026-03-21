@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
+import { ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -56,12 +56,7 @@ const LoginPage = () => {
           {/* Logo & Header */}
           <div className="text-center mb-10">
             <div className="relative w-20 h-20 mx-auto mb-5">
-              <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center shadow-soft">
-                <MessageCircle className="w-9 h-9 text-primary-foreground" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full gradient-accent flex items-center justify-center shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-accent-foreground" />
-              </div>
+              <img src="/icon-512.png" alt="Hearo" className="w-20 h-20 rounded-3xl shadow-soft" />
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight">
               {t("app.welcome")}
