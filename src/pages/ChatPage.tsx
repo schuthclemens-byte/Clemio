@@ -329,13 +329,14 @@ const ChatPage = () => {
   }, [messages]);
 
   // Auto-read new messages from others
+  const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
   useEffect(() => {
-    if (!autoRead || messages.length === 0) return;
+    if (!shouldAutoPlay || messages.length === 0) return;
     const last = messages[messages.length - 1];
     if (!last.isMine) {
       speak(last.text, localeSpeechCodes[locale]);
     }
-  }, [messages.length, autoRead]);
+  }, [messages.length, shouldAutoPlay]);
 
   const handleSend = async (text: string) => {
     if (isListening) stop();
