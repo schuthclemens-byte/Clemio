@@ -30,6 +30,8 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
   const { isPremium, requirePremium, PaywallGate } = usePremiumGate();
+  const { compactMode } = useAccessibility();
+  const [expanded, setExpanded] = useState(false);
 
   const isMedia = messageType === "image" || messageType === "video";
 
