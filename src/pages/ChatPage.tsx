@@ -18,6 +18,8 @@ interface Message {
   isMine: boolean;
   isRead: boolean;
   senderId: string;
+  messageType: string;
+  mediaUrl?: string;
 }
 
 const ChatPage = () => {
