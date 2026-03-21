@@ -36,6 +36,7 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/onboarding" element={<OnboardingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/chats" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
