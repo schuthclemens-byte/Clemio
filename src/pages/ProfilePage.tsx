@@ -23,6 +23,16 @@ const ProfilePage = () => {
   const [loaded, setLoaded] = useState(false);
   const [voiceProfile, setVoiceProfile] = useState<{ voice_name: string; elevenlabs_voice_id: string } | null>(null);
 
+  const loadVoiceProfile = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("voice_profiles" as any)
+      .select("voice_name, elevenlabs_voice_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setVoiceProfile(data as any);
+  };
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
@@ -41,6 +51,7 @@ const ProfilePage = () => {
       setLoaded(true);
     };
     load();
+    loadVoiceProfile();
   }, [user]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
