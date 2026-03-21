@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_autoplay: {
+        Row: {
+          auto_play: boolean
+          contact_user_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          auto_play?: boolean
+          contact_user_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          auto_play?: boolean
+          contact_user_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_members: {
         Row: {
           conversation_id: string
