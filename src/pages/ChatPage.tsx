@@ -705,7 +705,6 @@ const ChatPage = () => {
         onTyping={sendTyping}
         onStopTyping={clearTyping}
       />
-      />
     </div>
   );
 };
