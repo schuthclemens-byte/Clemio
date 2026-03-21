@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Send, Plus, Camera, ImagePlus, X } from "lucide-react";
 import VoiceButton from "./VoiceButton";
 import MediaPreview from "./MediaPreview";
 import CameraCapture from "./CameraCapture";
+import VoiceRecorder from "./VoiceRecorder";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -14,9 +15,12 @@ interface MediaAttachment {
 interface ChatInputProps {
   onSend: (message: string) => void;
   onSendMedia: (file: File, type: "image" | "video", caption?: string) => void;
+  onSendVoice?: (file: File) => void;
   isListening: boolean;
   onVoiceToggle: () => void;
   transcript: string;
+  onTyping?: () => void;
+  onStopTyping?: () => void;
 }
 
 const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript }: ChatInputProps) => {
