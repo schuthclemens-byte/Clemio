@@ -76,6 +76,7 @@ const ChatPage = () => {
           .maybeSingle();
 
         if (otherMember) {
+          setOtherUserId(otherMember.user_id);
           const { data: profile } = await supabase
             .from("profiles")
             .select("display_name, phone_number")
@@ -83,6 +84,20 @@ const ChatPage = () => {
             .maybeSingle();
 
           setChatName(profile?.display_name || profile?.phone_number || "Chat");
+
+          // Check presence
+          const { data: presence } = await supabase
+            .from("user_presence")
+            .select("is_online, last_seen")
+            .eq("user_id", otherMember.user_id)
+            .maybeSingle();
+
+          if (presence) {
+            setIsOnline(presence.is_online);
+            if (!presence.is_online && presence.last_seen) {
+              setLastSeen(new Date(presence.last_seen).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }));
+            }
+          }
         }
       }
 
