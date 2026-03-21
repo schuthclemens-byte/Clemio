@@ -72,6 +72,21 @@ const SettingsPage = () => {
           </div>
         </button>
 
+        {/* Contact Auto-Play link */}
+        <button
+          onClick={() => navigate("/contact-autoplay")}
+          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+          style={{ animationDelay: "60ms" }}
+        >
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Volume2 className="w-6 h-6 text-primary" />
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-[0.938rem]">Auto-Play pro Kontakt</p>
+            <p className="text-xs text-muted-foreground">Wähle wer vorgelesen wird</p>
+          </div>
+        </button>
+
         {/* Theme */}
         <section className="animate-reveal-up">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
