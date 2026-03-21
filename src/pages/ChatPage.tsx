@@ -766,6 +766,7 @@ const ChatPage = () => {
         transcript={transcript}
         onTyping={sendTyping}
         onStopTyping={clearTyping}
+      />
 
       {/* Background picker */}
       {conversationId && (
