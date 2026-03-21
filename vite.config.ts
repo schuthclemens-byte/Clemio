@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["icon-192.png", "icon-512.png"],
       manifest: {
-        name: "Voxo – Messenger",
-        short_name: "Voxo",
+        name: "Hearo – Messenger",
+        short_name: "Hearo",
         description: "Sprachnachrichten, Echtzeit-Übersetzung & barrierefreie Kommunikation",
         theme_color: "#4B8DF8",
         background_color: "#F7F8FA",

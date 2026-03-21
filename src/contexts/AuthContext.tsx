@@ -22,7 +22,7 @@ export const useAuth = () => {
 // Convert phone to a fake email for Supabase email auth
 const phoneToEmail = (phone: string) => {
   const clean = phone.replace(/[^0-9+]/g, "").replace("+", "p");
-  return `${clean}@phone.voxo.app`;
+  return `${clean}@phone.hearo.app`;
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
