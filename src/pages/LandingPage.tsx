@@ -3,6 +3,7 @@ import { Ear, Languages, Mic2, Shield, Headphones, ArrowRight, Download, Message
 import { Button } from "@/components/ui/button";
 import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
+import demoVoice from "@/assets/demo-voice.mp3";
 
 const features = [
   {
