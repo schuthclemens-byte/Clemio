@@ -192,6 +192,82 @@ const SettingsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Smart Silence */}
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden mt-3">
+            <button
+              onClick={() => a11y.toggle("smartSilence")}
+              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+              role="switch"
+              aria-checked={a11y.smartSilence}
+            >
+              <span className="flex items-center gap-3">
+                <BellOff className="w-4.5 h-4.5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block">Smart Silence</span>
+                  <span className="text-xs text-muted-foreground">Nachts keine Wiedergabe</span>
+                </div>
+              </span>
+              <div className={cn(
+                "w-11 h-6 rounded-full relative transition-colors duration-200",
+                a11y.smartSilence ? "bg-primary" : "bg-border"
+              )}>
+                <div className={cn(
+                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                  a11y.smartSilence ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                )} />
+              </div>
+            </button>
+            {a11y.smartSilence && (
+              <div className="px-4 pb-3.5 flex gap-3 items-center">
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground block mb-1">Von</label>
+                  <input
+                    type="time"
+                    value={a11y.quietHoursStart}
+                    onChange={(e) => a11y.setQuietHours(e.target.value, a11y.quietHoursEnd)}
+                    className="w-full h-10 rounded-xl bg-secondary px-3 text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground block mb-1">Bis</label>
+                  <input
+                    type="time"
+                    value={a11y.quietHoursEnd}
+                    onChange={(e) => a11y.setQuietHours(a11y.quietHoursStart, e.target.value)}
+                    className="w-full h-10 rounded-xl bg-secondary px-3 text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Compact Mode */}
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden mt-3">
+            <button
+              onClick={() => a11y.toggle("compactMode")}
+              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+              role="switch"
+              aria-checked={a11y.compactMode}
+            >
+              <span className="flex items-center gap-3">
+                <AlignLeft className="w-4.5 h-4.5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block">Weniger Text</span>
+                  <span className="text-xs text-muted-foreground">Lange Nachrichten kürzen</span>
+                </div>
+              </span>
+              <div className={cn(
+                "w-11 h-6 rounded-full relative transition-colors duration-200",
+                a11y.compactMode ? "bg-primary" : "bg-border"
+              )}>
+                <div className={cn(
+                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                  a11y.compactMode ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                )} />
+              </div>
+            </button>
+          </div>
         </section>
       </div>
     </div>

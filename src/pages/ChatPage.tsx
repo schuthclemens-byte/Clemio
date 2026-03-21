@@ -346,6 +346,9 @@ const ChatPage = () => {
   const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
   useEffect(() => {
     if (!shouldAutoPlay || messages.length === 0) return;
+    // Smart Silence: no auto-play during quiet hours
+    if (isQuietTime()) return;
+
     const last = messages[messages.length - 1];
     if (last.isMine) return;
 
