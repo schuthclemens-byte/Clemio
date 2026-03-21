@@ -495,17 +495,17 @@ const ChatPage = () => {
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
-        <div className="flex items-center gap-3 px-2 py-2.5">
+        <div className="flex items-center gap-3 px-3 py-3">
           <button
             onClick={() => navigate("/chats")}
-            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
             aria-label={t("a11y.back")}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="relative w-10 h-10 shrink-0">
+          <div className="relative w-11 h-11 shrink-0">
             <div className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm",
+              "w-11 h-11 rounded-full flex items-center justify-center font-semibold text-sm",
               isGroup ? "gradient-primary text-primary-foreground" : "bg-primary/10 text-primary"
             )}>
               {isGroup ? <Users className="w-5 h-5" /> : initials}
@@ -520,7 +520,7 @@ const ChatPage = () => {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-[0.938rem] truncate">{chatName}</h2>
+            <h2 className="font-semibold text-base truncate">{chatName}</h2>
             <p className="text-xs text-muted-foreground truncate">
               {isListening ? (
                 <span className="text-accent font-medium flex items-center gap-1">
@@ -537,28 +537,13 @@ const ChatPage = () => {
               )}
             </p>
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => navigate(`/call/${conversationId}?video=false`)}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
-              aria-label="Audioanruf"
-            >
-              <Phone className="w-4.5 h-4.5 text-muted-foreground" />
-            </button>
-            <button
-              onClick={() => navigate(`/call/${conversationId}?video=true`)}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
-              aria-label="Videoanruf"
-            >
-              <Video className="w-4.5 h-4.5 text-muted-foreground" />
-            </button>
-            <button
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
-              aria-label={t("a11y.more")}
-            >
-              <MoreVertical className="w-5 h-5 text-muted-foreground" />
-            </button>
-          </div>
+          <button
+            onClick={() => navigate(`/call/${conversationId}`)}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
+            aria-label="Anrufen"
+          >
+            <Phone className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
       </header>
 
