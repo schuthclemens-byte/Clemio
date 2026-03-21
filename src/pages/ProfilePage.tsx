@@ -21,6 +21,7 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [voiceProfile, setVoiceProfile] = useState<{ voice_name: string; elevenlabs_voice_id: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
