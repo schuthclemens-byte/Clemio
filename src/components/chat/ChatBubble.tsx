@@ -1,11 +1,12 @@
 import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaMessage } from "./MediaPreview";
 import { usePremiumGate } from "@/hooks/usePremiumGate";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
+import { playStartListenPop } from "@/lib/sounds";
 
 interface ChatBubbleProps {
   message: string;
@@ -24,6 +25,19 @@ interface ChatBubbleProps {
   hasClonedVoice?: boolean;
 }
 
+/** Animated wave bars shown during playback */
+const WaveIndicator = ({ color }: { color: string }) => (
+  <span className="inline-flex items-center gap-[3px] h-4 ml-1">
+    {[0, 1, 2, 3, 4].map((i) => (
+      <span
+        key={i}
+        className={cn("wave-bar", color)}
+        style={{ animationDelay: `${i * 0.12}s` }}
+      />
+    ))}
+  </span>
+);
+
 const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
@@ -33,9 +47,19 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const { compactMode } = useAccessibility();
   const [expanded, setExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const prevSpeaking = useRef(false);
 
   const isMedia = messageType === "image" || messageType === "video";
   const displayText = showTranslation && translated ? translated : message;
+  const isActive = isSpeaking || isPlayingCloned;
+
+  // Play subtle pop when speech starts
+  useEffect(() => {
+    if (isActive && !prevSpeaking.current) {
+      playStartListenPop();
+    }
+    prevSpeaking.current = !!isActive;
+  }, [isActive]);
 
   // 1-Click: tap bubble to listen
   const handleBubbleTap = () => {
@@ -93,23 +117,24 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
           onClick={handleBubbleTap}
           onDoubleClick={() => !isMine && message && setShowActions(!showActions)}
           className={cn(
-            "shadow-sm cursor-pointer select-none transition-all duration-150",
+            "shadow-sm cursor-pointer select-none transition-all duration-200",
             isMedia ? "rounded-2xl overflow-hidden" : "px-4 py-3",
             isMine
               ? "bg-chat-mine text-chat-mine-foreground rounded-[1.25rem] rounded-br-md"
               : "bg-chat-theirs text-chat-theirs-foreground rounded-[1.25rem] rounded-bl-md",
-            isSpeaking && "ring-2 ring-primary/40 shadow-md",
-            isPlayingCloned && "ring-2 ring-accent/40 shadow-md"
+            isActive && "ring-2 shadow-md",
+            isSpeaking && !isPlayingCloned && "ring-primary/40",
+            isPlayingCloned && "ring-accent/40"
           )}
         >
-          {/* Speaking indicator */}
-          {(isSpeaking || isPlayingCloned) && (
+          {/* Speaking indicator with wave animation */}
+          {isActive && (
             <div className={cn(
-              "flex items-center gap-1.5 mb-1.5 text-xs font-medium",
-              isMine ? "text-chat-mine-foreground/70" : "text-primary"
+              "flex items-center gap-1 mb-1.5 text-xs font-medium",
+              isMine ? "text-chat-mine-foreground/80" : "text-primary"
             )}>
-              <Volume2 className="w-3.5 h-3.5 animate-pulse" />
               {speakingLabel}
+              <WaveIndicator color={isMine ? "bg-chat-mine-foreground/60" : "bg-primary"} />
             </div>
           )}
 
@@ -155,7 +180,6 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
 
           {/* Footer: time + minimal actions */}
           <div className={cn("flex items-center justify-between mt-1.5", isMedia && "px-4 pb-2")}>
-            {/* Secondary actions – only show on double-tap or for non-own messages */}
             <div className="flex items-center gap-1.5">
               {!isMine && showActions && (
                 <>
@@ -198,7 +222,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               {timestamp}
               {isMine && (
                 isRead ? (
-                  <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                  <CheckCheck className="w-3.5 h-3.5 text-accent" />
                 ) : (
                   <CheckCheck className="w-3.5 h-3.5" />
                 )
@@ -208,7 +232,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
         </div>
 
         {/* Tap hint for non-own messages */}
-        {!isMine && message && !isMedia && !isSpeaking && !isPlayingCloned && (
+        {!isMine && message && !isMedia && !isActive && (
           <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
             {t("chat.tapToListen") || "Tippen zum Anhören · Doppeltippen für mehr"}
           </p>
