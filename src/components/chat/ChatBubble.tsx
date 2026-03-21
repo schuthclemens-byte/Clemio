@@ -119,15 +119,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               {/* Cloned voice button */}
               {!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
                 <button
-                  onClick={() => onPlayClonedVoice(message, senderId, msgId)}
+                  onClick={() => handlePlayCloned(message, senderId, msgId)}
                   className={cn(
                     "p-1 rounded-full transition-colors",
                     "hover:bg-foreground/5",
-                    isPlayingCloned ? "text-accent" : "text-muted-foreground"
+                    isPlayingCloned ? "text-accent" : "text-muted-foreground",
+                    !isPremium && "opacity-50"
                   )}
                   aria-label="Mit geklonter Stimme anhören"
                 >
-                  <Headphones className="w-3.5 h-3.5" />
+                  {isPremium ? <Headphones className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                 </button>
               )}
               {!isMine && message && (
