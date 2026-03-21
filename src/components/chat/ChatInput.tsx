@@ -60,6 +60,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
     if (!msg) return;
     onSend(msg);
     setText("");
+    onStopTyping?.();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
