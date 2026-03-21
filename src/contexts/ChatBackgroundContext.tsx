@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 
 export interface ChatBackground {
-  type: "none" | "gradient" | "color" | "image";
-  value: string; // CSS gradient, color, or image URL
+  type: "none" | "gradient" | "color" | "image" | "animated";
+  value: string; // CSS gradient, color, image URL, or animation key
 }
 
 interface ChatBackgroundContextType {
@@ -33,6 +33,13 @@ export const backgroundPresets: { label: string; bg: ChatBackground }[] = [
   { label: "Midnight", bg: { type: "gradient", value: "linear-gradient(135deg, hsl(230,30%,18%) 0%, hsl(250,25%,15%) 50%, hsl(210,35%,20%) 100%)" } },
   { label: "Sand", bg: { type: "color", value: "hsl(35,30%,92%)" } },
   { label: "Dunkel", bg: { type: "color", value: "hsl(220,15%,12%)" } },
+];
+
+export const animatedPresets: { label: string; bg: ChatBackground; premium: true }[] = [
+  { label: "Aurora", bg: { type: "animated", value: "aurora" }, premium: true },
+  { label: "Partikel", bg: { type: "animated", value: "particles" }, premium: true },
+  { label: "Wellen", bg: { type: "animated", value: "waves" }, premium: true },
+  { label: "Nebel", bg: { type: "animated", value: "nebula" }, premium: true },
 ];
 
 const STORAGE_KEY = "hearo-chat-bg-global";

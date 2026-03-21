@@ -7,6 +7,7 @@ import ChatInput from "@/components/chat/ChatInput";
 import SwipeableBubble from "@/components/chat/SwipeableBubble";
 import ReplyPreview from "@/components/chat/ReplyPreview";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
+import AnimatedChatBackground from "@/components/chat/AnimatedChatBackground";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import useTextToSpeech from "@/hooks/useTextToSpeech";
 import { useVoiceTTS } from "@/hooks/useVoiceTTS";
@@ -679,7 +680,7 @@ const ChatPage = () => {
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 py-4 bg-cover bg-center bg-no-repeat"
+        className="flex-1 overflow-y-auto px-3 py-4 bg-cover bg-center bg-no-repeat relative"
         role="log"
         aria-label={t("chat.chats")}
         aria-live="polite"
@@ -695,6 +696,10 @@ const ChatPage = () => {
         onTouchEnd={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current); }}
         onTouchMove={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current); }}
       >
+        {/* Animated background layer */}
+        {conversationId && getChatBackground(conversationId).type === "animated" && (
+          <AnimatedChatBackground animation={getChatBackground(conversationId).value} />
+        )}
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             {t("chat.noMessages") || "Noch keine Nachrichten. Schreib die erste!"}
