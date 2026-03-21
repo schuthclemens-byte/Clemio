@@ -191,6 +191,33 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
     );
   }
 
+  // Consent popup
+  if (phase === "consent") {
+    return (
+      <>
+        <div className="bg-card rounded-2xl p-6 shadow-sm border border-border text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-soft">
+            <Mic className="w-8 h-8 text-primary-foreground" />
+          </div>
+          <div>
+            <p className="font-semibold text-lg">Lass dich hören</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Bitte bestätige die Einwilligung, um fortzufahren
+            </p>
+          </div>
+        </div>
+        <VoiceConsentPopup
+          open={true}
+          onAccept={() => {
+            setPhase("idle");
+            startRecording();
+          }}
+          onCancel={() => setPhase("idle")}
+        />
+      </>
+    );
+  }
+
   // Idle – single CTA
   return (
     <div className="bg-card rounded-2xl p-6 shadow-sm border border-border text-center space-y-4">
@@ -204,13 +231,13 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         </p>
       </div>
       <button
-        onClick={startRecording}
+        onClick={() => setPhase("consent")}
         className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
       >
         Jetzt aufnehmen
       </button>
       <p className="text-[0.688rem] text-muted-foreground">
-        Deine Aufnahme wird nur verwendet, um deine Stimme wiederzugeben. Du kannst sie jederzeit löschen.
+        🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.
       </p>
     </div>
   );
