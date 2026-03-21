@@ -21,24 +21,26 @@ const VoiceConsentManager = () => {
   const loadRequests = async () => {
     if (!user) return;
     const { data } = await supabase
-      .from("voice_consents")
+      .from("voice_consents" as any)
       .select("*")
       .eq("voice_owner_id", user.id)
       .order("created_at", { ascending: false });
 
     if (data) {
-      // Load requester names
       const enriched = await Promise.all(
-        data.map(async (r) => {
+        (data as any[]).map(async (r: any) => {
           const { data: profile } = await supabase
             .from("profiles")
             .select("display_name, phone_number")
             .eq("id", r.granted_to_user_id)
             .maybeSingle();
           return {
-            ...r,
+            id: r.id,
+            granted_to_user_id: r.granted_to_user_id,
+            status: r.status,
+            created_at: r.created_at,
             requester_name: profile?.display_name || profile?.phone_number || "Unbekannt",
-          };
+          } as ConsentRequest;
         })
       );
       setRequests(enriched);
@@ -52,8 +54,8 @@ const VoiceConsentManager = () => {
 
   const handleConsent = async (id: string, status: "granted" | "denied") => {
     const { error } = await supabase
-      .from("voice_consents")
-      .update({ status, updated_at: new Date().toISOString() })
+      .from("voice_consents" as any)
+      .update({ status, updated_at: new Date().toISOString() } as any)
       .eq("id", id);
 
     if (error) {
