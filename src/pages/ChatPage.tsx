@@ -338,6 +338,71 @@ const ChatPage = () => {
       .eq("id", conversationId);
   };
 
+  const handleSendMedia = async (file: File, type: "image" | "video", caption?: string) => {
+    if (!user || !conversationId) return;
+
+    const tempId = crypto.randomUUID();
+    const now = new Date();
+    const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    // Upload file to storage
+    const filePath = `${user.id}/${conversationId}/${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("chat-media")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error("Upload failed:", uploadError);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("chat-media")
+      .getPublicUrl(filePath);
+
+    const mediaUrl = urlData.publicUrl;
+
+    // Optimistic update
+    setMessages((prev) => [...prev, {
+      id: tempId,
+      text: caption || "",
+      timestamp: ts,
+      isMine: true,
+      isRead: false,
+      senderId: user.id,
+      messageType: type,
+      mediaUrl,
+    }]);
+
+    // Insert message with media URL as content
+    const { error } = await supabase.from("messages").insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      content: mediaUrl,
+      message_type: type,
+    });
+
+    if (error) {
+      console.error("Send media failed:", error);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    }
+
+    // If there's a caption, send it as a separate text message
+    if (caption?.trim()) {
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content: caption.trim(),
+        message_type: "text",
+      });
+    }
+
+    await supabase
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
+  };
+
   const handleSpeak = (msgId: string, text: string) => {
     if (speakingId === msgId && isSpeaking) {
       stopSpeaking();
@@ -434,6 +499,8 @@ const ChatPage = () => {
               senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
               onSpeak={(text) => handleSpeak(msg.id, text)}
               isSpeaking={speakingId === msg.id && isSpeaking}
+              messageType={msg.messageType}
+              mediaUrl={msg.mediaUrl}
             />
           ))
         )}
@@ -449,6 +516,7 @@ const ChatPage = () => {
       {/* Input */}
       <ChatInput
         onSend={handleSend}
+        onSendMedia={handleSendMedia}
         isListening={isListening}
         onVoiceToggle={toggle}
         transcript={transcript}
