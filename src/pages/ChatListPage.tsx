@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Search, Plus } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
+import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ConversationItem {
   id: string;
