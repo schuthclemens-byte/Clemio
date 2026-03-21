@@ -11,6 +11,7 @@ const LoginPage = () => {
   const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
+  const [passwordFieldReady, setPasswordFieldReady] = useState(false);
   const navigate = useNavigate();
   const { t } = useI18n();
   const { signIn, signUp } = useAuth();
@@ -73,7 +74,12 @@ const LoginPage = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3" autoComplete="off">
+          <form onSubmit={handleSubmit} className="space-y-3" autoComplete="off" noValidate>
+            <div className="absolute opacity-0 pointer-events-none h-0 w-0 overflow-hidden" aria-hidden="true">
+              <input type="text" name="username" autoComplete="username" tabIndex={-1} />
+              <input type="password" name="current-password" autoComplete="current-password" tabIndex={-1} />
+            </div>
+
             {mode === "signup" && (
               <div className="animate-reveal-up">
                 <input
@@ -83,7 +89,8 @@ const LoginPage = () => {
                   placeholder={t("app.displayNamePlaceholder") || "Dein Name"}
                   className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
                   aria-label="Name"
-                  autoComplete="off"
+                  autoComplete="name"
+                  autoCapitalize="words"
                   data-1p-ignore
                   data-lpignore="true"
                 />
@@ -98,7 +105,11 @@ const LoginPage = () => {
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               autoFocus
               aria-label={t("app.phonePlaceholder")}
-              autoComplete="tel"
+              autoComplete="off"
+              name="phone_number_input"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
               data-1p-ignore
               data-lpignore="true"
             />
@@ -110,10 +121,19 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("app.passwordPlaceholder") || "Passwort (min. 6 Zeichen)"}
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
-              aria-label="Passwort"
-              autoComplete="off"
+              aria-label="Zugangscode"
+              autoComplete="new-password"
+              name={mode === "login" ? "login_secret" : "signup_secret"}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              readOnly={!passwordFieldReady}
+              onFocus={() => setPasswordFieldReady(true)}
+              onPointerDown={() => setPasswordFieldReady(true)}
               data-1p-ignore
               data-lpignore="true"
+              data-bwignore="true"
+              data-form-type="other"
               style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
             />
 
@@ -141,7 +161,10 @@ const LoginPage = () => {
           {/* Toggle mode */}
           <button
             type="button"
-            onClick={() => setMode(mode === "login" ? "signup" : "login")}
+          onClick={() => {
+            setMode(mode === "login" ? "signup" : "login");
+            setPasswordFieldReady(false);
+          }}
             className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mt-5 text-center"
           >
             {mode === "login"
