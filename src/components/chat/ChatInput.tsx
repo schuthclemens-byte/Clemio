@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Send, Camera, ImagePlus, X } from "lucide-react";
+import { Send, Plus, Camera, ImagePlus, X } from "lucide-react";
 import VoiceButton from "./VoiceButton";
 import MediaPreview from "./MediaPreview";
 import CameraCapture from "./CameraCapture";
@@ -23,13 +23,13 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
+  const [showMediaMenu, setShowMediaMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useI18n();
 
   const currentText = isListening ? transcript : text;
 
   const handleSend = () => {
-    // Send attachments
     if (attachments.length > 0) {
       for (const att of attachments) {
         onSendMedia(att.file, att.type, currentText.trim() || undefined);
@@ -66,12 +66,14 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
       }
     }
     setAttachments((prev) => [...prev, ...newAttachments]);
+    setShowMediaMenu(false);
     e.target.value = "";
   };
 
   const handleCameraCapture = (file: File, type: "image" | "video") => {
     setAttachments((prev) => [...prev, { file, type }]);
     setShowCamera(false);
+    setShowMediaMenu(false);
   };
 
   const removeAttachment = (index: number) => {
@@ -98,22 +100,40 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
         )}
 
         <div className="flex items-end gap-2 p-3">
-          {/* Media buttons */}
-          <div className="flex gap-1">
+          {/* Single + button for media */}
+          <div className="relative">
             <button
-              onClick={() => setShowCamera(true)}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors active:scale-95"
-              aria-label="Kamera öffnen"
+              onClick={() => setShowMediaMenu(!showMediaMenu)}
+              className={cn(
+                "flex items-center justify-center w-11 h-11 rounded-full transition-all duration-200 active:scale-90",
+                showMediaMenu
+                  ? "bg-primary text-primary-foreground rotate-45"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+              aria-label="Medien hinzufügen"
             >
-              <Camera className="w-5 h-5" />
+              <Plus className="w-5 h-5" />
             </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors active:scale-95"
-              aria-label="Bild oder Video auswählen"
-            >
-              <ImagePlus className="w-5 h-5" />
-            </button>
+
+            {/* Media popover */}
+            {showMediaMenu && (
+              <div className="absolute bottom-14 left-0 flex gap-2 bg-card border border-border rounded-2xl p-2 shadow-elevated animate-reveal-up">
+                <button
+                  onClick={() => { setShowCamera(true); setShowMediaMenu(false); }}
+                  className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-secondary transition-colors active:scale-95"
+                >
+                  <Camera className="w-5 h-5 text-primary" />
+                  <span className="text-[0.625rem] text-muted-foreground">Kamera</span>
+                </button>
+                <button
+                  onClick={() => { fileInputRef.current?.click(); }}
+                  className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-secondary transition-colors active:scale-95"
+                >
+                  <ImagePlus className="w-5 h-5 text-primary" />
+                  <span className="text-[0.625rem] text-muted-foreground">Galerie</span>
+                </button>
+              </div>
+            )}
           </div>
 
           <input
@@ -125,8 +145,10 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
             onChange={handleFileSelect}
           />
 
+          {/* Voice button */}
           <VoiceButton isListening={isListening} onToggle={onVoiceToggle} />
 
+          {/* Text input */}
           <div className="flex-1 relative">
             <textarea
               value={currentText}
@@ -145,15 +167,16 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
             />
           </div>
 
+          {/* Send */}
           <button
             onClick={handleSend}
             disabled={!hasContent}
             className={cn(
               "flex items-center justify-center w-12 h-12 rounded-full shrink-0",
-              "transition-all duration-200 active:scale-95",
+              "transition-all duration-200 active:scale-90",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               hasContent
-                ? "bg-primary text-primary-foreground shadow-md hover:shadow-lg"
+                ? "gradient-primary text-primary-foreground shadow-soft hover:shadow-elevated"
                 : "bg-secondary text-muted-foreground"
             )}
             aria-label={t("chat.send")}

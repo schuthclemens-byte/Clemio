@@ -1,4 +1,4 @@
-import { Volume2, VolumeX, Languages, Loader2, Check, CheckCheck, Headphones, Lock } from "lucide-react";
+import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -32,8 +32,18 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const { isPremium, requirePremium, PaywallGate } = usePremiumGate();
   const { compactMode } = useAccessibility();
   const [expanded, setExpanded] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const isMedia = messageType === "image" || messageType === "video";
+  const displayText = showTranslation && translated ? translated : message;
+
+  // 1-Click: tap bubble to listen
+  const handleBubbleTap = () => {
+    if (!message || isMedia) return;
+    if (onSpeak) {
+      onSpeak(displayText);
+    }
+  };
 
   const doTranslate = async () => {
     if (translated) {
@@ -55,31 +65,50 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     }
   };
 
-  const handleTranslate = () => requirePremium(doTranslate);
+  const handleTranslate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    requirePremium(doTranslate);
+  };
 
-  const handlePlayCloned = (text: string, sid: string, mid: string) => {
-    requirePremium(() => onPlayClonedVoice?.(text, sid, mid));
+  const handlePlayCloned = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    requirePremium(() => onPlayClonedVoice?.(message, senderId!, msgId!));
   };
 
   return (
     <>
     <PaywallGate />
     <div className={cn("flex w-full mb-3", isMine ? "justify-end" : "justify-start")}>
-      <div className={cn("max-w-[75%] animate-reveal-up")}>
+      <div className={cn("max-w-[80%] animate-reveal-up")}>
         {!isMine && senderName && (
           <span className="text-xs font-medium text-muted-foreground ml-3 mb-0.5 block">
             {senderName}
           </span>
         )}
         <div
+          onClick={handleBubbleTap}
+          onDoubleClick={() => !isMine && message && setShowActions(!showActions)}
           className={cn(
-            "shadow-sm",
-            isMedia ? "rounded-2xl overflow-hidden" : "px-4 py-2.5",
+            "shadow-sm cursor-pointer select-none transition-all duration-150",
+            isMedia ? "rounded-2xl overflow-hidden" : "px-4 py-3",
             isMine
               ? "bg-chat-mine text-chat-mine-foreground rounded-[1.25rem] rounded-br-md"
-              : "bg-chat-theirs text-chat-theirs-foreground rounded-[1.25rem] rounded-bl-md"
+              : "bg-chat-theirs text-chat-theirs-foreground rounded-[1.25rem] rounded-bl-md",
+            isSpeaking && "ring-2 ring-primary/40 shadow-md",
+            isPlayingCloned && "ring-2 ring-accent/40 shadow-md"
           )}
         >
+          {/* Speaking indicator */}
+          {(isSpeaking || isPlayingCloned) && (
+            <div className={cn(
+              "flex items-center gap-1.5 mb-1.5 text-xs font-medium",
+              isMine ? "text-chat-mine-foreground/70" : "text-primary"
+            )}>
+              <Volume2 className="w-3.5 h-3.5 animate-pulse" />
+              {isPlayingCloned ? `${senderName || "Kontakt"} spricht…` : "Wird vorgelesen…"}
+            </div>
+          )}
+
           {/* Media content */}
           {isMedia && mediaUrl && (
             <MediaMessage
@@ -89,16 +118,12 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             />
           )}
 
-          {/* Text or caption */}
+          {/* Text */}
           {message && !(isMedia && !message.trim()) && (() => {
-            const displayText = showTranslation && translated ? translated : message;
             const isLong = compactMode && displayText.length > 120 && !expanded;
             const truncated = isLong ? displayText.slice(0, 120) + "…" : displayText;
             return (
-              <div
-                onClick={isLong ? () => setExpanded(true) : undefined}
-                className={cn(isLong && "cursor-pointer")}
-              >
+              <div onClick={isLong ? (e: React.MouseEvent) => { e.stopPropagation(); setExpanded(true); } : undefined}>
                 <p className={cn(
                   "text-[0.938rem] leading-relaxed break-words",
                   isMedia && "px-4 pt-2"
@@ -124,59 +149,45 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             </p>
           )}
 
-          <div className={cn("flex items-center justify-between mt-1", isMedia && "px-4 pb-2")}>
-            <div className="flex items-center gap-1">
-              {onSpeak && message && (
-                <button
-                  onClick={() => onSpeak(showTranslation && translated ? translated : message)}
-                  className={cn(
-                    "p-1 rounded-full transition-colors",
-                    isMine
-                      ? "hover:bg-chat-mine-foreground/10 text-chat-mine-foreground/60"
-                      : "hover:bg-foreground/5 text-muted-foreground"
+          {/* Footer: time + minimal actions */}
+          <div className={cn("flex items-center justify-between mt-1.5", isMedia && "px-4 pb-2")}>
+            {/* Secondary actions – only show on double-tap or for non-own messages */}
+            <div className="flex items-center gap-1.5">
+              {!isMine && showActions && (
+                <>
+                  {hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
+                    <button
+                      onClick={handlePlayCloned}
+                      className="p-1.5 rounded-full bg-accent/10 text-accent transition-colors active:scale-90"
+                      aria-label="Mit geklonter Stimme anhören"
+                    >
+                      {isPremium ? <Headphones className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                    </button>
                   )}
-                  aria-label={t("chat.readAloud")}
-                >
-                  {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                </button>
-              )}
-              {/* Cloned voice button */}
-              {!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
-                <button
-                  onClick={() => handlePlayCloned(message, senderId, msgId)}
-                  className={cn(
-                    "p-1 rounded-full transition-colors",
-                    "hover:bg-foreground/5",
-                    isPlayingCloned ? "text-accent" : "text-muted-foreground",
-                    !isPremium && "opacity-50"
+                  {message && (
+                    <button
+                      onClick={handleTranslate}
+                      disabled={isTranslating}
+                      className={cn(
+                        "p-1.5 rounded-full transition-colors active:scale-90",
+                        showTranslation ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
+                      )}
+                      aria-label={t("chat.translate")}
+                    >
+                      {isTranslating ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Languages className="w-4 h-4" />
+                      )}
+                    </button>
                   )}
-                  aria-label="Mit geklonter Stimme anhören"
-                >
-                  {isPremium ? <Headphones className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                </button>
-              )}
-              {!isMine && message && (
-                <button
-                  onClick={handleTranslate}
-                  disabled={isTranslating}
-                  className={cn(
-                    "p-1 rounded-full transition-colors",
-                    "hover:bg-foreground/5 text-muted-foreground",
-                    showTranslation && "text-primary"
-                  )}
-                  aria-label={t("chat.translate")}
-                >
-                  {isTranslating ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Languages className="w-3.5 h-3.5" />
-                  )}
-                </button>
+                </>
               )}
             </div>
+
             <span
               className={cn(
-                "text-[0.688rem] flex items-center gap-0.5",
+                "text-[0.688rem] flex items-center gap-0.5 ml-auto",
                 isMine ? "text-chat-mine-foreground/60" : "text-muted-foreground"
               )}
             >
@@ -191,6 +202,13 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             </span>
           </div>
         </div>
+
+        {/* Tap hint for non-own messages */}
+        {!isMine && message && !isMedia && !isSpeaking && !isPlayingCloned && (
+          <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
+            Tippen zum Anhören · Doppeltippen für mehr
+          </p>
+        )}
       </div>
     </div>
     </>
