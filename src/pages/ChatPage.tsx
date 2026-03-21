@@ -242,8 +242,9 @@ const ChatPage = () => {
             return [...prev, newMsg];
           });
 
-          // Mark as read if from other user
+          // Play notification sound & mark as read if from other user
           if (m.sender_id !== user.id) {
+            playMessageTone();
             supabase
               .from("messages")
               .update({ is_read: true })
