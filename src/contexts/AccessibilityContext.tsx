@@ -12,6 +12,7 @@ interface AccessibilitySettings {
   quietHoursStart: string; // "22:00"
   quietHoursEnd: string;   // "07:00"
   compactMode: boolean;
+  muteSounds: boolean;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
