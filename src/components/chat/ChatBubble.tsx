@@ -14,7 +14,7 @@ interface ChatBubbleProps {
   isRead?: boolean;
 }
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
