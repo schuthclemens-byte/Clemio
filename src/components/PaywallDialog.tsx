@@ -1,4 +1,5 @@
-import { Crown, Mic, Globe, Headphones, Sparkles, X } from "lucide-react";
+import { Crown, Mic, Globe, Headphones, Sparkles, X, RotateCcw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface PaywallDialogProps {
@@ -14,7 +15,14 @@ const features = [
 ];
 
 const PaywallDialog = ({ open, onClose }: PaywallDialogProps) => {
+  const navigate = useNavigate();
+
   if (!open) return null;
+
+  const handleRestore = () => {
+    // Placeholder for IAP restore – will connect to App Store / Google Play
+    alert("Käufe werden wiederhergestellt…");
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -57,20 +65,56 @@ const PaywallDialog = ({ open, onClose }: PaywallDialogProps) => {
           ))}
         </div>
 
+        {/* Pricing */}
+        <div className="px-6 pb-3">
+          <div className="bg-secondary/50 rounded-xl p-4 text-center">
+            <p className="text-lg font-bold">4,99 €<span className="text-sm font-normal text-muted-foreground">/Monat</span></p>
+            <p className="text-xs text-muted-foreground mt-1">Nach 7 Tagen kostenloser Testphase</p>
+          </div>
+        </div>
+
         {/* CTA */}
-        <div className="px-6 pb-4">
+        <div className="px-6 pb-3">
           <button
             onClick={onClose}
             className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
           >
-            Kostenlos testen
+            7 Tage kostenlos testen
+          </button>
+        </div>
+
+        {/* Restore */}
+        <div className="px-6 pb-3">
+          <button
+            onClick={handleRestore}
+            className="w-full h-11 rounded-xl bg-secondary/50 text-muted-foreground text-sm font-medium flex items-center justify-center gap-2 hover:bg-secondary transition-colors active:scale-[0.97]"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Käufe wiederherstellen
           </button>
         </div>
 
         {/* Legal */}
-        <p className="text-center text-xs text-muted-foreground px-6 pb-6">
-          7 Tage kostenlos testen. Danach 4,99€/Monat. Jederzeit kündbar in den Einstellungen.
-        </p>
+        <div className="px-6 pb-6 space-y-2">
+          <p className="text-center text-xs text-muted-foreground">
+            7 Tage kostenlos testen. Danach 4,99 €/Monat. Das Abo verlängert sich automatisch. Jederzeit kündbar.
+          </p>
+          <div className="flex items-center justify-center gap-3 text-xs">
+            <button
+              onClick={() => { onClose(); navigate("/privacy"); }}
+              className="text-primary hover:underline"
+            >
+              Datenschutz
+            </button>
+            <span className="text-border">|</span>
+            <button
+              onClick={() => { onClose(); navigate("/terms"); }}
+              className="text-primary hover:underline"
+            >
+              Nutzungsbedingungen
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
