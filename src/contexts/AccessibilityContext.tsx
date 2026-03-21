@@ -5,6 +5,7 @@ interface AccessibilitySettings {
   largeText: boolean;
   highContrast: boolean;
   autoRead: boolean;
+  headphoneAutoPlay: boolean;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
