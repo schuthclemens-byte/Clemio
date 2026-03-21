@@ -7,7 +7,11 @@ const Index = () => {
 
   useEffect(() => {
     const done = localStorage.getItem(ONBOARDING_KEY);
-    navigate(done ? "/login" : "/onboarding", { replace: true });
+    if (!done) {
+      navigate("/onboarding", { replace: true });
+    } else {
+      navigate("/landing", { replace: true });
+    }
   }, [navigate]);
 
   return null;

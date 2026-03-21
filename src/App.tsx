@@ -18,6 +18,7 @@ import FocusModePage from "./pages/FocusModePage";
 import ContactAutoplayPage from "./pages/ContactAutoplayPage";
 import CallPage from "./pages/CallPage";
 import InstallPage from "./pages/InstallPage";
+import LandingPage from "./pages/LandingPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
