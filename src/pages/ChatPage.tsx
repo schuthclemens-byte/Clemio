@@ -178,6 +178,75 @@ const ChatPage = () => {
           }
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const m = payload.new as any;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === m.id ? { ...msg, isRead: m.is_read ?? false } : msg
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, user]);
+
+  // Presence tracking - set online/offline
+  useEffect(() => {
+    if (!user) return;
+
+    const setPresence = async (online: boolean) => {
+      await supabase.from("user_presence").upsert({
+        user_id: user.id,
+        is_online: online,
+        last_seen: new Date().toISOString(),
+      });
+    };
+
+    setPresence(true);
+
+    const handleBeforeUnload = () => setPresence(false);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      setPresence(false);
+    };
+  }, [user]);
+
+  // Listen for other user's presence changes
+  useEffect(() => {
+    if (!otherUserId) return;
+
+    const channel = supabase
+      .channel(`presence-${otherUserId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "user_presence",
+          filter: `user_id=eq.${otherUserId}`,
+        },
+        (payload) => {
+          const p = payload.new as any;
+          setIsOnline(p.is_online);
+          if (!p.is_online && p.last_seen) {
+            setLastSeen(new Date(p.last_seen).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }));
+          }
+        }
+      )
       .subscribe();
 
     return () => {
