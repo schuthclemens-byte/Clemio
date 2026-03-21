@@ -30,6 +30,13 @@ interface Message {
   senderId: string;
   messageType: string;
   mediaUrl?: string;
+  replyTo?: string;
+}
+
+interface ReplyTarget {
+  id: string;
+  text: string;
+  senderName: string;
 }
 
 const ChatPage = () => {
