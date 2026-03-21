@@ -56,6 +56,7 @@ export function playMessageTone() {
 
 /** Short click – played when voice recording starts */
 export function playVoiceStartClick() {
+  if (isMuted()) return;
   try {
     const ctx = getCtx();
     const now = ctx.currentTime;
