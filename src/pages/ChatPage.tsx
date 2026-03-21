@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Headphones, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAutoPlayQueue } from "@/hooks/useAutoPlayQueue";
 import { playMessageTone } from "@/lib/sounds";
 
 interface Message {
@@ -54,6 +55,15 @@ const ChatPage = () => {
   const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned } = useVoiceTTS();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
+
+  // Auto-play queue
+  const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
+  const { enqueue, clearQueue, currentItem, queueLength } = useAutoPlayQueue({
+    speak,
+    isSpeaking,
+    lang: localeSpeechCodes[locale],
+    enabled: shouldAutoPlay,
+  });
 
   const initials = chatName
     .split(" ")
@@ -359,8 +369,7 @@ const ChatPage = () => {
     loadAutoplay();
   }, [user]);
 
-  // Auto-read new messages from others
-  const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
+  // Auto-read new messages from others via queue
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
@@ -377,8 +386,9 @@ const ChatPage = () => {
     // Focus mode: only read from priority contacts
     if (focusMode && !focusContactIds.includes(last.senderId)) return;
 
-    speak(last.text, localeSpeechCodes[locale]);
-  }, [messages.length, shouldAutoPlay, focusMode, focusContactIds, autoplayContactIds]);
+    const senderName = memberNames[last.senderId] || chatName;
+    enqueue({ id: last.id, text: last.text, senderId: last.senderId, senderName });
+  }, [messages.length, shouldAutoPlay, focusMode, focusContactIds, autoplayContactIds, enqueue]);
 
   const handleSend = async (text: string) => {
     if (isListening) stop();
@@ -549,7 +559,42 @@ const ChatPage = () => {
         </div>
       </header>
 
-      {/* Messages */}
+      {/* Auto-play banner */}
+      {currentItem && (
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/5 border-b border-border animate-fade-in">
+          <Headphones className="w-4 h-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-foreground truncate">
+              {currentItem.senderName || chatName} spricht…
+            </p>
+            {queueLength > 0 && (
+              <p className="text-[10px] text-muted-foreground">
+                +{queueLength} weitere Nachricht{queueLength > 1 ? "en" : ""}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-1 mr-1">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <span
+                key={i}
+                className="w-0.5 rounded-full bg-primary wave-bar"
+                style={{
+                  height: "14px",
+                  animationDelay: `${i * 0.12}s`,
+                }}
+              />
+            ))}
+          </div>
+          <button
+            onClick={() => { stopSpeaking(); clearQueue(); setSpeakingId(null); }}
+            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
+            aria-label="Auto-Play stoppen"
+          >
+            <X className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        </div>
+      )}
+
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-3 py-4"
