@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MoreVertical, Mic } from "lucide-react";
+import { ArrowLeft, MoreVertical, Mic, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -17,6 +17,7 @@ interface Message {
   timestamp: string;
   isMine: boolean;
   isRead: boolean;
+  senderId: string;
 }
 
 const ChatPage = () => {
@@ -33,6 +34,8 @@ const ChatPage = () => {
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<string | null>(null);
+  const [isGroup, setIsGroup] = useState(false);
+  const [memberNames, setMemberNames] = useState<Record<string, string>>({});
 
   const { isListening, transcript, toggle, stop, isSupported } = useSpeechRecognition(
     localeSpeechCodes[locale]
@@ -64,9 +67,33 @@ const ChatPage = () => {
         return;
       }
 
-      // Get display name
-      if (conv.name) {
+      // Get display name & group info
+      setIsGroup(conv.is_group ?? false);
+
+      if (conv.is_group && conv.name) {
         setChatName(conv.name);
+
+        // Load all member names for group chat
+        const { data: members } = await supabase
+          .from("conversation_members")
+          .select("user_id")
+          .eq("conversation_id", conversationId);
+
+        if (members) {
+          const names: Record<string, string> = {};
+          for (const m of members) {
+            if (m.user_id === user.id) continue;
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("display_name, phone_number")
+              .eq("id", m.user_id)
+              .maybeSingle();
+            if (profile) {
+              names[m.user_id] = profile.display_name || profile.phone_number;
+            }
+          }
+          setMemberNames(names);
+        }
       } else {
         const { data: otherMember } = await supabase
           .from("conversation_members")
@@ -85,6 +112,7 @@ const ChatPage = () => {
             .maybeSingle();
 
           setChatName(profile?.display_name || profile?.phone_number || "Chat");
+          setMemberNames({ [otherMember.user_id]: profile?.display_name || profile?.phone_number || "" });
 
           // Check presence
           const { data: presence } = await supabase
@@ -120,6 +148,7 @@ const ChatPage = () => {
             }),
             isMine: m.sender_id === user.id,
             isRead: m.is_read ?? false,
+            senderId: m.sender_id,
           }))
         );
       }
@@ -163,6 +192,7 @@ const ChatPage = () => {
             }),
             isMine: m.sender_id === user.id,
             isRead: m.is_read ?? false,
+            senderId: m.sender_id,
           };
 
           setMessages((prev) => {
@@ -276,7 +306,7 @@ const ChatPage = () => {
     const tempId = crypto.randomUUID();
     const now = new Date();
     const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true, isRead: false }]);
+    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id }]);
 
     // Insert into DB
     const { error } = await supabase.from("messages").insert({
@@ -329,23 +359,30 @@ const ChatPage = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="relative w-10 h-10 shrink-0">
-            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-              {initials}
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm",
+              isGroup ? "gradient-primary text-primary-foreground" : "bg-primary/10 text-primary"
+            )}>
+              {isGroup ? <Users className="w-5 h-5" /> : initials}
             </div>
-            <span
-              className={cn(
-                "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card",
-                isOnline ? "bg-green-500" : "bg-muted-foreground/40"
-              )}
-            />
+            {!isGroup && (
+              <span
+                className={cn(
+                  "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card",
+                  isOnline ? "bg-success" : "bg-muted-foreground/40"
+                )}
+              />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-[0.938rem] truncate">{chatName}</h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground truncate">
               {isListening ? (
                 <span className="text-accent font-medium flex items-center gap-1">
                   <Mic className="w-3 h-3" /> {t("chat.recording")}
                 </span>
+              ) : isGroup ? (
+                `${Object.keys(memberNames).length + 1} Mitglieder`
               ) : isOnline ? (
                 t("chat.online")
               ) : lastSeen ? (
@@ -384,6 +421,7 @@ const ChatPage = () => {
               timestamp={msg.timestamp}
               isMine={msg.isMine}
               isRead={msg.isRead}
+              senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
               onSpeak={(text) => handleSpeak(msg.id, text)}
               isSpeaking={speakingId === msg.id && isSpeaking}
             />
