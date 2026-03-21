@@ -67,9 +67,33 @@ const ChatPage = () => {
         return;
       }
 
-      // Get display name
-      if (conv.name) {
+      // Get display name & group info
+      setIsGroup(conv.is_group ?? false);
+
+      if (conv.is_group && conv.name) {
         setChatName(conv.name);
+
+        // Load all member names for group chat
+        const { data: members } = await supabase
+          .from("conversation_members")
+          .select("user_id")
+          .eq("conversation_id", conversationId);
+
+        if (members) {
+          const names: Record<string, string> = {};
+          for (const m of members) {
+            if (m.user_id === user.id) continue;
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("display_name, phone_number")
+              .eq("id", m.user_id)
+              .maybeSingle();
+            if (profile) {
+              names[m.user_id] = profile.display_name || profile.phone_number;
+            }
+          }
+          setMemberNames(names);
+        }
       } else {
         const { data: otherMember } = await supabase
           .from("conversation_members")
@@ -88,6 +112,7 @@ const ChatPage = () => {
             .maybeSingle();
 
           setChatName(profile?.display_name || profile?.phone_number || "Chat");
+          setMemberNames({ [otherMember.user_id]: profile?.display_name || profile?.phone_number || "" });
 
           // Check presence
           const { data: presence } = await supabase
