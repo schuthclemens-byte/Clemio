@@ -18,6 +18,7 @@ const SettingsPage = () => {
     { key: "largeText" as const, icon: Eye, label: t("settings.largeText") },
     { key: "highContrast" as const, icon: Contrast, label: t("settings.highContrast") },
     { key: "autoRead" as const, icon: Volume2, label: t("settings.autoRead") },
+    { key: "headphoneAutoPlay" as const, icon: Headphones, label: "Kopfhörer Auto-Play" },
   ];
 
   const themeOptions = [
