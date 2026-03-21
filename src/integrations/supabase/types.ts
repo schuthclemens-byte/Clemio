@@ -198,6 +198,24 @@ export type Database = {
           },
         ]
       }
+      premium_whitelist: {
+        Row: {
+          created_at: string | null
+          id: string
+          phone_number: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          phone_number: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          phone_number?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
