@@ -142,6 +142,29 @@ const ChatListPage = () => {
 
   const handleNewChat = () => setShowNewChat(true);
 
+  const handleDeleteConversation = async (convId: string) => {
+    const { error } = await supabase.from("conversations").delete().eq("id", convId);
+    if (error) {
+      toast.error("Chat konnte nicht gelöscht werden");
+    } else {
+      setConversations((prev) => prev.filter((c) => c.id !== convId));
+      toast.success("Chat gelöscht");
+    }
+  };
+
+  const handleArchiveConversation = async (convId: string) => {
+    const { error } = await supabase
+      .from("conversations")
+      .update({ is_archived: true } as any)
+      .eq("id", convId);
+    if (error) {
+      toast.error("Archivieren fehlgeschlagen");
+    } else {
+      setConversations((prev) => prev.filter((c) => c.id !== convId));
+      toast.success("Chat archiviert");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
