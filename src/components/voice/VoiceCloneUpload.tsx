@@ -13,7 +13,7 @@ interface VoiceCloneUploadProps {
 
 const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) => {
   const { user } = useAuth();
-  const [phase, setPhase] = useState<"idle" | "recording" | "processing" | "done">("idle");
+  const [phase, setPhase] = useState<"idle" | "consent" | "recording" | "processing" | "done">("idle");
   const [seconds, setSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
