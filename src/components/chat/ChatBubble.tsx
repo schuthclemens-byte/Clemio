@@ -1,4 +1,4 @@
-import { Volume2, VolumeX, Languages, Loader2 } from "lucide-react";
+import { Volume2, VolumeX, Languages, Loader2, Check, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -11,6 +11,7 @@ interface ChatBubbleProps {
   senderName?: string;
   onSpeak?: (text: string) => void;
   isSpeaking?: boolean;
+  isRead?: boolean;
 }
 
 const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking }: ChatBubbleProps) => {
