@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -14,7 +14,10 @@ const LoginPage = () => {
   const [passwordFieldReady, setPasswordFieldReady] = useState(false);
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,13 +160,55 @@ const LoginPage = () => {
             </button>
           </form>
 
+          {/* Forgot password */}
+          {mode === "login" && !showForgot && (
+            <button
+              type="button"
+              onClick={() => setShowForgot(true)}
+              className="w-full text-sm text-primary/70 hover:text-primary transition-colors duration-200 mt-3 text-center"
+            >
+              Passwort vergessen?
+            </button>
+          )}
+
+          {showForgot && (
+            <div className="mt-3 p-4 bg-card rounded-2xl border border-border animate-reveal-up">
+              {forgotSent ? (
+                <p className="text-sm text-accent text-center">
+                  ✅ Falls ein Konto existiert, wurde ein Link gesendet.
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground mb-3 text-center">
+                    Gib deine Handynummer ein und tippe auf „Link senden".
+                  </p>
+                  <button
+                    type="button"
+                    disabled={phone.trim().length < 6 || forgotLoading}
+                    onClick={async () => {
+                      setForgotLoading(true);
+                      await resetPassword(phone);
+                      setForgotLoading(false);
+                      setForgotSent(true);
+                    }}
+                    className="w-full h-11 rounded-xl bg-primary/10 text-primary font-medium text-sm disabled:opacity-40"
+                  >
+                    {forgotLoading ? "Wird gesendet..." : "Link senden"}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Toggle mode */}
           <button
             type="button"
-          onClick={() => {
-            setMode(mode === "login" ? "signup" : "login");
-            setPasswordFieldReady(false);
-          }}
+            onClick={() => {
+              setMode(mode === "login" ? "signup" : "login");
+              setPasswordFieldReady(false);
+              setShowForgot(false);
+              setForgotSent(false);
+            }}
             className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mt-5 text-center"
           >
             {mode === "login"

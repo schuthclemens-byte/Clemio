@@ -18,6 +18,7 @@ import FocusModePage from "./pages/FocusModePage";
 import ContactAutoplayPage from "./pages/ContactAutoplayPage";
 import CallPage from "./pages/CallPage";
 import InstallPage from "./pages/InstallPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/chats" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                 <Route path="/chat/:id" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
