@@ -314,11 +314,23 @@ const ProfilePage = () => {
               Stimme löschen
             </button>
           )}
-          <div className="flex items-start gap-2.5 mt-3 p-3 rounded-xl bg-accent/5 border border-accent/10">
-            <ShieldCheck className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Deine Stimme wird nur mit deiner ausdrücklichen Zustimmung verwendet. Du kannst sie jederzeit löschen.
-            </p>
+          <div className="mt-3 p-4 rounded-2xl bg-accent/5 border border-accent/10 space-y-2">
+            <div className="flex items-start gap-2.5">
+              <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Deine Stimme ist geschützt</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                  Deine Stimme wird <strong>nur mit deiner ausdrücklichen Zustimmung</strong> für andere hörbar. 
+                  Du kannst Freigaben jederzeit widerrufen und dein Stimmmodell komplett löschen.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate("/privacy")}
+              className="text-xs text-primary font-medium hover:underline ml-7"
+            >
+              Mehr zum Datenschutz →
+            </button>
           </div>
         </section>
 
