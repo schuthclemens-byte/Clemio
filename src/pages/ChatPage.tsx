@@ -526,6 +526,11 @@ const ChatPage = () => {
               isSpeaking={speakingId === msg.id && isSpeaking}
               messageType={msg.messageType}
               mediaUrl={msg.mediaUrl}
+              senderId={msg.senderId}
+              msgId={msg.id}
+              hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
+              onPlayClonedVoice={playClonedVoice}
+              isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
             />
           ))
         )}
