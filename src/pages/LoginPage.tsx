@@ -73,7 +73,7 @@ const LoginPage = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-3" autoComplete="off">
             {mode === "signup" && (
               <div className="animate-reveal-up">
                 <input
@@ -83,6 +83,9 @@ const LoginPage = () => {
                   placeholder={t("app.displayNamePlaceholder") || "Dein Name"}
                   className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
                   aria-label="Name"
+                  autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
                 />
               </div>
             )}
@@ -95,15 +98,23 @@ const LoginPage = () => {
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               autoFocus
               aria-label={t("app.phonePlaceholder")}
+              autoComplete="tel"
+              data-1p-ignore
+              data-lpignore="true"
             />
 
             <input
-              type="password"
+              type="text"
+              inputMode="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("app.passwordPlaceholder") || "Passwort (min. 6 Zeichen)"}
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               aria-label="Passwort"
+              autoComplete="off"
+              data-1p-ignore
+              data-lpignore="true"
+              style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
             />
 
             <button
