@@ -21,7 +21,7 @@ const LoginPage = () => {
     if (phone.trim().length < 6 || password.length < 6) return;
 
     setLoading(true);
-    try {
+    localStorage.setItem("hearo_last_phone", phone.trim());
       if (mode === "login") {
         const { error } = await signIn(phone, password);
         if (error) {
