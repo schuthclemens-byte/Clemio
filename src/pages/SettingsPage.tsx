@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -84,6 +84,21 @@ const SettingsPage = () => {
           <div className="text-left">
             <p className="font-semibold text-[0.938rem]">Auto-Play pro Kontakt</p>
             <p className="text-xs text-muted-foreground">Wähle wer vorgelesen wird</p>
+          </div>
+        </button>
+
+        {/* App installieren */}
+        <button
+          onClick={() => navigate("/install")}
+          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+          style={{ animationDelay: "90ms" }}
+        >
+          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
+            <Download className="w-6 h-6 text-accent" />
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-[0.938rem]">App installieren</p>
+            <p className="text-xs text-muted-foreground">Hearo auf dem Startbildschirm</p>
           </div>
         </button>
 
