@@ -14,7 +14,10 @@ const LoginPage = () => {
   const [passwordFieldReady, setPasswordFieldReady] = useState(false);
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
