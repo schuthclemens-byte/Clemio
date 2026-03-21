@@ -209,20 +209,25 @@ const ChatListPage = () => {
           </div>
         ) : filtered.length > 0 ? (
           filtered.map((chat, i) => (
-            <div
-              key={chat.id}
-              className="animate-reveal-up"
-              style={{ animationDelay: `${i * 60}ms` }}
-              role="listitem"
-            >
-              <ChatListItem
-                name={chat.name}
-                lastMessage={chat.lastMessage}
-                time={chat.time}
-                unread={chat.unread}
-                onClick={() => navigate(`/chat/${chat.id}`)}
-              />
-            </div>
+              <SwipeableChatListItem
+                key={chat.id}
+                onDelete={() => handleDeleteConversation(chat.id)}
+                onArchive={() => handleArchiveConversation(chat.id)}
+              >
+                <div
+                  className="animate-reveal-up"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                  role="listitem"
+                >
+                  <ChatListItem
+                    name={chat.name}
+                    lastMessage={chat.lastMessage}
+                    time={chat.time}
+                    unread={chat.unread}
+                    onClick={() => navigate(`/chat/${chat.id}`)}
+                  />
+                </div>
+              </SwipeableChatListItem>
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
