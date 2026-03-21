@@ -369,8 +369,7 @@ const ChatPage = () => {
     loadAutoplay();
   }, [user]);
 
-  // Auto-read new messages from others
-  const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
+  // Auto-read new messages from others via queue
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
@@ -387,8 +386,9 @@ const ChatPage = () => {
     // Focus mode: only read from priority contacts
     if (focusMode && !focusContactIds.includes(last.senderId)) return;
 
-    speak(last.text, localeSpeechCodes[locale]);
-  }, [messages.length, shouldAutoPlay, focusMode, focusContactIds, autoplayContactIds]);
+    const senderName = memberNames[last.senderId] || chatName;
+    enqueue({ id: last.id, text: last.text, senderId: last.senderId, senderName });
+  }, [messages.length, shouldAutoPlay, focusMode, focusContactIds, autoplayContactIds, enqueue]);
 
   const handleSend = async (text: string) => {
     if (isListening) stop();
