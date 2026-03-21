@@ -359,23 +359,30 @@ const ChatPage = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="relative w-10 h-10 shrink-0">
-            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-              {initials}
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm",
+              isGroup ? "gradient-primary text-primary-foreground" : "bg-primary/10 text-primary"
+            )}>
+              {isGroup ? <Users className="w-5 h-5" /> : initials}
             </div>
-            <span
-              className={cn(
-                "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card",
-                isOnline ? "bg-green-500" : "bg-muted-foreground/40"
-              )}
-            />
+            {!isGroup && (
+              <span
+                className={cn(
+                  "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card",
+                  isOnline ? "bg-success" : "bg-muted-foreground/40"
+                )}
+              />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-[0.938rem] truncate">{chatName}</h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground truncate">
               {isListening ? (
                 <span className="text-accent font-medium flex items-center gap-1">
                   <Mic className="w-3 h-3" /> {t("chat.recording")}
                 </span>
+              ) : isGroup ? (
+                `${Object.keys(memberNames).length + 1} Mitglieder`
               ) : isOnline ? (
                 t("chat.online")
               ) : lastSeen ? (
