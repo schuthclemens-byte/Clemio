@@ -1,5 +1,6 @@
 import { Mic, MicOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface VoiceButtonProps {
   isListening: boolean;
@@ -7,6 +8,8 @@ interface VoiceButtonProps {
 }
 
 const VoiceButton = ({ isListening, onToggle }: VoiceButtonProps) => {
+  const { t } = useI18n();
+
   return (
     <button
       onClick={onToggle}
@@ -17,7 +20,7 @@ const VoiceButton = ({ isListening, onToggle }: VoiceButtonProps) => {
           ? "bg-accent text-accent-foreground animate-voice-pulse"
           : "bg-secondary text-secondary-foreground hover:bg-accent/20"
       )}
-      aria-label={isListening ? "Aufnahme stoppen" : "Sprachnachricht starten"}
+      aria-label={isListening ? (t("chat.voiceStop") || "Aufnahme stoppen") : (t("chat.voiceStart") || "Sprachnachricht starten")}
     >
       {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
     </button>

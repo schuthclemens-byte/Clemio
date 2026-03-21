@@ -110,7 +110,7 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
                   ? "bg-primary text-primary-foreground rotate-45"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               )}
-              aria-label="Medien hinzufügen"
+              aria-label={t("chat.addMedia") || "Medien hinzufügen"}
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -123,14 +123,14 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
                   className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-secondary transition-colors active:scale-95"
                 >
                   <Camera className="w-5 h-5 text-primary" />
-                  <span className="text-[0.625rem] text-muted-foreground">Kamera</span>
+                  <span className="text-[0.625rem] text-muted-foreground">{t("chat.camera") || "Kamera"}</span>
                 </button>
                 <button
                   onClick={() => { fileInputRef.current?.click(); }}
                   className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-secondary transition-colors active:scale-95"
                 >
                   <ImagePlus className="w-5 h-5 text-primary" />
-                  <span className="text-[0.625rem] text-muted-foreground">Galerie</span>
+                  <span className="text-[0.625rem] text-muted-foreground">{t("chat.gallery") || "Galerie"}</span>
                 </button>
               </div>
             )}
