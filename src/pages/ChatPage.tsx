@@ -679,10 +679,21 @@ const ChatPage = () => {
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 py-4"
+        className="flex-1 overflow-y-auto px-3 py-4 bg-cover bg-center bg-no-repeat"
         role="log"
         aria-label={t("chat.chats")}
         aria-live="polite"
+        style={(() => {
+          const bg = conversationId ? getChatBackground(conversationId) : { type: "none" as const, value: "" };
+          if (bg.type === "gradient" || bg.type === "color") return { background: bg.value };
+          if (bg.type === "image") return { backgroundImage: `url(${bg.value})`, backgroundSize: "cover", backgroundPosition: "center" };
+          return {};
+        })()}
+        onTouchStart={() => {
+          longPressTimer.current = setTimeout(() => setBgPickerOpen(true), 600);
+        }}
+        onTouchEnd={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current); }}
+        onTouchMove={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current); }}
       >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
