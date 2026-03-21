@@ -7,10 +7,12 @@ interface AccessibilitySettings {
   autoRead: boolean;
   headphoneAutoPlay: boolean;
   focusMode: boolean;
+  speechRate: number;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
-  toggle: (key: keyof AccessibilitySettings) => void;
+  toggle: (key: keyof Omit<AccessibilitySettings, "speechRate">) => void;
+  setSpeechRate: (rate: number) => void;
 }
 
 const defaultSettings: AccessibilitySettings = {
@@ -20,11 +22,13 @@ const defaultSettings: AccessibilitySettings = {
   autoRead: false,
   headphoneAutoPlay: false,
   focusMode: false,
+  speechRate: 1,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
   ...defaultSettings,
   toggle: () => {},
+  setSpeechRate: () => {},
 });
 
 export const useAccessibility = () => useContext(AccessibilityContext);
@@ -54,8 +58,16 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
     });
   }, []);
 
+  const setSpeechRate = useCallback((rate: number) => {
+    setSettings((prev) => {
+      const next = { ...prev, speechRate: rate };
+      localStorage.setItem("a11y-settings", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   return (
-    <AccessibilityContext.Provider value={{ ...settings, toggle }}>
+    <AccessibilityContext.Provider value={{ ...settings, toggle, setSpeechRate }}>
       {children}
     </AccessibilityContext.Provider>
   );

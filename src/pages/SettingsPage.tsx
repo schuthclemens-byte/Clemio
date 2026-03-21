@@ -163,6 +163,35 @@ const SettingsPage = () => {
               </button>
             ))}
           </div>
+
+          {/* Speech Rate */}
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden mt-3">
+            <div className="px-4 py-3.5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="flex items-center gap-3">
+                  <Volume2 className="w-4.5 h-4.5 text-muted-foreground" />
+                  <span className="text-[0.938rem]">Vorlesegeschwindigkeit</span>
+                </span>
+                <span className="text-sm font-semibold text-primary">{a11y.speechRate}×</span>
+              </div>
+              <div className="flex gap-2">
+                {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                  <button
+                    key={rate}
+                    onClick={() => a11y.setSpeechRate(rate)}
+                    className={cn(
+                      "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
+                      a11y.speechRate === rate
+                        ? "gradient-primary text-primary-foreground shadow-soft"
+                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                    )}
+                  >
+                    {rate}×
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </div>
