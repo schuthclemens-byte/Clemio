@@ -7,6 +7,8 @@ import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import useTextToSpeech from "@/hooks/useTextToSpeech";
 import { useI18n, localeSpeechCodes } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -15,67 +17,152 @@ interface Message {
   isMine: boolean;
 }
 
-const chatData: Record<string, { name: string; messages: Message[] }> = {
-  "1": {
-    name: "Lena Müller",
-    messages: [
-      { id: "1", text: "Hey! Treffen wir uns heute Abend?", timestamp: "14:20", isMine: false },
-      { id: "2", text: "Ja klar, wann passt dir?", timestamp: "14:25", isMine: true },
-      { id: "3", text: "So um 19 Uhr? Im neuen Restaurant am Marktplatz", timestamp: "14:28", isMine: false },
-      { id: "4", text: "Perfekt, bin dabei! 🎉", timestamp: "14:30", isMine: true },
-      { id: "5", text: "Klingt super, bis dann! 👋", timestamp: "14:32", isMine: false },
-    ],
-  },
-  "2": {
-    name: "Marco Rossi",
-    messages: [
-      { id: "1", text: "Ciao! Ich hab dir gerade das Dokument geschickt", timestamp: "13:05", isMine: false },
-      { id: "2", text: "Hast du das Dokument bekommen?", timestamp: "13:10", isMine: false },
-    ],
-  },
-  "3": {
-    name: "Sophie Chen",
-    messages: [
-      { id: "1", text: "Kommst du am Samstag zur Feier?", timestamp: "18:40", isMine: true },
-      { id: "2", text: "Ja auf jeden Fall! Wo genau?", timestamp: "18:45", isMine: false },
-      { id: "3", text: "Ich schick dir die Adresse", timestamp: "18:46", isMine: false },
-    ],
-  },
-  "4": {
-    name: "Ahmed Hassan",
-    messages: [
-      { id: "1", text: "Danke für die Hilfe!", timestamp: "16:30", isMine: false },
-    ],
-  },
-  "5": {
-    name: "Projekt-Gruppe",
-    messages: [
-      { id: "1", text: "Alles klar, machen wir", timestamp: "10:00", isMine: false },
-    ],
-  },
-};
-
 const ChatPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const chat = chatData[id || ""] || { name: "Unbekannt", messages: [] };
   const { locale, t } = useI18n();
   const { autoRead } = useAccessibility();
+  const { user } = useAuth();
 
-  const [messages, setMessages] = useState<Message[]>(chat.messages);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [chatName, setChatName] = useState("...");
+  const [loading, setLoading] = useState(true);
+
   const { isListening, transcript, toggle, stop, isSupported } = useSpeechRecognition(
     localeSpeechCodes[locale]
   );
   const { speak, stop: stopSpeaking, isSpeaking } = useTextToSpeech();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
 
-  const initials = chat.name
+  const initials = chatName
     .split(" ")
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  // Load conversation info
+  useEffect(() => {
+    if (!conversationId || !user) return;
+
+    const loadChat = async () => {
+      // Get conversation
+      const { data: conv } = await supabase
+        .from("conversations")
+        .select("*")
+        .eq("id", conversationId)
+        .single();
+
+      if (!conv) {
+        navigate("/chats");
+        return;
+      }
+
+      // Get display name
+      if (conv.name) {
+        setChatName(conv.name);
+      } else {
+        const { data: otherMember } = await supabase
+          .from("conversation_members")
+          .select("user_id")
+          .eq("conversation_id", conversationId)
+          .neq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (otherMember) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("display_name, phone_number")
+            .eq("id", otherMember.user_id)
+            .maybeSingle();
+
+          setChatName(profile?.display_name || profile?.phone_number || "Chat");
+        }
+      }
+
+      // Load messages
+      const { data: msgs } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true });
+
+      if (msgs) {
+        setMessages(
+          msgs.map((m) => ({
+            id: m.id,
+            text: m.content,
+            timestamp: new Date(m.created_at).toLocaleTimeString("de-DE", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            isMine: m.sender_id === user.id,
+          }))
+        );
+      }
+
+      // Mark messages as read
+      await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("conversation_id", conversationId)
+        .neq("sender_id", user.id)
+        .eq("is_read", false);
+
+      setLoading(false);
+    };
+
+    loadChat();
+  }, [conversationId, user]);
+
+  // Realtime messages
+  useEffect(() => {
+    if (!conversationId || !user) return;
+
+    const channel = supabase
+      .channel(`chat-${conversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const m = payload.new as any;
+          const newMsg: Message = {
+            id: m.id,
+            text: m.content,
+            timestamp: new Date(m.created_at).toLocaleTimeString("de-DE", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            isMine: m.sender_id === user.id,
+          };
+
+          setMessages((prev) => {
+            if (prev.some((p) => p.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+
+          // Mark as read if from other user
+          if (m.sender_id !== user.id) {
+            supabase
+              .from("messages")
+              .update({ is_read: true })
+              .eq("id", m.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, user]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -90,14 +177,34 @@ const ChatPage = () => {
     }
   }, [messages.length, autoRead]);
 
-  const handleSend = (text: string) => {
+  const handleSend = async (text: string) => {
     if (isListening) stop();
+    if (!user || !conversationId) return;
+
+    // Optimistic update
+    const tempId = crypto.randomUUID();
     const now = new Date();
     const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-    setMessages((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), text, timestamp: ts, isMine: true },
-    ]);
+    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true }]);
+
+    // Insert into DB
+    const { error } = await supabase.from("messages").insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      content: text,
+      message_type: "text",
+    });
+
+    if (error) {
+      console.error("Send failed:", error);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    }
+
+    // Update conversation timestamp
+    await supabase
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
   };
 
   const handleSpeak = (msgId: string, text: string) => {
@@ -109,6 +216,14 @@ const ChatPage = () => {
       setSpeakingId(msgId);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -126,7 +241,7 @@ const ChatPage = () => {
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-[0.938rem] truncate">{chat.name}</h2>
+            <h2 className="font-semibold text-[0.938rem] truncate">{chatName}</h2>
             <p className="text-xs text-muted-foreground">
               {isListening ? (
                 <span className="text-accent font-medium flex items-center gap-1">
@@ -154,16 +269,22 @@ const ChatPage = () => {
         aria-label={t("chat.chats")}
         aria-live="polite"
       >
-        {messages.map((msg) => (
-          <ChatBubble
-            key={msg.id}
-            message={msg.text}
-            timestamp={msg.timestamp}
-            isMine={msg.isMine}
-            onSpeak={(text) => handleSpeak(msg.id, text)}
-            isSpeaking={speakingId === msg.id && isSpeaking}
-          />
-        ))}
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+            {t("chat.noMessages") || "Noch keine Nachrichten. Schreib die erste!"}
+          </div>
+        ) : (
+          messages.map((msg) => (
+            <ChatBubble
+              key={msg.id}
+              message={msg.text}
+              timestamp={msg.timestamp}
+              isMine={msg.isMine}
+              onSpeak={(text) => handleSpeak(msg.id, text)}
+              isSpeaking={speakingId === msg.id && isSpeaking}
+            />
+          ))
+        )}
       </div>
 
       {/* Voice not supported notice */}
