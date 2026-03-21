@@ -33,6 +33,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <I18nProvider>
       <ThemeProvider>
+      <ColorThemeProvider>
       <AccessibilityProvider>
         <AuthProvider>
           <TooltipProvider>
