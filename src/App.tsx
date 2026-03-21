@@ -19,6 +19,7 @@ import ContactAutoplayPage from "./pages/ContactAutoplayPage";
 import CallPage from "./pages/CallPage";
 import InstallPage from "./pages/InstallPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import OnboardingPage from "./pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
