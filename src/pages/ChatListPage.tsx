@@ -5,6 +5,7 @@ import ChatListItem from "@/components/chat/ChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ConversationItem {
