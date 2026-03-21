@@ -7,6 +7,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import { I18nProvider } from "@/contexts/I18nContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ColorThemeProvider } from "@/contexts/ColorThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
