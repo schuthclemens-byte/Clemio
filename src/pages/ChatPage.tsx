@@ -11,6 +11,8 @@ import { useI18n, localeSpeechCodes } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface Message {
   id: string;
