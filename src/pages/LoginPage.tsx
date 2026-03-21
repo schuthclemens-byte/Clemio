@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, ArrowRight, UserPlus, LogIn } from "lucide-react";
+import { MessageCircle, ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -42,33 +42,49 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+    <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
+      {/* Decorative background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-primary/5 animate-float" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-accent/5 animate-float" style={{ animationDelay: "3s" }} />
+        <div className="absolute top-1/3 right-8 w-4 h-4 rounded-full bg-primary/20 animate-float" style={{ animationDelay: "1.5s" }} />
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
         <div className="w-full max-w-sm animate-reveal-up">
+          {/* Logo & Header */}
           <div className="text-center mb-10">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Phone className="w-7 h-7 text-primary" />
+            <div className="relative w-20 h-20 mx-auto mb-5">
+              <div className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center shadow-soft">
+                <MessageCircle className="w-9 h-9 text-primary-foreground" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full gradient-accent flex items-center justify-center shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-accent-foreground" />
+              </div>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-balance">
+            <h1 className="text-3xl font-extrabold tracking-tight">
               {t("app.welcome")}
             </h1>
-            <p className="text-muted-foreground mt-2 text-sm">
+            <p className="text-muted-foreground mt-2.5 text-[0.938rem] leading-relaxed">
               {mode === "login"
                 ? (t("app.loginSubtitle") || "Melde dich mit deiner Handynummer an")
                 : (t("app.signupSubtitle") || "Erstelle ein neues Konto")}
             </p>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
             {mode === "signup" && (
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder={t("app.displayNamePlaceholder") || "Dein Name"}
-                className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                aria-label="Name"
-              />
+              <div className="animate-reveal-up">
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder={t("app.displayNamePlaceholder") || "Dein Name"}
+                  className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
+                  aria-label="Name"
+                />
+              </div>
             )}
 
             <input
@@ -76,7 +92,7 @@ const LoginPage = () => {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder={t("app.phonePlaceholder") || "+49 123 456 789"}
-              className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               autoFocus
               aria-label={t("app.phonePlaceholder")}
             />
@@ -86,35 +102,36 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("app.passwordPlaceholder") || "Passwort (min. 6 Zeichen)"}
-              className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               aria-label="Passwort"
             />
 
             <button
               type="submit"
               disabled={phone.trim().length < 6 || password.length < 6 || loading}
-              className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+              className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2.5 shadow-soft hover:shadow-elevated transition-all duration-300 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none mt-1"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               ) : mode === "login" ? (
                 <>
                   {t("app.login") || "Anmelden"}
-                  <LogIn className="w-4 h-4" />
+                  <ArrowRight className="w-4.5 h-4.5" />
                 </>
               ) : (
                 <>
                   {t("app.signup") || "Registrieren"}
-                  <UserPlus className="w-4 h-4" />
+                  <UserPlus className="w-4.5 h-4.5" />
                 </>
               )}
             </button>
           </form>
 
+          {/* Toggle mode */}
           <button
             type="button"
             onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors mt-4 text-center"
+            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mt-5 text-center"
           >
             {mode === "login"
               ? (t("app.noAccount") || "Noch kein Konto? Registrieren")
@@ -122,7 +139,9 @@ const LoginPage = () => {
           </button>
         </div>
       </div>
-      <p className="text-center text-xs text-muted-foreground pb-6 px-6">
+
+      {/* Footer */}
+      <p className="text-center text-xs text-muted-foreground/60 pb-8 px-6 relative z-10">
         {t("app.terms")}
       </p>
     </div>
