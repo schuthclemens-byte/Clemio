@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaMessage } from "./MediaPreview";
+import AudioPlayer from "./AudioPlayer";
 import { usePremiumGate } from "@/hooks/usePremiumGate";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { playStartListenPop } from "@/lib/sounds";
