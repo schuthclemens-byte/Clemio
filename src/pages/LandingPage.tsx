@@ -296,8 +296,13 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border px-6 py-6 text-center">
-        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Hearo · Alle Rechte vorbehalten</p>
+      <footer className="border-t border-border px-6 py-8 text-center space-y-2">
+        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <button onClick={() => navigate("/privacy")} className="hover:text-foreground underline transition-colors">Datenschutz</button>
+          <span className="text-border">·</span>
+          <button onClick={() => navigate("/terms")} className="hover:text-foreground underline transition-colors">Nutzungsbedingungen</button>
+        </div>
+        <p className="text-xs text-muted-foreground/60">© {new Date().getFullYear()} Hearo · Alle Rechte vorbehalten</p>
       </footer>
     </div>
   );
