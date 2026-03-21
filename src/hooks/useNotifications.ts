@@ -21,7 +21,7 @@ export const useNotifications = () => {
       body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: conversationId || "voxo-message",
+      tag: conversationId || "hearo-message",
     };
 
     const notification = new Notification(title, options);

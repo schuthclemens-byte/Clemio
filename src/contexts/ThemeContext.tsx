@@ -21,14 +21,14 @@ const getSystemTheme = (): "light" | "dark" =>
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    return (localStorage.getItem("voxo-theme") as Theme) || "system";
+    return (localStorage.getItem("hearo-theme") as Theme) || "system";
   });
 
   const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
 
   const setTheme = (t: Theme) => {
     setThemeState(t);
-    localStorage.setItem("voxo-theme", t);
+    localStorage.setItem("hearo-theme", t);
   };
 
   useEffect(() => {
