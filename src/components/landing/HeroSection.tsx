@@ -78,7 +78,7 @@ const HeroSection = () => {
           100% kostenlos · Kein App Store nötig
         </motion.div>
 
-        <motion.h1 variants={fadeUp} custom={2} className="text-[2.5rem] sm:text-6xl font-extrabold tracking-tight text-foreground mb-5 leading-[1.08]">
+        <motion.h1 variants={fadeUp} custom={2} className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-5 leading-[1.12]">
           Nachrichten, die{" "}
           <span className="relative inline-block">
             <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-[gradient-shift_3s_ease-in-out_infinite]">
