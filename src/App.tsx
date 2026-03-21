@@ -35,6 +35,7 @@ const App = () => (
     <I18nProvider>
       <ThemeProvider>
       <ColorThemeProvider>
+      <ChatBackgroundProvider>
       <AccessibilityProvider>
         <AuthProvider>
           <TooltipProvider>
