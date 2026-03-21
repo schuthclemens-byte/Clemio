@@ -32,7 +32,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
 
   const isMedia = messageType === "image" || messageType === "video";
 
-  const handleTranslate = async () => {
+  const doTranslate = async () => {
     if (translated) {
       setShowTranslation(!showTranslation);
       return;
@@ -50,6 +50,12 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     } finally {
       setIsTranslating(false);
     }
+  };
+
+  const handleTranslate = () => requirePremium(doTranslate);
+
+  const handlePlayCloned = (text: string, sid: string, mid: string) => {
+    requirePremium(() => onPlayClonedVoice?.(text, sid, mid));
   };
 
   return (
