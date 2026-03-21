@@ -121,7 +121,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
         )}
         <div
           onClick={handleBubbleTap}
-          onDoubleClick={() => !isMine && message && setShowActions(!showActions)}
+          onDoubleClick={() => message && setShowActions(!showActions)}
           className={cn(
             "shadow-sm cursor-pointer select-none transition-all duration-200",
             isMedia ? "rounded-2xl overflow-hidden" : "px-4 py-3",
