@@ -34,6 +34,7 @@ const ChatPage = () => {
   const headphonesConnected = useHeadphoneDetection();
   const { isPremium } = useSubscription();
   const [focusContactIds, setFocusContactIds] = useState<string[]>([]);
+  const [autoplayContactIds, setAutoplayContactIds] = useState<string[]>([]);
   const { user } = useAuth();
 
   const [messages, setMessages] = useState<Message[]>([]);
