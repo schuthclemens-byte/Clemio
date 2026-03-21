@@ -13,13 +13,17 @@ const FooterSection = () => {
           </div>
           <span className="font-bold text-sm text-foreground">Hearo</span>
         </div>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap justify-center">
           <button onClick={() => navigate("/privacy")} className="hover:text-foreground transition-colors">
             Datenschutz
           </button>
           <span className="text-border">·</span>
           <button onClick={() => navigate("/terms")} className="hover:text-foreground transition-colors">
             Nutzungsbedingungen
+          </button>
+          <span className="text-border">·</span>
+          <button onClick={() => navigate("/impressum")} className="hover:text-foreground transition-colors">
+            Impressum
           </button>
         </div>
         <p className="text-[0.688rem] text-muted-foreground/50">
