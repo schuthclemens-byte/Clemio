@@ -42,6 +42,7 @@ const App = () => (
                 <Route path="/focus-mode" element={<ProtectedRoute><FocusModePage /></ProtectedRoute>} />
                 <Route path="/contact-autoplay" element={<ProtectedRoute><ContactAutoplayPage /></ProtectedRoute>} />
                 <Route path="/call/:id" element={<ProtectedRoute><CallPage /></ProtectedRoute>} />
+                <Route path="/install" element={<InstallPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
