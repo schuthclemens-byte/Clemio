@@ -460,15 +460,19 @@ const ChatPage = () => {
     const tempId = crypto.randomUUID();
     const now = new Date();
     const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text" }]);
+    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id }]);
 
     // Insert into DB
-    const { error } = await supabase.from("messages").insert({
+    const insertData: any = {
       conversation_id: conversationId,
       sender_id: user.id,
       content: text,
       message_type: "text",
-    });
+    };
+    if (replyTarget) insertData.reply_to = replyTarget.id;
+    setReplyTarget(null);
+
+    const { error } = await supabase.from("messages").insert(insertData);
 
     if (error) {
       console.error("Send failed:", error);
