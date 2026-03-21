@@ -11,8 +11,10 @@ const SettingsPage = () => {
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
   const { theme, setTheme } = useTheme();
+  const { colorTheme, setColorTheme } = useColorTheme();
 
   const languages = Object.entries(localeNames) as [Locale, string][];
+  const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
 
   const toggleItems = [
     { key: "dyslexiaFont" as const, icon: Type, label: t("settings.dyslexiaFont") },
