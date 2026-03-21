@@ -7,6 +7,7 @@ import ChatInput from "@/components/chat/ChatInput";
 import SwipeableBubble from "@/components/chat/SwipeableBubble";
 import ReplyPreview from "@/components/chat/ReplyPreview";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
+import AnimatedChatBackground from "@/components/chat/AnimatedChatBackground";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import useTextToSpeech from "@/hooks/useTextToSpeech";
 import { useVoiceTTS } from "@/hooks/useVoiceTTS";
