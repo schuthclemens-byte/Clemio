@@ -148,6 +148,7 @@ const ChatPage = () => {
             }),
             isMine: m.sender_id === user.id,
             isRead: m.is_read ?? false,
+            senderId: m.sender_id,
           }))
         );
       }
