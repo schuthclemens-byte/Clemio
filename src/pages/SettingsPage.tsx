@@ -15,6 +15,8 @@ const SettingsPage = () => {
   const a11y = useAccessibility();
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
+  const { globalBackground, setGlobalBackground } = useChatBackground();
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
 
   const languages = Object.entries(localeNames) as [Locale, string][];
   const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
