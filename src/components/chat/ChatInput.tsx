@@ -170,7 +170,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
           <div className="flex-1 relative">
             <textarea
               value={currentText}
-              onChange={(e) => setText(e.target.value)}
+              onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               placeholder={isListening ? t("chat.listening") : t("chat.placeholder")}
               rows={1}
