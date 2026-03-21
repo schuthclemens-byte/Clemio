@@ -343,21 +343,40 @@ const ChatPage = () => {
     loadFocus();
   }, [user, focusMode]);
 
+  // Load per-contact autoplay settings
+  useEffect(() => {
+    if (!user) return;
+    const loadAutoplay = async () => {
+      const { data } = await supabase
+        .from("contact_autoplay" as any)
+        .select("contact_user_id, auto_play")
+        .eq("user_id", user.id)
+        .eq("auto_play", true);
+      if (data) setAutoplayContactIds((data as any[]).map((d: any) => d.contact_user_id));
+    };
+    loadAutoplay();
+  }, [user]);
+
   // Auto-read new messages from others
   const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
   useEffect(() => {
-    if (!shouldAutoPlay || messages.length === 0) return;
-    // Smart Silence: no auto-play during quiet hours
-    if (isQuietTime()) return;
-
+    if (messages.length === 0) return;
     const last = messages[messages.length - 1];
     if (last.isMine) return;
+
+    // Per-contact autoplay always works (independent of global toggle)
+    const contactHasAutoplay = autoplayContactIds.includes(last.senderId);
+
+    if (!contactHasAutoplay && !shouldAutoPlay) return;
+
+    // Smart Silence: no auto-play during quiet hours
+    if (isQuietTime()) return;
 
     // Focus mode: only read from priority contacts
     if (focusMode && !focusContactIds.includes(last.senderId)) return;
 
     speak(last.text, localeSpeechCodes[locale]);
-  }, [messages.length, shouldAutoPlay, focusMode, focusContactIds]);
+  }, [messages.length, shouldAutoPlay, focusMode, focusContactIds, autoplayContactIds]);
 
   const handleSend = async (text: string) => {
     if (isListening) stop();
