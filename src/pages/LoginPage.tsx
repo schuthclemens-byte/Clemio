@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const LoginPage = () => {
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(() => localStorage.getItem("hearo_last_phone") || "");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -21,6 +21,7 @@ const LoginPage = () => {
     if (phone.trim().length < 6 || password.length < 6) return;
 
     setLoading(true);
+    localStorage.setItem("hearo_last_phone", phone.trim());
     try {
       if (mode === "login") {
         const { error } = await signIn(phone, password);
