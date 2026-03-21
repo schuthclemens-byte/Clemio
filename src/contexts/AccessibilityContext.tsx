@@ -7,10 +7,12 @@ interface AccessibilitySettings {
   autoRead: boolean;
   headphoneAutoPlay: boolean;
   focusMode: boolean;
+  speechRate: number;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
-  toggle: (key: keyof AccessibilitySettings) => void;
+  toggle: (key: keyof Omit<AccessibilitySettings, "speechRate">) => void;
+  setSpeechRate: (rate: number) => void;
 }
 
 const defaultSettings: AccessibilitySettings = {
