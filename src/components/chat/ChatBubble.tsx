@@ -171,9 +171,6 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
         </div>
       </div>
     </div>
-    <>
-      <PaywallGate />
-      {bubble}
     </>
    );
 };
