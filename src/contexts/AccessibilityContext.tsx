@@ -19,6 +19,7 @@ const defaultSettings: AccessibilitySettings = {
   highContrast: false,
   autoRead: false,
   headphoneAutoPlay: false,
+  focusMode: false,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
