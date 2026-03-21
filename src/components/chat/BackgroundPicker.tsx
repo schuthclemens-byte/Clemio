@@ -200,7 +200,7 @@ const BackgroundPicker = ({ open, onClose, current, onSelect, onReset, showReset
           />
         </div>
       </div>
-      <PaywallDialog />
+      <PaywallGate />
     </>
   );
 };
