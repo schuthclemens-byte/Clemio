@@ -236,6 +236,7 @@ const ChatPage = () => {
             mediaUrl: m.message_type === "image" || m.message_type === "video"
               ? m.content.startsWith("http") ? m.content : undefined
               : undefined,
+            replyTo: (m as any).reply_to || undefined,
           }))
         );
       }
