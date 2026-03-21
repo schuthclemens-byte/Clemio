@@ -4,6 +4,8 @@ import { ArrowLeft, Camera, Check, LogOut } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
+import VoiceConsentManager from "@/components/voice/VoiceConsentManager";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
