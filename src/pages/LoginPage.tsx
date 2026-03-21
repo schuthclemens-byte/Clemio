@@ -117,8 +117,9 @@ const LoginPage = () => {
               placeholder={t("app.passwordPlaceholder") || "Passwort (min. 6 Zeichen)"}
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               aria-label="Zugangscode"
-              autoComplete="new-password"
-              name={mode === "login" ? "login_secret" : "signup_secret"}
+              autoComplete="off"
+              name={`_hro_${mode}_${Date.now()}`}
+              id={`_hro_field_${mode}`}
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
@@ -129,6 +130,8 @@ const LoginPage = () => {
               data-lpignore="true"
               data-bwignore="true"
               data-form-type="other"
+              data-credential="false"
+              role="textbox"
               style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
             />
 
