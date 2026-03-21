@@ -306,7 +306,7 @@ const ChatPage = () => {
     const tempId = crypto.randomUUID();
     const now = new Date();
     const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true, isRead: false }]);
+    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id }]);
 
     // Insert into DB
     const { error } = await supabase.from("messages").insert({
