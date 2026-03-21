@@ -30,7 +30,7 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { locale, t } = useI18n();
-  const { autoRead, headphoneAutoPlay, focusMode } = useAccessibility();
+  const { autoRead, headphoneAutoPlay, focusMode, isQuietTime } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
   const { isPremium } = useSubscription();
   const [focusContactIds, setFocusContactIds] = useState<string[]>([]);
