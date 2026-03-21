@@ -55,7 +55,7 @@ const BackgroundPicker = ({ open, onClose, current, onSelect, onReset, showReset
 
   const handleAnimatedSelect = (bg: ChatBackground) => {
     if (!isPremium) {
-      gate(() => {
+      requirePremium(() => {
         onSelect(bg);
         onClose();
       });
