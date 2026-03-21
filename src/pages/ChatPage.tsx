@@ -585,7 +585,11 @@ const ChatPage = () => {
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-base truncate">{chatName}</h2>
             <p className="text-xs text-muted-foreground truncate">
-              {isListening ? (
+              {typingNames.length > 0 ? (
+                <span className="text-primary font-medium">
+                  {typingNames.join(", ")} schreibt…
+                </span>
+              ) : isListening ? (
                 <span className="text-accent font-medium flex items-center gap-1">
                   <Mic className="w-3 h-3" /> {t("chat.recording")}
                 </span>
