@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Mic, Users, Phone, Headphones, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,9 @@ import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAutoPlayQueue } from "@/hooks/useAutoPlayQueue";
 import { playMessageTone } from "@/lib/sounds";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+import { useMessageReactions } from "@/hooks/useMessageReactions";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
