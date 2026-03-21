@@ -17,13 +17,14 @@ export const useNotifications = () => {
     if (Notification.permission !== "granted") return;
     if (document.hasFocus()) return; // Don't show if app is focused
 
-    const notification = new Notification(title, {
+    const options: NotificationOptions & { renotify?: boolean } = {
       body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
       tag: conversationId || "voxo-message",
-      renotify: true,
-    });
+    };
+
+    const notification = new Notification(title, options);
 
     notification.onclick = () => {
       window.focus();
