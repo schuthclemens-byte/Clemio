@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
 import { cn } from "@/lib/utils";
 
 const SettingsPage = () => {
@@ -10,8 +11,10 @@ const SettingsPage = () => {
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
   const { theme, setTheme } = useTheme();
+  const { colorTheme, setColorTheme } = useColorTheme();
 
   const languages = Object.entries(localeNames) as [Locale, string][];
+  const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
 
   const toggleItems = [
     { key: "dyslexiaFont" as const, icon: Type, label: t("settings.dyslexiaFont") },
@@ -125,6 +128,45 @@ const SettingsPage = () => {
                 </span>
               </button>
             ))}
+          </div>
+        </section>
+
+        {/* Color Theme */}
+        <section className="animate-reveal-up" style={{ animationDelay: "40ms" }}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Palette className="w-4 h-4" />
+            Farbthema
+          </h2>
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4">
+            <div className="grid grid-cols-4 gap-3">
+              {colorThemes.map((ct) => (
+                <button
+                  key={ct}
+                  onClick={() => setColorTheme(ct)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
+                    "hover:bg-secondary/50 active:scale-[0.95]",
+                    colorTheme === ct && "ring-2 ring-primary bg-primary/10"
+                  )}
+                >
+                  <div className="flex gap-0.5">
+                    {colorThemePreview[ct].map((color, i) => (
+                      <div
+                        key={i}
+                        className="w-5 h-5 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                  <span className={cn(
+                    "text-xs font-medium",
+                    colorTheme === ct ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    {colorThemeLabels[ct]}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
