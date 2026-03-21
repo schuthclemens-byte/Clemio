@@ -382,6 +382,7 @@ const ChatPage = () => {
               message={msg.text}
               timestamp={msg.timestamp}
               isMine={msg.isMine}
+              isRead={msg.isRead}
               onSpeak={(text) => handleSpeak(msg.id, text)}
               isSpeaking={speakingId === msg.id && isSpeaking}
             />
