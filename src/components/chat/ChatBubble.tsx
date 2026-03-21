@@ -75,6 +75,10 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     requirePremium(() => onPlayClonedVoice?.(message, senderId!, msgId!));
   };
 
+  const speakingLabel = isPlayingCloned
+    ? `${senderName || t("chat.contact") || "Kontakt"} ${t("chat.speaking") || "spricht…"}`
+    : t("chat.readingAloud") || "Wird vorgelesen…";
+
   return (
     <>
     <PaywallGate />
@@ -105,7 +109,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               isMine ? "text-chat-mine-foreground/70" : "text-primary"
             )}>
               <Volume2 className="w-3.5 h-3.5 animate-pulse" />
-              {isPlayingCloned ? `${senderName || "Kontakt"} spricht…` : "Wird vorgelesen…"}
+              {speakingLabel}
             </div>
           )}
 
@@ -136,7 +140,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                     isMedia && "px-4",
                     isMine ? "text-chat-mine-foreground/70" : "text-primary"
                   )}>
-                    Mehr anzeigen
+                    {t("chat.showMore") || "Mehr anzeigen"}
                   </p>
                 )}
               </div>
@@ -159,7 +163,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                     <button
                       onClick={handlePlayCloned}
                       className="p-1.5 rounded-full bg-accent/10 text-accent transition-colors active:scale-90"
-                      aria-label="Mit geklonter Stimme anhören"
+                      aria-label={t("chat.listenClonedVoice") || "Mit geklonter Stimme anhören"}
                     >
                       {isPremium ? <Headphones className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     </button>
@@ -206,7 +210,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
         {/* Tap hint for non-own messages */}
         {!isMine && message && !isMedia && !isSpeaking && !isPlayingCloned && (
           <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
-            Tippen zum Anhören · Doppeltippen für mehr
+            {t("chat.tapToListen") || "Tippen zum Anhören · Doppeltippen für mehr"}
           </p>
         )}
       </div>
