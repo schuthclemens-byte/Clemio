@@ -56,6 +56,15 @@ const ChatPage = () => {
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
 
+  // Auto-play queue
+  const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
+  const { enqueue, clearQueue, currentItem, queueLength } = useAutoPlayQueue({
+    speak,
+    isSpeaking,
+    lang: localeSpeechCodes[locale],
+    enabled: shouldAutoPlay,
+  });
+
   const initials = chatName
     .split(" ")
     .map((n) => n[0])
