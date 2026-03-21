@@ -131,6 +131,45 @@ const SettingsPage = () => {
           </div>
         </section>
 
+        {/* Color Theme */}
+        <section className="animate-reveal-up" style={{ animationDelay: "40ms" }}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Palette className="w-4 h-4" />
+            Farbthema
+          </h2>
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4">
+            <div className="grid grid-cols-4 gap-3">
+              {colorThemes.map((ct) => (
+                <button
+                  key={ct}
+                  onClick={() => setColorTheme(ct)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
+                    "hover:bg-secondary/50 active:scale-[0.95]",
+                    colorTheme === ct && "ring-2 ring-primary bg-primary/10"
+                  )}
+                >
+                  <div className="flex gap-0.5">
+                    {colorThemePreview[ct].map((color, i) => (
+                      <div
+                        key={i}
+                        className="w-5 h-5 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                  <span className={cn(
+                    "text-xs font-medium",
+                    colorTheme === ct ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    {colorThemeLabels[ct]}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Language */}
         <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">

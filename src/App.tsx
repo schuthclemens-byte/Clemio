@@ -63,6 +63,7 @@ const App = () => (
           </TooltipProvider>
         </AuthProvider>
       </AccessibilityProvider>
+      </ColorThemeProvider>
       </ThemeProvider>
     </I18nProvider>
   </QueryClientProvider>
