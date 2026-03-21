@@ -5,6 +5,7 @@ import ChatListItem from "@/components/chat/ChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ConversationItem {
@@ -20,6 +21,8 @@ const ChatListPage = () => {
   const [search, setSearch] = useState("");
   const { t } = useI18n();
   const { user, signOut } = useAuth();
+  const { requestPermission } = useNotifications();
+
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewChat, setShowNewChat] = useState(false);
@@ -114,6 +117,7 @@ const ChatListPage = () => {
 
   useEffect(() => {
     fetchConversations();
+    requestPermission();
   }, [user]);
 
   // Realtime: refresh on new messages
