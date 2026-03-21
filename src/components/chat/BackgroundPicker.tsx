@@ -22,7 +22,7 @@ const BackgroundPicker = ({ open, onClose, current, onSelect, onReset, showReset
   const fileRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { isPremium } = useSubscription();
-  const { gate, PaywallDialog } = usePremiumGate();
+  const { requirePremium, PaywallGate } = usePremiumGate();
 
   if (!open) return null;
 
