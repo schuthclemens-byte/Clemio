@@ -1,4 +1,4 @@
-import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock } from "lucide-react";
+import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -7,6 +7,8 @@ import { MediaMessage } from "./MediaPreview";
 import { usePremiumGate } from "@/hooks/usePremiumGate";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { playStartListenPop } from "@/lib/sounds";
+import EmojiReactions from "./EmojiReactions";
+import type { Reaction } from "@/hooks/useMessageReactions";
 
 interface ChatBubbleProps {
   message: string;
@@ -23,6 +25,9 @@ interface ChatBubbleProps {
   isPlayingCloned?: boolean;
   msgId?: string;
   hasClonedVoice?: boolean;
+  reactions?: Reaction[];
+  onToggleReaction?: (msgId: string, emoji: string) => void;
+  onDelete?: (msgId: string) => void;
 }
 
 /** Animated wave bars shown during playback */
