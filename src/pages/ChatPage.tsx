@@ -766,7 +766,18 @@ const ChatPage = () => {
         transcript={transcript}
         onTyping={sendTyping}
         onStopTyping={clearTyping}
-      />
+
+      {/* Background picker */}
+      {conversationId && (
+        <BackgroundPicker
+          open={bgPickerOpen}
+          onClose={() => setBgPickerOpen(false)}
+          current={getChatBackground(conversationId)}
+          onSelect={(bg) => setChatBackground(conversationId, bg)}
+          onReset={() => clearChatBackground(conversationId)}
+          showReset={true}
+        />
+      )}
     </div>
   );
 };
