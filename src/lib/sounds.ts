@@ -3,6 +3,18 @@
  * No external files needed – all sounds are synthesized.
  */
 
+/** Check if sounds are muted via accessibility settings */
+function isMuted(): boolean {
+  try {
+    const saved = localStorage.getItem("a11y-settings");
+    if (saved) {
+      const settings = JSON.parse(saved);
+      return settings.muteSounds === true;
+    }
+  } catch {}
+  return false;
+}
+
 let audioCtx: AudioContext | null = null;
 
 function getCtx(): AudioContext {
@@ -18,6 +30,7 @@ function getCtx(): AudioContext {
 
 /** Soft chime – played when a new message arrives */
 export function playMessageTone() {
+  if (isMuted()) return;
   try {
     const ctx = getCtx();
     const now = ctx.currentTime;
@@ -43,6 +56,7 @@ export function playMessageTone() {
 
 /** Short click – played when voice recording starts */
 export function playVoiceStartClick() {
+  if (isMuted()) return;
   try {
     const ctx = getCtx();
     const now = ctx.currentTime;
@@ -63,6 +77,7 @@ export function playVoiceStartClick() {
 
 /** Soft descending tone – played when voice recording stops */
 export function playVoiceStopClick() {
+  if (isMuted()) return;
   try {
     const ctx = getCtx();
     const now = ctx.currentTime;
@@ -84,6 +99,7 @@ export function playVoiceStopClick() {
 
 /** Very subtle pop – played when speech playback starts */
 export function playStartListenPop() {
+  if (isMuted()) return;
   try {
     const ctx = getCtx();
     const now = ctx.currentTime;
