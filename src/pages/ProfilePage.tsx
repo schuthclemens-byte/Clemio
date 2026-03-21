@@ -229,8 +229,24 @@ const ProfilePage = () => {
           </div>
         </section>
 
-        {/* Sign Out */}
+        {/* Voice Cloning */}
         <section className="animate-reveal-up" style={{ animationDelay: "180ms" }}>
+          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+            Stimme
+          </label>
+          <VoiceCloneUpload existingVoice={voiceProfile} onCloned={loadVoiceProfile} />
+        </section>
+
+        {/* Voice Consent */}
+        <section className="animate-reveal-up" style={{ animationDelay: "240ms" }}>
+          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+            Stimmfreigaben
+          </label>
+          <VoiceConsentManager />
+        </section>
+
+        {/* Sign Out */}
+        <section className="animate-reveal-up" style={{ animationDelay: "300ms" }}>
           <button
             onClick={handleSignOut}
             className="w-full h-14 rounded-2xl bg-destructive/10 text-destructive font-semibold text-base flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors active:scale-[0.97]"
