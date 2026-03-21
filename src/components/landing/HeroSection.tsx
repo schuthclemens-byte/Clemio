@@ -10,7 +10,7 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.12, duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+    transition: { delay: i * 0.12, duration: 0.6, ease: "easeOut" as const },
   }),
 };
 
@@ -88,7 +88,7 @@ const HeroSection = () => {
               className="absolute -bottom-1 left-0 right-0 h-1 rounded-full gradient-primary"
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ delay: 0.8, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: 0.8, duration: 0.6, ease: "easeOut" }}
               style={{ transformOrigin: "left" }}
             />
           </span>
@@ -100,7 +100,7 @@ const HeroSection = () => {
           Hearo verwandelt Nachrichten in echte Stimmen – als würde dein Freund direkt neben dir sprechen.
         </motion.p>
 
-        {/* Demo Player – WOW Moment */}
+        {/* Demo Player */}
         <motion.div variants={fadeUp} custom={4} className="mb-10">
           <motion.button
             onClick={playDemo}

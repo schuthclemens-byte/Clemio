@@ -12,10 +12,9 @@ const CTASection = () => {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         className="max-w-lg mx-auto relative rounded-3xl overflow-hidden"
       >
-        {/* Animated gradient background */}
         <div className="absolute inset-0 gradient-primary opacity-100" />
         <motion.div
           className="absolute inset-0 opacity-30"
