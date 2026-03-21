@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -322,6 +322,36 @@ const SettingsPage = () => {
                   "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
                   a11y.muteSounds ? "translate-x-[1.375rem]" : "translate-x-0.5"
                 )} />
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {/* Legal & Privacy */}
+        <section className="animate-reveal-up" style={{ animationDelay: "180ms" }}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Lock className="w-4 h-4" />
+            Rechtliches
+          </h2>
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+            <button
+              onClick={() => navigate("/privacy")}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors border-b border-border"
+            >
+              <Shield className="w-4.5 h-4.5 text-muted-foreground" />
+              <div>
+                <span className="text-[0.938rem] block">Datenschutzerklärung</span>
+                <span className="text-xs text-muted-foreground">Was wir speichern & wie wir es schützen</span>
+              </div>
+            </button>
+            <button
+              onClick={() => navigate("/terms")}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
+            >
+              <FileText className="w-4.5 h-4.5 text-muted-foreground" />
+              <div>
+                <span className="text-[0.938rem] block">Nutzungsbedingungen</span>
+                <span className="text-xs text-muted-foreground">Regeln für die Nutzung von Hearo</span>
               </div>
             </button>
           </div>
