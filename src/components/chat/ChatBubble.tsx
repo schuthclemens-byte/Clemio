@@ -29,6 +29,8 @@ interface ChatBubbleProps {
   reactions?: Reaction[];
   onToggleReaction?: (msgId: string, emoji: string) => void;
   onDelete?: (msgId: string) => void;
+  replyToText?: string;
+  replyToSender?: string;
 }
 
 /** Animated wave bars shown during playback */
