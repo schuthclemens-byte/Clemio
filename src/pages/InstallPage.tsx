@@ -1,57 +1,58 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Download, Check, Share, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+import {
+  clearDeferredInstallPrompt,
+  getDeferredInstallPrompt,
+  subscribeToInstallPrompt,
+  type DeferredInstallPromptEvent,
+} from "@/lib/installPrompt";
 
 const InstallPage = () => {
   const navigate = useNavigate();
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<DeferredInstallPromptEvent | null>(getDeferredInstallPrompt());
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    if (isStandalone) {
       setIsInstalled(true);
     }
 
-    // Detect iOS
     const ua = navigator.userAgent;
-    setIsIOS(/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream);
+    setIsIOS(/iPad|iPhone|iPod/.test(ua) && !(window as Window & { MSStream?: unknown }).MSStream);
 
-    // Listen for install prompt (Android/Chrome)
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
+    const unsubscribe = subscribeToInstallPrompt(setDeferredPrompt);
+    const handleInstalled = () => setIsInstalled(true);
 
-    window.addEventListener("beforeinstallprompt", handler);
-    window.addEventListener("appinstalled", () => setIsInstalled(true));
+    window.addEventListener("appinstalled", handleInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
+      unsubscribe();
+      window.removeEventListener("appinstalled", handleInstalled);
     };
   }, []);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
+
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
+
     if (outcome === "accepted") {
       setIsInstalled(true);
     }
-    setDeferredPrompt(null);
+
+    clearDeferredInstallPrompt();
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
@@ -65,7 +66,6 @@ const InstallPage = () => {
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-12">
-        {/* App icon */}
         <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mb-6 shadow-lg">
           <img src="/icon-192.png" alt="Hearo" className="w-20 h-20 rounded-2xl" />
         </div>
@@ -86,7 +86,6 @@ const InstallPage = () => {
             </Button>
           </div>
         ) : isIOS ? (
-          /* iOS instructions */
           <div className="bg-card rounded-2xl p-6 border border-border max-w-sm w-full">
             <h3 className="font-semibold text-sm mb-4 text-foreground">So installierst du Hearo:</h3>
             <div className="space-y-4">
@@ -94,15 +93,14 @@ const InstallPage = () => {
                 Tippe auf <Share className="w-4 h-4 inline text-primary" /> <strong>Teilen</strong> in der Safari-Leiste
               </Step>
               <Step number={2}>
-                Scrolle runter und tippe auf <strong>„Zum Home-Bildschirm"</strong>
+                Scrolle runter und tippe auf <strong>„Zum Home-Bildschirm“</strong>
               </Step>
               <Step number={3}>
-                Tippe auf <strong>„Hinzufügen"</strong>
+                Tippe auf <strong>„Hinzufügen“</strong>
               </Step>
             </div>
           </div>
         ) : deferredPrompt ? (
-          /* Android install button */
           <Button
             onClick={handleInstall}
             size="lg"
@@ -112,7 +110,6 @@ const InstallPage = () => {
             Jetzt installieren
           </Button>
         ) : (
-          /* Fallback instructions */
           <div className="bg-card rounded-2xl p-6 border border-border max-w-sm w-full">
             <h3 className="font-semibold text-sm mb-4 text-foreground">So installierst du Hearo:</h3>
             <div className="space-y-4">
@@ -120,16 +117,15 @@ const InstallPage = () => {
                 Öffne das <strong>Browser-Menü</strong> (⋮ oben rechts)
               </Step>
               <Step number={2}>
-                Tippe auf <strong>„App installieren"</strong> oder <strong>„Zum Startbildschirm hinzufügen"</strong>
+                Tippe auf <strong>„App installieren“</strong> oder <strong>„Zum Startbildschirm hinzufügen“</strong>
               </Step>
               <Step number={3}>
-                Bestätige mit <strong>„Installieren"</strong>
+                Bestätige mit <strong>„Installieren“</strong>
               </Step>
             </div>
           </div>
         )}
 
-        {/* Features */}
         <div className="mt-10 space-y-3 max-w-sm w-full">
           <Feature emoji="⚡" text="Sofortiger Start – kein Browser nötig" />
           <Feature emoji="📴" text="Funktioniert auch offline" />
