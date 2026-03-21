@@ -77,6 +77,7 @@ export function playVoiceStartClick() {
 
 /** Soft descending tone – played when voice recording stops */
 export function playVoiceStopClick() {
+  if (isMuted()) return;
   try {
     const ctx = getCtx();
     const now = ctx.currentTime;
