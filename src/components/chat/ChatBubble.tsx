@@ -270,7 +270,12 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
         {/* Tap hint for non-own messages */}
         {!isMine && message && !isMedia && !isActive && (
           <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
-            {t("chat.tapToListen") || "Tippen zum Anhören · Doppeltippen für mehr"}
+            {t("chat.tapToListen") || "Tippen zum Anhören · Doppeltippen für Aktionen"}
+          </p>
+        )}
+        {isMine && message && !isMedia && !isActive && (
+          <p className="text-[0.625rem] text-muted-foreground/50 mr-3 mt-0.5 text-right">
+            Doppeltippen für Aktionen
           </p>
         )}
       </div>
