@@ -29,6 +29,9 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatName, setChatName] = useState("...");
   const [loading, setLoading] = useState(true);
+  const [otherUserId, setOtherUserId] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(false);
+  const [lastSeen, setLastSeen] = useState<string | null>(null);
 
   const { isListening, transcript, toggle, stop, isSupported } = useSpeechRecognition(
     localeSpeechCodes[locale]
