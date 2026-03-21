@@ -13,6 +13,7 @@ import LoginPage from "./pages/LoginPage";
 import ChatListPage from "./pages/ChatListPage";
 import ChatPage from "./pages/ChatPage";
 import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
