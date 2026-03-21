@@ -30,6 +30,7 @@ function getCtx(): AudioContext {
 
 /** Soft chime – played when a new message arrives */
 export function playMessageTone() {
+  if (isMuted()) return;
   try {
     const ctx = getCtx();
     const now = ctx.currentTime;
