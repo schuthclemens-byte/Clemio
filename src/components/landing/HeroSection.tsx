@@ -96,7 +96,7 @@ const HeroSection = () => {
           wie du.
         </motion.h1>
 
-        <motion.p variants={fadeUp} custom={3} className="text-muted-foreground text-lg sm:text-xl leading-relaxed max-w-md mx-auto mb-10">
+        <motion.p variants={fadeUp} custom={3} className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-md mx-auto mb-10">
           Hearo verwandelt Nachrichten in echte Stimmen – als würde dein Freund direkt neben dir sprechen.
         </motion.p>
 
