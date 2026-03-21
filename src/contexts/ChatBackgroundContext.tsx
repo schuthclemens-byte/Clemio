@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 
 export interface ChatBackground {
-  type: "none" | "gradient" | "color" | "image";
-  value: string; // CSS gradient, color, or image URL
+  type: "none" | "gradient" | "color" | "image" | "animated";
+  value: string; // CSS gradient, color, image URL, or animation key
 }
 
 interface ChatBackgroundContextType {
