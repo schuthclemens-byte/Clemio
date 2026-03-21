@@ -327,8 +327,16 @@ const ChatPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
-            {initials}
+          <div className="relative w-10 h-10 shrink-0">
+            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+              {initials}
+            </div>
+            <span
+              className={cn(
+                "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card",
+                isOnline ? "bg-green-500" : "bg-muted-foreground/40"
+              )}
+            />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-[0.938rem] truncate">{chatName}</h2>
@@ -337,8 +345,12 @@ const ChatPage = () => {
                 <span className="text-accent font-medium flex items-center gap-1">
                   <Mic className="w-3 h-3" /> {t("chat.recording")}
                 </span>
-              ) : (
+              ) : isOnline ? (
                 t("chat.online")
+              ) : lastSeen ? (
+                `${t("chat.lastSeen") || "Zuletzt"} ${lastSeen}`
+              ) : (
+                t("chat.offline") || "Offline"
               )}
             </p>
           </div>
