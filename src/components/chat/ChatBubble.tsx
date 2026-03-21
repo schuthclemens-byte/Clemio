@@ -29,6 +29,8 @@ interface ChatBubbleProps {
   reactions?: Reaction[];
   onToggleReaction?: (msgId: string, emoji: string) => void;
   onDelete?: (msgId: string) => void;
+  replyToText?: string;
+  replyToSender?: string;
 }
 
 /** Animated wave bars shown during playback */
@@ -44,7 +46,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete, replyToText, replyToSender }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -143,6 +145,20 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             )}>
               {speakingLabel}
               <WaveIndicator color={isMine ? "bg-chat-mine-foreground/60" : "bg-primary"} />
+            </div>
+          )}
+
+          {/* Reply quote */}
+          {replyToText && replyToSender && (
+            <div className={cn(
+              "flex gap-2 mb-2 rounded-lg px-2.5 py-1.5 text-xs",
+              isMine ? "bg-chat-mine-foreground/10" : "bg-primary/10"
+            )}>
+              <div className={cn("w-0.5 rounded-full shrink-0", isMine ? "bg-chat-mine-foreground/40" : "bg-primary")} />
+              <div className="min-w-0">
+                <p className={cn("font-semibold", isMine ? "text-chat-mine-foreground/80" : "text-primary")}>{replyToSender}</p>
+                <p className="truncate opacity-70">{replyToText}</p>
+              </div>
             </div>
           )}
 

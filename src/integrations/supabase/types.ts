@@ -72,6 +72,7 @@ export type Database = {
           created_at: string | null
           created_by: string
           id: string
+          is_archived: boolean
           is_group: boolean | null
           name: string | null
           updated_at: string | null
@@ -80,6 +81,7 @@ export type Database = {
           created_at?: string | null
           created_by: string
           id?: string
+          is_archived?: boolean
           is_group?: boolean | null
           name?: string | null
           updated_at?: string | null
@@ -88,6 +90,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           id?: string
+          is_archived?: boolean
           is_group?: boolean | null
           name?: string | null
           updated_at?: string | null
@@ -155,6 +158,7 @@ export type Database = {
           id: string
           is_read: boolean | null
           message_type: string | null
+          reply_to: string | null
           sender_id: string
         }
         Insert: {
@@ -164,6 +168,7 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message_type?: string | null
+          reply_to?: string | null
           sender_id: string
         }
         Update: {
@@ -173,6 +178,7 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message_type?: string | null
+          reply_to?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -181,6 +187,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]

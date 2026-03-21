@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Search, Plus } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
+import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ConversationItem {
   id: string;
@@ -48,6 +50,7 @@ const ChatListPage = () => {
       .from("conversations")
       .select("*")
       .in("id", convIds)
+      .eq("is_archived", false)
       .order("updated_at", { ascending: false });
 
     if (!convos) {
@@ -140,6 +143,29 @@ const ChatListPage = () => {
 
   const handleNewChat = () => setShowNewChat(true);
 
+  const handleDeleteConversation = async (convId: string) => {
+    const { error } = await supabase.from("conversations").delete().eq("id", convId);
+    if (error) {
+      toast.error("Chat konnte nicht gelöscht werden");
+    } else {
+      setConversations((prev) => prev.filter((c) => c.id !== convId));
+      toast.success("Chat gelöscht");
+    }
+  };
+
+  const handleArchiveConversation = async (convId: string) => {
+    const { error } = await supabase
+      .from("conversations")
+      .update({ is_archived: true } as any)
+      .eq("id", convId);
+    if (error) {
+      toast.error("Archivieren fehlgeschlagen");
+    } else {
+      setConversations((prev) => prev.filter((c) => c.id !== convId));
+      toast.success("Chat archiviert");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
@@ -184,20 +210,25 @@ const ChatListPage = () => {
           </div>
         ) : filtered.length > 0 ? (
           filtered.map((chat, i) => (
-            <div
-              key={chat.id}
-              className="animate-reveal-up"
-              style={{ animationDelay: `${i * 60}ms` }}
-              role="listitem"
-            >
-              <ChatListItem
-                name={chat.name}
-                lastMessage={chat.lastMessage}
-                time={chat.time}
-                unread={chat.unread}
-                onClick={() => navigate(`/chat/${chat.id}`)}
-              />
-            </div>
+              <SwipeableChatListItem
+                key={chat.id}
+                onDelete={() => handleDeleteConversation(chat.id)}
+                onArchive={() => handleArchiveConversation(chat.id)}
+              >
+                <div
+                  className="animate-reveal-up"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                  role="listitem"
+                >
+                  <ChatListItem
+                    name={chat.name}
+                    lastMessage={chat.lastMessage}
+                    time={chat.time}
+                    unread={chat.unread}
+                    onClick={() => navigate(`/chat/${chat.id}`)}
+                  />
+                </div>
+              </SwipeableChatListItem>
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
