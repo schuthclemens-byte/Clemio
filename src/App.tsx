@@ -14,6 +14,7 @@ import ChatListPage from "./pages/ChatListPage";
 import ChatPage from "./pages/ChatPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
+import FocusModePage from "./pages/FocusModePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
