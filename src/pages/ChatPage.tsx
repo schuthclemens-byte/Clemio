@@ -724,6 +724,15 @@ const ChatPage = () => {
         </div>
       )}
 
+      {/* Reply preview */}
+      {replyTarget && (
+        <ReplyPreview
+          senderName={replyTarget.senderName}
+          text={replyTarget.text}
+          onClear={() => setReplyTarget(null)}
+        />
+      )}
+
       {/* Input */}
       <ChatInput
         onSend={handleSend}
