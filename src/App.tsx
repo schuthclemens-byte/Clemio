@@ -65,6 +65,7 @@ const App = () => (
           </TooltipProvider>
         </AuthProvider>
       </AccessibilityProvider>
+      </ChatBackgroundProvider>
       </ColorThemeProvider>
       </ThemeProvider>
     </I18nProvider>
