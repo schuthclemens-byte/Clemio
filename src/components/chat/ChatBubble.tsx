@@ -90,14 +90,33 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
           )}
 
           {/* Text or caption */}
-          {message && !(isMedia && !message.trim()) && (
-            <p className={cn(
-              "text-[0.938rem] leading-relaxed break-words",
-              isMedia && "px-4 pt-2"
-            )} style={{ overflowWrap: "anywhere" }}>
-              {showTranslation && translated ? translated : message}
-            </p>
-          )}
+          {message && !(isMedia && !message.trim()) && (() => {
+            const displayText = showTranslation && translated ? translated : message;
+            const isLong = compactMode && displayText.length > 120 && !expanded;
+            const truncated = isLong ? displayText.slice(0, 120) + "…" : displayText;
+            return (
+              <div
+                onClick={isLong ? () => setExpanded(true) : undefined}
+                className={cn(isLong && "cursor-pointer")}
+              >
+                <p className={cn(
+                  "text-[0.938rem] leading-relaxed break-words",
+                  isMedia && "px-4 pt-2"
+                )} style={{ overflowWrap: "anywhere" }}>
+                  {truncated}
+                </p>
+                {isLong && (
+                  <p className={cn(
+                    "text-xs font-medium mt-0.5 opacity-70",
+                    isMedia && "px-4",
+                    isMine ? "text-chat-mine-foreground/70" : "text-primary"
+                  )}>
+                    Mehr anzeigen
+                  </p>
+                )}
+              </div>
+            );
+          })()}
 
           {showTranslation && translated && (
             <p className={cn("text-[0.75rem] mt-1 opacity-60 italic", isMedia && "px-4")}>
