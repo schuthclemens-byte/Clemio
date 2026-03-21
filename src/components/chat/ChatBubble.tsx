@@ -148,6 +148,20 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             </div>
           )}
 
+          {/* Reply quote */}
+          {replyToText && replyToSender && (
+            <div className={cn(
+              "flex gap-2 mb-2 rounded-lg px-2.5 py-1.5 text-xs",
+              isMine ? "bg-chat-mine-foreground/10" : "bg-primary/10"
+            )}>
+              <div className={cn("w-0.5 rounded-full shrink-0", isMine ? "bg-chat-mine-foreground/40" : "bg-primary")} />
+              <div className="min-w-0">
+                <p className={cn("font-semibold", isMine ? "text-chat-mine-foreground/80" : "text-primary")}>{replyToSender}</p>
+                <p className="truncate opacity-70">{replyToText}</p>
+              </div>
+            </div>
+          )}
+
           {/* Media content */}
           {isMedia && mediaUrl && (
             <MediaMessage
