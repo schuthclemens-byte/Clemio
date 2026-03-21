@@ -679,6 +679,9 @@ const ChatPage = () => {
               hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
               onPlayClonedVoice={playClonedVoice}
               isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
+              reactions={reactions[msg.id] || []}
+              onToggleReaction={toggleReaction}
+              onDelete={msg.isMine ? handleDeleteMessage : undefined}
             />
           ))
         )}
@@ -695,9 +698,13 @@ const ChatPage = () => {
       <ChatInput
         onSend={handleSend}
         onSendMedia={handleSendMedia}
+        onSendVoice={handleSendVoiceMessage}
         isListening={isListening}
         onVoiceToggle={toggle}
         transcript={transcript}
+        onTyping={sendTyping}
+        onStopTyping={clearTyping}
+      />
       />
     </div>
   );
