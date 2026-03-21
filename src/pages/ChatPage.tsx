@@ -151,6 +151,10 @@ const ChatPage = () => {
             isMine: m.sender_id === user.id,
             isRead: m.is_read ?? false,
             senderId: m.sender_id,
+            messageType: m.message_type || "text",
+            mediaUrl: m.message_type === "image" || m.message_type === "video"
+              ? m.content.startsWith("http") ? m.content : undefined
+              : undefined,
           }))
         );
       }
