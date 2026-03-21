@@ -21,6 +21,8 @@ import InstallPage from "./pages/InstallPage";
 import LandingPage from "./pages/LandingPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsPage from "./pages/TermsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
