@@ -4,6 +4,8 @@ import { ArrowLeft, Mic, Users, Phone, Headphones, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
+import SwipeableBubble from "@/components/chat/SwipeableBubble";
+import ReplyPreview from "@/components/chat/ReplyPreview";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import useTextToSpeech from "@/hooks/useTextToSpeech";
 import { useVoiceTTS } from "@/hooks/useVoiceTTS";
