@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Check, LogOut } from "lucide-react";
+import { ArrowLeft, Camera, Check, LogOut, Crown } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,9 @@ import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
 import VoiceConsentManager from "@/components/voice/VoiceConsentManager";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/useSubscription";
+import { usePremiumGate } from "@/hooks/usePremiumGate";
+import { Badge } from "@/components/ui/badge";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
