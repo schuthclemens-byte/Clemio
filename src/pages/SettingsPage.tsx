@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -42,6 +42,20 @@ const SettingsPage = () => {
       </header>
 
       <div className="flex-1 p-4 space-y-6">
+        {/* Profile link */}
+        <button
+          onClick={() => navigate("/profile")}
+          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+        >
+          <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center text-primary-foreground">
+            <User className="w-6 h-6" />
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-[0.938rem]">{t("settings.profile") || "Profil bearbeiten"}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.profileDesc") || "Name, Bild & Sprache"}</p>
+          </div>
+        </button>
+
         {/* Theme */}
         <section className="animate-reveal-up">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
