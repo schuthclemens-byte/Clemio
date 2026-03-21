@@ -1,17 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Headphones, X } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Headphones, X, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
 import SwipeableBubble from "@/components/chat/SwipeableBubble";
 import ReplyPreview from "@/components/chat/ReplyPreview";
+import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import useTextToSpeech from "@/hooks/useTextToSpeech";
 import { useVoiceTTS } from "@/hooks/useVoiceTTS";
 import { useI18n, localeSpeechCodes } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChatBackground } from "@/contexts/ChatBackgroundContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -43,6 +45,7 @@ const ChatPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, t } = useI18n();
   const { autoRead, headphoneAutoPlay, focusMode, isQuietTime } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
@@ -50,6 +53,8 @@ const ChatPage = () => {
   const [focusContactIds, setFocusContactIds] = useState<string[]>([]);
   const [autoplayContactIds, setAutoplayContactIds] = useState<string[]>([]);
   const { user } = useAuth();
+  const { getChatBackground, setChatBackground, clearChatBackground } = useChatBackground();
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatName, setChatName] = useState("...");
@@ -620,6 +625,13 @@ const ChatPage = () => {
             </p>
           </div>
           <button
+            onClick={() => setBgPickerOpen(true)}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
+            aria-label="Hintergrund ändern"
+          >
+            <ImageIcon className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <button
             onClick={() => navigate(`/call/${conversationId}`)}
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
             aria-label="Anrufen"
@@ -667,10 +679,21 @@ const ChatPage = () => {
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 py-4"
+        className="flex-1 overflow-y-auto px-3 py-4 bg-cover bg-center bg-no-repeat"
         role="log"
         aria-label={t("chat.chats")}
         aria-live="polite"
+        style={(() => {
+          const bg = conversationId ? getChatBackground(conversationId) : { type: "none" as const, value: "" };
+          if (bg.type === "gradient" || bg.type === "color") return { background: bg.value };
+          if (bg.type === "image") return { backgroundImage: `url(${bg.value})`, backgroundSize: "cover", backgroundPosition: "center" };
+          return {};
+        })()}
+        onTouchStart={() => {
+          longPressTimer.current = setTimeout(() => setBgPickerOpen(true), 600);
+        }}
+        onTouchEnd={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current); }}
+        onTouchMove={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current); }}
       >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
@@ -744,6 +767,18 @@ const ChatPage = () => {
         onTyping={sendTyping}
         onStopTyping={clearTyping}
       />
+
+      {/* Background picker */}
+      {conversationId && (
+        <BackgroundPicker
+          open={bgPickerOpen}
+          onClose={() => setBgPickerOpen(false)}
+          current={getChatBackground(conversationId)}
+          onSelect={(bg) => setChatBackground(conversationId, bg)}
+          onReset={() => clearChatBackground(conversationId)}
+          showReset={true}
+        />
+      )}
     </div>
   );
 };

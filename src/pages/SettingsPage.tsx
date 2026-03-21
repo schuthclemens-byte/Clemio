@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
+import { useChatBackground } from "@/contexts/ChatBackgroundContext";
+import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import { cn } from "@/lib/utils";
 
 const SettingsPage = () => {
@@ -12,6 +15,8 @@ const SettingsPage = () => {
   const a11y = useAccessibility();
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
+  const { globalBackground, setGlobalBackground } = useChatBackground();
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
 
   const languages = Object.entries(localeNames) as [Locale, string][];
   const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
@@ -170,7 +175,36 @@ const SettingsPage = () => {
           </div>
         </section>
 
-        {/* Language */}
+        {/* Chat Background */}
+        <section className="animate-reveal-up" style={{ animationDelay: "50ms" }}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <ImageIcon className="w-4 h-4" />
+            Chat-Hintergrund
+          </h2>
+          <button
+            onClick={() => setBgPickerOpen(true)}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+          >
+            <div
+              className="w-12 h-12 rounded-2xl border-2 border-border overflow-hidden flex items-center justify-center"
+              style={
+                globalBackground.type === "gradient" || globalBackground.type === "color"
+                  ? { background: globalBackground.value }
+                  : globalBackground.type === "image"
+                    ? { backgroundImage: `url(${globalBackground.value})`, backgroundSize: "cover", backgroundPosition: "center" }
+                    : { backgroundColor: "hsl(var(--background))" }
+              }
+            >
+              {globalBackground.type === "none" && <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-[0.938rem]">Hintergrund ändern</p>
+              <p className="text-xs text-muted-foreground">Farbe, Verlauf oder eigenes Bild</p>
+            </div>
+          </button>
+        </section>
+
+
         <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
             <Globe className="w-4 h-4" />
@@ -399,6 +433,13 @@ const SettingsPage = () => {
           </div>
         </section>
       </div>
+
+      <BackgroundPicker
+        open={bgPickerOpen}
+        onClose={() => setBgPickerOpen(false)}
+        current={globalBackground}
+        onSelect={setGlobalBackground}
+      />
     </div>
   );
 };
