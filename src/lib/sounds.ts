@@ -3,6 +3,18 @@
  * No external files needed – all sounds are synthesized.
  */
 
+/** Check if sounds are muted via accessibility settings */
+function isMuted(): boolean {
+  try {
+    const saved = localStorage.getItem("a11y-settings");
+    if (saved) {
+      const settings = JSON.parse(saved);
+      return settings.muteSounds === true;
+    }
+  } catch {}
+  return false;
+}
+
 let audioCtx: AudioContext | null = null;
 
 function getCtx(): AudioContext {
