@@ -1,0 +1,181 @@
+import { useNavigate } from "react-router-dom";
+import { Download, ArrowRight, MessageCircle, Sparkles, Play, Pause } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState, useCallback, useRef } from "react";
+import { motion } from "framer-motion";
+import demoVoice from "@/assets/demo-voice.mp3";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.12, duration: 0.6, ease: "easeOut" as const },
+  }),
+};
+
+const HeroSection = () => {
+  const navigate = useNavigate();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playDemo = useCallback(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(demoVoice);
+      audioRef.current.onended = () => setIsPlaying(false);
+      audioRef.current.onerror = () => setIsPlaying(false);
+    }
+    if (isPlaying) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+      return;
+    }
+    audioRef.current.play();
+    setIsPlaying(true);
+  }, [isPlaying]);
+
+  return (
+    <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
+      {/* Animated gradient orbs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <motion.div
+          className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full opacity-30 blur-[100px]"
+          style={{ background: "radial-gradient(circle, hsl(45 95% 58%), hsl(18 90% 55%) 60%, transparent 70%)" }}
+          animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full opacity-20 blur-[100px]"
+          style={{ background: "radial-gradient(circle, hsl(340 75% 55%), hsl(320 70% 50%) 60%, transparent 70%)" }}
+          animate={{ x: [0, -20, 0], y: [0, 30, 0], scale: [1, 1.15, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+        <motion.div
+          className="absolute -bottom-32 left-1/3 w-[450px] h-[450px] rounded-full opacity-15 blur-[100px]"
+          style={{ background: "radial-gradient(circle, hsl(280 60% 55%), hsl(240 50% 50%) 60%, transparent 70%)" }}
+          animate={{ x: [0, 25, 0], y: [0, -15, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+        />
+      </div>
+
+      <motion.div
+        className="relative z-10 max-w-xl mx-auto"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+      >
+        {/* Logo with glow */}
+        <motion.div variants={fadeUp} custom={0} className="relative w-20 h-20 mx-auto mb-8">
+          <div className="absolute inset-0 rounded-[1.5rem] gradient-primary blur-xl opacity-40 animate-voice-pulse" />
+          <div className="relative w-20 h-20 rounded-[1.5rem] shadow-elevated overflow-hidden gradient-primary flex items-center justify-center">
+            <MessageCircle className="w-10 h-10 text-primary-foreground" />
+          </div>
+        </motion.div>
+
+        <motion.div variants={fadeUp} custom={1} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6 border border-primary/20">
+          <Sparkles className="w-3.5 h-3.5" />
+          100% kostenlos · Kein App Store nötig
+        </motion.div>
+
+        <motion.h1 variants={fadeUp} custom={2} className="text-[2.5rem] sm:text-6xl font-extrabold tracking-tight text-foreground mb-5 leading-[1.08]">
+          Nachrichten, die{" "}
+          <span className="relative inline-block">
+            <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-[gradient-shift_3s_ease-in-out_infinite]">
+              klingen
+            </span>
+            <motion.span
+              className="absolute -bottom-1 left-0 right-0 h-1 rounded-full gradient-primary"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.8, duration: 0.6, ease: "easeOut" }}
+              style={{ transformOrigin: "left" }}
+            />
+          </span>
+          <br />
+          wie du.
+        </motion.h1>
+
+        <motion.p variants={fadeUp} custom={3} className="text-muted-foreground text-lg sm:text-xl leading-relaxed max-w-md mx-auto mb-10">
+          Hearo verwandelt Nachrichten in echte Stimmen – als würde dein Freund direkt neben dir sprechen.
+        </motion.p>
+
+        {/* Demo Player */}
+        <motion.div variants={fadeUp} custom={4} className="mb-10">
+          <motion.button
+            onClick={playDemo}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="group relative inline-flex items-center gap-4 px-7 py-4 rounded-2xl bg-card border border-border shadow-elevated hover:shadow-soft transition-all duration-300 w-full max-w-sm mx-auto"
+          >
+            <span className={`relative w-14 h-14 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-all duration-300 ${isPlaying ? "animate-voice-pulse" : "group-hover:scale-105"}`}>
+              {isPlaying ? (
+                <Pause className="w-6 h-6 text-primary-foreground" />
+              ) : (
+                <Play className="w-6 h-6 text-primary-foreground ml-0.5" />
+              )}
+            </span>
+            <span className="text-left flex-1">
+              <span className="block text-sm font-bold text-foreground">
+                {isPlaying ? "Max spricht gerade…" : "Hör mal rein 🎧"}
+              </span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                {isPlaying ? "Tippe zum Stoppen" : "So klingt eine Hearo-Nachricht"}
+              </span>
+            </span>
+            {isPlaying && (
+              <span className="flex items-center gap-[3px] ml-1">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <motion.span
+                    key={i}
+                    className="w-[3px] bg-primary rounded-full"
+                    animate={{ height: [6, 18, 6] }}
+                    transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1, ease: "easeInOut" }}
+                  />
+                ))}
+              </span>
+            )}
+          </motion.button>
+        </motion.div>
+
+        <motion.div variants={fadeUp} custom={5} className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Button
+            onClick={() => navigate("/install")}
+            size="lg"
+            className="rounded-full px-10 gap-2.5 text-base gradient-primary border-0 shadow-soft h-14 font-bold hover:shadow-elevated transition-all"
+          >
+            <Download className="w-5 h-5" />
+            Jetzt starten
+          </Button>
+          <Button
+            onClick={() => navigate("/login")}
+            variant="ghost"
+            size="lg"
+            className="rounded-full px-8 text-base h-14 text-muted-foreground hover:text-foreground"
+          >
+            Bereits dabei? Anmelden
+            <ArrowRight className="w-4 h-4 ml-1.5" />
+          </Button>
+        </motion.div>
+      </motion.div>
+
+      {/* Scroll indicator */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2 }}
+      >
+        <motion.div
+          className="w-6 h-10 rounded-full border-2 border-muted-foreground/20 flex items-start justify-center pt-2"
+          animate={{ y: [0, 4, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className="w-1 h-2.5 rounded-full bg-muted-foreground/40" />
+        </motion.div>
+      </motion.div>
+    </section>
+  );
+};
+
+export default HeroSection;
