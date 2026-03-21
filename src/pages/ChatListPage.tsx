@@ -117,6 +117,7 @@ const ChatListPage = () => {
 
   useEffect(() => {
     fetchConversations();
+    requestPermission();
   }, [user]);
 
   // Realtime: refresh on new messages
