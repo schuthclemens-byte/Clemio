@@ -421,6 +421,7 @@ const ChatPage = () => {
               timestamp={msg.timestamp}
               isMine={msg.isMine}
               isRead={msg.isRead}
+              senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
               onSpeak={(text) => handleSpeak(msg.id, text)}
               isSpeaking={speakingId === msg.id && isSpeaking}
             />
