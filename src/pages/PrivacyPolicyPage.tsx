@@ -31,105 +31,119 @@ const PrivacyPolicyPage = () => {
               <p className="text-xs text-muted-foreground">Zuletzt aktualisiert: März 2026</p>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Dein Vertrauen ist uns wichtig. Diese Datenschutzerklärung erklärt, welche Daten Hearo erhebt, 
-            wofür sie verwendet werden und wie du die Kontrolle behältst.
-          </p>
         </section>
 
-        {/* Section 1 */}
+        {/* 1. Allgemeines */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up">
-          <h3 className="font-semibold text-[0.938rem] mb-3">1. Welche Daten sammeln wir?</h3>
-          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <div>
-              <p className="font-medium text-foreground mb-1">Kontodaten</p>
-              <p>E-Mail-Adresse, Anzeigename und optionales Profilbild – notwendig für dein Konto.</p>
-            </div>
-            <div>
-              <p className="font-medium text-foreground mb-1">Nachrichten</p>
-              <p>Deine Nachrichten werden verschlüsselt gespeichert, damit du sie zwischen Geräten synchronisieren kannst.</p>
-            </div>
-            <div>
-              <p className="font-medium text-foreground mb-1">Stimmdaten</p>
-              <p>Wenn du das Stimmen-Klonen nutzt, wird eine kurze Sprachprobe verarbeitet, um ein digitales Stimmmodell zu erstellen. 
-                 Die originale Aufnahme wird nach der Verarbeitung gelöscht. Das Stimmmodell wird sicher gespeichert und 
-                 <strong className="text-foreground"> nur mit deiner ausdrücklichen Zustimmung</strong> für andere hörbar.</p>
-            </div>
-            <div>
-              <p className="font-medium text-foreground mb-1">Nutzungsdaten</p>
-              <p>Anonymisierte Daten zur App-Nutzung (z.B. welche Funktionen genutzt werden), um Hearo zu verbessern. Keine Weitergabe an Dritte.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 2 */}
-        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "60ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">2. Wofür nutzen wir deine Daten?</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
-            <li className="flex gap-2"><span className="text-primary">•</span>Bereitstellung der App-Funktionen (Messaging, Vorlesen, Übersetzen)</li>
-            <li className="flex gap-2"><span className="text-primary">•</span>Erstellen und Verwalten deines Stimmmodells</li>
-            <li className="flex gap-2"><span className="text-primary">•</span>Verbesserung der App-Qualität</li>
-            <li className="flex gap-2"><span className="text-primary">•</span>Abo-Verwaltung und Zahlungsabwicklung</li>
-          </ul>
-        </section>
-
-        {/* Section 3 - Voice */}
-        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "120ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">3. Stimmdaten & Einwilligung</h3>
-          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>Deine Stimme ist besonders schützenswert. Deshalb gelten strenge Regeln:</p>
-            <ul className="space-y-2">
-              <li className="flex gap-2"><span className="text-accent">✓</span>Stimmen-Klonen ist <strong className="text-foreground">freiwillig</strong> und erfordert deine aktive Zustimmung</li>
-              <li className="flex gap-2"><span className="text-accent">✓</span>Andere können deine Stimme <strong className="text-foreground">nur hören, wenn du es erlaubst</strong></li>
-              <li className="flex gap-2"><span className="text-accent">✓</span>Du kannst jede Freigabe <strong className="text-foreground">jederzeit widerrufen</strong></li>
-              <li className="flex gap-2"><span className="text-accent">✓</span>Du kannst dein Stimmmodell <strong className="text-foreground">jederzeit komplett löschen</strong></li>
-              <li className="flex gap-2"><span className="text-accent">✓</span>Die Verarbeitung erfolgt über ElevenLabs (USA) unter strengen Datenschutzvereinbarungen</li>
-            </ul>
-          </div>
-        </section>
-
-        {/* Section 4 */}
-        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "180ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">4. Deine Rechte</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
-            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Auskunft:</strong> Du kannst jederzeit erfahren, welche Daten wir über dich gespeichert haben</li>
-            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Löschung:</strong> Du kannst dein Konto und alle Daten jederzeit löschen</li>
-            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Widerruf:</strong> Du kannst deine Einwilligung zur Stimmverarbeitung jederzeit widerrufen</li>
-            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Export:</strong> Du hast das Recht, deine Daten in einem gängigen Format zu erhalten</li>
-          </ul>
-        </section>
-
-        {/* Section 5 */}
-        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "240ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">5. Datensicherheit</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">1. Allgemeines</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Alle Daten werden verschlüsselt übertragen (TLS) und auf sicheren Servern gespeichert. 
-            Wir verwenden branchenübliche Sicherheitsstandards und beschränken den Zugriff auf das Minimum.
+            Diese App ermöglicht Kommunikation über Text, Sprache und KI-gestützte Funktionen 
+            (z.&nbsp;B. Vorlesen und Stimmen-Simulation). Der Schutz deiner Daten ist uns wichtig.
           </p>
         </section>
 
-        {/* Section 6 */}
-        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "300ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">6. Abonnement & Zahlung</h3>
-          <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
-            <p>Hearo bietet eine kostenlose Testphase von 7 Tagen. Danach kostet das Abo 4,99 €/Monat.</p>
-            <ul className="space-y-1">
-              <li className="flex gap-2"><span className="text-primary">•</span>Das Abo verlängert sich automatisch, sofern du nicht kündigst</li>
-              <li className="flex gap-2"><span className="text-primary">•</span>Kündigung jederzeit in den App-Einstellungen oder über den App Store</li>
-              <li className="flex gap-2"><span className="text-primary">•</span>Bereits bezahlte Zeiträume werden nicht erstattet</li>
+        {/* 2. Welche Daten wir verarbeiten */}
+        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "60ms" }}>
+          <h3 className="font-semibold text-[0.938rem] mb-3">2. Welche Daten wir verarbeiten</h3>
+          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">Account-Daten</strong> (z.&nbsp;B. E-Mail oder Login)</p></div>
+            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">Nachrichten</strong> (Text und Sprache)</p></div>
+            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">Sprachaufnahmen</strong> (für Voice Cloning, nur mit Zustimmung)</p></div>
+            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">Nutzungsdaten</strong> (z.&nbsp;B. App-Funktionen)</p></div>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+            Diese Daten sind notwendig, um die App bereitzustellen und zu verbessern.
+          </p>
+        </section>
+
+        {/* 3. Voice Cloning */}
+        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "120ms" }}>
+          <h3 className="font-semibold text-[0.938rem] mb-3">3. Voice Cloning</h3>
+          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p>Wenn du eine Stimme hinzufügst:</p>
+            <ul className="space-y-2">
+              <li className="flex gap-2"><span className="text-accent">•</span>wird deine Sprachaufnahme verarbeitet, um eine künstliche Stimme zu erstellen</li>
+              <li className="flex gap-2"><span className="text-accent">•</span>diese Stimme wird nur für deine Nutzung in der App verwendet</li>
             </ul>
+            <div className="bg-primary/5 rounded-xl p-4 mt-3 space-y-2">
+              <p className="font-semibold text-foreground text-sm">⚠️ Wichtig:</p>
+              <ul className="space-y-1.5">
+                <li className="flex gap-2"><span className="text-accent">✓</span>Nutzung erfolgt <strong className="text-foreground">nur mit deiner ausdrücklichen Zustimmung</strong></li>
+                <li className="flex gap-2"><span className="text-accent">✓</span>Du kannst deine Stimme <strong className="text-foreground">jederzeit löschen</strong></li>
+                <li className="flex gap-2"><span className="text-accent">✓</span>Ohne Zustimmung wird <strong className="text-foreground">KEINE Stimme erstellt</strong></li>
+              </ul>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 italic">
+              Stimmen gelten als besonders schützenswert und dürfen nur mit Einwilligung genutzt werden.
+            </p>
           </div>
         </section>
 
-        {/* Section 7 */}
+        {/* 4. Nutzung deiner Daten */}
+        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "180ms" }}>
+          <h3 className="font-semibold text-[0.938rem] mb-3">4. Nutzung deiner Daten</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+            <li className="flex gap-2"><span className="text-primary">•</span>Bereitstellung der App</li>
+            <li className="flex gap-2"><span className="text-primary">•</span>Kommunikation zwischen Nutzern</li>
+            <li className="flex gap-2"><span className="text-primary">•</span>Verbesserung der Funktionen</li>
+          </ul>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+            Es erfolgt keine Weitergabe deiner Daten an Dritte, außer wenn es technisch notwendig ist (z.&nbsp;B. Serverbetrieb).
+          </p>
+        </section>
+
+        {/* 5. Speicherung & Sicherheit */}
+        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "240ms" }}>
+          <h3 className="font-semibold text-[0.938rem] mb-3">5. Speicherung & Sicherheit</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+            <li className="flex gap-2"><span className="text-accent">✓</span>Deine Daten werden sicher gespeichert</li>
+            <li className="flex gap-2"><span className="text-accent">✓</span>Zugriff nur, wenn notwendig</li>
+            <li className="flex gap-2"><span className="text-accent">✓</span>Schutz vor unbefugtem Zugriff</li>
+          </ul>
+        </section>
+
+        {/* 6. Deine Rechte */}
+        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "300ms" }}>
+          <h3 className="font-semibold text-[0.938rem] mb-3">6. Deine Rechte</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Auskunft</strong> über deine Daten</li>
+            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Löschung</strong> deiner Daten</li>
+            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Widerruf</strong> deiner Einwilligung</li>
+          </ul>
+          <div className="bg-primary/5 rounded-xl p-3 mt-3">
+            <p className="text-sm text-foreground font-medium">
+              ➡️ Du kannst deine Stimme jederzeit entfernen
+            </p>
+          </div>
+        </section>
+
+        {/* 7. Freiwilligkeit */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "360ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">7. Kontakt</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">7. Freiwilligkeit</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Bei Fragen zum Datenschutz erreichst du uns unter:{" "}
+            Die Nutzung der App ist freiwillig. Wenn du keine Sprachdaten bereitstellst, 
+            kannst du die App trotzdem eingeschränkt nutzen.
+          </p>
+        </section>
+
+        {/* 8. Kontakt */}
+        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "420ms" }}>
+          <h3 className="font-semibold text-[0.938rem] mb-3">8. Kontakt</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Bei Fragen zum Datenschutz kannst du uns kontaktieren:{" "}
             <a href="mailto:privacy@hearo.app" className="text-primary font-medium hover:underline">
               privacy@hearo.app
             </a>
           </p>
+        </section>
+
+        {/* Trust badge */}
+        <section className="animate-reveal-up" style={{ animationDelay: "480ms" }}>
+          <div className="bg-accent/5 border border-accent/10 rounded-2xl p-4 text-center">
+            <p className="text-sm font-medium text-foreground">
+              🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.
+            </p>
+          </div>
         </section>
 
         <div className="h-8" />
