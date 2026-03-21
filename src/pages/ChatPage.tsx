@@ -6,6 +6,7 @@ import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import useTextToSpeech from "@/hooks/useTextToSpeech";
+import { useVoiceTTS } from "@/hooks/useVoiceTTS";
 import { useI18n, localeSpeechCodes } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,7 +44,9 @@ const ChatPage = () => {
     localeSpeechCodes[locale]
   );
   const { speak, stop: stopSpeaking, isSpeaking } = useTextToSpeech();
+  const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned } = useVoiceTTS();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
 
   const initials = chatName
     .split(" ")
@@ -168,6 +171,28 @@ const ChatPage = () => {
         .eq("is_read", false);
 
       setLoading(false);
+
+      // Check which senders have voice profiles with consent
+      const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
+      const profiles: Record<string, boolean> = {};
+      for (const sid of senderIds) {
+        const { data: vp } = await supabase
+          .from("voice_profiles" as any)
+          .select("id")
+          .eq("user_id", sid)
+          .maybeSingle();
+        if (vp) {
+          const { data: consent } = await supabase
+            .from("voice_consents" as any)
+            .select("status")
+            .eq("voice_owner_id", sid)
+            .eq("granted_to_user_id", user.id)
+            .eq("status", "granted")
+            .maybeSingle();
+          profiles[sid] = !!consent;
+        }
+      }
+      setVoiceProfiles(profiles);
     };
 
     loadChat();
@@ -501,6 +526,11 @@ const ChatPage = () => {
               isSpeaking={speakingId === msg.id && isSpeaking}
               messageType={msg.messageType}
               mediaUrl={msg.mediaUrl}
+              senderId={msg.senderId}
+              msgId={msg.id}
+              hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
+              onPlayClonedVoice={playClonedVoice}
+              isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
             />
           ))
         )}

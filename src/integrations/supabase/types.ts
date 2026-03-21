@@ -159,6 +159,60 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_consents: {
+        Row: {
+          created_at: string | null
+          granted_to_user_id: string
+          id: string
+          status: string
+          updated_at: string | null
+          voice_owner_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          granted_to_user_id: string
+          id?: string
+          status?: string
+          updated_at?: string | null
+          voice_owner_id: string
+        }
+        Update: {
+          created_at?: string | null
+          granted_to_user_id?: string
+          id?: string
+          status?: string
+          updated_at?: string | null
+          voice_owner_id?: string
+        }
+        Relationships: []
+      }
+      voice_profiles: {
+        Row: {
+          created_at: string | null
+          elevenlabs_voice_id: string
+          id: string
+          sample_url: string | null
+          user_id: string
+          voice_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          elevenlabs_voice_id: string
+          id?: string
+          sample_url?: string | null
+          user_id: string
+          voice_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          elevenlabs_voice_id?: string
+          id?: string
+          sample_url?: string | null
+          user_id?: string
+          voice_name?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -4,6 +4,8 @@ import { ArrowLeft, Camera, Check, LogOut } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
+import VoiceConsentManager from "@/components/voice/VoiceConsentManager";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -19,6 +21,17 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [voiceProfile, setVoiceProfile] = useState<{ voice_name: string; elevenlabs_voice_id: string } | null>(null);
+
+  const loadVoiceProfile = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("voice_profiles" as any)
+      .select("voice_name, elevenlabs_voice_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setVoiceProfile(data as any);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -38,6 +51,7 @@ const ProfilePage = () => {
       setLoaded(true);
     };
     load();
+    loadVoiceProfile();
   }, [user]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,8 +229,24 @@ const ProfilePage = () => {
           </div>
         </section>
 
-        {/* Sign Out */}
+        {/* Voice Cloning */}
         <section className="animate-reveal-up" style={{ animationDelay: "180ms" }}>
+          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+            Stimme
+          </label>
+          <VoiceCloneUpload existingVoice={voiceProfile} onCloned={loadVoiceProfile} />
+        </section>
+
+        {/* Voice Consent */}
+        <section className="animate-reveal-up" style={{ animationDelay: "240ms" }}>
+          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+            Stimmfreigaben
+          </label>
+          <VoiceConsentManager />
+        </section>
+
+        {/* Sign Out */}
+        <section className="animate-reveal-up" style={{ animationDelay: "300ms" }}>
           <button
             onClick={handleSignOut}
             className="w-full h-14 rounded-2xl bg-destructive/10 text-destructive font-semibold text-base flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors active:scale-[0.97]"

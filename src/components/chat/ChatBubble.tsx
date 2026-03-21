@@ -1,4 +1,4 @@
-import { Volume2, VolumeX, Languages, Loader2, Check, CheckCheck } from "lucide-react";
+import { Volume2, VolumeX, Languages, Loader2, Check, CheckCheck, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -15,9 +15,14 @@ interface ChatBubbleProps {
   isRead?: boolean;
   messageType?: string;
   mediaUrl?: string;
+  senderId?: string;
+  onPlayClonedVoice?: (text: string, senderId: string, msgId: string) => void;
+  isPlayingCloned?: boolean;
+  msgId?: string;
+  hasClonedVoice?: boolean;
 }
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -101,6 +106,20 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                   aria-label={t("chat.readAloud")}
                 >
                   {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                </button>
+              )}
+              {/* Cloned voice button */}
+              {!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
+                <button
+                  onClick={() => onPlayClonedVoice(message, senderId, msgId)}
+                  className={cn(
+                    "p-1 rounded-full transition-colors",
+                    "hover:bg-foreground/5",
+                    isPlayingCloned ? "text-accent" : "text-muted-foreground"
+                  )}
+                  aria-label="Mit geklonter Stimme anhören"
+                >
+                  <Headphones className="w-3.5 h-3.5" />
                 </button>
               )}
               {!isMine && message && (
