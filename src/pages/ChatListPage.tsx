@@ -21,6 +21,8 @@ const ChatListPage = () => {
   const [search, setSearch] = useState("");
   const { t } = useI18n();
   const { user, signOut } = useAuth();
+  const { requestPermission } = useNotifications();
+
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewChat, setShowNewChat] = useState(false);
