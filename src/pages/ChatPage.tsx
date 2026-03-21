@@ -45,6 +45,7 @@ const ChatPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, t } = useI18n();
   const { autoRead, headphoneAutoPlay, focusMode, isQuietTime } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
@@ -52,6 +53,8 @@ const ChatPage = () => {
   const [focusContactIds, setFocusContactIds] = useState<string[]>([]);
   const [autoplayContactIds, setAutoplayContactIds] = useState<string[]>([]);
   const { user } = useAuth();
+  const { getChatBackground, setChatBackground, clearChatBackground } = useChatBackground();
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatName, setChatName] = useState("...");
