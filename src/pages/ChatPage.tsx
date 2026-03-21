@@ -677,28 +677,43 @@ const ChatPage = () => {
             {t("chat.noMessages") || "Noch keine Nachrichten. Schreib die erste!"}
           </div>
         ) : (
-          messages.map((msg) => (
-            <ChatBubble
-              key={msg.id}
-              message={msg.text}
-              timestamp={msg.timestamp}
-              isMine={msg.isMine}
-              isRead={msg.isRead}
-              senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
-              onSpeak={(text) => handleSpeak(msg.id, text)}
-              isSpeaking={speakingId === msg.id && isSpeaking}
-              messageType={msg.messageType}
-              mediaUrl={msg.mediaUrl}
-              senderId={msg.senderId}
-              msgId={msg.id}
-              hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
-              onPlayClonedVoice={playClonedVoice}
-              isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
-              reactions={reactions[msg.id] || []}
-              onToggleReaction={toggleReaction}
-              onDelete={msg.isMine ? handleDeleteMessage : undefined}
-            />
-          ))
+          messages.map((msg) => {
+            const replyMsg = msg.replyTo ? messages.find(m => m.id === msg.replyTo) : undefined;
+            const senderName = msg.isMine ? "Du" : (memberNames[msg.senderId] || chatName);
+            return (
+              <SwipeableBubble
+                key={msg.id}
+                isMine={msg.isMine}
+                onSwipeReply={() => setReplyTarget({
+                  id: msg.id,
+                  text: msg.text.slice(0, 100),
+                  senderName,
+                })}
+              >
+                <ChatBubble
+                  message={msg.text}
+                  timestamp={msg.timestamp}
+                  isMine={msg.isMine}
+                  isRead={msg.isRead}
+                  senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
+                  onSpeak={(text) => handleSpeak(msg.id, text)}
+                  isSpeaking={speakingId === msg.id && isSpeaking}
+                  messageType={msg.messageType}
+                  mediaUrl={msg.mediaUrl}
+                  senderId={msg.senderId}
+                  msgId={msg.id}
+                  hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
+                  onPlayClonedVoice={playClonedVoice}
+                  isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
+                  reactions={reactions[msg.id] || []}
+                  onToggleReaction={toggleReaction}
+                  onDelete={msg.isMine ? handleDeleteMessage : undefined}
+                  replyToText={replyMsg?.text}
+                  replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
+                />
+              </SwipeableBubble>
+            );
+          })
         )}
       </div>
 
