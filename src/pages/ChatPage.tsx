@@ -118,6 +118,7 @@ const ChatPage = () => {
               minute: "2-digit",
             }),
             isMine: m.sender_id === user.id,
+            isRead: m.is_read ?? false,
           }))
         );
       }
