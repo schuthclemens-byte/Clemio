@@ -30,7 +30,9 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { locale, t } = useI18n();
-  const { autoRead } = useAccessibility();
+  const { autoRead, headphoneAutoPlay } = useAccessibility();
+  const headphonesConnected = useHeadphoneDetection();
+  const { isPremium } = useSubscription();
   const { user } = useAuth();
 
   const [messages, setMessages] = useState<Message[]>([]);
