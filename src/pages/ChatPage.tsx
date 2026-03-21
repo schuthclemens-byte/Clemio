@@ -30,9 +30,10 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { locale, t } = useI18n();
-  const { autoRead, headphoneAutoPlay } = useAccessibility();
+  const { autoRead, headphoneAutoPlay, focusMode } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
   const { isPremium } = useSubscription();
+  const [focusContactIds, setFocusContactIds] = useState<string[]>([]);
   const { user } = useAuth();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -328,15 +329,31 @@ const ChatPage = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  // Load focus contacts
+  useEffect(() => {
+    if (!user || !focusMode) return;
+    const loadFocus = async () => {
+      const { data } = await supabase
+        .from("focus_contacts" as any)
+        .select("contact_user_id")
+        .eq("user_id", user.id);
+      if (data) setFocusContactIds((data as any[]).map((d: any) => d.contact_user_id));
+    };
+    loadFocus();
+  }, [user, focusMode]);
+
   // Auto-read new messages from others
   const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
   useEffect(() => {
     if (!shouldAutoPlay || messages.length === 0) return;
     const last = messages[messages.length - 1];
-    if (!last.isMine) {
-      speak(last.text, localeSpeechCodes[locale]);
-    }
-  }, [messages.length, shouldAutoPlay]);
+    if (last.isMine) return;
+
+    // Focus mode: only read from priority contacts
+    if (focusMode && !focusContactIds.includes(last.senderId)) return;
+
+    speak(last.text, localeSpeechCodes[locale]);
+  }, [messages.length, shouldAutoPlay, focusMode, focusContactIds]);
 
   const handleSend = async (text: string) => {
     if (isListening) stop();
