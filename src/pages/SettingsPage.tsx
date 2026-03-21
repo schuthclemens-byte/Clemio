@@ -87,6 +87,21 @@ const SettingsPage = () => {
           </div>
         </button>
 
+        {/* App installieren */}
+        <button
+          onClick={() => navigate("/install")}
+          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+          style={{ animationDelay: "90ms" }}
+        >
+          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
+            <Download className="w-6 h-6 text-accent" />
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-[0.938rem]">App installieren</p>
+            <p className="text-xs text-muted-foreground">Hearo auf dem Startbildschirm</p>
+          </div>
+        </button>
+
         {/* Theme */}
         <section className="animate-reveal-up">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
