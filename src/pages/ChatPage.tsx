@@ -11,6 +11,8 @@ import { useI18n, localeSpeechCodes } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface Message {
   id: string;
@@ -28,7 +30,9 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { locale, t } = useI18n();
-  const { autoRead } = useAccessibility();
+  const { autoRead, headphoneAutoPlay } = useAccessibility();
+  const headphonesConnected = useHeadphoneDetection();
+  const { isPremium } = useSubscription();
   const { user } = useAuth();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -325,13 +329,14 @@ const ChatPage = () => {
   }, [messages]);
 
   // Auto-read new messages from others
+  const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
   useEffect(() => {
-    if (!autoRead || messages.length === 0) return;
+    if (!shouldAutoPlay || messages.length === 0) return;
     const last = messages[messages.length - 1];
     if (!last.isMine) {
       speak(last.text, localeSpeechCodes[locale]);
     }
-  }, [messages.length, autoRead]);
+  }, [messages.length, shouldAutoPlay]);
 
   const handleSend = async (text: string) => {
     if (isListening) stop();

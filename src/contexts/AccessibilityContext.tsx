@@ -5,6 +5,7 @@ interface AccessibilitySettings {
   largeText: boolean;
   highContrast: boolean;
   autoRead: boolean;
+  headphoneAutoPlay: boolean;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
@@ -16,6 +17,7 @@ const defaultSettings: AccessibilitySettings = {
   largeText: false,
   highContrast: false,
   autoRead: false,
+  headphoneAutoPlay: false,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -18,6 +18,7 @@ const SettingsPage = () => {
     { key: "largeText" as const, icon: Eye, label: t("settings.largeText") },
     { key: "highContrast" as const, icon: Contrast, label: t("settings.highContrast") },
     { key: "autoRead" as const, icon: Volume2, label: t("settings.autoRead") },
+    { key: "headphoneAutoPlay" as const, icon: Headphones, label: "Kopfhörer Auto-Play" },
   ];
 
   const themeOptions = [
