@@ -171,6 +171,28 @@ const ChatPage = () => {
         .eq("is_read", false);
 
       setLoading(false);
+
+      // Check which senders have voice profiles with consent
+      const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
+      const profiles: Record<string, boolean> = {};
+      for (const sid of senderIds) {
+        const { data: vp } = await supabase
+          .from("voice_profiles" as any)
+          .select("id")
+          .eq("user_id", sid)
+          .maybeSingle();
+        if (vp) {
+          const { data: consent } = await supabase
+            .from("voice_consents" as any)
+            .select("status")
+            .eq("voice_owner_id", sid)
+            .eq("granted_to_user_id", user.id)
+            .eq("status", "granted")
+            .maybeSingle();
+          profiles[sid] = !!consent;
+        }
+      }
+      setVoiceProfiles(profiles);
     };
 
     loadChat();
