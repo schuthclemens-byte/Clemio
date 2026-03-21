@@ -50,6 +50,7 @@ const ChatListPage = () => {
       .from("conversations")
       .select("*")
       .in("id", convIds)
+      .eq("is_archived", false)
       .order("updated_at", { ascending: false });
 
     if (!convos) {
