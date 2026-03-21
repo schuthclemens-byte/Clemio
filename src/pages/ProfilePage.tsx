@@ -343,13 +343,35 @@ const ProfilePage = () => {
         </section>
 
         {/* Sign Out */}
-        <section className="animate-reveal-up" style={{ animationDelay: "300ms" }}>
+        <section className="animate-reveal-up space-y-3" style={{ animationDelay: "300ms" }}>
           <button
             onClick={handleSignOut}
             className="w-full h-14 rounded-2xl bg-destructive/10 text-destructive font-semibold text-base flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors active:scale-[0.97]"
           >
             <LogOut className="w-5 h-5" />
             {t("settings.signOut") || "Abmelden"}
+          </button>
+
+          <button
+            onClick={async () => {
+              if (!window.confirm("Bist du sicher? Dein Konto und alle Daten werden unwiderruflich gelöscht.")) return;
+              if (!user) return;
+              try {
+                // Delete all user data
+                await supabase.from("voice_profiles" as any).delete().eq("user_id", user.id);
+                await supabase.from("voice_consents" as any).delete().eq("voice_owner_id", user.id);
+                await supabase.from("subscriptions" as any).delete().eq("user_id", user.id);
+                await supabase.from("profiles").delete().eq("id", user.id);
+                await signOut();
+                navigate("/login");
+                toast.success("Dein Konto wurde gelöscht");
+              } catch {
+                toast.error("Fehler beim Löschen des Kontos");
+              }
+            }}
+            className="w-full h-11 rounded-xl text-destructive/60 text-sm font-medium hover:text-destructive transition-colors active:scale-[0.97]"
+          >
+            Konto dauerhaft löschen
           </button>
         </section>
       </div>

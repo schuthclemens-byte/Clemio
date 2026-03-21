@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Mic, Users, Phone, Headphones, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,9 @@ import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAutoPlayQueue } from "@/hooks/useAutoPlayQueue";
 import { playMessageTone } from "@/lib/sounds";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+import { useMessageReactions } from "@/hooks/useMessageReactions";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -55,6 +58,54 @@ const ChatPage = () => {
   const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned } = useVoiceTTS();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
+
+  // Typing indicator
+  const { sendTyping, clearTyping, typingNames } = useTypingIndicator(conversationId);
+
+  // Reactions
+  const messageIds = messages.map((m) => m.id);
+  const { reactions, toggleReaction } = useMessageReactions(messageIds);
+
+  // Delete message
+  const handleDeleteMessage = async (msgId: string) => {
+    const { error } = await supabase.from("messages").delete().eq("id", msgId);
+    if (error) {
+      toast.error("Nachricht konnte nicht gelöscht werden");
+    } else {
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    }
+  };
+
+  // Voice message
+  const handleSendVoiceMessage = async (file: File) => {
+    if (!user || !conversationId) return;
+
+    const filePath = `${user.id}/${conversationId}/${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("chat-media")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error("Upload fehlgeschlagen");
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("chat-media")
+      .getPublicUrl(filePath);
+
+    await supabase.from("messages").insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      content: urlData.publicUrl,
+      message_type: "audio",
+    });
+
+    await supabase
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
+  };
 
   // Auto-play queue
   const shouldAutoPlay = autoRead || (headphoneAutoPlay && headphonesConnected && isPremium);
@@ -534,7 +585,11 @@ const ChatPage = () => {
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-base truncate">{chatName}</h2>
             <p className="text-xs text-muted-foreground truncate">
-              {isListening ? (
+              {typingNames.length > 0 ? (
+                <span className="text-primary font-medium">
+                  {typingNames.join(", ")} schreibt…
+                </span>
+              ) : isListening ? (
                 <span className="text-accent font-medium flex items-center gap-1">
                   <Mic className="w-3 h-3" /> {t("chat.recording")}
                 </span>
@@ -624,6 +679,9 @@ const ChatPage = () => {
               hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
               onPlayClonedVoice={playClonedVoice}
               isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
+              reactions={reactions[msg.id] || []}
+              onToggleReaction={toggleReaction}
+              onDelete={msg.isMine ? handleDeleteMessage : undefined}
             />
           ))
         )}
@@ -640,9 +698,12 @@ const ChatPage = () => {
       <ChatInput
         onSend={handleSend}
         onSendMedia={handleSendMedia}
+        onSendVoice={handleSendVoiceMessage}
         isListening={isListening}
         onVoiceToggle={toggle}
         transcript={transcript}
+        onTyping={sendTyping}
+        onStopTyping={clearTyping}
       />
     </div>
   );

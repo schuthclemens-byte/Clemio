@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
-import { Send, Plus, Camera, ImagePlus, X } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { Send, Plus, Camera, ImagePlus, Mic } from "lucide-react";
 import VoiceButton from "./VoiceButton";
 import MediaPreview from "./MediaPreview";
 import CameraCapture from "./CameraCapture";
+import VoiceRecorder from "./VoiceRecorder";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -14,20 +15,36 @@ interface MediaAttachment {
 interface ChatInputProps {
   onSend: (message: string) => void;
   onSendMedia: (file: File, type: "image" | "video", caption?: string) => void;
+  onSendVoice?: (file: File) => void;
   isListening: boolean;
   onVoiceToggle: () => void;
   transcript: string;
+  onTyping?: () => void;
+  onStopTyping?: () => void;
 }
 
-const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript }: ChatInputProps) => {
+const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping }: ChatInputProps) => {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [showMediaMenu, setShowMediaMenu] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useI18n();
 
   const currentText = isListening ? transcript : text;
+
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+    if (onTyping) {
+      onTyping();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        onStopTyping?.();
+      }, 3000);
+    }
+  }, [onTyping, onStopTyping]);
 
   const handleSend = () => {
     if (attachments.length > 0) {
@@ -36,6 +53,7 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
       }
       setAttachments([]);
       setText("");
+      onStopTyping?.();
       return;
     }
 
@@ -43,6 +61,7 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
     if (!msg) return;
     onSend(msg);
     setText("");
+    onStopTyping?.();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -99,8 +118,18 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
           </div>
         )}
 
+        {/* Voice recorder */}
+        {showVoiceRecorder && onSendVoice && (
+          <div className="px-3 pt-3">
+            <VoiceRecorder onSend={(file) => {
+              onSendVoice(file);
+              setShowVoiceRecorder(false);
+            }} />
+          </div>
+        )}
+
         <div className="flex items-end gap-2 p-3">
-          {/* Single + button for media */}
+          {/* + button for media */}
           <div className="relative">
             <button
               onClick={() => setShowMediaMenu(!showMediaMenu)}
@@ -115,7 +144,6 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
               <Plus className="w-5 h-5" />
             </button>
 
-            {/* Media popover */}
             {showMediaMenu && (
               <div className="absolute bottom-14 left-0 flex gap-2 bg-card border border-border rounded-2xl p-2 shadow-elevated animate-reveal-up">
                 <button
@@ -145,14 +173,14 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
             onChange={handleFileSelect}
           />
 
-          {/* Voice button */}
+          {/* Voice dictation button */}
           <VoiceButton isListening={isListening} onToggle={onVoiceToggle} />
 
           {/* Text input */}
           <div className="flex-1 relative">
             <textarea
               value={currentText}
-              onChange={(e) => setText(e.target.value)}
+              onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               placeholder={isListening ? t("chat.listening") : t("chat.placeholder")}
               rows={1}
@@ -167,22 +195,42 @@ const ChatInput = ({ onSend, onSendMedia, isListening, onVoiceToggle, transcript
             />
           </div>
 
-          {/* Send */}
-          <button
-            onClick={handleSend}
-            disabled={!hasContent}
-            className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-full shrink-0",
-              "transition-all duration-200 active:scale-90",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              hasContent
-                ? "gradient-primary text-primary-foreground shadow-soft hover:shadow-elevated"
-                : "bg-secondary text-muted-foreground"
-            )}
-            aria-label={t("chat.send")}
-          >
-            <Send className="w-5 h-5" />
-          </button>
+          {/* Send or Voice Record */}
+          {hasContent ? (
+            <button
+              onClick={handleSend}
+              className={cn(
+                "flex items-center justify-center w-12 h-12 rounded-full shrink-0",
+                "transition-all duration-200 active:scale-90",
+                "gradient-primary text-primary-foreground shadow-soft hover:shadow-elevated"
+              )}
+              aria-label={t("chat.send")}
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          ) : onSendVoice ? (
+            <button
+              onClick={() => setShowVoiceRecorder(!showVoiceRecorder)}
+              className={cn(
+                "flex items-center justify-center w-12 h-12 rounded-full shrink-0",
+                "transition-all duration-200 active:scale-90",
+                showVoiceRecorder
+                  ? "bg-destructive text-destructive-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+              aria-label="Sprachnachricht"
+            >
+              <Mic className="w-5 h-5" />
+            </button>
+          ) : (
+            <button
+              disabled
+              className="flex items-center justify-center w-12 h-12 rounded-full shrink-0 bg-secondary text-muted-foreground"
+              aria-label={t("chat.send")}
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 

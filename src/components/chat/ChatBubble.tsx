@@ -1,4 +1,4 @@
-import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock } from "lucide-react";
+import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -7,6 +7,8 @@ import { MediaMessage } from "./MediaPreview";
 import { usePremiumGate } from "@/hooks/usePremiumGate";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { playStartListenPop } from "@/lib/sounds";
+import EmojiReactions from "./EmojiReactions";
+import type { Reaction } from "@/hooks/useMessageReactions";
 
 interface ChatBubbleProps {
   message: string;
@@ -23,6 +25,9 @@ interface ChatBubbleProps {
   isPlayingCloned?: boolean;
   msgId?: string;
   hasClonedVoice?: boolean;
+  reactions?: Reaction[];
+  onToggleReaction?: (msgId: string, emoji: string) => void;
+  onDelete?: (msgId: string) => void;
 }
 
 /** Animated wave bars shown during playback */
@@ -38,7 +43,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -47,6 +52,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const { compactMode } = useAccessibility();
   const [expanded, setExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const prevSpeaking = useRef(false);
 
   const isMedia = messageType === "image" || messageType === "video";
@@ -115,7 +121,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
         )}
         <div
           onClick={handleBubbleTap}
-          onDoubleClick={() => !isMine && message && setShowActions(!showActions)}
+          onDoubleClick={() => message && setShowActions(!showActions)}
           className={cn(
             "shadow-sm cursor-pointer select-none transition-all duration-200",
             isMedia ? "rounded-2xl overflow-hidden" : "px-4 py-3",
@@ -181,9 +187,19 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
           {/* Footer: time + minimal actions */}
           <div className={cn("flex items-center justify-between mt-1.5", isMedia && "px-4 pb-2")}>
             <div className="flex items-center gap-1.5">
-              {!isMine && showActions && (
+              {showActions && (
                 <>
-                  {hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
+                  {/* Emoji picker trigger */}
+                  {msgId && onToggleReaction && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); }}
+                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
+                      aria-label="Emoji-Reaktion"
+                    >
+                      <SmilePlus className="w-4 h-4" />
+                    </button>
+                  )}
+                  {!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
                     <button
                       onClick={handlePlayCloned}
                       className="p-1.5 rounded-full bg-accent/10 text-accent transition-colors active:scale-90"
@@ -192,7 +208,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       {isPremium ? <Headphones className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     </button>
                   )}
-                  {message && (
+                  {!isMine && message && (
                     <button
                       onClick={handleTranslate}
                       disabled={isTranslating}
@@ -207,6 +223,15 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       ) : (
                         <Languages className="w-4 h-4" />
                       )}
+                    </button>
+                  )}
+                  {isMine && msgId && onDelete && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDelete(msgId); }}
+                      className="p-1.5 rounded-full bg-destructive/10 text-destructive transition-colors active:scale-90"
+                      aria-label="Nachricht löschen"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </>
@@ -229,12 +254,28 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               )}
             </span>
           </div>
+
+          {/* Emoji reactions display */}
+          {msgId && onToggleReaction && (
+            <EmojiReactions
+              reactions={reactions}
+              onToggle={(emoji) => onToggleReaction(msgId, emoji)}
+              isMine={isMine}
+              showPicker={showEmojiPicker}
+              onTogglePicker={() => setShowEmojiPicker(!showEmojiPicker)}
+            />
+          )}
         </div>
 
         {/* Tap hint for non-own messages */}
         {!isMine && message && !isMedia && !isActive && (
           <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
-            {t("chat.tapToListen") || "Tippen zum Anhören · Doppeltippen für mehr"}
+            {t("chat.tapToListen") || "Tippen zum Anhören · Doppeltippen für Aktionen"}
+          </p>
+        )}
+        {isMine && message && !isMedia && !isActive && (
+          <p className="text-[0.625rem] text-muted-foreground/50 mr-3 mt-0.5 text-right">
+            Doppeltippen für Aktionen
           </p>
         )}
       </div>
