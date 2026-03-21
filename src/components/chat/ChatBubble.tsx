@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaMessage } from "./MediaPreview";
+import AudioPlayer from "./AudioPlayer";
 import { usePremiumGate } from "@/hooks/usePremiumGate";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { playStartListenPop } from "@/lib/sounds";
@@ -56,6 +57,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const prevSpeaking = useRef(false);
 
   const isMedia = messageType === "image" || messageType === "video";
+  const isAudio = messageType === "audio";
   const displayText = showTranslation && translated ? translated : message;
   const isActive = isSpeaking || isPlayingCloned;
 
@@ -153,8 +155,13 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             />
           )}
 
+          {/* Audio content */}
+          {isAudio && message && (
+            <AudioPlayer url={message} isMine={isMine} />
+          )}
+
           {/* Text */}
-          {message && !(isMedia && !message.trim()) && (() => {
+          {message && !isMedia && !isAudio && (() => {
             const isLong = compactMode && displayText.length > 120 && !expanded;
             const truncated = isLong ? displayText.slice(0, 120) + "…" : displayText;
             return (
