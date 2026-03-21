@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
