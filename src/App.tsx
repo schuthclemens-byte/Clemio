@@ -60,6 +60,7 @@ const App = () => (
                 <Route path="/install" element={<InstallPage />} />
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
+                <Route path="/impressum" element={<ImpressumPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

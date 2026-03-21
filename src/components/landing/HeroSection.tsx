@@ -117,7 +117,7 @@ const HeroSection = () => {
             </span>
             <span className="text-left flex-1">
               <span className="block text-sm font-bold text-foreground">
-                {isPlaying ? "Max spricht gerade…" : "Hör mal rein 🎧"}
+                {isPlaying ? "Marnie spricht gerade…" : "Hör mal rein 🎧"}
               </span>
               <span className="block text-xs text-muted-foreground mt-0.5">
                 {isPlaying ? "Tippe zum Stoppen" : "So klingt eine Hearo-Nachricht"}
