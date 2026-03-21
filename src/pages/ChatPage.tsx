@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MoreVertical, Mic } from "lucide-react";
+import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
@@ -15,6 +16,7 @@ interface Message {
   text: string;
   timestamp: string;
   isMine: boolean;
+  isRead: boolean;
 }
 
 const ChatPage = () => {
@@ -28,6 +30,9 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatName, setChatName] = useState("...");
   const [loading, setLoading] = useState(true);
+  const [otherUserId, setOtherUserId] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(false);
+  const [lastSeen, setLastSeen] = useState<string | null>(null);
 
   const { isListening, transcript, toggle, stop, isSupported } = useSpeechRecognition(
     localeSpeechCodes[locale]
@@ -72,6 +77,7 @@ const ChatPage = () => {
           .maybeSingle();
 
         if (otherMember) {
+          setOtherUserId(otherMember.user_id);
           const { data: profile } = await supabase
             .from("profiles")
             .select("display_name, phone_number")
@@ -79,6 +85,20 @@ const ChatPage = () => {
             .maybeSingle();
 
           setChatName(profile?.display_name || profile?.phone_number || "Chat");
+
+          // Check presence
+          const { data: presence } = await supabase
+            .from("user_presence")
+            .select("is_online, last_seen")
+            .eq("user_id", otherMember.user_id)
+            .maybeSingle();
+
+          if (presence) {
+            setIsOnline(presence.is_online);
+            if (!presence.is_online && presence.last_seen) {
+              setLastSeen(new Date(presence.last_seen).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }));
+            }
+          }
         }
       }
 
@@ -99,6 +119,7 @@ const ChatPage = () => {
               minute: "2-digit",
             }),
             isMine: m.sender_id === user.id,
+            isRead: m.is_read ?? false,
           }))
         );
       }
@@ -141,6 +162,7 @@ const ChatPage = () => {
               minute: "2-digit",
             }),
             isMine: m.sender_id === user.id,
+            isRead: m.is_read ?? false,
           };
 
           setMessages((prev) => {
@@ -154,6 +176,75 @@ const ChatPage = () => {
               .from("messages")
               .update({ is_read: true })
               .eq("id", m.id);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const m = payload.new as any;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === m.id ? { ...msg, isRead: m.is_read ?? false } : msg
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, user]);
+
+  // Presence tracking - set online/offline
+  useEffect(() => {
+    if (!user) return;
+
+    const setPresence = async (online: boolean) => {
+      await supabase.from("user_presence").upsert({
+        user_id: user.id,
+        is_online: online,
+        last_seen: new Date().toISOString(),
+      });
+    };
+
+    setPresence(true);
+
+    const handleBeforeUnload = () => setPresence(false);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      setPresence(false);
+    };
+  }, [user]);
+
+  // Listen for other user's presence changes
+  useEffect(() => {
+    if (!otherUserId) return;
+
+    const channel = supabase
+      .channel(`presence-${otherUserId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "user_presence",
+          filter: `user_id=eq.${otherUserId}`,
+        },
+        (payload) => {
+          const p = payload.new as any;
+          setIsOnline(p.is_online);
+          if (!p.is_online && p.last_seen) {
+            setLastSeen(new Date(p.last_seen).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }));
           }
         }
       )
@@ -185,7 +276,7 @@ const ChatPage = () => {
     const tempId = crypto.randomUUID();
     const now = new Date();
     const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true }]);
+    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true, isRead: false }]);
 
     // Insert into DB
     const { error } = await supabase.from("messages").insert({
@@ -237,8 +328,16 @@ const ChatPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
-            {initials}
+          <div className="relative w-10 h-10 shrink-0">
+            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+              {initials}
+            </div>
+            <span
+              className={cn(
+                "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card",
+                isOnline ? "bg-green-500" : "bg-muted-foreground/40"
+              )}
+            />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-[0.938rem] truncate">{chatName}</h2>
@@ -247,8 +346,12 @@ const ChatPage = () => {
                 <span className="text-accent font-medium flex items-center gap-1">
                   <Mic className="w-3 h-3" /> {t("chat.recording")}
                 </span>
-              ) : (
+              ) : isOnline ? (
                 t("chat.online")
+              ) : lastSeen ? (
+                `${t("chat.lastSeen") || "Zuletzt"} ${lastSeen}`
+              ) : (
+                t("chat.offline") || "Offline"
               )}
             </p>
           </div>
@@ -280,6 +383,7 @@ const ChatPage = () => {
               message={msg.text}
               timestamp={msg.timestamp}
               isMine={msg.isMine}
+              isRead={msg.isRead}
               onSpeak={(text) => handleSpeak(msg.id, text)}
               isSpeaking={speakingId === msg.id && isSpeaking}
             />
