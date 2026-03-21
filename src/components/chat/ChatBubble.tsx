@@ -187,9 +187,19 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
           {/* Footer: time + minimal actions */}
           <div className={cn("flex items-center justify-between mt-1.5", isMedia && "px-4 pb-2")}>
             <div className="flex items-center gap-1.5">
-              {!isMine && showActions && (
+              {showActions && (
                 <>
-                  {hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
+                  {/* Emoji picker trigger */}
+                  {msgId && onToggleReaction && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); }}
+                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
+                      aria-label="Emoji-Reaktion"
+                    >
+                      <SmilePlus className="w-4 h-4" />
+                    </button>
+                  )}
+                  {!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
                     <button
                       onClick={handlePlayCloned}
                       className="p-1.5 rounded-full bg-accent/10 text-accent transition-colors active:scale-90"
@@ -198,7 +208,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       {isPremium ? <Headphones className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     </button>
                   )}
-                  {message && (
+                  {!isMine && message && (
                     <button
                       onClick={handleTranslate}
                       disabled={isTranslating}
@@ -213,6 +223,15 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       ) : (
                         <Languages className="w-4 h-4" />
                       )}
+                    </button>
+                  )}
+                  {isMine && msgId && onDelete && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDelete(msgId); }}
+                      className="p-1.5 rounded-full bg-destructive/10 text-destructive transition-colors active:scale-90"
+                      aria-label="Nachricht löschen"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </>
@@ -235,6 +254,17 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               )}
             </span>
           </div>
+
+          {/* Emoji reactions display */}
+          {msgId && onToggleReaction && (
+            <EmojiReactions
+              reactions={reactions}
+              onToggle={(emoji) => onToggleReaction(msgId, emoji)}
+              isMine={isMine}
+              showPicker={showEmojiPicker}
+              onTogglePicker={() => setShowEmojiPicker(!showEmojiPicker)}
+            />
+          )}
         </div>
 
         {/* Tap hint for non-own messages */}
