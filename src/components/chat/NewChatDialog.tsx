@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, MessageCirclePlus } from "lucide-react";
+import { Search, X, MessageCirclePlus, Users, UserPlus, Check } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface FoundUser {
   id: string;
@@ -22,9 +23,28 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
+  const [isGroupMode, setIsGroupMode] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<FoundUser[]>([]);
+  const [groupName, setGroupName] = useState("");
   const navigate = useNavigate();
   const { t } = useI18n();
   const { user } = useAuth();
+
+  const reset = () => {
+    setPhone("");
+    setResult(null);
+    setError("");
+    setCreating(false);
+    setIsGroupMode(false);
+    setSelectedUsers([]);
+    setGroupName("");
+    setSearching(false);
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
 
   const handleSearch = async () => {
     if (!phone.trim() || !user) return;
@@ -46,18 +66,33 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     }
 
     if (data.id === user.id) {
-      setError("Du kannst nicht mit dir selbst chatten");
+      setError("Du kannst nicht dich selbst hinzufügen");
       return;
     }
 
-    setResult(data);
+    if (selectedUsers.some((u) => u.id === data.id)) {
+      setError("Nutzer bereits hinzugefügt");
+      return;
+    }
+
+    if (isGroupMode) {
+      setSelectedUsers((prev) => [...prev, data]);
+      setPhone("");
+      setResult(null);
+    } else {
+      setResult(data);
+    }
+  };
+
+  const removeUser = (id: string) => {
+    setSelectedUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
   const handleStartChat = async () => {
     if (!result || !user) return;
     setCreating(true);
 
-    // Check if conversation already exists between these two users
+    // Check existing 1:1 conversation
     const { data: myMemberships } = await supabase
       .from("conversation_members")
       .select("conversation_id")
@@ -65,6 +100,15 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
     if (myMemberships) {
       for (const m of myMemberships) {
+        const { data: conv } = await supabase
+          .from("conversations")
+          .select("is_group")
+          .eq("id", m.conversation_id)
+          .eq("is_group", false)
+          .maybeSingle();
+
+        if (!conv) continue;
+
         const { data: otherMember } = await supabase
           .from("conversation_members")
           .select("user_id")
@@ -73,32 +117,50 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
           .maybeSingle();
 
         if (otherMember) {
-          // Conversation already exists
-          onClose();
+          handleClose();
           navigate(`/chat/${m.conversation_id}`);
           return;
         }
       }
     }
 
-    // Create new conversation
     const { data: conv, error: convErr } = await supabase
       .from("conversations")
       .insert({ created_by: user.id, name: null, is_group: false })
       .select()
       .single();
 
-    if (convErr || !conv) {
-      setCreating(false);
-      return;
-    }
+    if (convErr || !conv) { setCreating(false); return; }
 
     await supabase.from("conversation_members").insert([
       { conversation_id: conv.id, user_id: user.id },
       { conversation_id: conv.id, user_id: result.id },
     ]);
 
-    onClose();
+    handleClose();
+    navigate(`/chat/${conv.id}`);
+  };
+
+  const handleCreateGroup = async () => {
+    if (selectedUsers.length < 2 || !user || !groupName.trim()) return;
+    setCreating(true);
+
+    const { data: conv, error: convErr } = await supabase
+      .from("conversations")
+      .insert({ created_by: user.id, name: groupName.trim(), is_group: true })
+      .select()
+      .single();
+
+    if (convErr || !conv) { setCreating(false); return; }
+
+    const members = [
+      { conversation_id: conv.id, user_id: user.id },
+      ...selectedUsers.map((u) => ({ conversation_id: conv.id, user_id: u.id })),
+    ];
+
+    await supabase.from("conversation_members").insert(members);
+
+    handleClose();
     navigate(`/chat/${conv.id}`);
   };
 
@@ -106,20 +168,53 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center">
-      <div className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border shadow-xl animate-reveal-up">
+      <div className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border shadow-xl animate-reveal-up max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-bold">{t("chat.newChat") || "Neuer Chat"}</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
+        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+          <h2 className="text-lg font-bold">
+            {isGroupMode ? (t("chat.newGroup") || "Neue Gruppe") : (t("chat.newChat") || "Neuer Chat")}
+          </h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setIsGroupMode(!isGroupMode);
+                setResult(null);
+                setError("");
+                if (!isGroupMode) setSelectedUsers([]);
+              }}
+              className={cn(
+                "h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all",
+                isGroupMode
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Users className="w-3.5 h-3.5" />
+              {isGroupMode ? "Gruppe" : "Gruppe"}
+            </button>
+            <button
+              onClick={handleClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="p-4 space-y-4">
+        {/* Content */}
+        <div className="p-4 space-y-3 overflow-y-auto flex-1">
+          {/* Group name input */}
+          {isGroupMode && (
+            <input
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="Gruppenname..."
+              className="w-full h-10 rounded-xl bg-secondary px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          )}
+
+          {/* Search */}
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -138,33 +233,73 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               disabled={searching || !phone.trim()}
               className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              {searching ? "..." : t("chat.search") || "Suchen"}
+              {searching ? "..." : isGroupMode ? <UserPlus className="w-4 h-4" /> : (t("chat.search") || "Suchen")}
             </button>
           </div>
 
-          {/* Error */}
-          {error && (
-            <p className="text-sm text-destructive text-center">{error}</p>
+          {error && <p className="text-sm text-destructive text-center">{error}</p>}
+
+          {/* Selected group members */}
+          {isGroupMode && selectedUsers.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">
+                {selectedUsers.length} {selectedUsers.length === 1 ? "Mitglied" : "Mitglieder"}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {selectedUsers.map((u) => (
+                  <button
+                    key={u.id}
+                    onClick={() => removeUser(u.id)}
+                    className="flex items-center gap-1.5 h-8 pl-3 pr-2 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                  >
+                    {u.display_name || u.phone_number}
+                    <X className="w-3 h-3" />
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
-          {/* Result */}
-          {result && (
+          {/* 1:1 result */}
+          {!isGroupMode && result && (
             <button
               onClick={handleStartChat}
               disabled={creating}
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/60 hover:bg-secondary transition-colors text-left"
             >
-              <div className="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
+              <div className="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
                 {(result.display_name || "?")[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">
-                  {result.display_name || result.phone_number}
-                </p>
+                <p className="font-semibold text-sm truncate">{result.display_name || result.phone_number}</p>
                 <p className="text-xs text-muted-foreground">{result.phone_number}</p>
               </div>
               <MessageCirclePlus className="w-5 h-5 text-primary shrink-0" />
             </button>
+          )}
+
+          {/* Create group button */}
+          {isGroupMode && selectedUsers.length >= 2 && (
+            <button
+              onClick={handleCreateGroup}
+              disabled={creating || !groupName.trim()}
+              className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 shadow-soft hover:shadow-elevated transition-all disabled:opacity-50"
+            >
+              {creating ? (
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Gruppe erstellen
+                </>
+              )}
+            </button>
+          )}
+
+          {isGroupMode && selectedUsers.length < 2 && (
+            <p className="text-xs text-muted-foreground text-center py-2">
+              Füge mindestens 2 Kontakte hinzu
+            </p>
           )}
         </div>
       </div>
