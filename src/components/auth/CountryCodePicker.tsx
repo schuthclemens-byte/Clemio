@@ -61,10 +61,38 @@ export const countries: Country[] = [
 ];
 
 export const findCountryByDial = (phone: string): Country | undefined => {
-  if (!phone.startsWith("+")) return countries[0]; // default DE
-  // Try longest dial codes first
+  if (!phone.startsWith("+")) return undefined;
   const sorted = [...countries].sort((a, b) => b.dial.length - a.dial.length);
   return sorted.find((c) => phone.startsWith(c.dial));
+};
+
+export const findCountryByCode = (code: string): Country | undefined => {
+  return countries.find((c) => c.code.toLowerCase() === code.toLowerCase());
+};
+
+/** Detect country from browser language (e.g. "de-DE" → "DE", "en-US" → "US") */
+export const detectCountryFromBrowser = (): Country => {
+  const lang = navigator.language || (navigator as any).userLanguage || "de-DE";
+  // Try region subtag first (e.g. "de-DE" → "DE")
+  const parts = lang.split("-");
+  if (parts.length >= 2) {
+    const match = findCountryByCode(parts[1]);
+    if (match) return match;
+  }
+  // Fallback: map language code to most common country
+  const langToCountry: Record<string, string> = {
+    de: "DE", en: "US", fr: "FR", es: "ES", it: "IT", pt: "PT", nl: "NL",
+    tr: "TR", ar: "SA", ru: "RU", ja: "JP", ko: "KR", zh: "CN",
+    pl: "PL", sv: "SE", da: "DK", fi: "FI", no: "NO", el: "GR",
+    cs: "CZ", ro: "RO", hu: "HU", uk: "UA", hi: "IN", th: "TH",
+    vi: "VN", id: "ID", ms: "MY", he: "IL",
+  };
+  const countryCode = langToCountry[parts[0].toLowerCase()];
+  if (countryCode) {
+    const match = findCountryByCode(countryCode);
+    if (match) return match;
+  }
+  return countries[0]; // Default: Deutschland
 };
 
 interface CountryCodePickerProps {

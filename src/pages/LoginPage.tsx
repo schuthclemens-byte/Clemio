@@ -6,11 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { isValidAuthPhone, sanitizePhoneInput } from "@/lib/authPhone";
 import { toast } from "sonner";
-import CountryCodePicker, { countries, findCountryByDial, type Country } from "@/components/auth/CountryCodePicker";
+import CountryCodePicker, { countries, findCountryByDial, detectCountryFromBrowser, type Country } from "@/components/auth/CountryCodePicker";
 
 const getInitialCountry = (): Country => {
   const saved = localStorage.getItem("hearo_last_phone") || "";
-  return findCountryByDial(saved) || countries[0];
+  return findCountryByDial(saved) || detectCountryFromBrowser();
 };
 
 const getInitialLocalNumber = (): string => {
