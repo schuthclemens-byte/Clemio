@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, Check, Share, ArrowLeft, HelpCircle, Smartphone } from "lucide-react";
+import { Download, Check, Share, ArrowLeft, HelpCircle, Smartphone, Monitor, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -150,11 +150,39 @@ const InstallPage = () => {
             </div>
           )}
 
-          <div className="mt-10 space-y-3 max-w-sm w-full">
-            <Feature emoji="⚡" text="Sofortiger Start – kein Browser nötig" />
-            <Feature emoji="📴" text="Funktioniert auch offline" />
-            <Feature emoji="🔔" text="Benachrichtigungen wie eine echte App" />
-            <Feature emoji="💾" text="Kein Download aus dem Store nötig" />
+          {/* Platform sections */}
+          <div className="mt-10 space-y-6 max-w-sm w-full">
+            {/* Mobile */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Smartphone className="w-4 h-4 text-primary" />
+                Handy (Android & iOS)
+              </div>
+              <Feature emoji="📲" text="APK herunterladen oder als Web-App installieren" />
+              <Feature emoji="🎤" text="Voller Zugriff auf Mikrofon & Kamera" />
+              <Feature emoji="🔔" text="Push-Benachrichtigungen" />
+            </div>
+
+            {/* Desktop */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Monitor className="w-4 h-4 text-primary" />
+                Desktop (Windows / Mac)
+              </div>
+              <Feature emoji="💻" text="In Chrome/Edge: Menü → 'App installieren'" />
+              <Feature emoji="⚡" text="Startet wie eine echte App – ohne Browser-Tab" />
+              <Feature emoji="🎙️" text="Mikrofon & Kamera für Anrufe" />
+            </div>
+
+            {/* Browser */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Globe className="w-4 h-4 text-primary" />
+                Browser
+              </div>
+              <Feature emoji="🌐" text="Ohne Installation direkt im Browser nutzen" />
+              <Feature emoji="📴" text="Funktioniert auch offline (nach erstem Laden)" />
+            </div>
           </div>
         </div>
       </div>
@@ -170,6 +198,7 @@ const InstallPage = () => {
 
           {isIOS ? (
             <div className="space-y-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">iPhone / iPad</p>
               <Step number={1}>
                 Tippe auf <Share className="w-4 h-4 inline text-primary" /> <strong>Teilen</strong> in Safari
               </Step>
@@ -181,16 +210,31 @@ const InstallPage = () => {
               </Step>
             </div>
           ) : (
-            <div className="space-y-4">
-              <Step number={1}>
-                Öffne in Chrome das <strong>3-Punkte-Menü</strong>
-              </Step>
-              <Step number={2}>
-                Tippe auf <strong>„App installieren"</strong> oder <strong>„Zum Startbildschirm hinzufügen"</strong>
-              </Step>
-              <Step number={3}>
-                Bestätige mit <strong>„Installieren"</strong>
-              </Step>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">📱 Handy (Android)</p>
+                <Step number={1}>
+                  Öffne in Chrome das <strong>3-Punkte-Menü</strong>
+                </Step>
+                <Step number={2}>
+                  Tippe auf <strong>„App installieren"</strong> oder <strong>„Zum Startbildschirm hinzufügen"</strong>
+                </Step>
+                <Step number={3}>
+                  Bestätige mit <strong>„Installieren"</strong>
+                </Step>
+              </div>
+              <div className="border-t border-border pt-4 space-y-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">💻 Desktop (Windows / Mac)</p>
+                <Step number={1}>
+                  Öffne Hearo in <strong>Chrome</strong> oder <strong>Microsoft Edge</strong>
+                </Step>
+                <Step number={2}>
+                  Klicke oben rechts auf das <strong>Install-Symbol</strong> (⊕) in der Adressleiste oder gehe ins <strong>3-Punkte-Menü → „App installieren"</strong>
+                </Step>
+                <Step number={3}>
+                  Klicke auf <strong>„Installieren"</strong> – Hearo öffnet sich als eigenes Fenster
+                </Step>
+              </div>
             </div>
           )}
         </DialogContent>
