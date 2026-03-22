@@ -1,10 +1,22 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, ArrowRight } from "lucide-react";
+import { Download, ArrowRight, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const CTASection = () => {
   const navigate = useNavigate();
+  const [apkUrl, setApkUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const { data } = supabase.storage.from("downloads").getPublicUrl("hearo.apk");
+    if (data?.publicUrl) {
+      fetch(data.publicUrl, { method: "HEAD" }).then(r => {
+        if (r.ok) setApkUrl(data.publicUrl);
+      }).catch(() => {});
+    }
+  }, []);
 
   return (
     <section className="px-6 pb-24">
@@ -30,7 +42,7 @@ const CTASection = () => {
           <p className="text-primary-foreground/80 text-base mb-8 max-w-xs mx-auto">
             Installiere Hearo jetzt – kostenlos, in 10 Sekunden, direkt im Browser.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex flex-col items-center justify-center gap-3">
             <Button
               onClick={() => navigate("/install")}
               variant="secondary"
@@ -40,6 +52,16 @@ const CTASection = () => {
               <Download className="w-5 h-5" />
               Jetzt installieren
             </Button>
+            {apkUrl && (
+              <a
+                href={apkUrl}
+                download="hearo.apk"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20"
+              >
+                <Smartphone className="w-4 h-4" />
+                Android APK herunterladen
+              </a>
+            )}
             <button
               onClick={() => navigate("/login")}
               className="text-primary-foreground/70 hover:text-primary-foreground text-sm font-medium flex items-center gap-1 transition-colors"
