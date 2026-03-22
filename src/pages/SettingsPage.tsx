@@ -9,6 +9,8 @@ import { useChatBackground } from "@/contexts/ChatBackgroundContext";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
+import PremiumBadge from "@/components/PremiumBadge";
+import { useSubscription } from "@/hooks/useSubscription";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -60,6 +62,7 @@ const SettingsPage = () => {
   const { globalBackground, setGlobalBackground } = useChatBackground();
   const biometric = useBiometricAuth();
   const { signOut } = useAuth();
+  const { isPremium } = useSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("hearo_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -149,7 +152,10 @@ const SettingsPage = () => {
             <Volume2 className="w-6 h-6 text-primary" />
           </div>
           <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">{t("settings.autoPlayContact")}</p>
+            <p className="font-semibold text-[0.938rem] flex items-center gap-2">
+              {t("settings.autoPlayContact")}
+              {!isPremium && <PremiumBadge />}
+            </p>
             <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
           </div>
         </button>

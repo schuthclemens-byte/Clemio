@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
 import VoiceConsentManager from "@/components/voice/VoiceConsentManager";
+import PremiumBadge from "@/components/PremiumBadge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -301,8 +302,9 @@ const ProfilePage = () => {
 
         {/* Voice Cloning */}
         <section className="animate-reveal-up" style={{ animationDelay: "180ms" }}>
-          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
             Stimme
+            {!isPremium && <PremiumBadge />}
           </label>
           <VoiceCloneUpload existingVoice={voiceProfile} onCloned={loadVoiceProfile} />
           {voiceProfile && (
@@ -336,8 +338,9 @@ const ProfilePage = () => {
 
         {/* Voice Consent */}
         <section className="animate-reveal-up" style={{ animationDelay: "240ms" }}>
-          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
             Stimmfreigaben
+            {!isPremium && <PremiumBadge />}
           </label>
           <VoiceConsentManager />
         </section>
