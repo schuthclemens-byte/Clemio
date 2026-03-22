@@ -37,6 +37,8 @@ const ChatListPage = () => {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewChat, setShowNewChat] = useState(false);
+  const [messageResults, setMessageResults] = useState<MessageSearchResult[]>([]);
+  const [searchingMessages, setSearchingMessages] = useState(false);
 
   const fetchConversations = async () => {
     if (!user) return;
