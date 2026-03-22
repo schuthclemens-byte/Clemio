@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, Check, Share, ArrowLeft, HelpCircle } from "lucide-react";
+import { Download, Check, Share, ArrowLeft, HelpCircle, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -16,12 +17,15 @@ import {
   type DeferredInstallPromptEvent,
 } from "@/lib/installPrompt";
 
+const APK_FILE_NAME = "hearo.apk";
+
 const InstallPage = () => {
   const navigate = useNavigate();
   const [deferredPrompt, setDeferredPrompt] = useState<DeferredInstallPromptEvent | null>(getDeferredInstallPrompt());
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [apkUrl, setApkUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const isStandalone =
@@ -37,8 +41,18 @@ const InstallPage = () => {
 
     const unsubscribe = subscribeToInstallPrompt(setDeferredPrompt);
     const handleInstalled = () => setIsInstalled(true);
-
     window.addEventListener("appinstalled", handleInstalled);
+
+    // Check if APK exists in storage
+    const { data } = supabase.storage.from("downloads").getPublicUrl(APK_FILE_NAME);
+    if (data?.publicUrl) {
+      // Verify the file actually exists by trying a HEAD request
+      fetch(data.publicUrl, { method: "HEAD" })
+        .then((res) => {
+          if (res.ok) setApkUrl(data.publicUrl);
+        })
+        .catch(() => {});
+    }
 
     return () => {
       unsubscribe();
@@ -99,20 +113,36 @@ const InstallPage = () => {
             </div>
           ) : (
             <div className="flex w-full max-w-sm flex-col gap-3">
+              {/* APK Download Button */}
+              {apkUrl && (
+                <Button
+                  asChild
+                  size="lg"
+                  className="w-full rounded-full px-8 gap-2 text-base"
+                >
+                  <a href={apkUrl} download={APK_FILE_NAME}>
+                    <Smartphone className="w-5 h-5" />
+                    Android App herunterladen (.apk)
+                  </a>
+                </Button>
+              )}
+
+              {/* PWA Install Button */}
               <Button
                 onClick={handleInstall}
                 size="lg"
+                variant={apkUrl ? "outline" : "default"}
                 className="w-full rounded-full px-8 gap-2 text-base"
               >
                 <Download className="w-5 h-5" />
-                {deferredPrompt ? "Jetzt installieren" : "Installieren"}
+                {deferredPrompt ? "Als Web-App installieren" : "Als Web-App installieren"}
               </Button>
 
               <Button
-                variant="outline"
+                variant="ghost"
                 size="lg"
                 onClick={() => setShowHelp(true)}
-                className="w-full rounded-full px-8 gap-2 text-base"
+                className="w-full rounded-full px-8 gap-2 text-base text-muted-foreground"
               >
                 <HelpCircle className="w-5 h-5" />
                 Installationshilfe
@@ -144,10 +174,10 @@ const InstallPage = () => {
                 Tippe auf <Share className="w-4 h-4 inline text-primary" /> <strong>Teilen</strong> in Safari
               </Step>
               <Step number={2}>
-                Wähle <strong>„Zum Home-Bildschirm“</strong>
+                Wähle <strong>„Zum Home-Bildschirm"</strong>
               </Step>
               <Step number={3}>
-                Tippe auf <strong>„Hinzufügen“</strong>
+                Tippe auf <strong>„Hinzufügen"</strong>
               </Step>
             </div>
           ) : (
@@ -156,10 +186,10 @@ const InstallPage = () => {
                 Öffne in Chrome das <strong>3-Punkte-Menü</strong>
               </Step>
               <Step number={2}>
-                Tippe auf <strong>„App installieren“</strong> oder <strong>„Zum Startbildschirm hinzufügen“</strong>
+                Tippe auf <strong>„App installieren"</strong> oder <strong>„Zum Startbildschirm hinzufügen"</strong>
               </Step>
               <Step number={3}>
-                Bestätige mit <strong>„Installieren“</strong>
+                Bestätige mit <strong>„Installieren"</strong>
               </Step>
             </div>
           )}
