@@ -83,8 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (loginError) {
         console.error("[Auth] post-signUp signIn error:", loginError.message, loginError);
         const friendlyError = /Invalid login credentials/i.test(loginError.message)
-          ? "Diese Nummer ist bereits registriert. Bitte melde dich an oder nutze „Passwort vergessen“.
-          "
+          ? "Diese Nummer ist bereits registriert. Bitte melde dich an oder nutze Passwort vergessen."
           : loginError.message;
         return { error: friendlyError.trim() };
       }
