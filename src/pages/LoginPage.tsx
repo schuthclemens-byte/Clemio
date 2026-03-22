@@ -16,9 +16,11 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { signIn, signUp, resetPassword } = useAuth();
+  const biometric = useBiometricAuth();
   const [showForgot, setShowForgot] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
