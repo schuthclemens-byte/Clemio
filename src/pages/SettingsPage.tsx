@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint, ChevronDown } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint, ChevronDown, SpellCheck } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -69,6 +69,7 @@ const SettingsPage = () => {
     { key: "highContrast" as const, icon: Contrast, label: t("settings.highContrast") },
     { key: "autoRead" as const, icon: Volume2, label: t("settings.autoRead") },
     { key: "headphoneAutoPlay" as const, icon: Headphones, label: t("settings.headphoneAutoPlay") },
+    { key: "autoCorrect" as const, icon: SpellCheck, label: t("settings.autoCorrect") },
   ];
 
   const themeOptions = [

@@ -6,6 +6,8 @@ import CameraCapture from "./CameraCapture";
 import VoiceRecorder from "./VoiceRecorder";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/contexts/I18nContext";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
+import { useAutoCorrect } from "@/hooks/useAutoCorrect";
 
 interface MediaAttachment {
   file: File;
@@ -31,12 +33,24 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { autoCorrect: autoCorrectEnabled } = useAccessibility();
+  const { suggestions, updateSuggestions, autoCorrect, applySuggestion } = useAutoCorrect(locale, autoCorrectEnabled);
 
   const currentText = isListening ? transcript : text;
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
+    let newText = e.target.value;
+    
+    // Auto-correct on space
+    const corrected = autoCorrect(newText);
+    if (corrected) {
+      newText = corrected;
+    }
+    
+    setText(newText);
+    updateSuggestions(newText);
+    
     if (onTyping) {
       onTyping();
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -44,7 +58,13 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
         onStopTyping?.();
       }, 3000);
     }
-  }, [onTyping, onStopTyping]);
+  }, [onTyping, onStopTyping, autoCorrect, updateSuggestions]);
+
+  const handleSuggestionClick = useCallback((suggestion: string) => {
+    const newText = applySuggestion(text, suggestion);
+    setText(newText);
+    updateSuggestions(newText);
+  }, [text, applySuggestion, updateSuggestions]);
 
   const handleSend = () => {
     if (attachments.length > 0) {
@@ -53,6 +73,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
       }
       setAttachments([]);
       setText("");
+      updateSuggestions("");
       onStopTyping?.();
       return;
     }
@@ -61,6 +82,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
     if (!msg) return;
     onSend(msg);
     setText("");
+    updateSuggestions("");
     onStopTyping?.();
   };
 
@@ -118,6 +140,21 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
           </div>
         )}
 
+        {/* Word suggestions bar */}
+        {suggestions.length > 0 && !isListening && (
+          <div className="flex gap-2 px-3 pt-2 overflow-x-auto">
+            {suggestions.map((word) => (
+              <button
+                key={word}
+                onClick={() => handleSuggestionClick(word)}
+                className="px-3.5 py-1.5 rounded-xl bg-secondary hover:bg-primary/10 text-sm font-medium text-foreground transition-colors active:scale-95 whitespace-nowrap border border-border/50"
+              >
+                {word}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Voice recorder */}
         {showVoiceRecorder && onSendVoice && (
           <div className="px-3 pt-3">
@@ -139,7 +176,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
                   ? "bg-primary text-primary-foreground rotate-45"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               )}
-              aria-label={t("chat.addMedia") || "Medien hinzufügen"}
+              aria-label={t("chat.addMedia")}
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -151,14 +188,14 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
                   className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-secondary transition-colors active:scale-95"
                 >
                   <Camera className="w-5 h-5 text-primary" />
-                  <span className="text-[0.625rem] text-muted-foreground">{t("chat.camera") || "Kamera"}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">{t("chat.camera")}</span>
                 </button>
                 <button
                   onClick={() => { fileInputRef.current?.click(); }}
                   className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-secondary transition-colors active:scale-95"
                 >
                   <ImagePlus className="w-5 h-5 text-primary" />
-                  <span className="text-[0.625rem] text-muted-foreground">{t("chat.gallery") || "Galerie"}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">{t("chat.gallery")}</span>
                 </button>
               </div>
             )}
@@ -191,6 +228,9 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
                 isListening && "border-2 border-accent/40 bg-accent/5"
               )}
               readOnly={isListening}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
               aria-label={t("chat.placeholder")}
             />
           </div>
