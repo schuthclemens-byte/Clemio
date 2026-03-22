@@ -123,7 +123,7 @@ export function useBiometricAuth() {
 
       const assertion = await navigator.credentials.get({
         publicKey: {
-          challenge,
+          challenge: challenge as BufferSource,
           allowCredentials: [{
             id: base64ToBuffer(credentialId),
             type: "public-key",
