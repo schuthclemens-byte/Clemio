@@ -55,6 +55,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // If "stay logged in" is disabled, sign out on fresh page load
+      const stayLoggedIn = localStorage.getItem("hearo_stay_logged_in");
+      if (stayLoggedIn === "false" && session) {
+        supabase.auth.signOut().then(() => {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+        });
+        return;
+      }
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
