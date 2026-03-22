@@ -829,6 +829,7 @@ const ChatPage = () => {
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
+                  onSaveAsVoiceSample={!msg.isMine ? handleSaveAsVoiceSample : undefined}
                   replyToText={replyMsg?.text}
                   replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
                 />
