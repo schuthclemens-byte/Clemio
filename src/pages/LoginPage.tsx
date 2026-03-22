@@ -336,7 +336,8 @@ const LoginPage = () => {
               setForgotSent(false);
               setPassword("");
               setDisplayName("");
-              setPhone(nextMode === "login" ? sanitizePhoneInput(localStorage.getItem("hearo_last_phone") || "") : "");
+              setLocalNumber(nextMode === "login" ? getInitialLocalNumber() : "");
+              setCountry(nextMode === "login" ? getInitialCountry() : countries[0]);
             }}
             className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mt-5 text-center"
           >
