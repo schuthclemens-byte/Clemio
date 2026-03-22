@@ -1,26 +1,6 @@
 import { motion } from "framer-motion";
-import { MessageSquare, Mic2, Headphones } from "lucide-react";
-
-const steps = [
-  {
-    icon: <MessageSquare className="w-7 h-7" />,
-    number: "01",
-    title: "Nachricht empfangen",
-    description: "Du bekommst eine Nachricht – wie gewohnt. Text, Emoji, egal was.",
-  },
-  {
-    icon: <Mic2 className="w-7 h-7" />,
-    number: "02",
-    title: "Stimme erkennen",
-    description: "Hearo kennt die Stimme deines Kontakts und bereitet sie vor.",
-  },
-  {
-    icon: <Headphones className="w-7 h-7" />,
-    number: "03",
-    title: "Zuhören & fühlen",
-    description: "Tippe auf die Nachricht – und hör deinen Freund sprechen. Echt. Natürlich.",
-  },
-];
+import { MessageSquare, Ear, Headphones } from "lucide-react";
+import { useI18n } from "@/contexts/I18nContext";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -31,55 +11,63 @@ const fadeUp = {
   }),
 };
 
-const HowItWorksSection = () => (
-  <section className="px-6 py-24 relative overflow-hidden">
-    <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-    </div>
+const HowItWorksSection = () => {
+  const { t } = useI18n();
 
-    <motion.div
-      className="max-w-lg mx-auto"
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
-    >
-      <motion.p variants={fadeUp} custom={0} className="text-primary text-sm font-bold uppercase tracking-wider text-center mb-3">
-        So funktioniert's
-      </motion.p>
-      <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-extrabold text-center mb-4 text-foreground leading-tight">
-        Drei Schritte zum<br />echten Gespräch
-      </motion.h2>
-      <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-center text-base mb-14 max-w-sm mx-auto">
-        Keine Einrichtung, kein Aufwand. Einfach loslegen.
-      </motion.p>
+  const steps = [
+    { icon: <MessageSquare className="w-6 h-6" />, number: "01", title: t("landing.howStep1Title"), description: t("landing.howStep1Desc") },
+    { icon: <Ear className="w-6 h-6" />, number: "02", title: t("landing.howStep2Title"), description: t("landing.howStep2Desc") },
+    { icon: <Headphones className="w-6 h-6" />, number: "03", title: t("landing.howStep3Title"), description: t("landing.howStep3Desc") },
+  ];
 
-      <div className="space-y-6">
-        {steps.map((step, i) => (
-          <motion.div
-            key={i}
-            variants={fadeUp}
-            custom={i + 3}
-            whileHover={{ x: 4 }}
-            className="flex items-start gap-5 p-6 rounded-2xl bg-card border border-border hover:border-primary/30 shadow-sm hover:shadow-elevated transition-all duration-300 group"
-          >
-            <div className="relative shrink-0">
-              <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center text-primary-foreground group-hover:scale-105 transition-transform duration-300">
-                {step.icon}
+  return (
+    <section className="relative px-6 py-24">
+      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background/50 to-transparent pointer-events-none" />
+
+      <motion.div
+        className="max-w-lg mx-auto"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-60px" }}
+        variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+      >
+        <motion.p variants={fadeUp} custom={0} className="text-primary text-sm font-bold uppercase tracking-wider text-center mb-3">
+          Hearo
+        </motion.p>
+        <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-extrabold text-center mb-3 text-foreground leading-tight">
+          {t("landing.howTitle")}
+        </motion.h2>
+        <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-center text-base mb-14">
+          {t("landing.howSubtitle")}
+        </motion.p>
+
+        <div className="space-y-4">
+          {steps.map((step, i) => (
+            <motion.div
+              key={i}
+              variants={fadeUp}
+              custom={i + 3}
+              whileHover={{ x: 4 }}
+              className="flex items-start gap-5 p-5 rounded-2xl bg-card border border-border shadow-sm hover:shadow-elevated transition-all duration-300"
+            >
+              <div className="relative">
+                <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground shrink-0">
+                  {step.icon}
+                </div>
+                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-foreground text-background text-[0.65rem] font-bold flex items-center justify-center">
+                  {step.number}
+                </span>
               </div>
-              <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-foreground text-background text-[0.625rem] font-black flex items-center justify-center">
-                {step.number}
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-foreground text-lg mb-1">{step.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  </section>
-);
+              <div>
+                <h3 className="font-bold text-foreground mb-1">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+    </section>
+  );
+};
 
 export default HowItWorksSection;
