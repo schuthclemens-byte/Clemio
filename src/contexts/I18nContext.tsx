@@ -103,6 +103,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "settings.compactModeDesc": "Lange Nachrichten kürzen",
     "settings.muteSounds": "Sounds stumm",
     "settings.muteSoundsDesc": "UI-Töne deaktivieren",
+    "settings.autoCorrect": "Autokorrektur & Vorschläge",
     "settings.legal": "Rechtliches",
     "settings.privacy": "Datenschutzerklärung",
     "settings.privacyDesc": "Was wir speichern & wie wir es schützen",
