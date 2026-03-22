@@ -653,6 +653,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "settings.compactModeDesc": "تقصير الرسائل الطويلة",
     "settings.muteSounds": "كتم الأصوات",
     "settings.muteSoundsDesc": "تعطيل أصوات الواجهة",
+    "settings.autoCorrect": "تصحيح تلقائي واقتراحات",
     "settings.legal": "قانوني",
     "settings.privacy": "سياسة الخصوصية",
     "settings.privacyDesc": "ما نخزنه وكيف نحميه",
