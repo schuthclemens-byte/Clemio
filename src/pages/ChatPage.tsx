@@ -662,7 +662,7 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background" {...swipeBack}>
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-3 py-3">
