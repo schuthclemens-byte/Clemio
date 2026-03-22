@@ -1,5 +1,5 @@
 const MAX_PHONE_DIGITS = 15;
-const MIN_PHONE_DIGITS = 10;
+const MIN_PHONE_DIGITS = 7;
 
 export const sanitizePhoneInput = (value: string): string => {
   const hasLeadingPlus = value.trim().startsWith("+");
@@ -11,9 +11,12 @@ export const sanitizePhoneInput = (value: string): string => {
 export const normalizePhone = (phone: string): string => {
   let digits = phone.replace(/[^0-9]/g, "");
 
-  if (digits.startsWith("0049")) {
+  // If starts with 00 (international prefix), strip leading 00
+  if (digits.startsWith("00")) {
     digits = digits.slice(2);
-  } else if (digits.startsWith("0") && !digits.startsWith("00")) {
+  }
+  // If starts with 0 and no country code, assume German (+49)
+  else if (digits.startsWith("0")) {
     digits = `49${digits.slice(1)}`;
   }
 
