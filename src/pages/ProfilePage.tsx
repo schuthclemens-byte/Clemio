@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2, ShieldCheck } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
