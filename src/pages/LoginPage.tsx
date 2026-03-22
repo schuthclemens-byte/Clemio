@@ -6,9 +6,29 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { isValidAuthPhone, sanitizePhoneInput } from "@/lib/authPhone";
 import { toast } from "sonner";
+import CountryCodePicker, { countries, findCountryByDial, type Country } from "@/components/auth/CountryCodePicker";
+
+const getInitialCountry = (): Country => {
+  const saved = localStorage.getItem("hearo_last_phone") || "";
+  return findCountryByDial(saved) || countries[0];
+};
+
+const getInitialLocalNumber = (): string => {
+  const saved = localStorage.getItem("hearo_last_phone") || "";
+  if (!saved) return "";
+  const country = findCountryByDial(saved) || countries[0];
+  // Strip the country dial code from saved number
+  if (saved.startsWith(country.dial)) {
+    return saved.slice(country.dial.length).trim();
+  }
+  return sanitizePhoneInput(saved);
+};
 
 const LoginPage = () => {
-  const [phone, setPhone] = useState(() => sanitizePhoneInput(localStorage.getItem("hearo_last_phone") || ""));
+  const [country, setCountry] = useState<Country>(getInitialCountry);
+  const [localNumber, setLocalNumber] = useState(() => getInitialLocalNumber());
+  const phone = `${country.dial}${localNumber.replace(/\D/g, "")}`;
+  const [password, setPassword] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
