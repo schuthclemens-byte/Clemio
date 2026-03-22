@@ -494,6 +494,54 @@ const ChatPage = () => {
     enqueue({ id: last.id, text: last.text, senderId: last.senderId, senderName });
   }, [messages.length, shouldAutoPlay, focusMode, focusContactIds, autoplayContactIds, enqueue]);
 
+  // Save a voice message audio as a voice sample for a contact
+  const handleSaveAsVoiceSample = async (audioUrl: string, contactSenderId: string) => {
+    if (!user) return;
+    try {
+      const { toast } = await import("sonner");
+      toast.info("Stimmprobe wird gespeichert…");
+
+      // Fetch the audio file
+      const response = await fetch(audioUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "voice-sample.webm", { type: blob.type || "audio/webm" });
+
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) return;
+
+      const formData = new FormData();
+      formData.append("audio", file);
+      formData.append("name", memberNames[contactSenderId] || chatName || "Kontakt");
+      formData.append("contact_user_id", contactSenderId);
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-clone`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Fehler");
+      }
+
+      toast.success("Stimmprobe gespeichert! Nachrichten können jetzt in dieser Stimme abgespielt werden. 🎙️");
+      // Update voiceProfiles to reflect the new voice
+      setVoiceProfiles((prev) => ({ ...prev, [contactSenderId]: true }));
+      setOtherHasVoice(true);
+    } catch (err) {
+      console.error("Save voice sample error:", err);
+      const { toast } = await import("sonner");
+      toast.error("Stimmprobe konnte nicht gespeichert werden");
+    }
+  };
+
   const handleSend = async (text: string) => {
     if (isListening) stop();
     if (!user || !conversationId) return;
