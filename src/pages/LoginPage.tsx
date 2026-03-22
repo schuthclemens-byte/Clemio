@@ -116,6 +116,36 @@ const LoginPage = () => {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
+        {/* Language Switcher */}
+        <div className="absolute top-5 right-5">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setLangOpen(!langOpen)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground hover:bg-accent/10 transition-all duration-200 shadow-sm"
+            >
+              {localeNames[locale]}
+              <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${langOpen ? "rotate-180" : ""}`} />
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 mt-1 w-40 bg-card border border-border rounded-xl shadow-elevated overflow-hidden animate-reveal-up z-50">
+                {(Object.keys(localeNames) as Locale[]).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => { setLocale(l); setLangOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 ${
+                      l === locale ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-accent/10"
+                    }`}
+                  >
+                    {localeNames[l]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="w-full max-w-sm animate-reveal-up">
           {/* Logo & Header */}
           <div className="text-center mb-10">
