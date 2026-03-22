@@ -316,7 +316,7 @@ const LoginPage = () => {
                   </p>
                   <button
                     type="button"
-                    disabled={!isValidAuthPhone(phone) || forgotLoading}
+                    disabled={localNumber.replace(/\D/g, "").length < 4 || forgotLoading}
                     onClick={async () => {
                       setForgotLoading(true);
                       await resetPassword(phone);
