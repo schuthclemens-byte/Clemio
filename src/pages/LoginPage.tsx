@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
+import { ArrowRight, UserPlus, LogIn, Sparkles, Fingerprint } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { toast } from "sonner";
 
 const LoginPage = () => {
@@ -15,9 +16,30 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { signIn, signUp, resetPassword } = useAuth();
+  const biometric = useBiometricAuth();
   const [showForgot, setShowForgot] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
+
+  const handleBiometricLogin = useCallback(async () => {
+    setBiometricLoading(true);
+    try {
+      const creds = await biometric.authenticateWithBiometric();
+      if (!creds) {
+        toast.error("Biometrische Anmeldung fehlgeschlagen");
+        return;
+      }
+      const { error } = await signIn(creds.phone, creds.password);
+      if (error) {
+        toast.error("Anmeldung fehlgeschlagen");
+        return;
+      }
+      navigate("/chats");
+    } finally {
+      setBiometricLoading(false);
+    }
+  }, [biometric, signIn, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +53,17 @@ const LoginPage = () => {
         if (error) {
           toast.error(t("app.loginError") || "Anmeldung fehlgeschlagen");
           return;
+        }
+        // Offer biometric enrollment after successful login
+        if (biometric.isAvailable && !biometric.isEnabled) {
+          try {
+            const enrolled = await biometric.enableBiometric(phone.trim(), password);
+            if (enrolled) {
+              toast.success("Biometrische Anmeldung aktiviert! 🔐");
+            }
+          } catch {
+            // silently ignore if user dismisses
+          }
         }
       } else {
         const { error } = await signUp(phone, password, displayName || "Nutzer");
@@ -159,6 +192,25 @@ const LoginPage = () => {
               )}
             </button>
           </form>
+
+          {/* Biometric login button */}
+          {mode === "login" && biometric.isAvailable && biometric.isEnabled && biometric.hasStoredCredential() && (
+            <button
+              type="button"
+              onClick={handleBiometricLogin}
+              disabled={biometricLoading}
+              className="w-full h-14 rounded-2xl bg-card border-2 border-primary/20 text-foreground font-semibold text-base flex items-center justify-center gap-3 shadow-sm hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 active:scale-[0.97] disabled:opacity-40 mt-3"
+            >
+              {biometricLoading ? (
+                <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Fingerprint className="w-5 h-5 text-primary" />
+                  Mit Face ID / Fingerabdruck anmelden
+                </>
+              )}
+            </button>
+          )}
 
           {/* Forgot password */}
           {mode === "login" && !showForgot && (
