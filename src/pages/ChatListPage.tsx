@@ -18,6 +18,15 @@ interface ConversationItem {
   unread: number;
 }
 
+interface MessageSearchResult {
+  messageId: string;
+  conversationId: string;
+  conversationName: string;
+  content: string;
+  time: string;
+  senderName: string;
+}
+
 const ChatListPage = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
