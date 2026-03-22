@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { phoneToEmail, sanitizePhoneInput } from "@/lib/authPhone";
 
 interface AuthContextType {
   user: User | null;
@@ -21,27 +22,6 @@ export const useAuth = () => {
   return ctx;
 };
 
-// Normalize phone to a canonical format, then convert to fake email
-const normalizePhone = (phone: string): string => {
-  // Strip everything except digits
-  let digits = phone.replace(/[^0-9]/g, "");
-  // Convert 0049... → 49...
-  if (digits.startsWith("0049")) {
-    digits = digits.slice(2); // "0049176..." → "49176..."
-  }
-  // Convert 0176... → 49176... (German local format)
-  else if (digits.startsWith("0") && !digits.startsWith("00")) {
-    digits = "49" + digits.slice(1); // "0176..." → "49176..."
-  }
-  // +49 already becomes 49 after stripping non-digits
-  return digits;
-};
-
-const phoneToEmail = (phone: string) => {
-  const normalized = normalizePhone(phone);
-  return `${normalized}@phone.hearo.app`;
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -59,7 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // If "stay logged in" is disabled, sign out on fresh page load
       const stayLoggedIn = localStorage.getItem("hearo_stay_logged_in");
       if (stayLoggedIn === "false" && session) {
         supabase.auth.signOut().then(() => {
@@ -68,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
         return;
       }
+
       applySession(session);
       setLoading(false);
     });
@@ -76,42 +56,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (phone: string, password: string, displayName: string) => {
-    const email = phoneToEmail(phone);
-    console.log("[Auth] signUp attempt:", { email, phone: phone.substring(0, 4) + "***" });
+    const cleanPhone = sanitizePhoneInput(phone);
+    const email = phoneToEmail(cleanPhone);
+    console.log("[Auth] signUp attempt:", { email, phone: cleanPhone.substring(0, 4) + "***" });
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          phone_number: phone,
+          phone_number: cleanPhone,
           display_name: displayName,
         },
       },
     });
+
     if (error) {
       console.error("[Auth] signUp error:", error.message, error);
       return { error: error.message };
     }
+
     let activeSession = data?.session ?? null;
+
     if (!activeSession) {
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
       if (loginError) {
         console.error("[Auth] post-signUp signIn error:", loginError.message, loginError);
-        return { error: loginError.message };
+        const friendlyError = /Invalid login credentials/i.test(loginError.message)
+          ? "Diese Nummer ist bereits registriert. Bitte melde dich an oder nutze Passwort vergessen."
+          : loginError.message;
+        return { error: friendlyError.trim() };
       }
       activeSession = loginData.session;
     }
+
     applySession(activeSession);
     console.log("[Auth] signUp success:", { userId: data?.user?.id, confirmed: data?.user?.confirmed_at });
     return { error: null };
   };
 
   const signIn = async (phone: string, password: string) => {
-    const email = phoneToEmail(phone);
+    const cleanPhone = sanitizePhoneInput(phone);
+    const email = phoneToEmail(cleanPhone);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
     if (error) {
-      // Fallback: try legacy format (raw digits with p prefix for +)
-      const legacyClean = phone.replace(/[^0-9+]/g, "").replace("+", "p");
+      const legacyClean = cleanPhone.replace(/[^0-9+]/g, "").replace("+", "p");
       const legacyEmail = `${legacyClean}@phone.hearo.app`;
       if (legacyEmail !== email) {
         const { data: legacyData, error: legacyError } = await supabase.auth.signInWithPassword({ email: legacyEmail, password });
@@ -122,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return { error: error.message };
     }
+
     applySession(data.session);
     return { error: null };
   };
@@ -132,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPassword = async (phone: string) => {
-    const email = phoneToEmail(phone);
+    const email = phoneToEmail(sanitizePhoneInput(phone));
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });

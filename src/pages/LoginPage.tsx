@@ -1,13 +1,14 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, UserPlus, LogIn, Sparkles, Fingerprint } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+import { isValidAuthPhone, sanitizePhoneInput } from "@/lib/authPhone";
 import { toast } from "sonner";
 
 const LoginPage = () => {
-  const [phone, setPhone] = useState(() => localStorage.getItem("hearo_last_phone") || "");
+  const [phone, setPhone] = useState(() => sanitizePhoneInput(localStorage.getItem("hearo_last_phone") || ""));
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -37,7 +38,6 @@ const LoginPage = () => {
         setBiometricLoading(false);
         return;
       }
-      // Ensure stay logged in is enabled for biometric users
       localStorage.setItem("hearo_stay_logged_in", "true");
       navigate("/chats");
     } catch {
@@ -49,46 +49,56 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.trim().length < 6 || password.length < 6) return;
+
+    const cleanPhone = sanitizePhoneInput(phone);
+    if (!isValidAuthPhone(cleanPhone)) {
+      toast.error("Bitte gib eine gültige Handynummer ein");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Das Passwort muss mindestens 6 Zeichen lang sein");
+      return;
+    }
 
     setLoading(true);
-    localStorage.setItem("hearo_last_phone", phone.trim());
+    localStorage.setItem("hearo_last_phone", cleanPhone);
+
     try {
       if (mode === "login") {
-        const { error } = await signIn(phone, password);
+        const { error } = await signIn(cleanPhone, password);
         if (error) {
           toast.error(t("app.loginError") || "Anmeldung fehlgeschlagen");
           return;
         }
-        // If biometrics available: enroll on first time, update credentials on subsequent logins
+
         if (biometric.isAvailable) {
           if (!biometric.isEnabled) {
-            // First time: ask user to set up biometric
             try {
-              const enrolled = await biometric.enableBiometric(phone.trim(), password);
+              const enrolled = await biometric.enableBiometric(cleanPhone, password);
               if (enrolled) {
                 toast.success("Biometrische Anmeldung aktiviert! 🔐");
               }
             } catch {
-              // user dismissed - ignore
+              // ignore
             }
           } else {
-            // Already enabled: silently update stored credentials in case password changed
             try {
-              await biometric.enableBiometric(phone.trim(), password);
+              await biometric.enableBiometric(cleanPhone, password);
             } catch {
               // ignore
             }
           }
         }
       } else {
-        const { error } = await signUp(phone, password, displayName || "Nutzer");
+        const { error } = await signUp(cleanPhone, password, displayName || "Nutzer");
         if (error) {
           toast.error(error);
           return;
         }
         toast.success(t("app.signupSuccess") || "Konto erstellt!");
       }
+
       navigate("/chats");
     } finally {
       setLoading(false);
@@ -148,18 +158,19 @@ const LoginPage = () => {
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
               placeholder={t("app.phonePlaceholder") || "+49 123 456 789"}
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               autoFocus
               aria-label={t("app.phonePlaceholder")}
-              autoComplete="username"
-              name="username"
+              autoComplete={mode === "login" ? "username" : "tel"}
+              name={mode === "login" ? "username" : "signup-phone"}
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
-              data-form-type="username"
+              data-form-type={mode === "login" ? "username" : "other"}
               inputMode="tel"
+              maxLength={16}
             />
 
             <input
@@ -184,7 +195,7 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              disabled={phone.trim().length < 6 || password.length < 6 || loading}
+              disabled={!isValidAuthPhone(phone) || password.length < 6 || loading}
               className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2.5 shadow-soft hover:shadow-elevated transition-all duration-300 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none mt-1"
             >
               {loading ? (
@@ -246,7 +257,7 @@ const LoginPage = () => {
                   </p>
                   <button
                     type="button"
-                    disabled={phone.trim().length < 6 || forgotLoading}
+                    disabled={!isValidAuthPhone(phone) || forgotLoading}
                     onClick={async () => {
                       setForgotLoading(true);
                       await resetPassword(phone);
@@ -266,10 +277,14 @@ const LoginPage = () => {
           <button
             type="button"
             onClick={() => {
-              setMode(mode === "login" ? "signup" : "login");
+              const nextMode = mode === "login" ? "signup" : "login";
+              setMode(nextMode);
               setPasswordFieldReady(false);
               setShowForgot(false);
               setForgotSent(false);
+              setPassword("");
+              setDisplayName("");
+              setPhone(nextMode === "login" ? sanitizePhoneInput(localStorage.getItem("hearo_last_phone") || "") : "");
             }}
             className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mt-5 text-center"
           >
