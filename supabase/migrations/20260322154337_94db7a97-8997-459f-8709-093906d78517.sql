@@ -1,0 +1,1 @@
+INSERT INTO public.premium_whitelist (phone_number) VALUES ('017620985875') ON CONFLICT DO NOTHING;
