@@ -169,18 +169,20 @@ const HeroSection = () => {
                 <a
                   href={apkUrl}
                   download="hearo.apk"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-card border border-border text-foreground text-sm font-semibold shadow-sm hover:shadow-elevated hover:border-primary/30 transition-all active:scale-95"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-card border border-border text-foreground text-sm font-semibold shadow-sm hover:shadow-elevated hover:border-primary/30 transition-all active:scale-95 sm:hidden"
                 >
                   <Smartphone className="w-4 h-4 text-primary" />
-                  Android
+                  Android App
                 </a>
               )}
               <button
                 onClick={() => navigate("/install")}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-card border border-border text-foreground text-sm font-semibold shadow-sm hover:shadow-elevated hover:border-primary/30 transition-all active:scale-95"
               >
-                <Monitor className="w-4 h-4 text-primary" />
-                Desktop
+                <Download className="w-4 h-4 text-primary sm:hidden" />
+                <Monitor className="w-4 h-4 text-primary hidden sm:block" />
+                <span className="sm:hidden">App installieren</span>
+                <span className="hidden sm:inline">Desktop</span>
               </button>
             </div>
           </div>

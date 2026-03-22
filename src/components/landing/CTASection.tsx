@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, Smartphone, Monitor } from "lucide-react";
+import { LogIn, Smartphone, Monitor, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,18 +58,20 @@ const CTASection = () => {
                 <a
                   href={apkUrl}
                   download="hearo.apk"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20 sm:hidden"
                 >
                   <Smartphone className="w-4 h-4" />
-                  Android
+                  Android App
                 </a>
               )}
               <button
                 onClick={() => navigate("/install")}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20"
               >
-                <Monitor className="w-4 h-4" />
-                Desktop
+                <Download className="w-4 h-4 sm:hidden" />
+                <Monitor className="w-4 h-4 hidden sm:block" />
+                <span className="sm:hidden">App installieren</span>
+                <span className="hidden sm:inline">Desktop</span>
               </button>
             </div>
           </div>
