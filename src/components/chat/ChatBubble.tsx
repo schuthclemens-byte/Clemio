@@ -261,6 +261,17 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
+                  {/* Save voice message as voice sample for this contact */}
+                  {!isMine && isAudio && senderId && onSaveAsVoiceSample && message && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); requirePremium(() => onSaveAsVoiceSample(message, senderId!)); }}
+                      className="p-1.5 rounded-full bg-primary/10 text-primary transition-colors active:scale-90"
+                      aria-label="Als Stimmprobe speichern"
+                      title="Als Stimmprobe speichern"
+                    >
+                      {isPremium ? <Mic2 className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                    </button>
+                  )}
                 </>
               )}
             </div>
