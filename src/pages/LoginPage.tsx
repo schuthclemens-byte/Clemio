@@ -15,7 +15,8 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [passwordFieldReady, setPasswordFieldReady] = useState(false);
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
+  const [langOpen, setLangOpen] = useState(false);
   const { signIn, signUp, resetPassword } = useAuth();
   const biometric = useBiometricAuth();
   const [showForgot, setShowForgot] = useState(false);
