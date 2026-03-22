@@ -36,6 +36,7 @@ const defaultSettings: AccessibilitySettings = {
   quietHoursEnd: "07:00",
   compactMode: false,
   muteSounds: false,
+  autoCorrect: true,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
