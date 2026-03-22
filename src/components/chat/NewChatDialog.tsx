@@ -4,6 +4,7 @@ import { Search, X, MessageCirclePlus, Users, UserPlus, Check } from "lucide-rea
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizePhone } from "@/lib/authPhone";
 import { cn } from "@/lib/utils";
 
 interface FoundUser {
@@ -18,7 +19,8 @@ interface NewChatDialogProps {
 }
 
 const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
-  const [phone, setPhone] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults] = useState<FoundUser[]>([]);
   const [result, setResult] = useState<FoundUser | null>(null);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +33,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   const { user } = useAuth();
 
   const reset = () => {
-    setPhone("");
+    setSearchQuery("");
+    setResults([]);
     setResult(null);
     setError("");
     setCreating(false);
@@ -46,41 +49,70 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     onClose();
   };
 
+  const isPhoneQuery = (q: string) => /^[+0-9\s()-]+$/.test(q.trim());
+
   const handleSearch = async () => {
-    if (!phone.trim() || !user) return;
+    const query = searchQuery.trim();
+    if (!query || !user) return;
     setSearching(true);
     setError("");
     setResult(null);
+    setResults([]);
 
-    const { data, error: err } = await supabase
-      .from("profiles")
-      .select("id, display_name, phone_number")
-      .eq("phone_number", phone.trim())
-      .maybeSingle();
+    let found: FoundUser[] = [];
+
+    if (isPhoneQuery(query)) {
+      // Normalize the search input to match stored format
+      const normalized = normalizePhone(query);
+
+      // Search with multiple formats
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, phone_number")
+        .or(`phone_number.ilike.%${normalized}%,phone_number.ilike.%${query.replace(/\s/g, "")}%`)
+        .limit(10);
+
+      if (data) found = data;
+    } else {
+      // Name search
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, phone_number")
+        .ilike("display_name", `%${query}%`)
+        .limit(10);
+
+      if (data) found = data;
+    }
+
+    // Filter out self and already selected
+    found = found.filter(
+      (u) => u.id !== user.id && !selectedUsers.some((s) => s.id === u.id)
+    );
 
     setSearching(false);
 
-    if (err || !data) {
+    if (found.length === 0) {
       setError(t("chat.userNotFound") || "Nutzer nicht gefunden");
       return;
     }
 
-    if (data.id === user.id) {
-      setError("Du kannst nicht dich selbst hinzufügen");
-      return;
-    }
-
-    if (selectedUsers.some((u) => u.id === data.id)) {
-      setError("Nutzer bereits hinzugefügt");
-      return;
-    }
-
     if (isGroupMode) {
-      setSelectedUsers((prev) => [...prev, data]);
-      setPhone("");
-      setResult(null);
+      setResults(found);
+    } else if (found.length === 1) {
+      setResult(found[0]);
     } else {
-      setResult(data);
+      setResults(found);
+    }
+  };
+
+  const selectUser = (u: FoundUser) => {
+    if (isGroupMode) {
+      setSelectedUsers((prev) => [...prev, u]);
+      setResults((prev) => prev.filter((r) => r.id !== u.id));
+      setSearchQuery("");
+    } else {
+      setResult(u);
+      setResults([]);
     }
   };
 
@@ -92,7 +124,6 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     if (!result || !user) return;
     setCreating(true);
 
-    // Check existing 1:1 conversation
     const { data: myMemberships } = await supabase
       .from("conversation_members")
       .select("conversation_id")
@@ -179,6 +210,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               onClick={() => {
                 setIsGroupMode(!isGroupMode);
                 setResult(null);
+                setResults([]);
                 setError("");
                 if (!isGroupMode) setSelectedUsers([]);
               }}
@@ -190,7 +222,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               )}
             >
               <Users className="w-3.5 h-3.5" />
-              {isGroupMode ? "Gruppe" : "Gruppe"}
+              Gruppe
             </button>
             <button
               onClick={handleClose}
@@ -203,7 +235,6 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
         {/* Content */}
         <div className="p-4 space-y-3 overflow-y-auto flex-1">
-          {/* Group name input */}
           {isGroupMode && (
             <input
               type="text"
@@ -219,18 +250,18 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder={t("chat.enterPhone") || "Handynummer eingeben..."}
+                placeholder="Name oder Nummer suchen..."
                 className="w-full h-10 rounded-xl bg-secondary pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 autoFocus
               />
             </div>
             <button
               onClick={handleSearch}
-              disabled={searching || !phone.trim()}
+              disabled={searching || !searchQuery.trim()}
               className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {searching ? "..." : isGroupMode ? <UserPlus className="w-4 h-4" /> : (t("chat.search") || "Suchen")}
@@ -238,6 +269,32 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
           </div>
 
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
+
+          {/* Search results list */}
+          {results.length > 0 && (
+            <div className="space-y-1">
+              {results.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => selectUser(u)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/60 hover:bg-secondary transition-colors text-left"
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
+                    {(u.display_name || "?")[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{u.display_name || u.phone_number}</p>
+                    <p className="text-xs text-muted-foreground">{u.phone_number}</p>
+                  </div>
+                  {isGroupMode ? (
+                    <UserPlus className="w-4 h-4 text-primary shrink-0" />
+                  ) : (
+                    <MessageCirclePlus className="w-4 h-4 text-primary shrink-0" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Selected group members */}
           {isGroupMode && selectedUsers.length > 0 && (
