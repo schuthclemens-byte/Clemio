@@ -205,23 +205,25 @@ const LoginPage = () => {
               </div>
             )}
 
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
-              placeholder={t("app.phonePlaceholder") || "+49 123 456 789"}
-              className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
-              autoFocus
-              aria-label={t("app.phonePlaceholder")}
-              autoComplete={mode === "login" ? "username" : "tel"}
-              name={mode === "login" ? "username" : "signup-phone"}
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-              data-form-type={mode === "login" ? "username" : "other"}
-              inputMode="tel"
-              maxLength={16}
-            />
+            <div className="flex">
+              <CountryCodePicker selected={country} onSelect={setCountry} />
+              <input
+                type="tel"
+                value={localNumber}
+                onChange={(e) => setLocalNumber(e.target.value.replace(/[^\d\s]/g, ""))}
+                placeholder="123 456 789"
+                className="flex-1 h-14 rounded-r-2xl bg-card px-4 text-base shadow-sm border border-border border-l-0 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
+                autoFocus
+                aria-label={t("app.phonePlaceholder")}
+                autoComplete={mode === "login" ? "username" : "tel"}
+                name={mode === "login" ? "username" : "signup-phone"}
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                data-form-type={mode === "login" ? "username" : "other"}
+                inputMode="tel"
+              />
+            </div>
 
             <input
               type="password"
