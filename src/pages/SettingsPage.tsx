@@ -207,6 +207,42 @@ const SettingsPage = () => {
           </button>
         </section>
 
+        {/* Biometric Auth */}
+        {biometric.isAvailable && (
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "100ms" }}>
+            <button
+              onClick={async () => {
+                if (biometric.isEnabled) {
+                  biometric.disableBiometric();
+                  toast.success("Biometrische Anmeldung deaktiviert");
+                } else {
+                  toast.info("Bitte melde dich ab und wieder an, um die biometrische Anmeldung einzurichten.");
+                }
+              }}
+              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+              role="switch"
+              aria-checked={biometric.isEnabled}
+            >
+              <span className="flex items-center gap-3">
+                <Fingerprint className="w-5 h-5 text-primary" />
+                <div>
+                  <span className="text-[0.938rem] block font-medium">Face ID / Fingerabdruck</span>
+                  <span className="text-xs text-muted-foreground">Schnelle Anmeldung mit Biometrie</span>
+                </div>
+              </span>
+              <div className={cn(
+                "w-11 h-6 rounded-full relative transition-colors duration-200",
+                biometric.isEnabled ? "bg-primary" : "bg-border"
+              )}>
+                <div className={cn(
+                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                  biometric.isEnabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                )} />
+              </div>
+            </button>
+          </div>
+        )}
+
 
         <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
