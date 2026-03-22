@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint, ChevronDown, SpellCheck } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint, ChevronDown, SpellCheck, LogOut, KeyRound } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -58,7 +59,22 @@ const SettingsPage = () => {
   const { colorTheme, setColorTheme } = useColorTheme();
   const { globalBackground, setGlobalBackground } = useChatBackground();
   const biometric = useBiometricAuth();
+  const { signOut } = useAuth();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
+  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("hearo_stay_logged_in") !== "false");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login", { replace: true });
+  };
+
+  const toggleStayLoggedIn = () => {
+    const next = !stayLoggedIn;
+    setStayLoggedIn(next);
+    localStorage.setItem("hearo_stay_logged_in", next ? "true" : "false");
+    toast.success(next ? t("settings.stayLoggedIn") + " ✓" : t("settings.logout") + " – " + t("settings.stayLoggedInDesc"));
+  };
 
   const languages = Object.entries(localeNames) as [Locale, string][];
   const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
@@ -465,8 +481,66 @@ const SettingsPage = () => {
           </div>
         </CollapsibleSection>
 
+        {/* Stay logged in toggle */}
+        <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "95ms" }}>
+          <button
+            onClick={toggleStayLoggedIn}
+            className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+            role="switch"
+            aria-checked={stayLoggedIn}
+          >
+            <span className="flex items-center gap-3">
+              <KeyRound className="w-5 h-5 text-primary" />
+              <div>
+                <span className="text-[0.938rem] block font-medium">{t("settings.stayLoggedIn")}</span>
+                <span className="text-xs text-muted-foreground">{t("settings.stayLoggedInDesc")}</span>
+              </div>
+            </span>
+            <div className={cn(
+              "w-11 h-6 rounded-full relative transition-colors duration-200",
+              stayLoggedIn ? "bg-primary" : "bg-border"
+            )}>
+              <div className={cn(
+                "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                stayLoggedIn ? "translate-x-[1.375rem]" : "translate-x-0.5"
+              )} />
+            </div>
+          </button>
+        </div>
+
+        {/* Logout button */}
+        <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
+          {!showLogoutConfirm ? (
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="w-full flex items-center justify-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl shadow-sm hover:bg-destructive/20 transition-colors active:scale-[0.98] font-semibold"
+            >
+              <LogOut className="w-5 h-5" />
+              {t("settings.logout")}
+            </button>
+          ) : (
+            <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
+              <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm"
+                >
+                  {t("a11y.back")}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm"
+                >
+                  {t("settings.logout")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Legal & Privacy */}
-        <CollapsibleSection icon={Lock} title={t("settings.legal")} delay="90ms">
+        <CollapsibleSection icon={Lock} title={t("settings.legal")} delay="110ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <button
               onClick={() => navigate("/privacy")}

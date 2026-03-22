@@ -28,14 +28,20 @@ const LoginPage = () => {
       const creds = await biometric.authenticateWithBiometric();
       if (!creds) {
         toast.error("Biometrische Anmeldung fehlgeschlagen");
+        setBiometricLoading(false);
         return;
       }
       const { error } = await signIn(creds.phone, creds.password);
       if (error) {
         toast.error("Anmeldung fehlgeschlagen");
+        setBiometricLoading(false);
         return;
       }
+      // Ensure stay logged in is enabled for biometric users
+      localStorage.setItem("hearo_stay_logged_in", "true");
       navigate("/chats");
+    } catch {
+      toast.error("Biometrische Anmeldung fehlgeschlagen");
     } finally {
       setBiometricLoading(false);
     }
