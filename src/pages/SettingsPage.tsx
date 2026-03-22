@@ -18,6 +18,7 @@ const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
   const { globalBackground, setGlobalBackground } = useChatBackground();
+  const biometric = useBiometricAuth();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
 
   const languages = Object.entries(localeNames) as [Locale, string][];
