@@ -47,10 +47,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const applySession = (nextSession: Session | null) => {
+    setSession(nextSession);
+    setUser(nextSession?.user ?? null);
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      applySession(session);
       setLoading(false);
     });
 
@@ -59,14 +63,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const stayLoggedIn = localStorage.getItem("hearo_stay_logged_in");
       if (stayLoggedIn === "false" && session) {
         supabase.auth.signOut().then(() => {
-          setSession(null);
-          setUser(null);
+          applySession(null);
           setLoading(false);
         });
         return;
       }
-      setSession(session);
-      setUser(session?.user ?? null);
+      applySession(session);
       setLoading(false);
     });
 
@@ -90,28 +92,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("[Auth] signUp error:", error.message, error);
       return { error: error.message };
     }
+    let activeSession = data?.session ?? null;
+    if (!activeSession) {
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      if (loginError) {
+        console.error("[Auth] post-signUp signIn error:", loginError.message, loginError);
+        return { error: loginError.message };
+      }
+      activeSession = loginData.session;
+    }
+    applySession(activeSession);
     console.log("[Auth] signUp success:", { userId: data?.user?.id, confirmed: data?.user?.confirmed_at });
     return { error: null };
   };
 
   const signIn = async (phone: string, password: string) => {
     const email = phoneToEmail(phone);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       // Fallback: try legacy format (raw digits with p prefix for +)
       const legacyClean = phone.replace(/[^0-9+]/g, "").replace("+", "p");
       const legacyEmail = `${legacyClean}@phone.hearo.app`;
       if (legacyEmail !== email) {
-        const { error: legacyError } = await supabase.auth.signInWithPassword({ email: legacyEmail, password });
-        if (!legacyError) return { error: null };
+        const { data: legacyData, error: legacyError } = await supabase.auth.signInWithPassword({ email: legacyEmail, password });
+        if (!legacyError) {
+          applySession(legacyData.session);
+          return { error: null };
+        }
       }
       return { error: error.message };
     }
+    applySession(data.session);
     return { error: null };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    applySession(null);
   };
 
   const resetPassword = async (phone: string) => {
