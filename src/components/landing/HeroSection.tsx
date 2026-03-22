@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/contexts/I18nContext";
 import demoVoice from "@/assets/demo-voice.mp3";
 
 const fadeUp = {
@@ -17,6 +18,7 @@ const fadeUp = {
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [apkUrl, setApkUrl] = useState<string | null>(null);
@@ -48,7 +50,6 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
-      {/* Animated gradient orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
           className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full opacity-30 blur-[100px]"
@@ -76,7 +77,6 @@ const HeroSection = () => {
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
       >
-        {/* Logo with glow */}
         <motion.div variants={fadeUp} custom={0} className="relative w-20 h-20 mx-auto mb-8">
           <div className="absolute inset-0 rounded-[1.5rem] gradient-primary blur-xl opacity-40 animate-voice-pulse" />
           <div className="relative w-20 h-20 rounded-[1.5rem] shadow-elevated overflow-hidden gradient-primary flex items-center justify-center">
@@ -86,14 +86,14 @@ const HeroSection = () => {
 
         <motion.div variants={fadeUp} custom={1} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6 border border-primary/20">
           <Sparkles className="w-3.5 h-3.5" />
-          100% kostenlos · Browser, App & Desktop
+          {t("landing.badge")}
         </motion.div>
 
         <motion.h1 variants={fadeUp} custom={2} className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-5 leading-[1.12]">
-          Nachrichten, die{" "}
+          {t("landing.heroTitle1")}{" "}
           <span className="relative inline-block">
             <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-[gradient-shift_3s_ease-in-out_infinite]">
-              klingen
+              {t("landing.heroTitle2")}
             </span>
             <motion.span
               className="absolute -bottom-1 left-0 right-0 h-1 rounded-full gradient-primary"
@@ -104,14 +104,13 @@ const HeroSection = () => {
             />
           </span>
           <br />
-          wie du.
+          {t("landing.heroTitle3")}
         </motion.h1>
 
         <motion.p variants={fadeUp} custom={3} className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-md mx-auto mb-10">
-          Hearo verwandelt Nachrichten in echte Stimmen – als würde dein Freund direkt neben dir sprechen.
+          {t("landing.heroSubtitle")}
         </motion.p>
 
-        {/* Demo Player */}
         <motion.div variants={fadeUp} custom={4} className="mb-10">
           <motion.button
             onClick={playDemo}
@@ -128,10 +127,10 @@ const HeroSection = () => {
             </span>
             <span className="text-left flex-1">
               <span className="block text-sm font-bold text-foreground">
-                {isPlaying ? "Marnie spricht gerade…" : "Hör mal rein 🎧"}
+                {isPlaying ? t("landing.demoPlaying") : t("landing.demoPlay")}
               </span>
               <span className="block text-xs text-muted-foreground mt-0.5">
-                {isPlaying ? "Tippe zum Stoppen" : "So klingt eine Hearo-Nachricht"}
+                {isPlaying ? t("landing.demoStop") : t("landing.demoSubtitle")}
               </span>
             </span>
             {isPlaying && (
@@ -149,25 +148,22 @@ const HeroSection = () => {
           </motion.button>
         </motion.div>
 
-        {/* CTA Buttons */}
         <motion.div variants={fadeUp} custom={5} className="flex flex-col items-center gap-3">
-          {/* Primary: Anmelden */}
           <Button
             onClick={() => navigate("/login")}
             size="lg"
             className="rounded-full px-10 gap-2.5 text-base gradient-primary border-0 shadow-soft h-14 font-bold hover:shadow-elevated transition-all"
           >
             <LogIn className="w-5 h-5" />
-            Anmelden
+            {t("landing.signIn")}
           </Button>
 
-          {/* Secondary: App herunterladen */}
           <button
             onClick={() => navigate("/install")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-card border border-border text-foreground text-sm font-semibold shadow-sm hover:shadow-elevated hover:border-primary/30 transition-all active:scale-95"
           >
             <Download className="w-4 h-4 text-primary" />
-            App herunterladen
+            {t("landing.download")}
           </button>
         </motion.div>
       </motion.div>
