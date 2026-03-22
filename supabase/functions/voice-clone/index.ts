@@ -38,7 +38,8 @@ serve(async (req) => {
 
     const formData = await req.formData();
     const audioFile = formData.get("audio") as File;
-    const voiceName = formData.get("name") as string || "Meine Stimme";
+    const voiceName = formData.get("name") as string || "Stimme";
+    const contactUserId = formData.get("contact_user_id") as string | null;
 
     if (!audioFile) {
       return new Response(JSON.stringify({ error: "No audio file provided" }), {
@@ -47,17 +48,20 @@ serve(async (req) => {
       });
     }
 
+    const isContactVoice = !!contactUserId;
+    const cloneName = isContactVoice
+      ? `hearo_contact_${user.id.slice(0, 8)}_${contactUserId!.slice(0, 8)}`
+      : `hearo_${user.id.slice(0, 8)}_${voiceName}`;
+
     // Clone voice via ElevenLabs
     const elFormData = new FormData();
-    elFormData.append("name", `hearo_${user.id.slice(0, 8)}_${voiceName}`);
+    elFormData.append("name", cloneName);
     elFormData.append("files", audioFile);
-    elFormData.append("description", `Voice clone for Hearo user`);
+    elFormData.append("description", isContactVoice ? "Contact voice clone for Hearo" : "Voice clone for Hearo user");
 
     const elResponse = await fetch("https://api.elevenlabs.io/v1/voices/add", {
       method: "POST",
-      headers: {
-        "xi-api-key": ELEVENLABS_API_KEY,
-      },
+      headers: { "xi-api-key": ELEVENLABS_API_KEY },
       body: elFormData,
     });
 
@@ -72,17 +76,27 @@ serve(async (req) => {
 
     const { voice_id } = await elResponse.json();
 
-    // Save voice profile - use service role for upsert
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    await adminClient.from("voice_profiles").upsert({
-      user_id: user.id,
-      elevenlabs_voice_id: voice_id,
-      voice_name: voiceName,
-    }, { onConflict: "user_id" });
+    if (isContactVoice) {
+      // Save as contact voice profile
+      await adminClient.from("contact_voice_profiles").upsert({
+        user_id: user.id,
+        contact_user_id: contactUserId,
+        elevenlabs_voice_id: voice_id,
+        voice_name: voiceName,
+      }, { onConflict: "user_id,contact_user_id" });
+    } else {
+      // Save as own voice profile
+      await adminClient.from("voice_profiles").upsert({
+        user_id: user.id,
+        elevenlabs_voice_id: voice_id,
+        voice_name: voiceName,
+      }, { onConflict: "user_id" });
+    }
 
     return new Response(JSON.stringify({ success: true, voice_id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

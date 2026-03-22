@@ -258,10 +258,22 @@ const ChatPage = () => {
 
       setLoading(false);
 
-      // Check which senders have voice profiles with consent
+      // Check which senders have voice profiles (contact-uploaded or own with consent)
       const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
       const profiles: Record<string, boolean> = {};
       for (const sid of senderIds) {
+        // Check contact voice profile first (no consent needed - user uploaded it themselves)
+        const { data: contactVp } = await supabase
+          .from("contact_voice_profiles" as any)
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("contact_user_id", sid)
+          .maybeSingle();
+        if (contactVp) {
+          profiles[sid] = true;
+          continue;
+        }
+        // Fall back to sender's own voice profile with consent
         const { data: vp } = await supabase
           .from("voice_profiles" as any)
           .select("id")
@@ -278,26 +290,28 @@ const ChatPage = () => {
           profiles[sid] = !!consent;
         }
       }
-        // Track if the other user has a voice profile (for hint banner)
-        if (!isGroup) {
-          const otherSid = senderIds[0];
-          if (otherSid) {
+      // Track if other user has any voice (contact-uploaded or own)
+      if (!isGroup) {
+        const otherSid = senderIds[0] || otherUserId;
+        if (otherSid) {
+          const { data: cvp } = await supabase
+            .from("contact_voice_profiles" as any)
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("contact_user_id", otherSid)
+            .maybeSingle();
+          if (cvp) {
+            setOtherHasVoice(true);
+          } else {
             const { data: vp } = await supabase
               .from("voice_profiles" as any)
               .select("id")
               .eq("user_id", otherSid)
               .maybeSingle();
             setOtherHasVoice(!!vp);
-          } else if (otherUserId) {
-            // No messages from them yet, check directly
-            const { data: vp } = await supabase
-              .from("voice_profiles" as any)
-              .select("id")
-              .eq("user_id", otherUserId)
-              .maybeSingle();
-            setOtherHasVoice(!!vp);
           }
         }
+      }
 
       setVoiceProfiles(profiles);
     };
@@ -479,6 +493,54 @@ const ChatPage = () => {
     const senderName = memberNames[last.senderId] || chatName;
     enqueue({ id: last.id, text: last.text, senderId: last.senderId, senderName });
   }, [messages.length, shouldAutoPlay, focusMode, focusContactIds, autoplayContactIds, enqueue]);
+
+  // Save a voice message audio as a voice sample for a contact
+  const handleSaveAsVoiceSample = async (audioUrl: string, contactSenderId: string) => {
+    if (!user) return;
+    try {
+      const { toast } = await import("sonner");
+      toast.info("Stimmprobe wird gespeichert…");
+
+      // Fetch the audio file
+      const response = await fetch(audioUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "voice-sample.webm", { type: blob.type || "audio/webm" });
+
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) return;
+
+      const formData = new FormData();
+      formData.append("audio", file);
+      formData.append("name", memberNames[contactSenderId] || chatName || "Kontakt");
+      formData.append("contact_user_id", contactSenderId);
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-clone`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Fehler");
+      }
+
+      toast.success("Stimmprobe gespeichert! Nachrichten können jetzt in dieser Stimme abgespielt werden. 🎙️");
+      // Update voiceProfiles to reflect the new voice
+      setVoiceProfiles((prev) => ({ ...prev, [contactSenderId]: true }));
+      setOtherHasVoice(true);
+    } catch (err) {
+      console.error("Save voice sample error:", err);
+      const { toast } = await import("sonner");
+      toast.error("Stimmprobe konnte nicht gespeichert werden");
+    }
+  };
 
   const handleSend = async (text: string) => {
     if (isListening) stop();
@@ -670,7 +732,7 @@ const ChatPage = () => {
         <div className="flex items-center gap-2.5 px-4 py-2 bg-accent/5 border-b border-border/50">
           <Info className="w-4 h-4 text-accent shrink-0" />
           <p className="text-[11px] text-muted-foreground leading-snug">
-            <strong className="text-foreground">{chatName}</strong> hat noch keine Stimme hinterlegt. Jeder Kontakt kann seine Stimme in seinem eigenen Profil aufnehmen.
+            Noch keine Stimmprobe von <strong className="text-foreground">{chatName}</strong>. Doppeltippe auf eine Sprachnachricht und speichere sie als Stimmprobe.
           </p>
         </div>
       )}
@@ -767,6 +829,7 @@ const ChatPage = () => {
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
+                  onSaveAsVoiceSample={!msg.isMine ? handleSaveAsVoiceSample : undefined}
                   replyToText={replyMsg?.text}
                   replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
                 />

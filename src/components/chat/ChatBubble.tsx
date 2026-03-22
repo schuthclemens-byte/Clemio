@@ -1,4 +1,4 @@
-import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown } from "lucide-react";
+import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -29,6 +29,7 @@ interface ChatBubbleProps {
   reactions?: Reaction[];
   onToggleReaction?: (msgId: string, emoji: string) => void;
   onDelete?: (msgId: string) => void;
+  onSaveAsVoiceSample?: (audioUrl: string, senderId: string) => void;
   replyToText?: string;
   replyToSender?: string;
 }
@@ -46,7 +47,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete, replyToText, replyToSender }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onSaveAsVoiceSample, replyToText, replyToSender }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -258,6 +259,17 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       aria-label="Nachricht löschen"
                     >
                       <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  {/* Save voice message as voice sample for this contact */}
+                  {!isMine && isAudio && senderId && onSaveAsVoiceSample && message && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); requirePremium(() => onSaveAsVoiceSample(message, senderId!)); }}
+                      className="p-1.5 rounded-full bg-primary/10 text-primary transition-colors active:scale-90"
+                      aria-label="Als Stimmprobe speichern"
+                      title="Als Stimmprobe speichern"
+                    >
+                      {isPremium ? <Mic2 className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     </button>
                   )}
                 </>

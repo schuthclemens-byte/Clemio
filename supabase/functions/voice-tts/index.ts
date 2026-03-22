@@ -45,44 +45,58 @@ serve(async (req) => {
       });
     }
 
-    // Check if sender has a voice profile
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: voiceProfile } = await adminClient
-      .from("voice_profiles")
+    // Priority 1: Check if the requesting user has a contact voice profile for this sender
+    const { data: contactVoice } = await adminClient
+      .from("contact_voice_profiles")
       .select("elevenlabs_voice_id")
-      .eq("user_id", senderId)
+      .eq("user_id", user.id)
+      .eq("contact_user_id", senderId)
       .maybeSingle();
 
-    if (!voiceProfile) {
-      return new Response(JSON.stringify({ error: "No voice profile for this user" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    let voiceId: string | null = contactVoice?.elevenlabs_voice_id ?? null;
+
+    // Priority 2: Fall back to sender's own voice profile (with consent check)
+    if (!voiceId) {
+      const { data: voiceProfile } = await adminClient
+        .from("voice_profiles")
+        .select("elevenlabs_voice_id")
+        .eq("user_id", senderId)
+        .maybeSingle();
+
+      if (!voiceProfile) {
+        return new Response(JSON.stringify({ error: "No voice profile for this user" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Check consent for sender's own voice
+      const { data: consent } = await adminClient
+        .from("voice_consents")
+        .select("status")
+        .eq("voice_owner_id", senderId)
+        .eq("granted_to_user_id", user.id)
+        .eq("status", "granted")
+        .maybeSingle();
+
+      if (!consent) {
+        return new Response(JSON.stringify({ error: "No consent granted" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      voiceId = voiceProfile.elevenlabs_voice_id;
     }
 
-    // Check consent: has the voice owner granted permission to the requesting user?
-    const { data: consent } = await adminClient
-      .from("voice_consents")
-      .select("status")
-      .eq("voice_owner_id", senderId)
-      .eq("granted_to_user_id", user.id)
-      .eq("status", "granted")
-      .maybeSingle();
-
-    if (!consent) {
-      return new Response(JSON.stringify({ error: "No consent granted" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Generate TTS with cloned voice
+    // Generate TTS with the resolved voice
     const ttsResponse = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceProfile.elevenlabs_voice_id}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
         method: "POST",
         headers: {

@@ -38,6 +38,36 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_voice_profiles: {
+        Row: {
+          contact_user_id: string
+          created_at: string | null
+          elevenlabs_voice_id: string
+          id: string
+          sample_url: string | null
+          user_id: string
+          voice_name: string | null
+        }
+        Insert: {
+          contact_user_id: string
+          created_at?: string | null
+          elevenlabs_voice_id: string
+          id?: string
+          sample_url?: string | null
+          user_id: string
+          voice_name?: string | null
+        }
+        Update: {
+          contact_user_id?: string
+          created_at?: string | null
+          elevenlabs_voice_id?: string
+          id?: string
+          sample_url?: string | null
+          user_id?: string
+          voice_name?: string | null
+        }
+        Relationships: []
+      }
       conversation_members: {
         Row: {
           conversation_id: string
