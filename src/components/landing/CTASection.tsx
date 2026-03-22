@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, Smartphone, Monitor, Download } from "lucide-react";
+import { LogIn, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/contexts/I18nContext";
 
 const CTASection = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [apkUrl, setApkUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,11 +38,11 @@ const CTASection = () => {
         />
 
         <div className="relative p-10 text-center">
-          <h2 className="text-3xl font-extrabold text-primary-foreground mb-3 leading-tight">
-            Bereit, richtig<br />zuzuhören?
+          <h2 className="text-3xl font-extrabold text-primary-foreground mb-3 leading-tight whitespace-pre-line">
+            {t("landing.ctaTitle")}
           </h2>
           <p className="text-primary-foreground/80 text-base mb-8 max-w-sm mx-auto">
-            Melde dich an und starte sofort – im Browser, als App oder auf dem Desktop.
+            {t("landing.ctaSubtitle")}
           </p>
           <div className="flex flex-col items-center justify-center gap-3">
             <Button
@@ -50,7 +52,7 @@ const CTASection = () => {
               className="rounded-full px-8 gap-2.5 text-base font-bold h-14 shadow-elevated"
             >
               <LogIn className="w-5 h-5" />
-              Anmelden
+              {t("landing.signIn")}
             </Button>
 
             <button
@@ -58,7 +60,7 @@ const CTASection = () => {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20 mt-2"
             >
               <Download className="w-4 h-4" />
-              App herunterladen
+              {t("landing.download")}
             </button>
           </div>
         </div>

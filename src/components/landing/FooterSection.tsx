@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
+import { useI18n } from "@/contexts/I18nContext";
 
 const FooterSection = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   return (
     <footer className="border-t border-border px-6 py-10">
@@ -15,15 +17,15 @@ const FooterSection = () => {
         </div>
         <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap justify-center">
           <button onClick={() => navigate("/privacy")} className="hover:text-foreground transition-colors">
-            Datenschutz
+            {t("landing.footerPrivacy")}
           </button>
           <span className="text-border">·</span>
           <button onClick={() => navigate("/terms")} className="hover:text-foreground transition-colors">
-            Nutzungsbedingungen
+            {t("landing.footerTerms")}
           </button>
           <span className="text-border">·</span>
           <button onClick={() => navigate("/impressum")} className="hover:text-foreground transition-colors">
-            Impressum
+            {t("landing.footerImprint")}
           </button>
         </div>
         <p className="text-[0.688rem] text-muted-foreground/50">
