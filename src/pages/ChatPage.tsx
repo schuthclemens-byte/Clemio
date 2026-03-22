@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Headphones, X, ImageIcon } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Headphones, X, ImageIcon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -73,6 +73,7 @@ const ChatPage = () => {
   const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned } = useVoiceTTS();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
+  const [otherHasVoice, setOtherHasVoice] = useState<boolean | null>(null);
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
 
   // Typing indicator
@@ -277,6 +278,27 @@ const ChatPage = () => {
           profiles[sid] = !!consent;
         }
       }
+        // Track if the other user has a voice profile (for hint banner)
+        if (!isGroup) {
+          const otherSid = senderIds[0];
+          if (otherSid) {
+            const { data: vp } = await supabase
+              .from("voice_profiles" as any)
+              .select("id")
+              .eq("user_id", otherSid)
+              .maybeSingle();
+            setOtherHasVoice(!!vp);
+          } else if (otherUserId) {
+            // No messages from them yet, check directly
+            const { data: vp } = await supabase
+              .from("voice_profiles" as any)
+              .select("id")
+              .eq("user_id", otherUserId)
+              .maybeSingle();
+            setOtherHasVoice(!!vp);
+          }
+        }
+
       setVoiceProfiles(profiles);
     };
 
@@ -643,6 +665,15 @@ const ChatPage = () => {
       </header>
 
       {/* Auto-play banner */}
+      {/* Voice hint: contact has no voice profile */}
+      {!isGroup && otherHasVoice === false && isPremium && (
+        <div className="flex items-center gap-2.5 px-4 py-2 bg-accent/5 border-b border-border/50">
+          <Info className="w-4 h-4 text-accent shrink-0" />
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            <strong className="text-foreground">{chatName}</strong> hat noch keine Stimme hinterlegt. Jeder Kontakt kann seine Stimme in seinem eigenen Profil aufnehmen.
+          </p>
+        </div>
+      )}
       {currentItem && (
         <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/5 border-b border-border animate-fade-in">
           <Headphones className="w-4 h-4 text-primary shrink-0" />
