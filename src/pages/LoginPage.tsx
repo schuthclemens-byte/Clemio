@@ -22,6 +22,25 @@ const LoginPage = () => {
   const [forgotSent, setForgotSent] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
 
+  const handleBiometricLogin = useCallback(async () => {
+    setBiometricLoading(true);
+    try {
+      const creds = await biometric.authenticateWithBiometric();
+      if (!creds) {
+        toast.error("Biometrische Anmeldung fehlgeschlagen");
+        return;
+      }
+      const { error } = await signIn(creds.phone, creds.password);
+      if (error) {
+        toast.error("Anmeldung fehlgeschlagen");
+        return;
+      }
+      navigate("/chats");
+    } finally {
+      setBiometricLoading(false);
+    }
+  }, [biometric, signIn, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.trim().length < 6 || password.length < 6) return;
@@ -34,6 +53,17 @@ const LoginPage = () => {
         if (error) {
           toast.error(t("app.loginError") || "Anmeldung fehlgeschlagen");
           return;
+        }
+        // Offer biometric enrollment after successful login
+        if (biometric.isAvailable && !biometric.isEnabled) {
+          try {
+            const enrolled = await biometric.enableBiometric(phone.trim(), password);
+            if (enrolled) {
+              toast.success("Biometrische Anmeldung aktiviert! 🔐");
+            }
+          } catch {
+            // silently ignore if user dismisses
+          }
         }
       } else {
         const { error } = await signUp(phone, password, displayName || "Nutzer");
