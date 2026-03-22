@@ -129,6 +129,67 @@ const ChatListPage = () => {
     setLoading(false);
   };
 
+  // Search messages across all conversations
+  const searchMessages = useCallback(async (query: string) => {
+    if (!user || query.length < 2) {
+      setMessageResults([]);
+      return;
+    }
+    setSearchingMessages(true);
+
+    const { data: memberships } = await supabase
+      .from("conversation_members")
+      .select("conversation_id")
+      .eq("user_id", user.id);
+
+    if (!memberships || memberships.length === 0) {
+      setMessageResults([]);
+      setSearchingMessages(false);
+      return;
+    }
+
+    const convIds = memberships.map((m) => m.conversation_id);
+
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("id, content, created_at, sender_id, conversation_id")
+      .in("conversation_id", convIds)
+      .ilike("content", `%${query}%`)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (!msgs || msgs.length === 0) {
+      setMessageResults([]);
+      setSearchingMessages(false);
+      return;
+    }
+
+    // Build results with conversation & sender names
+    const results: MessageSearchResult[] = [];
+    for (const msg of msgs) {
+      const conv = conversations.find((c) => c.id === msg.conversation_id);
+      const convName = conv?.name || "Chat";
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, phone_number")
+        .eq("id", msg.sender_id)
+        .maybeSingle();
+
+      results.push({
+        messageId: msg.id,
+        conversationId: msg.conversation_id,
+        conversationName: convName,
+        content: msg.content,
+        time: new Date(msg.created_at!).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+        senderName: profile?.display_name || profile?.phone_number || "Unbekannt",
+      });
+    }
+
+    setMessageResults(results);
+    setSearchingMessages(false);
+  }, [user, conversations]);
+
   useEffect(() => {
     fetchConversations();
     requestPermission();
@@ -147,6 +208,18 @@ const ChatListPage = () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  // Debounced message search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search.length >= 2) {
+        searchMessages(search);
+      } else {
+        setMessageResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, searchMessages]);
 
   const filtered = conversations.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
