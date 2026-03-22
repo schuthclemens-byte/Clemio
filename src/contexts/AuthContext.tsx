@@ -21,10 +21,25 @@ export const useAuth = () => {
   return ctx;
 };
 
-// Convert phone to a fake email for Supabase email auth
+// Normalize phone to a canonical format, then convert to fake email
+const normalizePhone = (phone: string): string => {
+  // Strip everything except digits
+  let digits = phone.replace(/[^0-9]/g, "");
+  // Convert 0049... → 49...
+  if (digits.startsWith("0049")) {
+    digits = digits.slice(2); // "0049176..." → "49176..."
+  }
+  // Convert 0176... → 49176... (German local format)
+  else if (digits.startsWith("0") && !digits.startsWith("00")) {
+    digits = "49" + digits.slice(1); // "0176..." → "49176..."
+  }
+  // +49 already becomes 49 after stripping non-digits
+  return digits;
+};
+
 const phoneToEmail = (phone: string) => {
-  const clean = phone.replace(/[^0-9+]/g, "").replace("+", "p");
-  return `${clean}@phone.hearo.app`;
+  const normalized = normalizePhone(phone);
+  return `${normalized}@phone.hearo.app`;
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
