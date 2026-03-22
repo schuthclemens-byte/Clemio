@@ -71,7 +71,7 @@ export function useBiometricAuth() {
 
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge,
+          challenge: challenge as BufferSource,
           rp: { name: "Hearo Messenger", id: window.location.hostname },
           user: {
             id: userId,
