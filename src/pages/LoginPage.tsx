@@ -233,25 +233,35 @@ const LoginPage = () => {
               />
             </div>
 
-            <input
-              type="password"
-              inputMode="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("app.passwordPlaceholder") || "Passwort (min. 6 Zeichen)"}
-              className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
-              aria-label="Zugangscode"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              name="password"
-              id={`_hro_field_${mode}`}
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-              readOnly={!passwordFieldReady}
-              onFocus={() => setPasswordFieldReady(true)}
-              onPointerDown={() => setPasswordFieldReady(true)}
-              data-form-type={mode === "login" ? "password" : "new-password"}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                inputMode="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("app.passwordPlaceholder") || "Passwort (min. 6 Zeichen)"}
+                className="w-full h-14 rounded-2xl bg-card px-5 pr-12 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
+                aria-label="Zugangscode"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                name="password"
+                id={`_hro_field_${mode}`}
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                readOnly={!passwordFieldReady}
+                onFocus={() => setPasswordFieldReady(true)}
+                onPointerDown={() => setPasswordFieldReady(true)}
+                data-form-type={mode === "login" ? "password" : "new-password"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
 
             <button
               type="submit"
