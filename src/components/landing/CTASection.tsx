@@ -39,18 +39,18 @@ const CTASection = () => {
           <h2 className="text-3xl font-extrabold text-primary-foreground mb-3 leading-tight">
             Bereit, richtig<br />zuzuhören?
           </h2>
-          <p className="text-primary-foreground/80 text-base mb-8 max-w-xs mx-auto">
-            Installiere Hearo jetzt – kostenlos, in 10 Sekunden, direkt im Browser.
+          <p className="text-primary-foreground/80 text-base mb-8 max-w-sm mx-auto">
+            Nutze Hearo direkt auf der Website – ganz ohne Download. Wenn du möchtest, kannst du die Android-App zusätzlich optional herunterladen.
           </p>
           <div className="flex flex-col items-center justify-center gap-3">
             <Button
-              onClick={() => navigate("/install")}
+              onClick={() => navigate("/login")}
               variant="secondary"
               size="lg"
               className="rounded-full px-8 gap-2.5 text-base font-bold h-14 shadow-elevated"
             >
-              <Download className="w-5 h-5" />
-              Jetzt installieren
+              <ArrowRight className="w-5 h-5" />
+              Direkt im Browser starten
             </Button>
             {apkUrl && (
               <a
@@ -59,15 +59,15 @@ const CTASection = () => {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20"
               >
                 <Smartphone className="w-4 h-4" />
-                Android APK herunterladen
+                Android-App optional herunterladen
               </a>
             )}
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/install")}
               className="text-primary-foreground/70 hover:text-primary-foreground text-sm font-medium flex items-center gap-1 transition-colors"
             >
-              Anmelden
-              <ArrowRight className="w-3.5 h-3.5" />
+              Installations-Hilfe
+              <Download className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
