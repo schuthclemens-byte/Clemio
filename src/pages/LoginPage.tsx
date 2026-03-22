@@ -6,9 +6,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { isValidAuthPhone, sanitizePhoneInput } from "@/lib/authPhone";
 import { toast } from "sonner";
+import CountryCodePicker, { countries, findCountryByDial, type Country } from "@/components/auth/CountryCodePicker";
+
+const getInitialCountry = (): Country => {
+  const saved = localStorage.getItem("hearo_last_phone") || "";
+  return findCountryByDial(saved) || countries[0];
+};
+
+const getInitialLocalNumber = (): string => {
+  const saved = localStorage.getItem("hearo_last_phone") || "";
+  if (!saved) return "";
+  const country = findCountryByDial(saved) || countries[0];
+  // Strip the country dial code from saved number
+  if (saved.startsWith(country.dial)) {
+    return saved.slice(country.dial.length).trim();
+  }
+  return sanitizePhoneInput(saved);
+};
 
 const LoginPage = () => {
-  const [phone, setPhone] = useState(() => sanitizePhoneInput(localStorage.getItem("hearo_last_phone") || ""));
+  const [country, setCountry] = useState<Country>(getInitialCountry);
+  const [localNumber, setLocalNumber] = useState(() => getInitialLocalNumber());
+  const phone = `${country.dial}${localNumber.replace(/\D/g, "")}`;
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -51,8 +70,14 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const cleanPhone = sanitizePhoneInput(phone);
-    if (!isValidAuthPhone(cleanPhone)) {
+    const digits = localNumber.replace(/\D/g, "");
+    if (digits.length < 4) {
+      toast.error("Bitte gib eine gültige Handynummer ein");
+      return;
+    }
+
+    const fullPhone = `${country.dial}${digits}`;
+    if (!isValidAuthPhone(fullPhone)) {
       toast.error("Bitte gib eine gültige Handynummer ein");
       return;
     }
@@ -63,6 +88,7 @@ const LoginPage = () => {
     }
 
     setLoading(true);
+    const cleanPhone = fullPhone;
     localStorage.setItem("hearo_last_phone", cleanPhone);
 
     try {
@@ -186,23 +212,25 @@ const LoginPage = () => {
               </div>
             )}
 
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
-              placeholder={t("app.phonePlaceholder") || "+49 123 456 789"}
-              className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
-              autoFocus
-              aria-label={t("app.phonePlaceholder")}
-              autoComplete={mode === "login" ? "username" : "tel"}
-              name={mode === "login" ? "username" : "signup-phone"}
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-              data-form-type={mode === "login" ? "username" : "other"}
-              inputMode="tel"
-              maxLength={16}
-            />
+            <div className="flex">
+              <CountryCodePicker selected={country} onSelect={setCountry} />
+              <input
+                type="tel"
+                value={localNumber}
+                onChange={(e) => setLocalNumber(e.target.value.replace(/[^\d\s]/g, ""))}
+                placeholder="123 456 789"
+                className="flex-1 h-14 rounded-r-2xl bg-card px-4 text-base shadow-sm border border-border border-l-0 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
+                autoFocus
+                aria-label={t("app.phonePlaceholder")}
+                autoComplete={mode === "login" ? "username" : "tel"}
+                name={mode === "login" ? "username" : "signup-phone"}
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                data-form-type={mode === "login" ? "username" : "other"}
+                inputMode="tel"
+              />
+            </div>
 
             <input
               type="password"
@@ -226,7 +254,7 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              disabled={!isValidAuthPhone(phone) || password.length < 6 || loading}
+              disabled={localNumber.replace(/\D/g, "").length < 4 || password.length < 6 || loading}
               className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2.5 shadow-soft hover:shadow-elevated transition-all duration-300 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none mt-1"
             >
               {loading ? (
@@ -288,7 +316,7 @@ const LoginPage = () => {
                   </p>
                   <button
                     type="button"
-                    disabled={!isValidAuthPhone(phone) || forgotLoading}
+                    disabled={localNumber.replace(/\D/g, "").length < 4 || forgotLoading}
                     onClick={async () => {
                       setForgotLoading(true);
                       await resetPassword(phone);
@@ -315,7 +343,8 @@ const LoginPage = () => {
               setForgotSent(false);
               setPassword("");
               setDisplayName("");
-              setPhone(nextMode === "login" ? sanitizePhoneInput(localStorage.getItem("hearo_last_phone") || "") : "");
+              setLocalNumber(nextMode === "login" ? getInitialLocalNumber() : "");
+              setCountry(nextMode === "login" ? getInitialCountry() : countries[0]);
             }}
             className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mt-5 text-center"
           >
