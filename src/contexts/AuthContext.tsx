@@ -82,7 +82,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (phone: string, password: string) => {
     const email = phoneToEmail(phone);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
+    if (error) {
+      // Fallback: try legacy format (raw digits with p prefix for +)
+      const legacyClean = phone.replace(/[^0-9+]/g, "").replace("+", "p");
+      const legacyEmail = `${legacyClean}@phone.hearo.app`;
+      if (legacyEmail !== email) {
+        const { error: legacyError } = await supabase.auth.signInWithPassword({ email: legacyEmail, password });
+        if (!legacyError) return { error: null };
+      }
+      return { error: error.message };
+    }
     return { error: null };
   };
 
