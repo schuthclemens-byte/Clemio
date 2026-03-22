@@ -198,6 +198,7 @@ const InstallPage = () => {
 
           {isIOS ? (
             <div className="space-y-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">iPhone / iPad</p>
               <Step number={1}>
                 Tippe auf <Share className="w-4 h-4 inline text-primary" /> <strong>Teilen</strong> in Safari
               </Step>
@@ -209,16 +210,31 @@ const InstallPage = () => {
               </Step>
             </div>
           ) : (
-            <div className="space-y-4">
-              <Step number={1}>
-                Öffne in Chrome das <strong>3-Punkte-Menü</strong>
-              </Step>
-              <Step number={2}>
-                Tippe auf <strong>„App installieren"</strong> oder <strong>„Zum Startbildschirm hinzufügen"</strong>
-              </Step>
-              <Step number={3}>
-                Bestätige mit <strong>„Installieren"</strong>
-              </Step>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">📱 Handy (Android)</p>
+                <Step number={1}>
+                  Öffne in Chrome das <strong>3-Punkte-Menü</strong>
+                </Step>
+                <Step number={2}>
+                  Tippe auf <strong>„App installieren"</strong> oder <strong>„Zum Startbildschirm hinzufügen"</strong>
+                </Step>
+                <Step number={3}>
+                  Bestätige mit <strong>„Installieren"</strong>
+                </Step>
+              </div>
+              <div className="border-t border-border pt-4 space-y-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">💻 Desktop (Windows / Mac)</p>
+                <Step number={1}>
+                  Öffne Hearo in <strong>Chrome</strong> oder <strong>Microsoft Edge</strong>
+                </Step>
+                <Step number={2}>
+                  Klicke oben rechts auf das <strong>Install-Symbol</strong> (⊕) in der Adressleiste oder gehe ins <strong>3-Punkte-Menü → „App installieren"</strong>
+                </Step>
+                <Step number={3}>
+                  Klicke auf <strong>„Installieren"</strong> – Hearo öffnet sich als eigenes Fenster
+                </Step>
+              </div>
             </div>
           )}
         </DialogContent>
