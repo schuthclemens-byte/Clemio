@@ -91,7 +91,7 @@ const CORRECTIONS_DE: Record<string, string> = {
   "nru": "nur", "nuur": "nur",
   "mti": "mit", "mti": "mit",
   "fü": "für", "fue": "für",
-  "shcon": "schon", "scohn": "schon",
+  "shcon": "schon",
   "libe": "liebe", "leibe": "liebe",
   "wekr": "werk", "wrk": "werk",
   "kien": "kein", "keine": "keine",
