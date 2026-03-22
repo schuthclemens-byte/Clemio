@@ -42,6 +42,7 @@ const LoginPage = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleBiometricLogin = useCallback(async () => {
     setBiometricLoading(true);
