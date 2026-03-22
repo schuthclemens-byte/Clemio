@@ -70,8 +70,14 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const cleanPhone = sanitizePhoneInput(phone);
-    if (!isValidAuthPhone(cleanPhone)) {
+    const digits = localNumber.replace(/\D/g, "");
+    if (digits.length < 4) {
+      toast.error("Bitte gib eine gültige Handynummer ein");
+      return;
+    }
+
+    const fullPhone = `${country.dial}${digits}`;
+    if (!isValidAuthPhone(fullPhone)) {
       toast.error("Bitte gib eine gültige Handynummer ein");
       return;
     }
@@ -82,6 +88,7 @@ const LoginPage = () => {
     }
 
     setLoading(true);
+    const cleanPhone = fullPhone;
     localStorage.setItem("hearo_last_phone", cleanPhone);
 
     try {
