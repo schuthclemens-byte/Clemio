@@ -75,7 +75,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (phone: string, password: string, displayName: string) => {
     const email = phoneToEmail(phone);
-    const { error } = await supabase.auth.signUp({
+    console.log("[Auth] signUp attempt:", { email, phone: phone.substring(0, 4) + "***" });
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -85,7 +86,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     });
-    if (error) return { error: error.message };
+    if (error) {
+      console.error("[Auth] signUp error:", error.message, error);
+      return { error: error.message };
+    }
+    console.log("[Auth] signUp success:", { userId: data?.user?.id, confirmed: data?.user?.confirmed_at });
     return { error: null };
   };
 
