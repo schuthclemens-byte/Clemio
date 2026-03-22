@@ -193,6 +193,25 @@ const LoginPage = () => {
             </button>
           </form>
 
+          {/* Biometric login button */}
+          {mode === "login" && biometric.isAvailable && biometric.isEnabled && biometric.hasStoredCredential() && (
+            <button
+              type="button"
+              onClick={handleBiometricLogin}
+              disabled={biometricLoading}
+              className="w-full h-14 rounded-2xl bg-card border-2 border-primary/20 text-foreground font-semibold text-base flex items-center justify-center gap-3 shadow-sm hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 active:scale-[0.97] disabled:opacity-40 mt-3"
+            >
+              {biometricLoading ? (
+                <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Fingerprint className="w-5 h-5 text-primary" />
+                  Mit Face ID / Fingerabdruck anmelden
+                </>
+              )}
+            </button>
+          )}
+
           {/* Forgot password */}
           {mode === "login" && !showForgot && (
             <button
