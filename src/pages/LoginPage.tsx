@@ -54,15 +54,25 @@ const LoginPage = () => {
           toast.error(t("app.loginError") || "Anmeldung fehlgeschlagen");
           return;
         }
-        // Offer biometric enrollment after successful login
-        if (biometric.isAvailable && !biometric.isEnabled) {
-          try {
-            const enrolled = await biometric.enableBiometric(phone.trim(), password);
-            if (enrolled) {
-              toast.success("Biometrische Anmeldung aktiviert! 🔐");
+        // If biometrics available: enroll on first time, update credentials on subsequent logins
+        if (biometric.isAvailable) {
+          if (!biometric.isEnabled) {
+            // First time: ask user to set up biometric
+            try {
+              const enrolled = await biometric.enableBiometric(phone.trim(), password);
+              if (enrolled) {
+                toast.success("Biometrische Anmeldung aktiviert! 🔐");
+              }
+            } catch {
+              // user dismissed - ignore
             }
-          } catch {
-            // silently ignore if user dismisses
+          } else {
+            // Already enabled: silently update stored credentials in case password changed
+            try {
+              await biometric.enableBiometric(phone.trim(), password);
+            } catch {
+              // ignore
+            }
           }
         }
       } else {
