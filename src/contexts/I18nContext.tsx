@@ -21,7 +21,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "app.signupSuccess": "Konto erstellt!",
     "app.loginError": "Anmeldung fehlgeschlagen",
     "app.forgotPassword": "Passwort vergessen?",
-    "app.forgotHint": "Gib deine Handynummer ein und tippe auf „Link senden".",
+    "app.forgotHint": "Gib deine Handynummer ein und tippe auf 'Link senden'.",
     "app.sendLink": "Link senden",
     "app.sending": "Wird gesendet...",
     "app.forgotSent": "Falls ein Konto existiert, wurde ein Link gesendet.",
