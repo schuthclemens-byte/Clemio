@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
+import { ArrowRight, UserPlus, LogIn, Sparkles, Fingerprint } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { toast } from "sonner";
 
 const LoginPage = () => {
