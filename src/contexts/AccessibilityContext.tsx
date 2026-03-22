@@ -9,10 +9,11 @@ interface AccessibilitySettings {
   focusMode: boolean;
   speechRate: number;
   smartSilence: boolean;
-  quietHoursStart: string; // "22:00"
-  quietHoursEnd: string;   // "07:00"
+  quietHoursStart: string;
+  quietHoursEnd: string;
   compactMode: boolean;
   muteSounds: boolean;
+  autoCorrect: boolean;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
