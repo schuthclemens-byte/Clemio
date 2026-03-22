@@ -3,11 +3,6 @@ import { useState, useEffect, useCallback } from "react";
 const BIOMETRIC_ENABLED_KEY = "hearo_biometric_enabled";
 const BIOMETRIC_CRED_KEY = "hearo_biometric_cred";
 
-interface StoredCredential {
-  phone: string;
-  token: string;
-}
-
 function isWebAuthnAvailable(): boolean {
   return (
     typeof window !== "undefined" &&
@@ -31,31 +26,43 @@ function generateChallenge(): Uint8Array {
   return challenge;
 }
 
-function bufferToBase64(buffer: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+function bufferToBase64Url(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function base64ToBuffer(base64: string): ArrayBuffer {
-  const binary = atob(base64);
-  const buffer = new ArrayBuffer(binary.length);
-  const view = new Uint8Array(buffer);
+function base64UrlToBuffer(base64Url: string): ArrayBuffer {
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
-    view[i] = binary.charCodeAt(i);
+    bytes[i] = binary.charCodeAt(i);
   }
-  return buffer;
+  return bytes.buffer;
 }
 
-// Simple XOR obfuscation (not encryption, but prevents plain-text storage)
-function obfuscate(text: string, key: string): string {
-  let result = "";
-  for (let i = 0; i < text.length; i++) {
-    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-  }
-  return btoa(result);
+function textToBytes(text: string): Uint8Array {
+  return new TextEncoder().encode(text);
 }
 
-function deobfuscate(encoded: string, key: string): string {
-  const text = atob(encoded);
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function deriveDeviceKey(): Promise<string> {
+  const seed = `${window.location.origin}|${navigator.userAgent}|hearo-biometric-v2`;
+  const digest = await crypto.subtle.digest("SHA-256", textToBytes(seed));
+  return bytesToHex(new Uint8Array(digest));
+}
+
+function xorTransform(text: string, key: string): string {
   let result = "";
   for (let i = 0; i < text.length; i++) {
     result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
@@ -63,7 +70,15 @@ function deobfuscate(encoded: string, key: string): string {
   return result;
 }
 
-const OBF_KEY = "hearo-bio-2026";
+async function obfuscate(text: string): Promise<string> {
+  const key = await deriveDeviceKey();
+  return btoa(xorTransform(text, key));
+}
+
+async function deobfuscate(encoded: string): Promise<string> {
+  const key = await deriveDeviceKey();
+  return xorTransform(atob(encoded), key);
+}
 
 export function useBiometricAuth() {
   const [isAvailable, setIsAvailable] = useState(false);
@@ -82,20 +97,22 @@ export function useBiometricAuth() {
     check();
   }, []);
 
-  // Store credentials and register a WebAuthn credential for biometric gate
   const enableBiometric = useCallback(async (phone: string, password: string): Promise<boolean> => {
     try {
-      const userId = new TextEncoder().encode(phone);
+      const userIdSeed = await crypto.subtle.digest("SHA-256", textToBytes(phone.trim().toLowerCase()));
+      const userId = new Uint8Array(userIdSeed);
       const challenge = generateChallenge();
 
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge: challenge as BufferSource,
-          rp: { name: "Hearo Messenger", id: window.location.hostname },
+          challenge,
+          rp: {
+            name: "Hearo Messenger",
+          },
           user: {
-            id: userId as BufferSource,
-            name: phone,
-            displayName: `Hearo - ${phone}`,
+            id: userId,
+            name: phone.trim(),
+            displayName: `Hearo - ${phone.trim()}`,
           },
           pubKeyCredParams: [
             { alg: -7, type: "public-key" },
@@ -104,19 +121,21 @@ export function useBiometricAuth() {
           authenticatorSelection: {
             authenticatorAttachment: "platform",
             userVerification: "required",
-            residentKey: "preferred",
+            residentKey: "required",
           },
+          attestation: "none",
           timeout: 60000,
         },
       }) as PublicKeyCredential | null;
 
       if (!credential) return false;
 
-      // Store credential ID + obfuscated login data
       const data = {
-        credentialId: bufferToBase64(credential.rawId),
-        phone: obfuscate(phone, OBF_KEY),
-        token: obfuscate(password, OBF_KEY),
+        version: 2,
+        credentialId: bufferToBase64Url(credential.rawId),
+        phone: await obfuscate(phone.trim()),
+        password: await obfuscate(password),
+        createdAt: Date.now(),
       };
 
       localStorage.setItem(BIOMETRIC_CRED_KEY, JSON.stringify(data));
@@ -129,7 +148,6 @@ export function useBiometricAuth() {
     }
   }, []);
 
-  // Authenticate with biometric (WebAuthn assertion) then return stored credentials
   const authenticateWithBiometric = useCallback(async (): Promise<{ phone: string; password: string } | null> => {
     try {
       const stored = localStorage.getItem(BIOMETRIC_CRED_KEY);
@@ -137,15 +155,22 @@ export function useBiometricAuth() {
 
       const data = JSON.parse(stored);
       const challenge = generateChallenge();
+      const allowCredentialId = data?.credentialId ? base64UrlToBuffer(data.credentialId) : null;
 
       const assertion = await navigator.credentials.get({
         publicKey: {
-          challenge: challenge as BufferSource,
-          allowCredentials: [{
-            id: base64ToBuffer(data.credentialId),
-            type: "public-key",
-            transports: ["internal"],
-          }],
+          challenge,
+          ...(allowCredentialId
+            ? {
+                allowCredentials: [
+                  {
+                    id: allowCredentialId,
+                    type: "public-key",
+                    transports: ["internal", "hybrid"],
+                  },
+                ],
+              }
+            : {}),
           userVerification: "required",
           timeout: 60000,
         },
@@ -153,11 +178,11 @@ export function useBiometricAuth() {
 
       if (!assertion) return null;
 
-      // Biometric verified - return stored credentials
-      return {
-        phone: deobfuscate(data.phone, OBF_KEY),
-        password: deobfuscate(data.token, OBF_KEY),
-      };
+      const phone = await deobfuscate(data.phone);
+      const password = await deobfuscate(data.password ?? data.token ?? "");
+      if (!phone || !password) return null;
+
+      return { phone, password };
     } catch (err) {
       console.error("Biometric authentication failed:", err);
       return null;
@@ -184,3 +209,4 @@ export function useBiometricAuth() {
     hasStoredCredential,
   };
 }
+
