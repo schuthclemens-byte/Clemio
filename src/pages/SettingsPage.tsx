@@ -59,7 +59,22 @@ const SettingsPage = () => {
   const { colorTheme, setColorTheme } = useColorTheme();
   const { globalBackground, setGlobalBackground } = useChatBackground();
   const biometric = useBiometricAuth();
+  const { signOut } = useAuth();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
+  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("hearo_stay_logged_in") !== "false");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login", { replace: true });
+  };
+
+  const toggleStayLoggedIn = () => {
+    const next = !stayLoggedIn;
+    setStayLoggedIn(next);
+    localStorage.setItem("hearo_stay_logged_in", next ? "true" : "false");
+    toast.success(next ? t("settings.stayLoggedIn") + " ✓" : t("settings.logout") + " – " + t("settings.stayLoggedInDesc"));
+  };
 
   const languages = Object.entries(localeNames) as [Locale, string][];
   const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
