@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, Check, Share, ArrowLeft, HelpCircle, Smartphone } from "lucide-react";
+import { Download, Check, Share, ArrowLeft, HelpCircle, Smartphone, Monitor, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
