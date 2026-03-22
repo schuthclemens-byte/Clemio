@@ -66,7 +66,7 @@ export function useBiometricAuth() {
   // Register biometric credential after successful login
   const enableBiometric = useCallback(async (phone: string, password: string): Promise<boolean> => {
     try {
-      const userId = new TextEncoder().encode(phone);
+      const userId = new TextEncoder().encode(phone) as BufferSource;
       const challenge = generateChallenge();
 
       const credential = await navigator.credentials.create({
