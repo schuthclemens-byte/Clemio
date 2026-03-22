@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, Search, Plus } from "lucide-react";
+import { Settings, Search, Plus, MessageSquare, X } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
 import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
@@ -18,6 +18,15 @@ interface ConversationItem {
   unread: number;
 }
 
+interface MessageSearchResult {
+  messageId: string;
+  conversationId: string;
+  conversationName: string;
+  content: string;
+  time: string;
+  senderName: string;
+}
+
 const ChatListPage = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -28,6 +37,8 @@ const ChatListPage = () => {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewChat, setShowNewChat] = useState(false);
+  const [messageResults, setMessageResults] = useState<MessageSearchResult[]>([]);
+  const [searchingMessages, setSearchingMessages] = useState(false);
 
   const fetchConversations = async () => {
     if (!user) return;
@@ -118,6 +129,67 @@ const ChatListPage = () => {
     setLoading(false);
   };
 
+  // Search messages across all conversations
+  const searchMessages = useCallback(async (query: string) => {
+    if (!user || query.length < 2) {
+      setMessageResults([]);
+      return;
+    }
+    setSearchingMessages(true);
+
+    const { data: memberships } = await supabase
+      .from("conversation_members")
+      .select("conversation_id")
+      .eq("user_id", user.id);
+
+    if (!memberships || memberships.length === 0) {
+      setMessageResults([]);
+      setSearchingMessages(false);
+      return;
+    }
+
+    const convIds = memberships.map((m) => m.conversation_id);
+
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("id, content, created_at, sender_id, conversation_id")
+      .in("conversation_id", convIds)
+      .ilike("content", `%${query}%`)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (!msgs || msgs.length === 0) {
+      setMessageResults([]);
+      setSearchingMessages(false);
+      return;
+    }
+
+    // Build results with conversation & sender names
+    const results: MessageSearchResult[] = [];
+    for (const msg of msgs) {
+      const conv = conversations.find((c) => c.id === msg.conversation_id);
+      const convName = conv?.name || "Chat";
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, phone_number")
+        .eq("id", msg.sender_id)
+        .maybeSingle();
+
+      results.push({
+        messageId: msg.id,
+        conversationId: msg.conversation_id,
+        conversationName: convName,
+        content: msg.content,
+        time: new Date(msg.created_at!).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+        senderName: profile?.display_name || profile?.phone_number || "Unbekannt",
+      });
+    }
+
+    setMessageResults(results);
+    setSearchingMessages(false);
+  }, [user, conversations]);
+
   useEffect(() => {
     fetchConversations();
     requestPermission();
@@ -136,6 +208,18 @@ const ChatListPage = () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  // Debounced message search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search.length >= 2) {
+        searchMessages(search);
+      } else {
+        setMessageResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, searchMessages]);
 
   const filtered = conversations.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -196,9 +280,17 @@ const ChatListPage = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("chat.search")}
-              className="w-full h-11 rounded-xl bg-secondary/70 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:bg-card transition-all duration-200"
+              className="w-full h-11 rounded-xl bg-secondary/70 pl-10 pr-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:bg-card transition-all duration-200"
               aria-label={t("chat.search")}
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-muted-foreground/20 flex items-center justify-center"
+              >
+                <X className="w-3 h-3 text-muted-foreground" />
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -208,38 +300,92 @@ const ChatListPage = () => {
           <div className="flex items-center justify-center py-20">
             <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
-        ) : filtered.length > 0 ? (
-          filtered.map((chat, i) => (
-              <SwipeableChatListItem
-                key={chat.id}
-                onDelete={() => handleDeleteConversation(chat.id)}
-                onArchive={() => handleArchiveConversation(chat.id)}
-              >
-                <div
-                  className="animate-reveal-up"
-                  style={{ animationDelay: `${i * 60}ms` }}
-                  role="listitem"
-                >
-                  <ChatListItem
-                    name={chat.name}
-                    lastMessage={chat.lastMessage}
-                    time={chat.time}
-                    unread={chat.unread}
-                    onClick={() => navigate(`/chat/${chat.id}`)}
-                  />
-                </div>
-              </SwipeableChatListItem>
-          ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <p className="text-sm">{t("chat.noChats")}</p>
-            <button
-              onClick={handleNewChat}
-              className="mt-4 text-sm text-primary font-medium hover:underline"
-            >
-              {t("chat.startChat") || "Neuen Chat starten"}
-            </button>
-          </div>
+          <>
+            {/* Conversation results */}
+            {filtered.length > 0 && (
+              <>
+                {search.length >= 2 && (
+                  <div className="px-5 pt-3 pb-1">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chats</p>
+                  </div>
+                )}
+                {filtered.map((chat, i) => (
+                  <SwipeableChatListItem
+                    key={chat.id}
+                    onDelete={() => handleDeleteConversation(chat.id)}
+                    onArchive={() => handleArchiveConversation(chat.id)}
+                  >
+                    <div
+                      className="animate-reveal-up"
+                      style={{ animationDelay: `${i * 60}ms` }}
+                      role="listitem"
+                    >
+                      <ChatListItem
+                        name={chat.name}
+                        lastMessage={chat.lastMessage}
+                        time={chat.time}
+                        unread={chat.unread}
+                        onClick={() => navigate(`/chat/${chat.id}`)}
+                      />
+                    </div>
+                  </SwipeableChatListItem>
+                ))}
+              </>
+            )}
+
+            {/* Message search results */}
+            {search.length >= 2 && (
+              <>
+                <div className="px-5 pt-4 pb-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Nachrichten
+                    {searchingMessages && (
+                      <span className="ml-2 inline-block w-3 h-3 border border-primary/30 border-t-primary rounded-full animate-spin align-middle" />
+                    )}
+                  </p>
+                </div>
+                {messageResults.length > 0 ? (
+                  messageResults.map((result) => (
+                    <button
+                      key={result.messageId}
+                      onClick={() => navigate(`/chat/${result.conversationId}`)}
+                      className="w-full flex items-start gap-3 px-5 py-3 hover:bg-secondary/50 active:bg-secondary/70 transition-colors text-left"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <MessageSquare className="w-4 h-4 text-accent" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{result.senderName}</p>
+                          <span className="text-[11px] text-muted-foreground shrink-0">{result.time}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{result.conversationName}</p>
+                        <p className="text-sm text-foreground/80 line-clamp-2 mt-0.5">{result.content}</p>
+                      </div>
+                    </button>
+                  ))
+                ) : !searchingMessages ? (
+                  <p className="px-5 py-4 text-sm text-muted-foreground">Keine Nachrichten gefunden</p>
+                ) : null}
+              </>
+            )}
+
+            {/* Empty state */}
+            {filtered.length === 0 && messageResults.length === 0 && !searchingMessages && (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                <p className="text-sm">{search ? "Keine Ergebnisse" : t("chat.noChats")}</p>
+                {!search && (
+                  <button
+                    onClick={handleNewChat}
+                    className="mt-4 text-sm text-primary font-medium hover:underline"
+                  >
+                    {t("chat.startChat") || "Neuen Chat starten"}
+                  </button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 
