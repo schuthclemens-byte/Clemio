@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint, ChevronDown } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -10,6 +10,45 @@ import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+const CollapsibleSection = ({ 
+  icon: Icon, 
+  title, 
+  children, 
+  defaultOpen = false,
+  delay = "0ms"
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  children: React.ReactNode; 
+  defaultOpen?: boolean;
+  delay?: string;
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section className="animate-reveal-up" style={{ animationDelay: delay }}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between mb-3"
+      >
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+          <Icon className="w-4 h-4" />
+          {title}
+        </h2>
+        <ChevronDown className={cn(
+          "w-4 h-4 text-muted-foreground transition-transform duration-200",
+          open && "rotate-180"
+        )} />
+      </button>
+      <div className={cn(
+        "overflow-hidden transition-all duration-300",
+        open ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+      )}>
+        {children}
+      </div>
+    </section>
+  );
+};
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -29,13 +68,13 @@ const SettingsPage = () => {
     { key: "largeText" as const, icon: Eye, label: t("settings.largeText") },
     { key: "highContrast" as const, icon: Contrast, label: t("settings.highContrast") },
     { key: "autoRead" as const, icon: Volume2, label: t("settings.autoRead") },
-    { key: "headphoneAutoPlay" as const, icon: Headphones, label: "Kopfhörer Auto-Play" },
+    { key: "headphoneAutoPlay" as const, icon: Headphones, label: t("settings.headphoneAutoPlay") },
   ];
 
   const themeOptions = [
-    { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") || "System" },
-    { value: "light" as const, icon: Sun, label: t("settings.themeLight") || "Hell" },
-    { value: "dark" as const, icon: Moon, label: t("settings.themeDark") || "Dunkel" },
+    { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
+    { value: "light" as const, icon: Sun, label: t("settings.themeLight") },
+    { value: "dark" as const, icon: Moon, label: t("settings.themeDark") },
   ];
 
   return (
@@ -63,8 +102,8 @@ const SettingsPage = () => {
             <User className="w-6 h-6" />
           </div>
           <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">{t("settings.profile") || "Profil bearbeiten"}</p>
-            <p className="text-xs text-muted-foreground">{t("settings.profileDesc") || "Name, Bild & Sprache"}</p>
+            <p className="font-semibold text-[0.938rem]">{t("settings.profile")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.profileDesc")}</p>
           </div>
         </button>
 
@@ -78,8 +117,8 @@ const SettingsPage = () => {
             <Shield className="w-6 h-6 text-accent" />
           </div>
           <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">Fokus-Modus</p>
-            <p className="text-xs text-muted-foreground">Nur wichtige Kontakte vorlesen</p>
+            <p className="font-semibold text-[0.938rem]">{t("settings.focusMode")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.focusModeDesc")}</p>
           </div>
         </button>
 
@@ -93,8 +132,8 @@ const SettingsPage = () => {
             <Volume2 className="w-6 h-6 text-primary" />
           </div>
           <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">Auto-Play pro Kontakt</p>
-            <p className="text-xs text-muted-foreground">Wähle wer vorgelesen wird</p>
+            <p className="font-semibold text-[0.938rem]">{t("settings.autoPlayContact")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
           </div>
         </button>
 
@@ -108,17 +147,49 @@ const SettingsPage = () => {
             <Download className="w-6 h-6 text-accent" />
           </div>
           <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">App installieren</p>
-            <p className="text-xs text-muted-foreground">Hearo auf dem Startbildschirm</p>
+            <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
           </div>
         </button>
 
-        {/* Theme */}
-        <section className="animate-reveal-up">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Moon className="w-4 h-4" />
-            {t("settings.theme") || "Design"}
-          </h2>
+        {/* Biometric Auth */}
+        {biometric.isAvailable && (
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "100ms" }}>
+            <button
+              onClick={async () => {
+                if (biometric.isEnabled) {
+                  biometric.disableBiometric();
+                  toast.success(t("settings.biometricDisabled"));
+                } else {
+                  toast.info(t("settings.biometricHint"));
+                }
+              }}
+              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+              role="switch"
+              aria-checked={biometric.isEnabled}
+            >
+              <span className="flex items-center gap-3">
+                <Fingerprint className="w-5 h-5 text-primary" />
+                <div>
+                  <span className="text-[0.938rem] block font-medium">{t("settings.biometric")}</span>
+                  <span className="text-xs text-muted-foreground">{t("settings.biometricDesc")}</span>
+                </div>
+              </span>
+              <div className={cn(
+                "w-11 h-6 rounded-full relative transition-colors duration-200",
+                biometric.isEnabled ? "bg-primary" : "bg-border"
+              )}>
+                <div className={cn(
+                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                  biometric.isEnabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                )} />
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* Theme - Collapsible */}
+        <CollapsibleSection icon={Moon} title={t("settings.theme")} delay="40ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
             {themeOptions.map(({ value, icon: Icon, label }) => (
               <button
@@ -137,14 +208,10 @@ const SettingsPage = () => {
               </button>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
-        {/* Color Theme */}
-        <section className="animate-reveal-up" style={{ animationDelay: "40ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Palette className="w-4 h-4" />
-            Farbthema
-          </h2>
+        {/* Color Theme - Collapsible */}
+        <CollapsibleSection icon={Palette} title={t("settings.colorTheme")} delay="50ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4">
             <div className="grid grid-cols-4 gap-3">
               {colorThemes.map((ct) => (
@@ -176,14 +243,10 @@ const SettingsPage = () => {
               ))}
             </div>
           </div>
-        </section>
+        </CollapsibleSection>
 
-        {/* Chat Background */}
-        <section className="animate-reveal-up" style={{ animationDelay: "50ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <ImageIcon className="w-4 h-4" />
-            Chat-Hintergrund
-          </h2>
+        {/* Chat Background - Collapsible */}
+        <CollapsibleSection icon={ImageIcon} title={t("settings.chatBackground")} delay="60ms">
           <button
             onClick={() => setBgPickerOpen(true)}
             className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
@@ -201,54 +264,14 @@ const SettingsPage = () => {
               {globalBackground.type === "none" && <ImageIcon className="w-5 h-5 text-muted-foreground" />}
             </div>
             <div className="text-left">
-              <p className="font-semibold text-[0.938rem]">Hintergrund ändern</p>
-              <p className="text-xs text-muted-foreground">Farbe, Verlauf oder eigenes Bild</p>
+              <p className="font-semibold text-[0.938rem]">{t("settings.changeBackground")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.backgroundDesc")}</p>
             </div>
           </button>
-        </section>
+        </CollapsibleSection>
 
-        {/* Biometric Auth */}
-        {biometric.isAvailable && (
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "100ms" }}>
-            <button
-              onClick={async () => {
-                if (biometric.isEnabled) {
-                  biometric.disableBiometric();
-                  toast.success("Biometrische Anmeldung deaktiviert");
-                } else {
-                  toast.info("Bitte melde dich ab und wieder an, um die biometrische Anmeldung einzurichten.");
-                }
-              }}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-              role="switch"
-              aria-checked={biometric.isEnabled}
-            >
-              <span className="flex items-center gap-3">
-                <Fingerprint className="w-5 h-5 text-primary" />
-                <div>
-                  <span className="text-[0.938rem] block font-medium">Face ID / Fingerabdruck</span>
-                  <span className="text-xs text-muted-foreground">Schnelle Anmeldung mit Biometrie</span>
-                </div>
-              </span>
-              <div className={cn(
-                "w-11 h-6 rounded-full relative transition-colors duration-200",
-                biometric.isEnabled ? "bg-primary" : "bg-border"
-              )}>
-                <div className={cn(
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                  biometric.isEnabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                )} />
-              </div>
-            </button>
-          </div>
-        )}
-
-
-        <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Globe className="w-4 h-4" />
-            {t("settings.language")}
-          </h2>
+        {/* Language - Collapsible */}
+        <CollapsibleSection icon={Globe} title={t("settings.language")} delay="70ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {languages.map(([code, name]) => (
               <button
@@ -268,186 +291,181 @@ const SettingsPage = () => {
               </button>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
-        {/* Accessibility */}
-        <section className="animate-reveal-up" style={{ animationDelay: "120ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            {t("settings.accessibility")}
-          </h2>
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            {toggleItems.map(({ key, icon: Icon, label }) => (
-              <button
-                key={key}
-                onClick={() => a11y.toggle(key)}
-                className={cn(
-                  "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
-                  "hover:bg-secondary/50 active:scale-[0.99]",
-                  "border-b border-border last:border-b-0"
-                )}
-                role="switch"
-                aria-checked={a11y[key]}
-              >
-                <span className="flex items-center gap-3">
-                  <Icon className="w-4.5 h-4.5 text-muted-foreground" />
-                  <span className="text-[0.938rem]">{label}</span>
-                </span>
-                <div
+        {/* Accessibility - Collapsible */}
+        <CollapsibleSection icon={Eye} title={t("settings.accessibility")} delay="80ms">
+          <div className="space-y-3">
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              {toggleItems.map(({ key, icon: Icon, label }) => (
+                <button
+                  key={key}
+                  onClick={() => a11y.toggle(key)}
                   className={cn(
-                    "w-11 h-6 rounded-full relative transition-colors duration-200",
-                    a11y[key] ? "bg-primary" : "bg-border"
+                    "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
+                    "hover:bg-secondary/50 active:scale-[0.99]",
+                    "border-b border-border last:border-b-0"
                   )}
+                  role="switch"
+                  aria-checked={a11y[key]}
                 >
+                  <span className="flex items-center gap-3">
+                    <Icon className="w-4.5 h-4.5 text-muted-foreground" />
+                    <span className="text-[0.938rem]">{label}</span>
+                  </span>
                   <div
                     className={cn(
-                      "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                      a11y[key] ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                    )}
-                  />
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Speech Rate */}
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden mt-3">
-            <div className="px-4 py-3.5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="flex items-center gap-3">
-                  <Volume2 className="w-4.5 h-4.5 text-muted-foreground" />
-                  <span className="text-[0.938rem]">Vorlesegeschwindigkeit</span>
-                </span>
-                <span className="text-sm font-semibold text-primary">{a11y.speechRate}×</span>
-              </div>
-              <div className="flex gap-2">
-                {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                  <button
-                    key={rate}
-                    onClick={() => a11y.setSpeechRate(rate)}
-                    className={cn(
-                      "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
-                      a11y.speechRate === rate
-                        ? "gradient-primary text-primary-foreground shadow-soft"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      "w-11 h-6 rounded-full relative transition-colors duration-200",
+                      a11y[key] ? "bg-primary" : "bg-border"
                     )}
                   >
-                    {rate}×
-                  </button>
-                ))}
+                    <div
+                      className={cn(
+                        "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                        a11y[key] ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                      )}
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Speech Rate */}
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3.5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="flex items-center gap-3">
+                    <Volume2 className="w-4.5 h-4.5 text-muted-foreground" />
+                    <span className="text-[0.938rem]">{t("settings.speechRate")}</span>
+                  </span>
+                  <span className="text-sm font-semibold text-primary">{a11y.speechRate}×</span>
+                </div>
+                <div className="flex gap-2">
+                  {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                    <button
+                      key={rate}
+                      onClick={() => a11y.setSpeechRate(rate)}
+                      className={cn(
+                        "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
+                        a11y.speechRate === rate
+                          ? "gradient-primary text-primary-foreground shadow-soft"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      {rate}×
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Smart Silence */}
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden mt-3">
-            <button
-              onClick={() => a11y.toggle("smartSilence")}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-              role="switch"
-              aria-checked={a11y.smartSilence}
-            >
-              <span className="flex items-center gap-3">
-                <BellOff className="w-4.5 h-4.5 text-muted-foreground" />
-                <div>
-                  <span className="text-[0.938rem] block">Smart Silence</span>
-                  <span className="text-xs text-muted-foreground">Nachts keine Wiedergabe</span>
-                </div>
-              </span>
-              <div className={cn(
-                "w-11 h-6 rounded-full relative transition-colors duration-200",
-                a11y.smartSilence ? "bg-primary" : "bg-border"
-              )}>
+            {/* Smart Silence */}
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => a11y.toggle("smartSilence")}
+                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+                role="switch"
+                aria-checked={a11y.smartSilence}
+              >
+                <span className="flex items-center gap-3">
+                  <BellOff className="w-4.5 h-4.5 text-muted-foreground" />
+                  <div>
+                    <span className="text-[0.938rem] block">{t("settings.smartSilence")}</span>
+                    <span className="text-xs text-muted-foreground">{t("settings.smartSilenceDesc")}</span>
+                  </div>
+                </span>
                 <div className={cn(
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                  a11y.smartSilence ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                )} />
-              </div>
-            </button>
-            {a11y.smartSilence && (
-              <div className="px-4 pb-3.5 flex gap-3 items-center">
-                <div className="flex-1">
-                  <label className="text-xs text-muted-foreground block mb-1">Von</label>
-                  <input
-                    type="time"
-                    value={a11y.quietHoursStart}
-                    onChange={(e) => a11y.setQuietHours(e.target.value, a11y.quietHoursEnd)}
-                    className="w-full h-10 rounded-xl bg-secondary px-3 text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                  "w-11 h-6 rounded-full relative transition-colors duration-200",
+                  a11y.smartSilence ? "bg-primary" : "bg-border"
+                )}>
+                  <div className={cn(
+                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                    a11y.smartSilence ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                  )} />
                 </div>
-                <div className="flex-1">
-                  <label className="text-xs text-muted-foreground block mb-1">Bis</label>
-                  <input
-                    type="time"
-                    value={a11y.quietHoursEnd}
-                    onChange={(e) => a11y.setQuietHours(a11y.quietHoursStart, e.target.value)}
-                    className="w-full h-10 rounded-xl bg-secondary px-3 text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+              </button>
+              {a11y.smartSilence && (
+                <div className="px-4 pb-3.5 flex gap-3 items-center">
+                  <div className="flex-1">
+                    <label className="text-xs text-muted-foreground block mb-1">{t("settings.quietFrom")}</label>
+                    <input
+                      type="time"
+                      value={a11y.quietHoursStart}
+                      onChange={(e) => a11y.setQuietHours(e.target.value, a11y.quietHoursEnd)}
+                      className="w-full h-10 rounded-xl bg-secondary px-3 text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-muted-foreground block mb-1">{t("settings.quietTo")}</label>
+                    <input
+                      type="time"
+                      value={a11y.quietHoursEnd}
+                      onChange={(e) => a11y.setQuietHours(a11y.quietHoursStart, e.target.value)}
+                      className="w-full h-10 rounded-xl bg-secondary px-3 text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Compact Mode */}
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden mt-3">
-            <button
-              onClick={() => a11y.toggle("compactMode")}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-              role="switch"
-              aria-checked={a11y.compactMode}
-            >
-              <span className="flex items-center gap-3">
-                <AlignLeft className="w-4.5 h-4.5 text-muted-foreground" />
-                <div>
-                  <span className="text-[0.938rem] block">Weniger Text</span>
-                  <span className="text-xs text-muted-foreground">Lange Nachrichten kürzen</span>
-                </div>
-              </span>
-              <div className={cn(
-                "w-11 h-6 rounded-full relative transition-colors duration-200",
-                a11y.compactMode ? "bg-primary" : "bg-border"
-              )}>
+            {/* Compact Mode */}
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => a11y.toggle("compactMode")}
+                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+                role="switch"
+                aria-checked={a11y.compactMode}
+              >
+                <span className="flex items-center gap-3">
+                  <AlignLeft className="w-4.5 h-4.5 text-muted-foreground" />
+                  <div>
+                    <span className="text-[0.938rem] block">{t("settings.compactMode")}</span>
+                    <span className="text-xs text-muted-foreground">{t("settings.compactModeDesc")}</span>
+                  </div>
+                </span>
                 <div className={cn(
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                  a11y.compactMode ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                )} />
-              </div>
-            </button>
-          </div>
+                  "w-11 h-6 rounded-full relative transition-colors duration-200",
+                  a11y.compactMode ? "bg-primary" : "bg-border"
+                )}>
+                  <div className={cn(
+                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                    a11y.compactMode ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                  )} />
+                </div>
+              </button>
+            </div>
 
-          {/* Mute Sounds */}
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden mt-3">
-            <button
-              onClick={() => a11y.toggle("muteSounds")}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-              role="switch"
-              aria-checked={a11y.muteSounds}
-            >
-              <span className="flex items-center gap-3">
-                <VolumeX className="w-4.5 h-4.5 text-muted-foreground" />
-                <div>
-                  <span className="text-[0.938rem] block">Sounds stumm</span>
-                  <span className="text-xs text-muted-foreground">UI-Töne deaktivieren</span>
-                </div>
-              </span>
-              <div className={cn(
-                "w-11 h-6 rounded-full relative transition-colors duration-200",
-                a11y.muteSounds ? "bg-primary" : "bg-border"
-              )}>
+            {/* Mute Sounds */}
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => a11y.toggle("muteSounds")}
+                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+                role="switch"
+                aria-checked={a11y.muteSounds}
+              >
+                <span className="flex items-center gap-3">
+                  <VolumeX className="w-4.5 h-4.5 text-muted-foreground" />
+                  <div>
+                    <span className="text-[0.938rem] block">{t("settings.muteSounds")}</span>
+                    <span className="text-xs text-muted-foreground">{t("settings.muteSoundsDesc")}</span>
+                  </div>
+                </span>
                 <div className={cn(
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                  a11y.muteSounds ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                )} />
-              </div>
-            </button>
+                  "w-11 h-6 rounded-full relative transition-colors duration-200",
+                  a11y.muteSounds ? "bg-primary" : "bg-border"
+                )}>
+                  <div className={cn(
+                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                    a11y.muteSounds ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                  )} />
+                </div>
+              </button>
+            </div>
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* Legal & Privacy */}
-        <section className="animate-reveal-up" style={{ animationDelay: "180ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Lock className="w-4 h-4" />
-            Rechtliches
-          </h2>
+        <CollapsibleSection icon={Lock} title={t("settings.legal")} delay="90ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <button
               onClick={() => navigate("/privacy")}
@@ -455,8 +473,8 @@ const SettingsPage = () => {
             >
               <Shield className="w-4.5 h-4.5 text-muted-foreground" />
               <div>
-                <span className="text-[0.938rem] block">Datenschutzerklärung</span>
-                <span className="text-xs text-muted-foreground">Was wir speichern & wie wir es schützen</span>
+                <span className="text-[0.938rem] block">{t("settings.privacy")}</span>
+                <span className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</span>
               </div>
             </button>
             <button
@@ -465,12 +483,12 @@ const SettingsPage = () => {
             >
               <FileText className="w-4.5 h-4.5 text-muted-foreground" />
               <div>
-                <span className="text-[0.938rem] block">Nutzungsbedingungen</span>
-                <span className="text-xs text-muted-foreground">Regeln für die Nutzung von Hearo</span>
+                <span className="text-[0.938rem] block">{t("settings.terms")}</span>
+                <span className="text-xs text-muted-foreground">{t("settings.termsDesc")}</span>
               </div>
             </button>
           </div>
-        </section>
+        </CollapsibleSection>
       </div>
 
       <BackgroundPicker
