@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { Download, ArrowRight, MessageCircle, Sparkles, Play, Pause } from "lucide-react";
+import { Download, ArrowRight, LogIn, MessageCircle, Sparkles, Play, Pause, Monitor, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 import demoVoice from "@/assets/demo-voice.mp3";
 
 const fadeUp = {
@@ -18,6 +19,16 @@ const HeroSection = () => {
   const navigate = useNavigate();
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [apkUrl, setApkUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const { data } = supabase.storage.from("downloads").getPublicUrl("hearo.apk");
+    if (data?.publicUrl) {
+      fetch(data.publicUrl, { method: "HEAD" }).then(r => {
+        if (r.ok) setApkUrl(data.publicUrl);
+      }).catch(() => {});
+    }
+  }, []);
 
   const playDemo = useCallback(() => {
     if (!audioRef.current) {
@@ -75,7 +86,7 @@ const HeroSection = () => {
 
         <motion.div variants={fadeUp} custom={1} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6 border border-primary/20">
           <Sparkles className="w-3.5 h-3.5" />
-          100% kostenlos · Kein App Store nötig
+          100% kostenlos · Browser, App & Desktop
         </motion.div>
 
         <motion.h1 variants={fadeUp} custom={2} className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-5 leading-[1.12]">
@@ -138,27 +149,43 @@ const HeroSection = () => {
           </motion.button>
         </motion.div>
 
-        <motion.div variants={fadeUp} custom={5} className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        {/* CTA Buttons */}
+        <motion.div variants={fadeUp} custom={5} className="flex flex-col items-center gap-3">
+          {/* Primary: Anmelden */}
           <Button
-            onClick={() => navigate("/install")}
+            onClick={() => navigate("/login")}
             size="lg"
             className="rounded-full px-10 gap-2.5 text-base gradient-primary border-0 shadow-soft h-14 font-bold hover:shadow-elevated transition-all"
           >
-            <Download className="w-5 h-5" />
-            Jetzt starten
+            <LogIn className="w-5 h-5" />
+            Anmelden
           </Button>
-          <Button
-            onClick={() => navigate("/login")}
-            variant="ghost"
-            size="lg"
-            className="rounded-full px-8 text-base h-14 text-muted-foreground hover:text-foreground"
-          >
-            Bereits dabei? Anmelden
-            <ArrowRight className="w-4 h-4 ml-1.5" />
-          </Button>
+
+          {/* Secondary: App herunterladen */}
+          <div className="flex flex-col items-center gap-2 mt-1">
+            <p className="text-xs text-muted-foreground">App herunterladen:</p>
+            <div className="flex items-center gap-2">
+              {apkUrl && (
+                <a
+                  href={apkUrl}
+                  download="hearo.apk"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-card border border-border text-foreground text-sm font-semibold shadow-sm hover:shadow-elevated hover:border-primary/30 transition-all active:scale-95"
+                >
+                  <Smartphone className="w-4 h-4 text-primary" />
+                  Android
+                </a>
+              )}
+              <button
+                onClick={() => navigate("/install")}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-card border border-border text-foreground text-sm font-semibold shadow-sm hover:shadow-elevated hover:border-primary/30 transition-all active:scale-95"
+              >
+                <Monitor className="w-4 h-4 text-primary" />
+                Desktop
+              </button>
+            </div>
+          </div>
         </motion.div>
       </motion.div>
-
     </section>
   );
 };
