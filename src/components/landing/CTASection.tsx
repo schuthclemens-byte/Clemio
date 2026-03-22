@@ -53,27 +53,13 @@ const CTASection = () => {
               Anmelden
             </Button>
 
-            <div className="flex items-center gap-2 mt-2">
-              {apkUrl && (
-                <a
-                  href={apkUrl}
-                  download="hearo.apk"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20 sm:hidden"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  Android App
-                </a>
-              )}
-              <button
-                onClick={() => navigate("/install")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20"
-              >
-                <Download className="w-4 h-4 sm:hidden" />
-                <Monitor className="w-4 h-4 hidden sm:block" />
-                <span className="sm:hidden">App installieren</span>
-                <span className="hidden sm:inline">Desktop</span>
-              </button>
-            </div>
+            <button
+              onClick={() => navigate("/install")}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground font-semibold text-sm transition-colors active:scale-95 border border-primary-foreground/20 mt-2"
+            >
+              <Download className="w-4 h-4" />
+              App herunterladen
+            </button>
           </div>
         </div>
       </motion.div>
