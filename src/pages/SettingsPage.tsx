@@ -515,6 +515,70 @@ const SettingsPage = () => {
           </button>
         </div>
 
+        {/* Subscription / Premium */}
+        <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "95ms" }}>
+          <div className="px-4 py-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center",
+                  isPremium ? "gradient-primary" : "bg-muted"
+                )}>
+                  <Crown className={cn("w-5 h-5", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
+                </div>
+                <div>
+                  <p className="font-semibold text-[0.938rem]">{planLabel}</p>
+                  {isPremium && daysRemaining > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {stripeActive ? `Nächste Zahlung in ${daysRemaining} Tagen` : `Noch ${daysRemaining} Tage`}
+                    </p>
+                  )}
+                  {isFoundingUser && (
+                    <p className="text-xs text-accent font-medium">🎉 Danke, Founding User!</p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => refreshSubscription()}
+                className="p-2 rounded-full hover:bg-secondary transition-colors"
+                aria-label="Status aktualisieren"
+              >
+                <RefreshCw className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {!isPremium && (
+              <button
+                onClick={startCheckout}
+                disabled={checkoutLoading}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+              >
+                {checkoutLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CreditCard className="w-4 h-4" />
+                )}
+                Premium abonnieren – 4,99€/Monat
+              </button>
+            )}
+
+            {stripeActive && (
+              <button
+                onClick={openPortal}
+                disabled={portalLoading}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+              >
+                {portalLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-4 h-4" />
+                )}
+                Abo verwalten
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Logout button */}
         <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
           {!showLogoutConfirm ? (
