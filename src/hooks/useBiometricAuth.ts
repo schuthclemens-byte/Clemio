@@ -20,10 +20,10 @@ async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
   }
 }
 
-function generateChallenge(): Uint8Array {
+function generateChallenge(): ArrayBuffer {
   const challenge = new Uint8Array(32);
   crypto.getRandomValues(challenge);
-  return challenge;
+  return challenge.buffer as ArrayBuffer;
 }
 
 function bufferToBase64Url(buffer: ArrayBuffer): string {
@@ -43,11 +43,11 @@ function base64UrlToBuffer(base64Url: string): ArrayBuffer {
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
-  return bytes.buffer;
+  return bytes.buffer as ArrayBuffer;
 }
 
-function textToBytes(text: string): Uint8Array {
-  return new TextEncoder().encode(text);
+function textToBuffer(text: string): ArrayBuffer {
+  return new TextEncoder().encode(text).buffer as ArrayBuffer;
 }
 
 function bytesToHex(bytes: Uint8Array): string {
@@ -58,7 +58,7 @@ function bytesToHex(bytes: Uint8Array): string {
 
 async function deriveDeviceKey(): Promise<string> {
   const seed = `${window.location.origin}|${navigator.userAgent}|hearo-biometric-v2`;
-  const digest = await crypto.subtle.digest("SHA-256", textToBytes(seed));
+  const digest = await crypto.subtle.digest("SHA-256", textToBuffer(seed));
   return bytesToHex(new Uint8Array(digest));
 }
 
