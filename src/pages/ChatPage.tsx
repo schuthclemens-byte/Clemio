@@ -46,6 +46,7 @@ interface ReplyTarget {
 const ChatPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const swipeBack = useSwipeBack({ fallbackPath: "/chats" });
   const scrollRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, t } = useI18n();
