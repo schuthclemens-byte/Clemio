@@ -1,4 +1,4 @@
-import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus } from "lucide-react";
+import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -244,7 +244,10 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       {isTranslating ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Languages className="w-4 h-4" />
+                        <span className="relative">
+                          <Languages className="w-4 h-4" />
+                          {!isPremium && <Crown className="w-2.5 h-2.5 text-accent absolute -top-1 -right-1.5" />}
+                        </span>
                       )}
                     </button>
                   )}
