@@ -153,25 +153,25 @@ const LoginPage = () => {
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               autoFocus
               aria-label={t("app.phonePlaceholder")}
-              autoComplete="off"
-              name="phone_number_input"
+              autoComplete="username"
+              name="username"
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
-              data-1p-ignore
-              data-lpignore="true"
+              data-form-type="username"
+              inputMode="tel"
             />
 
             <input
-              type="text"
+              type="password"
               inputMode="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("app.passwordPlaceholder") || "Passwort (min. 6 Zeichen)"}
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200"
               aria-label="Zugangscode"
-              autoComplete="off"
-              name={`_hro_${mode}_${Date.now()}`}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              name="password"
               id={`_hro_field_${mode}`}
               autoCapitalize="off"
               autoCorrect="off"
@@ -179,13 +179,7 @@ const LoginPage = () => {
               readOnly={!passwordFieldReady}
               onFocus={() => setPasswordFieldReady(true)}
               onPointerDown={() => setPasswordFieldReady(true)}
-              data-1p-ignore
-              data-lpignore="true"
-              data-bwignore="true"
-              data-form-type="other"
-              data-credential="false"
-              role="textbox"
-              style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
+              data-form-type={mode === "login" ? "password" : "new-password"}
             />
 
             <button
