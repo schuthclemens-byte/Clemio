@@ -481,8 +481,66 @@ const SettingsPage = () => {
           </div>
         </CollapsibleSection>
 
+        {/* Stay logged in toggle */}
+        <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "95ms" }}>
+          <button
+            onClick={toggleStayLoggedIn}
+            className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+            role="switch"
+            aria-checked={stayLoggedIn}
+          >
+            <span className="flex items-center gap-3">
+              <KeyRound className="w-5 h-5 text-primary" />
+              <div>
+                <span className="text-[0.938rem] block font-medium">{t("settings.stayLoggedIn")}</span>
+                <span className="text-xs text-muted-foreground">{t("settings.stayLoggedInDesc")}</span>
+              </div>
+            </span>
+            <div className={cn(
+              "w-11 h-6 rounded-full relative transition-colors duration-200",
+              stayLoggedIn ? "bg-primary" : "bg-border"
+            )}>
+              <div className={cn(
+                "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                stayLoggedIn ? "translate-x-[1.375rem]" : "translate-x-0.5"
+              )} />
+            </div>
+          </button>
+        </div>
+
+        {/* Logout button */}
+        <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
+          {!showLogoutConfirm ? (
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="w-full flex items-center justify-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl shadow-sm hover:bg-destructive/20 transition-colors active:scale-[0.98] font-semibold"
+            >
+              <LogOut className="w-5 h-5" />
+              {t("settings.logout")}
+            </button>
+          ) : (
+            <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
+              <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm"
+                >
+                  {t("a11y.back")}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm"
+                >
+                  {t("settings.logout")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Legal & Privacy */}
-        <CollapsibleSection icon={Lock} title={t("settings.legal")} delay="90ms">
+        <CollapsibleSection icon={Lock} title={t("settings.legal")} delay="110ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <button
               onClick={() => navigate("/privacy")}
