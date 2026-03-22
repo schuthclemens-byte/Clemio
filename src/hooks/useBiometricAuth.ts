@@ -99,8 +99,8 @@ export function useBiometricAuth() {
 
   const enableBiometric = useCallback(async (phone: string, password: string): Promise<boolean> => {
     try {
-      const userIdSeed = await crypto.subtle.digest("SHA-256", textToBytes(phone.trim().toLowerCase()));
-      const userId = new Uint8Array(userIdSeed);
+      const userIdSeed = await crypto.subtle.digest("SHA-256", textToBuffer(phone.trim().toLowerCase()));
+      const userId = new Uint8Array(userIdSeed as ArrayBuffer);
       const challenge = generateChallenge();
 
       const credential = await navigator.credentials.create({
@@ -110,7 +110,7 @@ export function useBiometricAuth() {
             name: "Hearo Messenger",
           },
           user: {
-            id: userId,
+            id: userId.buffer as ArrayBuffer,
             name: phone.trim(),
             displayName: `Hearo - ${phone.trim()}`,
           },
