@@ -89,7 +89,7 @@ const CORRECTIONS_DE: Record<string, string> = {
   "dei": "die", "dre": "der",
   "ien": "ein", "enie": "eine",
   "nru": "nur", "nuur": "nur",
-  "mti": "mit", "mti": "mit",
+  "mti": "mit",
   "fü": "für", "fue": "für",
   "shcon": "schon",
   "libe": "liebe", "leibe": "liebe",
