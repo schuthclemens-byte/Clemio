@@ -109,7 +109,7 @@ const CORRECTIONS_EN: Record<string, string> = {
   "definately": "definitely", "definetly": "definitely",
   "recieve": "receive", "recive": "receive",
   "seperate": "separate", "seprate": "separate",
-  "occured": "occurred", "occured": "occurred",
+  "occured": "occurred",
   "tomorow": "tomorrow", "tommorow": "tomorrow",
   "mesage": "message", "messge": "message",
   "wiht": "with", "whit": "with",
