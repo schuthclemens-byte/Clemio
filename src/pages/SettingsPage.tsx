@@ -69,6 +69,7 @@ const SettingsPage = () => {
     { key: "highContrast" as const, icon: Contrast, label: t("settings.highContrast") },
     { key: "autoRead" as const, icon: Volume2, label: t("settings.autoRead") },
     { key: "headphoneAutoPlay" as const, icon: Headphones, label: t("settings.headphoneAutoPlay") },
+    { key: "autoCorrect" as const, icon: SpellCheck, label: t("settings.autoCorrect") },
   ];
 
   const themeOptions = [
