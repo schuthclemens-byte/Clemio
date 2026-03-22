@@ -6,8 +6,10 @@ import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
