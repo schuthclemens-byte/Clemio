@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, UserPlus, LogIn, Sparkles, Fingerprint } from "lucide-react";
-import { useI18n } from "@/contexts/I18nContext";
+import { ArrowRight, UserPlus, LogIn, Sparkles, Fingerprint, ChevronDown } from "lucide-react";
+import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { isValidAuthPhone, sanitizePhoneInput } from "@/lib/authPhone";
