@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Mic, Users, Phone, Headphones, X, ImageIcon, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,7 @@ interface ReplyTarget {
 const ChatPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const swipeBack = useSwipeBack({ fallbackPath: "/chats" });
   const scrollRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, t } = useI18n();
@@ -660,7 +662,7 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background" {...swipeBack}>
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-3 py-3">
