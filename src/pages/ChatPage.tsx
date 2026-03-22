@@ -732,7 +732,7 @@ const ChatPage = () => {
         <div className="flex items-center gap-2.5 px-4 py-2 bg-accent/5 border-b border-border/50">
           <Info className="w-4 h-4 text-accent shrink-0" />
           <p className="text-[11px] text-muted-foreground leading-snug">
-            <strong className="text-foreground">{chatName}</strong> hat noch keine Stimme hinterlegt. Jeder Kontakt kann seine Stimme in seinem eigenen Profil aufnehmen.
+            Noch keine Stimmprobe von <strong className="text-foreground">{chatName}</strong>. Doppeltippe auf eine Sprachnachricht und speichere sie als Stimmprobe.
           </p>
         </div>
       )}
