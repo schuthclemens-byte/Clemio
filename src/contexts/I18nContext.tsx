@@ -1555,6 +1555,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "اسمع 🎧",
     "landing.demoStop": "اضغط للإيقاف",
     "landing.demoSubtitle": "هكذا تبدو رسالة Clevara",
+    "landing.demoSpeech": "مرحبًا، أردت فقط أن أخبرك أنني سأتأخر قليلاً اليوم. أراك قريبًا! إلى اللقاء.",
     "landing.signIn": "تسجيل الدخول",
     "landing.download": "تحميل التطبيق",
     "landing.howTitle": "كيف يعمل",
