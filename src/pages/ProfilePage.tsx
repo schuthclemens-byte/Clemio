@@ -102,9 +102,9 @@ const ProfilePage = () => {
 
     setSaving(false);
     if (error) {
-      toast.error("Speichern fehlgeschlagen");
+      toast.error(t("profile.saveFailed"));
     } else {
-      toast.success("Profil gespeichert");
+      toast.success(t("profile.saved"));
     }
   };
 
