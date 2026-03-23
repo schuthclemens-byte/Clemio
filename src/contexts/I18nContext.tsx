@@ -1269,6 +1269,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "Dinle 🎧",
     "landing.demoStop": "Durdurmak için dokun",
     "landing.demoSubtitle": "Bir Clevara mesajı böyle duyulur",
+    "landing.demoSpeech": "Selam, bugün biraz geç kalacağımı söylemek istedim. Görüşürüz! Sonra konuşuruz.",
     "landing.signIn": "Giriş yap",
     "landing.download": "Uygulamayı indir",
     "landing.howTitle": "Nasıl çalışır",
