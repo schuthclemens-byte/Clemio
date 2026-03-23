@@ -358,7 +358,7 @@ const ProfilePage = () => {
 
           <button
             onClick={async () => {
-              if (!window.confirm("Bist du sicher? Dein Konto und alle Daten werden unwiderruflich gelöscht.")) return;
+              if (!window.confirm(t("profile.deleteAccountConfirm"))) return;
               if (!user) return;
               try {
                 // Delete all user data
