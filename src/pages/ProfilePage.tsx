@@ -370,7 +370,7 @@ const ProfilePage = () => {
                 navigate("/login");
                 toast.success(t("profile.accountDeleted"));
               } catch {
-                toast.error("Fehler beim Löschen des Kontos");
+                toast.error(t("profile.deleteAccountError"));
               }
             }}
             className="w-full h-11 rounded-xl text-destructive/60 text-sm font-medium hover:text-destructive transition-colors active:scale-[0.97]"
