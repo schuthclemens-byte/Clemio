@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) {
       const legacyClean = cleanPhone.replace(/[^0-9+]/g, "").replace("+", "p");
-      const legacyEmail = `${legacyClean}@phone.voxa.app`;
+      const legacyEmail = `${legacyClean}@phone.voicara.app`;
       if (legacyEmail !== email) {
         const { data: legacyData, error: legacyError } = await supabase.auth.signInWithPassword({ email: legacyEmail, password });
         if (!legacyError) {
