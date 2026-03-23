@@ -983,6 +983,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "Écoute 🎧",
     "landing.demoStop": "Touche pour arrêter",
     "landing.demoSubtitle": "Voilà comment sonne un message Clevara",
+    "landing.demoSpeech": "Salut, je voulais juste te dire que j'arriverai un peu en retard aujourd'hui. On se voit bientôt ! À plus.",
     "landing.signIn": "Se connecter",
     "landing.download": "Télécharger l'app",
     "landing.howTitle": "Comment ça marche",
