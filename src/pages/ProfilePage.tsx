@@ -314,7 +314,7 @@ const ProfilePage = () => {
               className="w-full mt-3 flex items-center justify-center gap-2 h-11 rounded-xl bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors active:scale-[0.97]"
             >
               <Trash2 className="w-4 h-4" />
-              Stimme löschen
+              {t("profile.deleteVoice")}
             </button>
           )}
           <div className="mt-3 p-4 rounded-2xl bg-accent/5 border border-accent/10 space-y-2">
