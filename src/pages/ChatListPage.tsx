@@ -72,58 +72,59 @@ const ChatListPage = () => {
 
     // Get last message and unread count for each conversation
     const items: ConversationItem[] = [];
-    for (const conv of convos) {
-      const { data: lastMsg } = await supabase
-        .from("messages")
-        .select("content, created_at")
-        .eq("conversation_id", conv.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    const convItems = await Promise.all(
+      convos.map(async (conv) => {
+        const [lastMsgRes, unreadRes, memberRes] = await Promise.all([
+          supabase
+            .from("messages")
+            .select("content, created_at")
+            .eq("conversation_id", conv.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("messages")
+            .select("*", { count: "exact", head: true })
+            .eq("conversation_id", conv.id)
+            .eq("is_read", false)
+            .neq("sender_id", user.id),
+          !conv.is_group
+            ? supabase
+                .from("conversation_members")
+                .select("user_id")
+                .eq("conversation_id", conv.id)
+                .neq("user_id", user.id)
+                .limit(1)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+        ]);
 
-      const { count } = await supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("conversation_id", conv.id)
-        .eq("is_read", false)
-        .neq("sender_id", user.id);
-
-      // Get other member name for non-group chats
-      let displayName = conv.name || "Chat";
-      if (!conv.is_group) {
-        const { data: otherMembers } = await supabase
-          .from("conversation_members")
-          .select("user_id")
-          .eq("conversation_id", conv.id)
-          .neq("user_id", user.id)
-          .limit(1)
-          .maybeSingle();
-
-        if (otherMembers) {
+        let displayName = conv.name || "Chat";
+        if (!conv.is_group && memberRes.data) {
           const { data: profile } = await supabase
             .from("profiles")
             .select("display_name, phone_number")
-            .eq("id", otherMembers.user_id)
+            .eq("id", memberRes.data.user_id)
             .maybeSingle();
-
           if (profile) {
             displayName = profile.display_name || profile.phone_number;
           }
         }
-      }
 
-      const timeStr = lastMsg
-        ? new Date(lastMsg.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
-        : "";
+        const lastMsg = lastMsgRes.data;
+        return {
+          id: conv.id,
+          name: displayName,
+          lastMessage: lastMsg?.content || "",
+          time: lastMsg
+            ? new Date(lastMsg.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+            : "",
+          unread: unreadRes.count || 0,
+        };
+      })
+    );
 
-      items.push({
-        id: conv.id,
-        name: displayName,
-        lastMessage: lastMsg?.content || "",
-        time: timeStr,
-        unread: count || 0,
-      });
-    }
+    items.push(...convItems);
 
     setConversations(items);
     setLoading(false);

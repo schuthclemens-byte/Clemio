@@ -162,57 +162,47 @@ const ChatPage = () => {
       // Get display name & group info
       setIsGroup(conv.is_group ?? false);
 
+      // Load members and messages in parallel
+      const [membersRes, msgsRes] = await Promise.all([
+        supabase
+          .from("conversation_members")
+          .select("user_id")
+          .eq("conversation_id", conversationId),
+        supabase
+          .from("messages")
+          .select("*")
+          .eq("conversation_id", conversationId)
+          .order("created_at", { ascending: true }),
+      ]);
+
+      const members = membersRes.data;
+
       if (conv.is_group && conv.name) {
         setChatName(conv.name);
-
-        // Load all member names for group chat
-        const { data: members } = await supabase
-          .from("conversation_members")
-          .select("user_id")
-          .eq("conversation_id", conversationId);
-
         if (members) {
-          const names: Record<string, string> = {};
-          for (const m of members) {
-            if (m.user_id === user.id) continue;
-            const { data: profile } = await supabase
+          const otherIds = members.filter((m) => m.user_id !== user.id).map((m) => m.user_id);
+          if (otherIds.length > 0) {
+            const { data: profiles } = await supabase
               .from("profiles")
-              .select("display_name, phone_number")
-              .eq("id", m.user_id)
-              .maybeSingle();
-            if (profile) {
-              names[m.user_id] = profile.display_name || profile.phone_number;
-            }
+              .select("id, display_name, phone_number")
+              .in("id", otherIds);
+            const names: Record<string, string> = {};
+            profiles?.forEach((p) => { names[p.id] = p.display_name || p.phone_number; });
+            setMemberNames(names);
           }
-          setMemberNames(names);
         }
       } else {
-        const { data: otherMember } = await supabase
-          .from("conversation_members")
-          .select("user_id")
-          .eq("conversation_id", conversationId)
-          .neq("user_id", user.id)
-          .limit(1)
-          .maybeSingle();
-
+        const otherMember = members?.find((m) => m.user_id !== user.id);
         if (otherMember) {
           setOtherUserId(otherMember.user_id);
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("display_name, phone_number")
-            .eq("id", otherMember.user_id)
-            .maybeSingle();
-
+          const [profileRes, presenceRes] = await Promise.all([
+            supabase.from("profiles").select("display_name, phone_number").eq("id", otherMember.user_id).maybeSingle(),
+            supabase.from("user_presence").select("is_online, last_seen").eq("user_id", otherMember.user_id).maybeSingle(),
+          ]);
+          const profile = profileRes.data;
           setChatName(profile?.display_name || profile?.phone_number || "Chat");
           setMemberNames({ [otherMember.user_id]: profile?.display_name || profile?.phone_number || "" });
-
-          // Check presence
-          const { data: presence } = await supabase
-            .from("user_presence")
-            .select("is_online, last_seen")
-            .eq("user_id", otherMember.user_id)
-            .maybeSingle();
-
+          const presence = presenceRes.data;
           if (presence) {
             setIsOnline(presence.is_online);
             if (!presence.is_online && presence.last_seen) {
@@ -222,13 +212,7 @@ const ChatPage = () => {
         }
       }
 
-      // Load messages
-      const { data: msgs } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
-
+      const msgs = msgsRes.data;
       if (msgs) {
         setMessages(
           msgs.map((m) => ({
@@ -263,19 +247,15 @@ const ChatPage = () => {
       // Check which senders have voice profiles (contact-uploaded or own with consent)
       const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
       const profiles: Record<string, boolean> = {};
-      for (const sid of senderIds) {
-        // Check contact voice profile first (no consent needed - user uploaded it themselves)
+      // Check voice profiles in parallel
+      await Promise.all(senderIds.map(async (sid) => {
         const { data: contactVp } = await supabase
           .from("contact_voice_profiles" as any)
           .select("id")
           .eq("user_id", user.id)
           .eq("contact_user_id", sid)
           .maybeSingle();
-        if (contactVp) {
-          profiles[sid] = true;
-          continue;
-        }
-        // Fall back to sender's own voice profile with consent
+        if (contactVp) { profiles[sid] = true; return; }
         const { data: vp } = await supabase
           .from("voice_profiles" as any)
           .select("id")
@@ -291,29 +271,7 @@ const ChatPage = () => {
             .maybeSingle();
           profiles[sid] = !!consent;
         }
-      }
-      // Track if other user has any voice (contact-uploaded or own)
-      if (!isGroup) {
-        const otherSid = senderIds[0] || otherUserId;
-        if (otherSid) {
-          const { data: cvp } = await supabase
-            .from("contact_voice_profiles" as any)
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("contact_user_id", otherSid)
-            .maybeSingle();
-          if (cvp) {
-            setOtherHasVoice(true);
-          } else {
-            const { data: vp } = await supabase
-              .from("voice_profiles" as any)
-              .select("id")
-              .eq("user_id", otherSid)
-              .maybeSingle();
-            setOtherHasVoice(!!vp);
-          }
-        }
-      }
+      }));
 
       setVoiceProfiles(profiles);
     };
