@@ -355,6 +355,8 @@ const ChatPage = () => {
 
           setMessages((prev) => {
             if (prev.some((p) => p.id === newMsg.id)) return prev;
+            // Skip own messages from realtime – they're already shown via optimistic update
+            if (newMsg.isMine) return prev;
             return [...prev, newMsg];
           });
 
