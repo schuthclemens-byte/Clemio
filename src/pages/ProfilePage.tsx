@@ -321,10 +321,10 @@ const ProfilePage = () => {
             <div className="flex items-start gap-2.5">
               <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-foreground">Deine Stimme ist geschützt</p>
+                <p className="text-sm font-semibold text-foreground">{t("profile.voiceProtected")}</p>
                 <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                  Deine Stimme wird <strong>nur mit deiner ausdrücklichen Zustimmung</strong> für andere hörbar. 
-                  Du kannst Freigaben jederzeit widerrufen und dein Stimmmodell komplett löschen.
+                  {t("profile.voiceProtectedDesc")}
+                </p>
                 </p>
               </div>
             </div>
