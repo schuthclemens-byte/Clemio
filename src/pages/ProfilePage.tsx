@@ -325,7 +325,6 @@ const ProfilePage = () => {
                 <p className="text-xs text-muted-foreground leading-relaxed mt-1">
                   {t("profile.voiceProtectedDesc")}
                 </p>
-                </p>
               </div>
             </div>
             <button
