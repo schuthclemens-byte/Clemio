@@ -391,13 +391,13 @@ const LoginPage = () => {
 
       {/* Footer */}
       <p className="text-center text-xs text-muted-foreground/60 pb-8 px-6 relative z-10">
-        Mit der Anmeldung akzeptierst du unsere{" "}
+        {t("app.termsFooter")}{" "}
         <button type="button" onClick={() => navigate("/terms")} className="underline hover:text-foreground transition-colors">
-          Nutzungsbedingungen
+          {t("app.termsLink")}
         </button>{" "}
-        und{" "}
+        {t("app.and")}{" "}
         <button type="button" onClick={() => navigate("/privacy")} className="underline hover:text-foreground transition-colors">
-          Datenschutzerklärung
+          {t("app.privacyLink")}
         </button>
       </p>
     </div>
