@@ -420,11 +420,11 @@ const ChatPage = () => {
     if (!otherUserId) return;
 
     const channel = supabase
-      .channel(`presence-${otherUserId}`)
+      .channel(`presence-watch-${otherUserId}`)
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
           table: "user_presence",
           filter: `user_id=eq.${otherUserId}`,
@@ -442,7 +442,7 @@ const ChatPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, user]);
+  }, [otherUserId]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -552,7 +552,8 @@ const ChatPage = () => {
     const tempId = crypto.randomUUID();
     const now = new Date();
     const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-    setMessages((prev) => [...prev, { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id }]);
+    const optimisticMsg: Message = { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id };
+    setMessages((prev) => [...prev, optimisticMsg]);
 
     // Insert into DB
     const insertData: any = {
@@ -571,7 +572,15 @@ const ChatPage = () => {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
     } else if (inserted) {
       // Replace temp id with real DB id so realtime dedup works
-      setMessages((prev) => prev.map((m) => m.id === tempId ? { ...m, id: inserted.id } : m));
+      setMessages((prev) => {
+        // If realtime already delivered this message, just remove the temp
+        const realtimeExists = prev.some((m) => m.id === inserted.id);
+        if (realtimeExists) {
+          return prev.filter((m) => m.id !== tempId);
+        }
+        // Otherwise swap temp id for real id
+        return prev.map((m) => m.id === tempId ? { ...m, id: inserted.id } : m);
+      });
     }
 
     // Update conversation timestamp
