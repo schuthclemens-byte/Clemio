@@ -54,40 +54,57 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   const handleSearch = async () => {
     const query = searchQuery.trim();
     if (!query || !user) return;
+
     setSearching(true);
     setError("");
     setResult(null);
     setResults([]);
 
-    let found: FoundUser[] = [];
+    const lowerQuery = query.toLowerCase();
+    const digitsQuery = query.replace(/\D/g, "");
+    const normalizedDigitsQuery = digitsQuery ? normalizePhone(query) : "";
+    const shouldSearchByName = /[^\d\s()+-]/.test(query);
+    const shouldSearchByPhone = digitsQuery.length >= 3 || isPhoneQuery(query);
 
-    if (isPhoneQuery(query)) {
-      // Normalize the search input to match stored format
-      const normalized = normalizePhone(query);
+    const emptyResponse = { data: [] as FoundUser[] | null, error: null };
 
-      // Search with multiple formats
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, display_name, phone_number")
-        .or(`phone_number.ilike.%${normalized}%,phone_number.ilike.%${query.replace(/\s/g, "")}%`)
-        .limit(10);
+    const [nameResponse, phoneResponse] = await Promise.all([
+      shouldSearchByName
+        ? supabase
+            .from("profiles")
+            .select("id, display_name, phone_number")
+            .ilike("display_name", `%${query}%`)
+            .limit(10)
+        : Promise.resolve(emptyResponse),
+      shouldSearchByPhone
+        ? supabase
+            .from("profiles")
+            .select("id, display_name, phone_number")
+            .or(`phone_number.ilike.%${digitsQuery}%,phone_number.ilike.%${normalizedDigitsQuery}%`)
+            .limit(10)
+        : Promise.resolve(emptyResponse),
+    ]);
 
-      if (data) found = data;
-    } else {
-      // Name search
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, display_name, phone_number")
-        .ilike("display_name", `%${query}%`)
-        .limit(10);
+    const merged = [...(nameResponse.data ?? []), ...(phoneResponse.data ?? [])];
+    const deduped = merged.filter((candidate, index, arr) => arr.findIndex((item) => item.id === candidate.id) === index);
 
-      if (data) found = data;
-    }
+    const found = deduped.filter((candidate) => {
+      const candidateName = (candidate.display_name || "").toLowerCase();
+      const candidateDigits = candidate.phone_number.replace(/\D/g, "");
+      const candidateNormalized = normalizePhone(candidate.phone_number);
 
-    // Filter out self and already selected
-    found = found.filter(
-      (u) => u.id !== user.id && !selectedUsers.some((s) => s.id === u.id)
-    );
+      const nameMatches = candidateName.includes(lowerQuery);
+      const phoneMatches = digitsQuery.length > 0 && (
+        candidateDigits.includes(digitsQuery) ||
+        candidateNormalized.includes(normalizedDigitsQuery)
+      );
+
+      return (
+        candidate.id !== user.id &&
+        !selectedUsers.some((selected) => selected.id === candidate.id) &&
+        (nameMatches || phoneMatches)
+      );
+    });
 
     setSearching(false);
 
@@ -96,11 +113,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       return;
     }
 
-    if (isGroupMode) {
-      setResults(found);
-    } else {
-      setResults(found);
-    }
+    setResults(found);
   };
 
   const selectUser = (u: FoundUser) => {
