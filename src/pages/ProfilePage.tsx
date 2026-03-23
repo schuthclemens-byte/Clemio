@@ -223,7 +223,7 @@ const ProfilePage = () => {
             </div>
             {isFoundingUser && isPremium && (
               <p className="text-xs text-muted-foreground mt-3 bg-primary/5 rounded-xl p-3">
-                🎉 Du bist einer der ersten 50 Nutzer. Du erhältst 60 Tage Premium kostenlos.
+                {t("profile.foundingHint")}
               </p>
             )}
           </div>
