@@ -74,7 +74,7 @@ const ProfilePage = () => {
       .upload(path, file, { upsert: true });
 
     if (uploadErr) {
-      toast.error("Upload fehlgeschlagen");
+      toast.error(t("profile.uploadFailed"));
       setUploading(false);
       return;
     }
