@@ -247,19 +247,15 @@ const ChatPage = () => {
       // Check which senders have voice profiles (contact-uploaded or own with consent)
       const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
       const profiles: Record<string, boolean> = {};
-      for (const sid of senderIds) {
-        // Check contact voice profile first (no consent needed - user uploaded it themselves)
+      // Check voice profiles in parallel
+      await Promise.all(senderIds.map(async (sid) => {
         const { data: contactVp } = await supabase
           .from("contact_voice_profiles" as any)
           .select("id")
           .eq("user_id", user.id)
           .eq("contact_user_id", sid)
           .maybeSingle();
-        if (contactVp) {
-          profiles[sid] = true;
-          continue;
-        }
-        // Fall back to sender's own voice profile with consent
+        if (contactVp) { profiles[sid] = true; return; }
         const { data: vp } = await supabase
           .from("voice_profiles" as any)
           .select("id")
@@ -275,29 +271,7 @@ const ChatPage = () => {
             .maybeSingle();
           profiles[sid] = !!consent;
         }
-      }
-      // Track if other user has any voice (contact-uploaded or own)
-      if (!isGroup) {
-        const otherSid = senderIds[0] || otherUserId;
-        if (otherSid) {
-          const { data: cvp } = await supabase
-            .from("contact_voice_profiles" as any)
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("contact_user_id", otherSid)
-            .maybeSingle();
-          if (cvp) {
-            setOtherHasVoice(true);
-          } else {
-            const { data: vp } = await supabase
-              .from("voice_profiles" as any)
-              .select("id")
-              .eq("user_id", otherSid)
-              .maybeSingle();
-            setOtherHasVoice(!!vp);
-          }
-        }
-      }
+      }));
 
       setVoiceProfiles(profiles);
     };
