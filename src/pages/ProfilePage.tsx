@@ -130,7 +130,7 @@ const ProfilePage = () => {
       .eq("voice_owner_id", user.id);
 
     setVoiceProfile(null);
-    toast.success("Deine Stimme wurde gelöscht");
+    toast.success(t("profile.voiceDeleted"));
   };
 
   const initials = displayName
