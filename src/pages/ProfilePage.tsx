@@ -368,7 +368,7 @@ const ProfilePage = () => {
                 await supabase.from("profiles").delete().eq("id", user.id);
                 await signOut();
                 navigate("/login");
-                toast.success("Dein Konto wurde gelöscht");
+                toast.success(t("profile.accountDeleted"));
               } catch {
                 toast.error("Fehler beim Löschen des Kontos");
               }
