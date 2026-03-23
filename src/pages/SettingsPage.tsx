@@ -575,7 +575,7 @@ const SettingsPage = () => {
                 ) : (
                   <ExternalLink className="w-4 h-4" />
                 )}
-                Abo verwalten
+                {t("sub.manage")}
               </button>
             )}
           </div>
