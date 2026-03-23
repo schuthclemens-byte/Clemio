@@ -791,7 +791,13 @@ const ChatPage = () => {
                   isMine={msg.isMine}
                   isRead={msg.isRead}
                   senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
-                  onSpeak={!msg.isMine && voiceProfiles[msg.senderId] ? (text) => handleSpeak(msg.id, text) : msg.isMine ? (text) => handleSpeak(msg.id, text) : undefined}
+                  onSpeak={
+                    msg.isMine
+                      ? (text) => handleSpeak(msg.id, text)
+                      : voiceProfiles[msg.senderId]
+                        ? (text) => handleSpeak(msg.id, text)
+                        : undefined
+                  }
                   isSpeaking={speakingId === msg.id && isSpeaking}
                   messageType={msg.messageType}
                   mediaUrl={msg.mediaUrl}
