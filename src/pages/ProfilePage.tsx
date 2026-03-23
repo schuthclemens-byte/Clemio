@@ -74,7 +74,7 @@ const ProfilePage = () => {
       .upload(path, file, { upsert: true });
 
     if (uploadErr) {
-      toast.error("Upload fehlgeschlagen");
+      toast.error(t("profile.uploadFailed"));
       setUploading(false);
       return;
     }
@@ -85,7 +85,7 @@ const ProfilePage = () => {
     await supabase.from("profiles").update({ avatar_url: newUrl }).eq("id", user.id);
     setAvatarUrl(newUrl);
     setUploading(false);
-    toast.success("Profilbild aktualisiert");
+    toast.success(t("profile.avatarUpdated"));
   };
 
   const handleSave = async () => {
@@ -102,9 +102,9 @@ const ProfilePage = () => {
 
     setSaving(false);
     if (error) {
-      toast.error("Speichern fehlgeschlagen");
+      toast.error(t("profile.saveFailed"));
     } else {
-      toast.success("Profil gespeichert");
+      toast.success(t("profile.saved"));
     }
   };
 
@@ -115,7 +115,7 @@ const ProfilePage = () => {
 
   const handleDeleteVoice = async () => {
     if (!user || !voiceProfile) return;
-    const confirmed = window.confirm("Möchtest du deine geklonte Stimme wirklich löschen? Das kann nicht rückgängig gemacht werden.");
+    const confirmed = window.confirm(t("profile.deleteVoiceConfirm"));
     if (!confirmed) return;
 
     await supabase
@@ -130,7 +130,7 @@ const ProfilePage = () => {
       .eq("voice_owner_id", user.id);
 
     setVoiceProfile(null);
-    toast.success("Deine Stimme wurde gelöscht");
+    toast.success(t("profile.voiceDeleted"));
   };
 
   const initials = displayName
@@ -186,7 +186,7 @@ const ProfilePage = () => {
         {/* Subscription Status */}
         <section className="animate-reveal-up">
           <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-            Abo-Status
+            {t("profile.subStatus")}
           </label>
           <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
             <div className="flex items-center gap-3">
@@ -200,15 +200,15 @@ const ProfilePage = () => {
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-[0.938rem]">{planLabel}</p>
                   {isFoundingUser && (
-                    <Badge variant="default" className="text-[0.625rem]">Founding User</Badge>
+                    <Badge variant="default" className="text-[0.625rem]">{t("profile.foundingUser")}</Badge>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {isPremium
                     ? daysRemaining > 0
-                      ? `Noch ${daysRemaining} Tage Premium`
-                      : "Premium aktiv"
-                    : "Upgrade für alle Funktionen"
+                      ? t("profile.daysRemaining").replace("{n}", String(daysRemaining))
+                      : t("profile.premiumActive")
+                    : t("profile.upgradeHint")
                   }
                 </p>
               </div>
@@ -217,13 +217,13 @@ const ProfilePage = () => {
                   onClick={() => requirePremium(() => {})}
                   className="h-9 px-4 rounded-xl gradient-primary text-primary-foreground text-sm font-medium shadow-soft hover:shadow-elevated transition-all"
                 >
-                  Upgrade
+                  {t("profile.upgrade")}
                 </button>
               )}
             </div>
             {isFoundingUser && isPremium && (
               <p className="text-xs text-muted-foreground mt-3 bg-primary/5 rounded-xl p-3">
-                🎉 Du bist einer der ersten 50 Nutzer. Du erhältst 60 Tage Premium kostenlos.
+                {t("profile.foundingHint")}
               </p>
             )}
           </div>
@@ -270,7 +270,7 @@ const ProfilePage = () => {
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Dein Name"
+            placeholder={t("profile.namePlaceholder")}
             className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
           />
         </section>
@@ -304,7 +304,7 @@ const ProfilePage = () => {
         {/* Voice Cloning */}
         <section className="animate-reveal-up" style={{ animationDelay: "180ms" }}>
           <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
-            Stimme
+            {t("profile.voice")}
             {!isPremium && <PremiumBadge />}
           </label>
           <VoiceCloneUpload existingVoice={voiceProfile} onCloned={loadVoiceProfile} />
@@ -314,17 +314,16 @@ const ProfilePage = () => {
               className="w-full mt-3 flex items-center justify-center gap-2 h-11 rounded-xl bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors active:scale-[0.97]"
             >
               <Trash2 className="w-4 h-4" />
-              Stimme löschen
+              {t("profile.deleteVoice")}
             </button>
           )}
           <div className="mt-3 p-4 rounded-2xl bg-accent/5 border border-accent/10 space-y-2">
             <div className="flex items-start gap-2.5">
               <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-foreground">Deine Stimme ist geschützt</p>
+                <p className="text-sm font-semibold text-foreground">{t("profile.voiceProtected")}</p>
                 <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                  Deine Stimme wird <strong>nur mit deiner ausdrücklichen Zustimmung</strong> für andere hörbar. 
-                  Du kannst Freigaben jederzeit widerrufen und dein Stimmmodell komplett löschen.
+                  {t("profile.voiceProtectedDesc")}
                 </p>
               </div>
             </div>
@@ -332,7 +331,7 @@ const ProfilePage = () => {
               onClick={() => navigate("/privacy")}
               className="text-xs text-primary font-medium hover:underline ml-7"
             >
-              Mehr zum Datenschutz →
+              {t("profile.morePrivacy")}
             </button>
           </div>
         </section>
@@ -340,7 +339,7 @@ const ProfilePage = () => {
         {/* Voice Consent */}
         <section className="animate-reveal-up" style={{ animationDelay: "240ms" }}>
           <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
-            Stimmfreigaben
+            {t("profile.voiceConsents")}
             {!isPremium && <PremiumBadge />}
           </label>
           <VoiceConsentManager />
@@ -358,7 +357,7 @@ const ProfilePage = () => {
 
           <button
             onClick={async () => {
-              if (!window.confirm("Bist du sicher? Dein Konto und alle Daten werden unwiderruflich gelöscht.")) return;
+              if (!window.confirm(t("profile.deleteAccountConfirm"))) return;
               if (!user) return;
               try {
                 // Delete all user data
@@ -368,14 +367,14 @@ const ProfilePage = () => {
                 await supabase.from("profiles").delete().eq("id", user.id);
                 await signOut();
                 navigate("/login");
-                toast.success("Dein Konto wurde gelöscht");
+                toast.success(t("profile.accountDeleted"));
               } catch {
-                toast.error("Fehler beim Löschen des Kontos");
+                toast.error(t("profile.deleteAccountError"));
               }
             }}
             className="w-full h-11 rounded-xl text-destructive/60 text-sm font-medium hover:text-destructive transition-colors active:scale-[0.97]"
           >
-            Konto dauerhaft löschen
+            {t("profile.deleteAccount")}
           </button>
         </section>
       </div>

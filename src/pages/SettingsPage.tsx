@@ -530,12 +530,12 @@ const SettingsPage = () => {
                   <p className="font-semibold text-[0.938rem]">{planLabel}</p>
                   {isPremium && daysRemaining > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      {stripeActive ? `Nächste Zahlung in ${daysRemaining} Tagen` : `Noch ${daysRemaining} Tage`}
+                      {stripeActive ? t("sub.nextPayment").replace("{n}", String(daysRemaining)) : t("sub.daysLeft").replace("{n}", String(daysRemaining))}
                     </p>
                   )}
                   {isFoundingUser && (
                     <p className="text-xs text-accent font-medium">
-                      {daysRemaining === -1 ? "✨ Permanenter Zugang" : "🎉 Danke, Founding User!"}
+                      {daysRemaining === -1 ? t("sub.permanentAccess") : t("sub.foundingThanks")}
                     </p>
                   )}
                 </div>
@@ -543,7 +543,7 @@ const SettingsPage = () => {
               <button
                 onClick={() => refreshSubscription()}
                 className="p-2 rounded-full hover:bg-secondary transition-colors"
-                aria-label="Status aktualisieren"
+                aria-label={t("sub.refreshStatus")}
               >
                 <RefreshCw className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -560,7 +560,7 @@ const SettingsPage = () => {
                 ) : (
                   <CreditCard className="w-4 h-4" />
                 )}
-                Premium abonnieren – 4,99€/Monat
+                {t("sub.subscribe")}
               </button>
             )}
 
@@ -575,7 +575,7 @@ const SettingsPage = () => {
                 ) : (
                   <ExternalLink className="w-4 h-4" />
                 )}
-                Abo verwalten
+                {t("sub.manage")}
               </button>
             )}
           </div>

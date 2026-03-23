@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { Mic, ShieldCheck, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ShieldCheck, X } from "lucide-react";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface VoiceConsentPopupProps {
   open: boolean;
@@ -9,6 +8,8 @@ interface VoiceConsentPopupProps {
 }
 
 const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps) => {
+  const { t } = useI18n();
+
   if (!open) return null;
 
   return (
@@ -28,28 +29,22 @@ const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps)
           <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-8 h-8 text-accent" />
           </div>
-          <h2 className="text-xl font-bold mb-2">Einwilligung zur Nutzung deiner Stimme</h2>
+          <h2 className="text-xl font-bold mb-2">{t("consent.title")}</h2>
         </div>
 
         {/* Content */}
         <div className="px-6 pb-6 space-y-4">
           <div className="bg-secondary/50 rounded-xl p-4 space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>Ich bestätige, dass ich meine Stimme <strong className="text-foreground">freiwillig</strong> zur Verfügung stelle.</p>
-            <p>
-              Ich stimme zu, dass meine Sprachaufnahme verwendet wird, um eine künstliche Stimme zu erstellen, 
-              die <strong className="text-foreground">innerhalb der App</strong> genutzt wird.
-            </p>
-            <p>
-              Ich kann diese Einwilligung <strong className="text-foreground">jederzeit widerrufen</strong> und 
-              meine Stimme löschen.
-            </p>
+            <p>{t("consent.voluntary")}</p>
+            <p>{t("consent.usage")}</p>
+            <p>{t("consent.revoke")}</p>
           </div>
 
           {/* Trust line */}
           <div className="flex items-center gap-2 px-1">
             <ShieldCheck className="w-4 h-4 text-accent shrink-0" />
             <p className="text-xs text-muted-foreground">
-              Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.
+              {t("consent.trust")}
             </p>
           </div>
         </div>
@@ -60,13 +55,13 @@ const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps)
             onClick={onAccept}
             className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
           >
-            Zustimmen
+            {t("consent.accept")}
           </button>
           <button
             onClick={onCancel}
             className="w-full h-11 rounded-xl bg-secondary/50 text-muted-foreground text-sm font-medium hover:bg-secondary transition-colors active:scale-[0.97]"
           >
-            Abbrechen
+            {t("consent.cancel")}
           </button>
         </div>
       </div>
