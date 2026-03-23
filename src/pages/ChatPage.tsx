@@ -564,11 +564,14 @@ const ChatPage = () => {
     if (replyTarget) insertData.reply_to = replyTarget.id;
     setReplyTarget(null);
 
-    const { error } = await supabase.from("messages").insert(insertData);
+    const { data: inserted, error } = await supabase.from("messages").insert(insertData).select("id").single();
 
     if (error) {
       console.error("Send failed:", error);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    } else if (inserted) {
+      // Replace temp id with real DB id so realtime dedup works
+      setMessages((prev) => prev.map((m) => m.id === tempId ? { ...m, id: inserted.id } : m));
     }
 
     // Update conversation timestamp
