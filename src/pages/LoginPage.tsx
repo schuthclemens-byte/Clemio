@@ -60,7 +60,7 @@ const LoginPage = () => {
         setBiometricLoading(false);
         return;
       }
-      localStorage.setItem("hearo_stay_logged_in", stayLoggedIn ? "true" : "false");
+      localStorage.setItem("voicara_stay_logged_in", stayLoggedIn ? "true" : "false");
       navigate("/chats");
     } catch {
       toast.error("Biometrische Anmeldung fehlgeschlagen");
@@ -128,7 +128,7 @@ const LoginPage = () => {
         toast.success(t("app.signupSuccess") || "Konto erstellt!");
       }
 
-      localStorage.setItem("hearo_stay_logged_in", "true");
+      localStorage.setItem("voicara_stay_logged_in", "true");
       navigate("/chats");
     } finally {
       setLoading(false);
