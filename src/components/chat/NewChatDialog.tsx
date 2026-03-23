@@ -99,7 +99,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     if (isGroupMode) {
       setResults(found);
     } else if (found.length === 1) {
-      setResult(found[0]);
+      // Single result: start chat immediately
+      handleStartChatWith(found[0]);
     } else {
       setResults(found);
     }
@@ -111,8 +112,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       setResults((prev) => prev.filter((r) => r.id !== u.id));
       setSearchQuery("");
     } else {
-      setResult(u);
-      setResults([]);
+      // Directly start chat on click
+      handleStartChatWith(u);
     }
   };
 
@@ -120,8 +121,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     setSelectedUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
-  const handleStartChat = async () => {
-    if (!result || !user) return;
+  const handleStartChatWith = async (target: FoundUser) => {
+    if (!target || !user) return;
     setCreating(true);
 
     const { data: myMemberships } = await supabase
@@ -144,7 +145,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
           .from("conversation_members")
           .select("user_id")
           .eq("conversation_id", m.conversation_id)
-          .eq("user_id", result.id)
+          .eq("user_id", target.id)
           .maybeSingle();
 
         if (otherMember) {
@@ -165,11 +166,15 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
     await supabase.from("conversation_members").insert([
       { conversation_id: conv.id, user_id: user.id },
-      { conversation_id: conv.id, user_id: result.id },
+      { conversation_id: conv.id, user_id: target.id },
     ]);
 
     handleClose();
     navigate(`/chat/${conv.id}`);
+  };
+
+  const handleStartChat = () => {
+    if (result) handleStartChatWith(result);
   };
 
   const handleCreateGroup = async () => {
