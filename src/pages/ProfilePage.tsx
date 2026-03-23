@@ -332,7 +332,7 @@ const ProfilePage = () => {
               onClick={() => navigate("/privacy")}
               className="text-xs text-primary font-medium hover:underline ml-7"
             >
-              Mehr zum Datenschutz →
+              {t("profile.morePrivacy")}
             </button>
           </div>
         </section>
