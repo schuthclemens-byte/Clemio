@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import { phoneToEmail, sanitizePhoneInput } from "@/lib/authPhone";
+import { phoneToEmail, sanitizePhoneInput, normalizePhone } from "@/lib/authPhone";
 
 interface AuthContextType {
   user: User | null;
@@ -101,12 +101,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      const legacyClean = cleanPhone.replace(/[^0-9+]/g, "").replace("+", "p");
-      const legacyEmail = `${legacyClean}@phone.voicara.app`;
+      // Try legacy hearo.app domain for existing users
+      const legacyEmail = `${normalizePhone(cleanPhone)}@phone.hearo.app`;
       if (legacyEmail !== email) {
         const { data: legacyData, error: legacyError } = await supabase.auth.signInWithPassword({ email: legacyEmail, password });
         if (!legacyError) {
           applySession(legacyData.session);
+          return { error: null };
+        }
+      }
+      // Try old format fallback
+      const legacyClean = cleanPhone.replace(/[^0-9+]/g, "").replace("+", "p");
+      const legacyEmail2 = `${legacyClean}@phone.hearo.app`;
+      if (legacyEmail2 !== email && legacyEmail2 !== legacyEmail) {
+        const { data: legacyData2, error: legacyError2 } = await supabase.auth.signInWithPassword({ email: legacyEmail2, password });
+        if (!legacyError2) {
+          applySession(legacyData2.session);
           return { error: null };
         }
       }
