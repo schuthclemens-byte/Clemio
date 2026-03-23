@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Ear, Languages, Mic2, Shield, Headphones, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ONBOARDING_KEY = "voxa_onboarding_done";
+const ONBOARDING_KEY = "voicara_onboarding_done";
 
 interface Slide {
   icon: React.ReactNode;

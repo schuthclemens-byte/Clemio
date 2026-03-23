@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["icon-192.png", "icon-512.png"],
       manifest: {
-        name: "Voxa – Messenger",
-        short_name: "Voxa",
+        name: "Voicara – Messenger",
+        short_name: "Voicara",
         description: "Sprachnachrichten, Echtzeit-Übersetzung & barrierefreie Kommunikation",
         theme_color: "#F97316",
         background_color: "#FFF7ED",

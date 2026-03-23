@@ -154,12 +154,12 @@ const themes: Record<ColorTheme, { light: Record<string, string>; dark: Record<s
 
 export const ColorThemeProvider = ({ children }: { children: ReactNode }) => {
   const [colorTheme, setColorThemeState] = useState<ColorTheme>(() => {
-    return (localStorage.getItem("voxa-color-theme") as ColorTheme) || "sunset";
+    return (localStorage.getItem("voicara-color-theme") as ColorTheme) || "sunset";
   });
 
   const setColorTheme = (t: ColorTheme) => {
     setColorThemeState(t);
-    localStorage.setItem("voxa-color-theme", t);
+    localStorage.setItem("voicara-color-theme", t);
   };
 
   useEffect(() => {

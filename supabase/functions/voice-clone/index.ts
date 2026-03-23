@@ -50,14 +50,14 @@ serve(async (req) => {
 
     const isContactVoice = !!contactUserId;
     const cloneName = isContactVoice
-      ? `voxa_contact_${user.id.slice(0, 8)}_${contactUserId!.slice(0, 8)}`
-      : `voxa_${user.id.slice(0, 8)}_${voiceName}`;
+      ? `voicara_contact_${user.id.slice(0, 8)}_${contactUserId!.slice(0, 8)}`
+      : `voicara_${user.id.slice(0, 8)}_${voiceName}`;
 
     // Clone voice via ElevenLabs
     const elFormData = new FormData();
     elFormData.append("name", cloneName);
     elFormData.append("files", audioFile);
-    elFormData.append("description", isContactVoice ? "Contact voice clone for Voxa" : "Voice clone for Voxa user");
+    elFormData.append("description", isContactVoice ? "Contact voice clone for Voicara" : "Voice clone for Voicara user");
 
     const elResponse = await fetch("https://api.elevenlabs.io/v1/voices/add", {
       method: "POST",

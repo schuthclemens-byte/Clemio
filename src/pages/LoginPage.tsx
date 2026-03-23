@@ -9,12 +9,12 @@ import { toast } from "sonner";
 import CountryCodePicker, { countries, findCountryByDial, detectCountryFromBrowser, type Country } from "@/components/auth/CountryCodePicker";
 
 const getInitialCountry = (): Country => {
-  const saved = localStorage.getItem("voxa_last_phone") || "";
+  const saved = localStorage.getItem("voicara_last_phone") || "";
   return findCountryByDial(saved) || detectCountryFromBrowser();
 };
 
 const getInitialLocalNumber = (): string => {
-  const saved = localStorage.getItem("voxa_last_phone") || "";
+  const saved = localStorage.getItem("voicara_last_phone") || "";
   if (!saved) return "";
   const country = findCountryByDial(saved) || countries[0];
   // Strip the country dial code from saved number
@@ -91,7 +91,7 @@ const LoginPage = () => {
 
     setLoading(true);
     const cleanPhone = fullPhone;
-    localStorage.setItem("voxa_last_phone", cleanPhone);
+    localStorage.setItem("voicara_last_phone", cleanPhone);
 
     try {
       if (mode === "login") {
@@ -179,7 +179,7 @@ const LoginPage = () => {
           {/* Logo & Header */}
           <div className="text-center mb-10">
             <div className="relative w-20 h-20 mx-auto mb-5">
-              <img src="/icon-512.png" alt="Voxa" className="w-20 h-20 rounded-3xl shadow-soft" />
+              <img src="/icon-512.png" alt="Voicara" className="w-20 h-20 rounded-3xl shadow-soft" />
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight">
               {t("app.welcome")}
