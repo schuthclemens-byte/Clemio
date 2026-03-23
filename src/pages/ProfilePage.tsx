@@ -375,7 +375,7 @@ const ProfilePage = () => {
             }}
             className="w-full h-11 rounded-xl text-destructive/60 text-sm font-medium hover:text-destructive transition-colors active:scale-[0.97]"
           >
-            Konto dauerhaft löschen
+            {t("profile.deleteAccount")}
           </button>
         </section>
       </div>
