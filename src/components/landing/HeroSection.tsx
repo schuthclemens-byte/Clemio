@@ -87,8 +87,8 @@ const HeroSection = () => {
           <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">Clevara</span>
         </motion.div>
 
-        <motion.div variants={fadeUp} custom={1} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6 border border-primary/20">
-          <Sparkles className="w-3.5 h-3.5" />
+        <motion.div variants={fadeUp} custom={1} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[0.7rem] font-semibold mb-6 border border-primary/20">
+          <Sparkles className="w-3 h-3" />
           {t("landing.badge")}
         </motion.div>
 
