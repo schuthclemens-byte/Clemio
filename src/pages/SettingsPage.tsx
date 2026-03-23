@@ -535,7 +535,7 @@ const SettingsPage = () => {
                   )}
                   {isFoundingUser && (
                     <p className="text-xs text-accent font-medium">
-                      {daysRemaining === -1 ? "✨ Permanenter Zugang" : "🎉 Danke, Founding User!"}
+                      {daysRemaining === -1 ? t("sub.permanentAccess") : t("sub.foundingThanks")}
                     </p>
                   )}
                 </div>
