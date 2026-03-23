@@ -85,7 +85,7 @@ const ProfilePage = () => {
     await supabase.from("profiles").update({ avatar_url: newUrl }).eq("id", user.id);
     setAvatarUrl(newUrl);
     setUploading(false);
-    toast.success("Profilbild aktualisiert");
+    toast.success(t("profile.avatarUpdated"));
   };
 
   const handleSave = async () => {
