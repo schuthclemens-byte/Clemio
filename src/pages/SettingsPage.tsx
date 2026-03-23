@@ -65,7 +65,7 @@ const SettingsPage = () => {
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
-  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("hearo_stay_logged_in") !== "false");
+  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("voicara_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = async () => {
@@ -76,7 +76,7 @@ const SettingsPage = () => {
   const toggleStayLoggedIn = () => {
     const next = !stayLoggedIn;
     setStayLoggedIn(next);
-    localStorage.setItem("hearo_stay_logged_in", next ? "true" : "false");
+    localStorage.setItem("voicara_stay_logged_in", next ? "true" : "false");
     toast.success(next ? t("settings.stayLoggedIn") + " ✓" : t("settings.logout") + " – " + t("settings.stayLoggedInDesc"));
   };
 
