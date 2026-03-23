@@ -21,7 +21,7 @@ export const useNotifications = () => {
       body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: conversationId || "voicara-message",
+      tag: conversationId || "clevara-message",
     };
 
     const notification = new Notification(title, options);

@@ -14,7 +14,7 @@ const InstallPage = () => {
 
   useEffect(() => {
     // Check APK availability
-    const { data: apkData } = supabase.storage.from("downloads").getPublicUrl("voicara.apk");
+    const { data: apkData } = supabase.storage.from("downloads").getPublicUrl("clevara.apk");
     if (apkData?.publicUrl) {
       fetch(apkData.publicUrl, { method: "HEAD" })
         .then((r) => { if (r.ok) setApkUrl(apkData.publicUrl); })
@@ -25,7 +25,7 @@ const InstallPage = () => {
     }
 
     // Check Desktop installer availability
-    const { data: desktopData } = supabase.storage.from("downloads").getPublicUrl("voicara-setup.exe");
+    const { data: desktopData } = supabase.storage.from("downloads").getPublicUrl("clevara-setup.exe");
     if (desktopData?.publicUrl) {
       fetch(desktopData.publicUrl, { method: "HEAD" })
         .then((r) => { if (r.ok) setDesktopUrl(desktopData.publicUrl); })
@@ -46,19 +46,19 @@ const InstallPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-semibold text-lg">Voicara herunterladen</h1>
+          <h1 className="font-semibold text-lg">Clevara herunterladen</h1>
         </div>
       </header>
 
       <div className="flex-1 flex flex-col items-center px-6 pt-8 pb-12">
         {/* App icon */}
         <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mb-6 shadow-lg">
-          <img src="/icon-192.png" alt="Voicara" className="w-20 h-20 rounded-2xl" />
+          <img src="/icon-192.png" alt="Clevara" className="w-20 h-20 rounded-2xl" />
         </div>
 
-        <h2 className="text-2xl font-bold text-foreground mb-2">Voicara</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Clevara</h2>
         <p className="text-muted-foreground text-center text-sm mb-10 max-w-xs">
-          Lade Voicara als App herunter – für dein Handy oder deinen Computer.
+          Lade Clevara als App herunter – für dein Handy oder deinen Computer.
         </p>
 
         {/* Download cards */}
@@ -72,7 +72,7 @@ const InstallPage = () => {
             loading={checkingApk}
             available={!!apkUrl}
             url={apkUrl}
-            fileName="voicara.apk"
+            fileName="clevara.apk"
             buttonLabel="APK herunterladen"
             unavailableText="APK wird vorbereitet…"
           />
@@ -85,7 +85,7 @@ const InstallPage = () => {
             loading={checkingDesktop}
             available={!!desktopUrl}
             url={desktopUrl}
-            fileName="voicara-setup.exe"
+            fileName="clevara-setup.exe"
             buttonLabel="Für Windows herunterladen"
             unavailableText="Desktop-App kommt bald"
           />
@@ -99,7 +99,7 @@ const InstallPage = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-[0.938rem]">Im Browser nutzen</h3>
                 <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-                  Kein Download nötig – Voicara funktioniert auch direkt im Browser.
+                  Kein Download nötig – Clevara funktioniert auch direkt im Browser.
                 </p>
                 <Button
                   variant="outline"

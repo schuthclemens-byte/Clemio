@@ -12,7 +12,7 @@ const CTASection = () => {
   const [apkUrl, setApkUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data } = supabase.storage.from("downloads").getPublicUrl("voicara.apk");
+    const { data } = supabase.storage.from("downloads").getPublicUrl("clevara.apk");
     if (data?.publicUrl) {
       fetch(data.publicUrl, { method: "HEAD" }).then(r => {
         if (r.ok) setApkUrl(data.publicUrl);
