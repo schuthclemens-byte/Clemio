@@ -217,7 +217,7 @@ const ProfilePage = () => {
                   onClick={() => requirePremium(() => {})}
                   className="h-9 px-4 rounded-xl gradient-primary text-primary-foreground text-sm font-medium shadow-soft hover:shadow-elevated transition-all"
                 >
-                  Upgrade
+                  {t("profile.upgrade")}
                 </button>
               )}
             </div>
