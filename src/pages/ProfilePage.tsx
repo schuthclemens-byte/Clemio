@@ -115,7 +115,7 @@ const ProfilePage = () => {
 
   const handleDeleteVoice = async () => {
     if (!user || !voiceProfile) return;
-    const confirmed = window.confirm("Möchtest du deine geklonte Stimme wirklich löschen? Das kann nicht rückgängig gemacht werden.");
+    const confirmed = window.confirm(t("profile.deleteVoiceConfirm"));
     if (!confirmed) return;
 
     await supabase
