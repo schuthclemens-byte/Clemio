@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
-const BIOMETRIC_ENABLED_KEY = "hearo_biometric_enabled";
-const BIOMETRIC_CRED_KEY = "hearo_biometric_cred";
+const BIOMETRIC_ENABLED_KEY = "voxa_biometric_enabled";
+const BIOMETRIC_CRED_KEY = "voxa_biometric_cred";
 
 function isWebAuthnAvailable(): boolean {
   return (
@@ -57,7 +57,7 @@ function bytesToHex(bytes: Uint8Array): string {
 }
 
 async function deriveDeviceKey(): Promise<string> {
-  const seed = `${window.location.origin}|${navigator.userAgent}|hearo-biometric-v2`;
+  const seed = `${window.location.origin}|${navigator.userAgent}|voxa-biometric-v2`;
   const digest = await crypto.subtle.digest("SHA-256", textToBuffer(seed));
   return bytesToHex(new Uint8Array(digest));
 }
@@ -107,12 +107,12 @@ export function useBiometricAuth() {
         publicKey: {
           challenge,
           rp: {
-            name: "Hearo Messenger",
+            name: "Voxa Messenger",
           },
           user: {
             id: userId.buffer as ArrayBuffer,
             name: phone.trim(),
-            displayName: `Hearo - ${phone.trim()}`,
+            displayName: `Voxa - ${phone.trim()}`,
           },
           pubKeyCredParams: [
             { alg: -7, type: "public-key" },

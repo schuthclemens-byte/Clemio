@@ -24,7 +24,7 @@ const HeroSection = () => {
   const [apkUrl, setApkUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data } = supabase.storage.from("downloads").getPublicUrl("hearo.apk");
+    const { data } = supabase.storage.from("downloads").getPublicUrl("voxa.apk");
     if (data?.publicUrl) {
       fetch(data.publicUrl, { method: "HEAD" }).then(r => {
         if (r.ok) setApkUrl(data.publicUrl);

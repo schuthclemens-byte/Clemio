@@ -14,7 +14,7 @@ const InstallPage = () => {
 
   useEffect(() => {
     // Check APK availability
-    const { data: apkData } = supabase.storage.from("downloads").getPublicUrl("hearo.apk");
+    const { data: apkData } = supabase.storage.from("downloads").getPublicUrl("voxa.apk");
     if (apkData?.publicUrl) {
       fetch(apkData.publicUrl, { method: "HEAD" })
         .then((r) => { if (r.ok) setApkUrl(apkData.publicUrl); })
@@ -25,7 +25,7 @@ const InstallPage = () => {
     }
 
     // Check Desktop installer availability
-    const { data: desktopData } = supabase.storage.from("downloads").getPublicUrl("hearo-setup.exe");
+    const { data: desktopData } = supabase.storage.from("downloads").getPublicUrl("voxa-setup.exe");
     if (desktopData?.publicUrl) {
       fetch(desktopData.publicUrl, { method: "HEAD" })
         .then((r) => { if (r.ok) setDesktopUrl(desktopData.publicUrl); })
@@ -46,19 +46,19 @@ const InstallPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-semibold text-lg">Hearo herunterladen</h1>
+          <h1 className="font-semibold text-lg">Voxa herunterladen</h1>
         </div>
       </header>
 
       <div className="flex-1 flex flex-col items-center px-6 pt-8 pb-12">
         {/* App icon */}
         <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mb-6 shadow-lg">
-          <img src="/icon-192.png" alt="Hearo" className="w-20 h-20 rounded-2xl" />
+          <img src="/icon-192.png" alt="Voxa" className="w-20 h-20 rounded-2xl" />
         </div>
 
-        <h2 className="text-2xl font-bold text-foreground mb-2">Hearo</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Voxa</h2>
         <p className="text-muted-foreground text-center text-sm mb-10 max-w-xs">
-          Lade Hearo als App herunter – für dein Handy oder deinen Computer.
+          Lade Voxa als App herunter – für dein Handy oder deinen Computer.
         </p>
 
         {/* Download cards */}
@@ -72,7 +72,7 @@ const InstallPage = () => {
             loading={checkingApk}
             available={!!apkUrl}
             url={apkUrl}
-            fileName="hearo.apk"
+            fileName="voxa.apk"
             buttonLabel="APK herunterladen"
             unavailableText="APK wird vorbereitet…"
           />
@@ -85,7 +85,7 @@ const InstallPage = () => {
             loading={checkingDesktop}
             available={!!desktopUrl}
             url={desktopUrl}
-            fileName="hearo-setup.exe"
+            fileName="voxa-setup.exe"
             buttonLabel="Für Windows herunterladen"
             unavailableText="Desktop-App kommt bald"
           />
@@ -99,7 +99,7 @@ const InstallPage = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-[0.938rem]">Im Browser nutzen</h3>
                 <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-                  Kein Download nötig – Hearo funktioniert auch direkt im Browser.
+                  Kein Download nötig – Voxa funktioniert auch direkt im Browser.
                 </p>
                 <Button
                   variant="outline"

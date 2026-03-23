@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const stayLoggedIn = localStorage.getItem("hearo_stay_logged_in");
+      const stayLoggedIn = localStorage.getItem("voxa_stay_logged_in");
       if (stayLoggedIn === "false" && session) {
         supabase.auth.signOut().then(() => {
           applySession(null);
@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) {
       const legacyClean = cleanPhone.replace(/[^0-9+]/g, "").replace("+", "p");
-      const legacyEmail = `${legacyClean}@phone.hearo.app`;
+      const legacyEmail = `${legacyClean}@phone.voxa.app`;
       if (legacyEmail !== email) {
         const { data: legacyData, error: legacyError } = await supabase.auth.signInWithPassword({ email: legacyEmail, password });
         if (!legacyError) {
