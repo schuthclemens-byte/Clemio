@@ -43,6 +43,7 @@ const LoginPage = () => {
   const [forgotSent, setForgotSent] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [stayLoggedIn, setStayLoggedIn] = useState(true);
 
   const handleBiometricLogin = useCallback(async () => {
     setBiometricLoading(true);
@@ -59,7 +60,7 @@ const LoginPage = () => {
         setBiometricLoading(false);
         return;
       }
-      localStorage.setItem("hearo_stay_logged_in", "true");
+      localStorage.setItem("hearo_stay_logged_in", stayLoggedIn ? "true" : "false");
       navigate("/chats");
     } catch {
       toast.error("Biometrische Anmeldung fehlgeschlagen");
@@ -263,6 +264,18 @@ const LoginPage = () => {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+
+            {mode === "login" && (
+              <label className="flex items-center gap-2.5 cursor-pointer select-none px-1">
+                <input
+                  type="checkbox"
+                  checked={stayLoggedIn}
+                  onChange={(e) => setStayLoggedIn(e.target.checked)}
+                  className="w-4.5 h-4.5 rounded border-border accent-primary cursor-pointer"
+                />
+                <span className="text-sm text-muted-foreground">Eingeloggt bleiben</span>
+              </label>
+            )}
 
             <button
               type="submit"
