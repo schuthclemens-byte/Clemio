@@ -340,7 +340,7 @@ const ProfilePage = () => {
         {/* Voice Consent */}
         <section className="animate-reveal-up" style={{ animationDelay: "240ms" }}>
           <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
-            Stimmfreigaben
+            {t("profile.voiceConsents")}
             {!isPremium && <PremiumBadge />}
           </label>
           <VoiceConsentManager />
