@@ -200,7 +200,7 @@ const ProfilePage = () => {
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-[0.938rem]">{planLabel}</p>
                   {isFoundingUser && (
-                    <Badge variant="default" className="text-[0.625rem]">Founding User</Badge>
+                    <Badge variant="default" className="text-[0.625rem]">{t("profile.foundingUser")}</Badge>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
