@@ -127,6 +127,7 @@ const LoginPage = () => {
         toast.success(t("app.signupSuccess") || "Konto erstellt!");
       }
 
+      localStorage.setItem("hearo_stay_logged_in", "true");
       navigate("/chats");
     } finally {
       setLoading(false);
