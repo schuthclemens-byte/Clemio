@@ -111,6 +111,8 @@ export const useSubscription = () => {
       return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
     }
     if (!subscription?.premium_until) return 0;
+    // Whitelist users have premium_until far in the future - don't show countdown
+    if (new Date(subscription.premium_until).getFullYear() >= 2099) return -1;
     const diff = new Date(subscription.premium_until).getTime() - Date.now();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   };
