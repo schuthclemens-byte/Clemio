@@ -111,8 +111,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       setResults((prev) => prev.filter((r) => r.id !== u.id));
       setSearchQuery("");
     } else {
-      setResult(u);
-      setResults([]);
+      // Directly start chat on click
+      handleStartChatWith(u);
     }
   };
 
