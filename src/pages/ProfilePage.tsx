@@ -206,9 +206,9 @@ const ProfilePage = () => {
                 <p className="text-xs text-muted-foreground">
                   {isPremium
                     ? daysRemaining > 0
-                      ? `Noch ${daysRemaining} Tage Premium`
-                      : "Premium aktiv"
-                    : "Upgrade für alle Funktionen"
+                      ? t("profile.daysRemaining").replace("{n}", String(daysRemaining))
+                      : t("profile.premiumActive")
+                    : t("profile.upgradeHint")
                   }
                 </p>
               </div>
