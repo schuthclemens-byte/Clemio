@@ -131,8 +131,8 @@ const PrivacyPolicyPage = () => {
           <h3 className="font-semibold text-[0.938rem] mb-3">8. Kontakt</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Bei Fragen zum Datenschutz kannst du uns kontaktieren:{" "}
-            <a href="mailto:privacy@hearo.app" className="text-primary font-medium hover:underline">
-              privacy@hearo.app
+            <a href="mailto:privacy@voxa.app" className="text-primary font-medium hover:underline">
+              privacy@voxa.app
             </a>
           </p>
         </section>

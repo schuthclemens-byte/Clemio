@@ -35,8 +35,8 @@ const TermsPage = () => {
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up">
           <h3 className="font-semibold text-[0.938rem] mb-3">1. Nutzung der App</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Hearo ist eine Kommunikations-App, die Nachrichten als Sprache wiedergibt. 
-            Du musst mindestens 16 Jahre alt sein, um Hearo zu nutzen.
+            Voxa ist eine Kommunikations-App, die Nachrichten als Sprache wiedergibt. 
+            Du musst mindestens 16 Jahre alt sein, um Voxa zu nutzen.
             Du bist für dein Konto und alle Aktivitäten verantwortlich.
           </p>
         </section>
@@ -56,7 +56,7 @@ const TermsPage = () => {
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "120ms" }}>
           <h3 className="font-semibold text-[0.938rem] mb-3">3. Abonnement</h3>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
-            <p>Hearo bietet kostenlose und Premium-Funktionen:</p>
+            <p>Voxa bietet kostenlose und Premium-Funktionen:</p>
             <ul className="space-y-1">
               <li className="flex gap-2"><span className="text-primary">•</span>7 Tage kostenlose Testphase für alle neuen Nutzer</li>
               <li className="flex gap-2"><span className="text-primary">•</span>Premium: 4,99 €/Monat, verlängert sich automatisch</li>
@@ -80,8 +80,8 @@ const TermsPage = () => {
           <h3 className="font-semibold text-[0.938rem] mb-3">5. Kontakt</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Bei Fragen erreichst du uns unter:{" "}
-            <a href="mailto:support@hearo.app" className="text-primary font-medium hover:underline">
-              support@hearo.app
+            <a href="mailto:support@voxa.app" className="text-primary font-medium hover:underline">
+              support@voxa.app
             </a>
           </p>
         </section>

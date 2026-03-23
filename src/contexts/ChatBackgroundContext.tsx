@@ -42,8 +42,8 @@ export const animatedPresets: { label: string; bg: ChatBackground; premium: true
   { label: "Nebel", bg: { type: "animated", value: "nebula" }, premium: true },
 ];
 
-const STORAGE_KEY = "hearo-chat-bg-global";
-const PER_CHAT_KEY = "hearo-chat-bg-";
+const STORAGE_KEY = "voxa-chat-bg-global";
+const PER_CHAT_KEY = "voxa-chat-bg-";
 
 export const ChatBackgroundProvider = ({ children }: { children: ReactNode }) => {
   const [globalBackground, setGlobalBgState] = useState<ChatBackground>(() => {

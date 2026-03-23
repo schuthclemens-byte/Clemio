@@ -32,7 +32,7 @@ const HowItWorksSection = () => {
         variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
       >
         <motion.p variants={fadeUp} custom={0} className="text-primary text-sm font-bold uppercase tracking-wider text-center mb-3">
-          Hearo
+          Voxa
         </motion.p>
         <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-extrabold text-center mb-3 text-foreground leading-tight">
           {t("landing.howTitle")}
