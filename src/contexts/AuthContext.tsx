@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import { phoneToEmail, sanitizePhoneInput } from "@/lib/authPhone";
+import { phoneToEmail, sanitizePhoneInput, normalizePhone } from "@/lib/authPhone";
 
 interface AuthContextType {
   user: User | null;
