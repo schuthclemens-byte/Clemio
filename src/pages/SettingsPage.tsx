@@ -560,7 +560,7 @@ const SettingsPage = () => {
                 ) : (
                   <CreditCard className="w-4 h-4" />
                 )}
-                Premium abonnieren – 4,99€/Monat
+                {t("sub.subscribe")}
               </button>
             )}
 
