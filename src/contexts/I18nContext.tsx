@@ -125,6 +125,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "Hör mal rein 🎧",
     "landing.demoStop": "Tippe zum Stoppen",
     "landing.demoSubtitle": "So klingt eine Clevara-Nachricht",
+    "landing.demoSpeech": "Hey, ich wollte dir nur sagen, dass ich heute etwas später komme. Wir sehen uns dann! Bis gleich.",
     "landing.signIn": "Anmelden",
     "landing.download": "App herunterladen",
     "landing.howTitle": "So funktioniert's",
@@ -410,6 +411,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "Listen in 🎧",
     "landing.demoStop": "Tap to stop",
     "landing.demoSubtitle": "This is how a Clevara message sounds",
+    "landing.demoSpeech": "Hey, I just wanted to let you know that I'll be a bit late today. See you soon! Talk later.",
     "landing.signIn": "Sign in",
     "landing.download": "Download app",
     "landing.howTitle": "How it works",
@@ -695,6 +697,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "Escucha 🎧",
     "landing.demoStop": "Toca para parar",
     "landing.demoSubtitle": "Así suena un mensaje de Clevara",
+    "landing.demoSpeech": "Hola, solo quería decirte que hoy llegaré un poco tarde. ¡Nos vemos pronto! Hasta luego.",
     "landing.signIn": "Iniciar sesión",
     "landing.download": "Descargar app",
     "landing.howTitle": "Cómo funciona",
@@ -980,6 +983,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "Écoute 🎧",
     "landing.demoStop": "Touche pour arrêter",
     "landing.demoSubtitle": "Voilà comment sonne un message Clevara",
+    "landing.demoSpeech": "Salut, je voulais juste te dire que j'arriverai un peu en retard aujourd'hui. On se voit bientôt ! À plus.",
     "landing.signIn": "Se connecter",
     "landing.download": "Télécharger l'app",
     "landing.howTitle": "Comment ça marche",
@@ -1265,6 +1269,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "Dinle 🎧",
     "landing.demoStop": "Durdurmak için dokun",
     "landing.demoSubtitle": "Bir Clevara mesajı böyle duyulur",
+    "landing.demoSpeech": "Selam, bugün biraz geç kalacağımı söylemek istedim. Görüşürüz! Sonra konuşuruz.",
     "landing.signIn": "Giriş yap",
     "landing.download": "Uygulamayı indir",
     "landing.howTitle": "Nasıl çalışır",
@@ -1550,6 +1555,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.demoPlay": "اسمع 🎧",
     "landing.demoStop": "اضغط للإيقاف",
     "landing.demoSubtitle": "هكذا تبدو رسالة Clevara",
+    "landing.demoSpeech": "مرحبًا، أردت فقط أن أخبرك أنني سأتأخر قليلاً اليوم. أراك قريبًا! إلى اللقاء.",
     "landing.signIn": "تسجيل الدخول",
     "landing.download": "تحميل التطبيق",
     "landing.howTitle": "كيف يعمل",
@@ -1750,7 +1756,14 @@ export const useI18n = () => useContext(I18nContext);
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const [locale, setLocaleState] = useState<Locale>(() => {
     const saved = localStorage.getItem("app-locale");
-    return (saved as Locale) || "de";
+    if (saved && saved in localeNames) return saved as Locale;
+    // Auto-detect from device/system language
+    const deviceLang = (navigator.language || "").toLowerCase();
+    const langMap: Record<string, Locale> = {
+      de: "de", en: "en", es: "es", fr: "fr", tr: "tr", ar: "ar",
+    };
+    const prefix = deviceLang.split("-")[0];
+    return langMap[prefix] || "de";
   });
 
   const setLocale = useCallback((l: Locale) => {
