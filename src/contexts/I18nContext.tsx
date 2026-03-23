@@ -1756,7 +1756,14 @@ export const useI18n = () => useContext(I18nContext);
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const [locale, setLocaleState] = useState<Locale>(() => {
     const saved = localStorage.getItem("app-locale");
-    return (saved as Locale) || "de";
+    if (saved && saved in localeNames) return saved as Locale;
+    // Auto-detect from device/system language
+    const deviceLang = (navigator.language || "").toLowerCase();
+    const langMap: Record<string, Locale> = {
+      de: "de", en: "en", es: "es", fr: "fr", tr: "tr", ar: "ar",
+    };
+    const prefix = deviceLang.split("-")[0];
+    return langMap[prefix] || "de";
   });
 
   const setLocale = useCallback((l: Locale) => {
