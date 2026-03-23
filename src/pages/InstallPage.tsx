@@ -70,11 +70,11 @@ const InstallPage = () => {
           <DownloadCard
             icon={Monitor}
             title="Windows"
-            description="Desktop-App für Windows herunterladen"
+            description="ZIP herunterladen, entpacken & Clevara.exe starten"
             loading={checkingDesktop}
             available={!!desktopUrl}
             url={desktopUrl}
-            fileName="clevara-setup.exe"
+            fileName="clevara-setup.zip"
             buttonLabel="Für Windows herunterladen"
             unavailableText="Desktop-App kommt bald"
           />
