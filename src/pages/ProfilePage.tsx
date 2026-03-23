@@ -186,7 +186,7 @@ const ProfilePage = () => {
         {/* Subscription Status */}
         <section className="animate-reveal-up">
           <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-            Abo-Status
+            {t("profile.subStatus")}
           </label>
           <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
             <div className="flex items-center gap-3">
