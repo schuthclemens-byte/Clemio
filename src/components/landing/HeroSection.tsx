@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { Download, ArrowRight, LogIn, MessageCircle, Sparkles, Play, Pause } from "lucide-react";
+import { Download, LogIn, MessageCircle, Sparkles, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/contexts/I18nContext";
-import { localeSpeechCodes } from "@/contexts/I18nContext";
+import demoVoice from "@/assets/demo-voice.mp3";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -17,30 +18,35 @@ const fadeUp = {
 
 const HeroSection = () => {
   const navigate = useNavigate();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [apkUrl, setApkUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const { data } = supabase.storage.from("downloads").getPublicUrl("clevara.apk");
+    if (data?.publicUrl) {
+      fetch(data.publicUrl, { method: "HEAD" }).then(r => {
+        if (r.ok) setApkUrl(data.publicUrl);
+      }).catch(() => {});
+    }
+  }, []);
 
   const playDemo = useCallback(() => {
-    if (!("speechSynthesis" in window)) return;
-
+    if (!audioRef.current) {
+      audioRef.current = new Audio(demoVoice);
+      audioRef.current.onended = () => setIsPlaying(false);
+      audioRef.current.onerror = () => setIsPlaying(false);
+    }
     if (isPlaying) {
-      window.speechSynthesis.cancel();
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
       setIsPlaying(false);
       return;
     }
-
-    const text = t("landing.demoSpeech");
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = localeSpeechCodes[locale] || "de-DE";
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
-    utteranceRef.current = utterance;
+    audioRef.current.play();
     setIsPlaying(true);
-    window.speechSynthesis.speak(utterance);
-  }, [isPlaying, t, locale]);
+  }, [isPlaying]);
 
   return (
     <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
