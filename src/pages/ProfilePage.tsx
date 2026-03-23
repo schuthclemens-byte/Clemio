@@ -304,7 +304,7 @@ const ProfilePage = () => {
         {/* Voice Cloning */}
         <section className="animate-reveal-up" style={{ animationDelay: "180ms" }}>
           <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
-            Stimme
+            {t("profile.voice")}
             {!isPremium && <PremiumBadge />}
           </label>
           <VoiceCloneUpload existingVoice={voiceProfile} onCloned={loadVoiceProfile} />
