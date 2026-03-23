@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const stayLoggedIn = localStorage.getItem("voicara_stay_logged_in");
+      const stayLoggedIn = localStorage.getItem("clevara_stay_logged_in");
       if (stayLoggedIn === "false" && session) {
         supabase.auth.signOut().then(() => {
           applySession(null);

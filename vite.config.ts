@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["icon-192.png", "icon-512.png"],
       manifest: {
-        name: "Voicara – Messenger",
-        short_name: "Voicara",
+        name: "Clevara – Messenger",
+        short_name: "Clevara",
         description: "Sprachnachrichten, Echtzeit-Übersetzung & barrierefreie Kommunikation",
         theme_color: "#F97316",
         background_color: "#FFF7ED",
