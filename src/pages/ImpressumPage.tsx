@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Building2 } from "lucide-react";
+import { useI18n } from "@/contexts/I18nContext";
 
 const ImpressumPage = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -11,11 +13,11 @@ const ImpressumPage = () => {
           <button
             onClick={() => navigate(-1)}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
-            aria-label="Zurück"
+            aria-label={t("legal.back")}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Impressum</h1>
+          <h1 className="text-xl font-bold">{t("legal.impTitle")}</h1>
         </div>
       </header>
 
@@ -26,14 +28,14 @@ const ImpressumPage = () => {
               <Building2 className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Impressum</h2>
-              <p className="text-xs text-muted-foreground">Angaben gemäß § 5 TMG</p>
+              <h2 className="text-lg font-bold">{t("legal.impTitle")}</h2>
+              <p className="text-xs text-muted-foreground">{t("legal.impSubtitle")}</p>
             </div>
           </div>
         </section>
 
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up">
-          <h3 className="font-semibold text-[0.938rem] mb-3">Verantwortlich</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.impResponsible")}</h3>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-1">
             <p className="font-medium text-foreground">Clemens Schuth</p>
             <p>Ludwig-Erhard-Allee 3</p>
@@ -43,10 +45,10 @@ const ImpressumPage = () => {
         </section>
 
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "60ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">Kontakt</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.impContact")}</h3>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-1">
             <p>
-              E-Mail:{" "}
+              {t("legal.impEmail")}:{" "}
               <a href="mailto:clemensschuth@outlook.de" className="text-primary font-medium hover:underline">
                 clemensschuth@outlook.de
               </a>
@@ -55,21 +57,17 @@ const ImpressumPage = () => {
         </section>
 
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "120ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">Haftungsausschluss</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.impDisclaimer")}</h3>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
-            <p>
-              <strong className="text-foreground">Haftung für Inhalte:</strong> Die Inhalte dieser App wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte übernehmen wir jedoch keine Gewähr.
-            </p>
-            <p>
-              <strong className="text-foreground">Haftung für Links:</strong> Unsere App enthält ggf. Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter verantwortlich.
-            </p>
+            <p>{t("legal.impDisclaimerContent")}</p>
+            <p>{t("legal.impDisclaimerLinks")}</p>
           </div>
         </section>
 
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "180ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">Urheberrecht</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.impCopyright")}</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Die durch den Betreiber erstellten Inhalte und Werke auf dieser App unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors.
+            {t("legal.impCopyrightText")}
           </p>
         </section>
 

@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Shield } from "lucide-react";
+import { useI18n } from "@/contexts/I18nContext";
 
 const PrivacyPolicyPage = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -11,137 +13,125 @@ const PrivacyPolicyPage = () => {
           <button
             onClick={() => navigate(-1)}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
-            aria-label="Zurück"
+            aria-label={t("legal.back")}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Datenschutz</h1>
+          <h1 className="text-xl font-bold">{t("legal.privTitle")}</h1>
         </div>
       </header>
 
       <div className="flex-1 p-5 space-y-6 max-w-2xl mx-auto">
-        {/* Intro */}
         <section className="animate-reveal-up">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Datenschutzerklärung</h2>
-              <p className="text-xs text-muted-foreground">Zuletzt aktualisiert: März 2026</p>
+              <h2 className="text-lg font-bold">{t("legal.privFullTitle")}</h2>
+              <p className="text-xs text-muted-foreground">{t("legal.privUpdated")}</p>
             </div>
           </div>
         </section>
 
-        {/* 1. Allgemeines */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up">
-          <h3 className="font-semibold text-[0.938rem] mb-3">1. Allgemeines</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.priv1Title")}</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Diese App ermöglicht Kommunikation über Text, Sprache und KI-gestützte Funktionen 
-            (z.&nbsp;B. Vorlesen und Stimmen-Simulation). Der Schutz deiner Daten ist uns wichtig.
+            {t("legal.priv1Text")}
           </p>
         </section>
 
-        {/* 2. Welche Daten wir verarbeiten */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "60ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">2. Welche Daten wir verarbeiten</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.priv2Title")}</h3>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">Account-Daten</strong> (z.&nbsp;B. E-Mail oder Login)</p></div>
-            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">Nachrichten</strong> (Text und Sprache)</p></div>
-            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">Sprachaufnahmen</strong> (für Voice Cloning, nur mit Zustimmung)</p></div>
-            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">Nutzungsdaten</strong> (z.&nbsp;B. App-Funktionen)</p></div>
+            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">{t("legal.priv2Account")}</strong></p></div>
+            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">{t("legal.priv2Messages")}</strong></p></div>
+            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">{t("legal.priv2Voice")}</strong></p></div>
+            <div className="flex gap-2"><span className="text-primary">•</span><p><strong className="text-foreground">{t("legal.priv2Usage")}</strong></p></div>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-            Diese Daten sind notwendig, um die App bereitzustellen und zu verbessern.
+            {t("legal.priv2Note")}
           </p>
         </section>
 
-        {/* 3. Voice Cloning */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "120ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">3. Voice Cloning</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.priv3Title")}</h3>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>Wenn du eine Stimme hinzufügst:</p>
+            <p>{t("legal.priv3Intro")}</p>
             <ul className="space-y-2">
-              <li className="flex gap-2"><span className="text-accent">•</span>wird deine Sprachaufnahme verarbeitet, um eine künstliche Stimme zu erstellen</li>
-              <li className="flex gap-2"><span className="text-accent">•</span>diese Stimme wird nur für deine Nutzung in der App verwendet</li>
+              <li className="flex gap-2"><span className="text-accent">•</span>{t("legal.priv3Item1")}</li>
+              <li className="flex gap-2"><span className="text-accent">•</span>{t("legal.priv3Item2")}</li>
             </ul>
             <div className="bg-primary/5 rounded-xl p-4 mt-3 space-y-2">
-              <p className="font-semibold text-foreground text-sm">⚠️ Wichtig:</p>
+              <p className="font-semibold text-foreground text-sm">⚠️ {t("legal.priv3Important")}</p>
               <ul className="space-y-1.5">
-                <li className="flex gap-2"><span className="text-accent">✓</span>Nutzung erfolgt <strong className="text-foreground">nur mit deiner ausdrücklichen Zustimmung</strong></li>
-                <li className="flex gap-2"><span className="text-accent">✓</span>Du kannst deine Stimme <strong className="text-foreground">jederzeit löschen</strong></li>
-                <li className="flex gap-2"><span className="text-accent">✓</span>Ohne Zustimmung wird <strong className="text-foreground">KEINE Stimme erstellt</strong></li>
+                <li className="flex gap-2"><span className="text-accent">✓</span>{t("legal.priv3Consent")}</li>
+                <li className="flex gap-2"><span className="text-accent">✓</span>{t("legal.priv3Delete")}</li>
+                <li className="flex gap-2"><span className="text-accent">✓</span>{t("legal.priv3NoConsent")}</li>
               </ul>
             </div>
             <p className="text-xs text-muted-foreground mt-2 italic">
-              Stimmen gelten als besonders schützenswert und dürfen nur mit Einwilligung genutzt werden.
+              {t("legal.priv3Note")}
             </p>
           </div>
         </section>
 
-        {/* 4. Nutzung deiner Daten */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "180ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">4. Nutzung deiner Daten</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.priv4Title")}</h3>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
-            <li className="flex gap-2"><span className="text-primary">•</span>Bereitstellung der App</li>
-            <li className="flex gap-2"><span className="text-primary">•</span>Kommunikation zwischen Nutzern</li>
-            <li className="flex gap-2"><span className="text-primary">•</span>Verbesserung der Funktionen</li>
+            <li className="flex gap-2"><span className="text-primary">•</span>{t("legal.priv4Item1")}</li>
+            <li className="flex gap-2"><span className="text-primary">•</span>{t("legal.priv4Item2")}</li>
+            <li className="flex gap-2"><span className="text-primary">•</span>{t("legal.priv4Item3")}</li>
           </ul>
           <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-            Es erfolgt keine Weitergabe deiner Daten an Dritte, außer wenn es technisch notwendig ist (z.&nbsp;B. Serverbetrieb).
+            {t("legal.priv4Note")}
           </p>
         </section>
 
-        {/* 5. Speicherung & Sicherheit */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "240ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">5. Speicherung & Sicherheit</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.priv5Title")}</h3>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
-            <li className="flex gap-2"><span className="text-accent">✓</span>Deine Daten werden sicher gespeichert</li>
-            <li className="flex gap-2"><span className="text-accent">✓</span>Zugriff nur, wenn notwendig</li>
-            <li className="flex gap-2"><span className="text-accent">✓</span>Schutz vor unbefugtem Zugriff</li>
+            <li className="flex gap-2"><span className="text-accent">✓</span>{t("legal.priv5Item1")}</li>
+            <li className="flex gap-2"><span className="text-accent">✓</span>{t("legal.priv5Item2")}</li>
+            <li className="flex gap-2"><span className="text-accent">✓</span>{t("legal.priv5Item3")}</li>
           </ul>
         </section>
 
-        {/* 6. Deine Rechte */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "300ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">6. Deine Rechte</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.priv6Title")}</h3>
           <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
-            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Auskunft</strong> über deine Daten</li>
-            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Löschung</strong> deiner Daten</li>
-            <li className="flex gap-2"><span className="text-primary">•</span><strong className="text-foreground">Widerruf</strong> deiner Einwilligung</li>
+            <li className="flex gap-2"><span className="text-primary">•</span>{t("legal.priv6Item1")}</li>
+            <li className="flex gap-2"><span className="text-primary">•</span>{t("legal.priv6Item2")}</li>
+            <li className="flex gap-2"><span className="text-primary">•</span>{t("legal.priv6Item3")}</li>
           </ul>
           <div className="bg-primary/5 rounded-xl p-3 mt-3">
             <p className="text-sm text-foreground font-medium">
-              ➡️ Du kannst deine Stimme jederzeit entfernen
+              ➡️ {t("legal.priv6Hint")}
             </p>
           </div>
         </section>
 
-        {/* 7. Freiwilligkeit */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "360ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">7. Freiwilligkeit</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.priv7Title")}</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Die Nutzung der App ist freiwillig. Wenn du keine Sprachdaten bereitstellst, 
-            kannst du die App trotzdem eingeschränkt nutzen.
+            {t("legal.priv7Text")}
           </p>
         </section>
 
-        {/* 8. Kontakt */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "420ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">8. Kontakt</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.priv8Title")}</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Bei Fragen zum Datenschutz kannst du uns kontaktieren:{" "}
+            {t("legal.priv8Text")}{" "}
             <a href="mailto:privacy@clevara.app" className="text-primary font-medium hover:underline">
               privacy@clevara.app
             </a>
           </p>
         </section>
 
-        {/* Trust badge */}
         <section className="animate-reveal-up" style={{ animationDelay: "480ms" }}>
           <div className="bg-accent/5 border border-accent/10 rounded-2xl p-4 text-center">
             <p className="text-sm font-medium text-foreground">
-              🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.
+              {t("legal.privTrust")}
             </p>
           </div>
         </section>
