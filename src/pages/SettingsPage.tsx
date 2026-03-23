@@ -543,7 +543,7 @@ const SettingsPage = () => {
               <button
                 onClick={() => refreshSubscription()}
                 className="p-2 rounded-full hover:bg-secondary transition-colors"
-                aria-label="Status aktualisieren"
+                aria-label={t("sub.refreshStatus")}
               >
                 <RefreshCw className="w-4 h-4 text-muted-foreground" />
               </button>
