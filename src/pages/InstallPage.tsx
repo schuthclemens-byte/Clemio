@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Download, ArrowLeft, Smartphone, Monitor, Globe, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const InstallPage = () => {
@@ -13,27 +12,17 @@ const InstallPage = () => {
   const [checkingDesktop, setCheckingDesktop] = useState(true);
 
   useEffect(() => {
-    // Check APK availability
-    const { data: apkData } = supabase.storage.from("downloads").getPublicUrl("clevara.apk");
-    if (apkData?.publicUrl) {
-      fetch(apkData.publicUrl, { method: "HEAD" })
-        .then((r) => { if (r.ok) setApkUrl(apkData.publicUrl); })
-        .catch(() => {})
-        .finally(() => setCheckingApk(false));
-    } else {
-      setCheckingApk(false);
-    }
+    // Check APK availability from public folder
+    fetch("/clevara.apk", { method: "HEAD" })
+      .then((r) => { if (r.ok) setApkUrl("/clevara.apk"); })
+      .catch(() => {})
+      .finally(() => setCheckingApk(false));
 
-    // Check Desktop installer availability
-    const { data: desktopData } = supabase.storage.from("downloads").getPublicUrl("clevara-setup.exe");
-    if (desktopData?.publicUrl) {
-      fetch(desktopData.publicUrl, { method: "HEAD" })
-        .then((r) => { if (r.ok) setDesktopUrl(desktopData.publicUrl); })
-        .catch(() => {})
-        .finally(() => setCheckingDesktop(false));
-    } else {
-      setCheckingDesktop(false);
-    }
+    // Check Windows ZIP availability from public folder
+    fetch("/clevara-setup.zip", { method: "HEAD" })
+      .then((r) => { if (r.ok) setDesktopUrl("/clevara-setup.zip"); })
+      .catch(() => {})
+      .finally(() => setCheckingDesktop(false));
   }, []);
 
   return (
