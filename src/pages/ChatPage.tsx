@@ -420,11 +420,11 @@ const ChatPage = () => {
     if (!otherUserId) return;
 
     const channel = supabase
-      .channel(`presence-${otherUserId}`)
+      .channel(`presence-watch-${otherUserId}`)
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
           table: "user_presence",
           filter: `user_id=eq.${otherUserId}`,
@@ -442,7 +442,7 @@ const ChatPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, user]);
+  }, [otherUserId]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
