@@ -99,7 +99,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     if (isGroupMode) {
       setResults(found);
     } else if (found.length === 1) {
-      setResult(found[0]);
+      // Single result: start chat immediately
+      handleStartChatWith(found[0]);
     } else {
       setResults(found);
     }
