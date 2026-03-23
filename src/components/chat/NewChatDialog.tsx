@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizePhone } from "@/lib/authPhone";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface FoundUser {
   id: string;
@@ -132,55 +133,76 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   };
 
   const handleStartChatWith = async (target: FoundUser) => {
-    if (!target || !user) return;
+    if (!target || !user || creating) return;
     setCreating(true);
+    setError("");
 
-    const { data: myMemberships } = await supabase
-      .from("conversation_members")
-      .select("conversation_id")
-      .eq("user_id", user.id);
-
-    if (myMemberships) {
-      for (const m of myMemberships) {
-        const { data: conv } = await supabase
-          .from("conversations")
-          .select("is_group")
-          .eq("id", m.conversation_id)
-          .eq("is_group", false)
-          .maybeSingle();
-
-        if (!conv) continue;
-
-        const { data: otherMember } = await supabase
+    try {
+      const [myMembershipsResponse, targetMembershipsResponse] = await Promise.all([
+        supabase
           .from("conversation_members")
-          .select("user_id")
-          .eq("conversation_id", m.conversation_id)
-          .eq("user_id", target.id)
+          .select("conversation_id")
+          .eq("user_id", user.id),
+        supabase
+          .from("conversation_members")
+          .select("conversation_id")
+          .eq("user_id", target.id),
+      ]);
+
+      if (myMembershipsResponse.error) throw myMembershipsResponse.error;
+      if (targetMembershipsResponse.error) throw targetMembershipsResponse.error;
+
+      const myConversationIds = new Set((myMembershipsResponse.data ?? []).map((membership) => membership.conversation_id));
+      const sharedConversationIds = (targetMembershipsResponse.data ?? [])
+        .map((membership) => membership.conversation_id)
+        .filter((conversationId) => myConversationIds.has(conversationId));
+
+      if (sharedConversationIds.length > 0) {
+        const { data: existingConversation, error: existingConversationError } = await supabase
+          .from("conversations")
+          .select("id")
+          .in("id", sharedConversationIds)
+          .eq("is_group", false)
+          .limit(1)
           .maybeSingle();
 
-        if (otherMember) {
+        if (existingConversationError) throw existingConversationError;
+
+        if (existingConversation?.id) {
           handleClose();
-          navigate(`/chat/${m.conversation_id}`);
+          navigate(`/chat/${existingConversation.id}`);
           return;
         }
       }
+
+      const { data: conv, error: convErr } = await supabase
+        .from("conversations")
+        .insert({ created_by: user.id, name: null, is_group: false })
+        .select("id")
+        .single();
+
+      if (convErr || !conv) throw convErr ?? new Error("Conversation creation failed");
+
+      const { error: ownMembershipError } = await supabase
+        .from("conversation_members")
+        .insert({ conversation_id: conv.id, user_id: user.id });
+
+      if (ownMembershipError) throw ownMembershipError;
+
+      const { error: targetMembershipError } = await supabase
+        .from("conversation_members")
+        .insert({ conversation_id: conv.id, user_id: target.id });
+
+      if (targetMembershipError) throw targetMembershipError;
+
+      handleClose();
+      navigate(`/chat/${conv.id}`);
+    } catch (err) {
+      console.error("[NewChatDialog] Chat start failed", err);
+      toast.error("Chat konnte nicht gestartet werden");
+    } finally {
+      setCreating(false);
     }
-
-    const { data: conv, error: convErr } = await supabase
-      .from("conversations")
-      .insert({ created_by: user.id, name: null, is_group: false })
-      .select()
-      .single();
-
-    if (convErr || !conv) { setCreating(false); return; }
-
-    await supabase.from("conversation_members").insert([
-      { conversation_id: conv.id, user_id: user.id },
-      { conversation_id: conv.id, user_id: target.id },
-    ]);
-
-    handleClose();
-    navigate(`/chat/${conv.id}`);
   };
 
   const handleStartChat = () => {
@@ -292,7 +314,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                 <button
                   key={u.id}
                   onClick={() => selectUser(u)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/60 hover:bg-secondary transition-colors text-left"
+                  disabled={creating}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/60 hover:bg-secondary transition-colors text-left disabled:opacity-60 disabled:pointer-events-none"
                 >
                   <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
                     {(u.display_name || "?")[0].toUpperCase()}
