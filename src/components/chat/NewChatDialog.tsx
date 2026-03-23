@@ -175,28 +175,28 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
         }
       }
 
-      const { data: conv, error: convErr } = await supabase
-        .from("conversations")
-        .insert({ created_by: user.id, name: null, is_group: false })
-        .select("id")
-        .single();
+      const conversationId = crypto.randomUUID();
 
-      if (convErr || !conv) throw convErr ?? new Error("Conversation creation failed");
+      const { error: convErr } = await supabase
+        .from("conversations")
+        .insert({ id: conversationId, created_by: user.id, name: null, is_group: false });
+
+      if (convErr) throw convErr;
 
       const { error: ownMembershipError } = await supabase
         .from("conversation_members")
-        .insert({ conversation_id: conv.id, user_id: user.id });
+        .insert({ conversation_id: conversationId, user_id: user.id });
 
       if (ownMembershipError) throw ownMembershipError;
 
       const { error: targetMembershipError } = await supabase
         .from("conversation_members")
-        .insert({ conversation_id: conv.id, user_id: target.id });
+        .insert({ conversation_id: conversationId, user_id: target.id });
 
       if (targetMembershipError) throw targetMembershipError;
 
       handleClose();
-      navigate(`/chat/${conv.id}`);
+      navigate(`/chat/${conversationId}`);
     } catch (err) {
       console.error("[NewChatDialog] Chat start failed", err);
       toast.error("Chat konnte nicht gestartet werden");
