@@ -530,7 +530,7 @@ const SettingsPage = () => {
                   <p className="font-semibold text-[0.938rem]">{planLabel}</p>
                   {isPremium && daysRemaining > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      {stripeActive ? `Nächste Zahlung in ${daysRemaining} Tagen` : `Noch ${daysRemaining} Tage`}
+                      {stripeActive ? t("sub.nextPayment").replace("{n}", String(daysRemaining)) : t("sub.daysLeft").replace("{n}", String(daysRemaining))}
                     </p>
                   )}
                   {isFoundingUser && (
