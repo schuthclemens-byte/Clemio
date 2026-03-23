@@ -77,11 +77,14 @@ const HeroSection = () => {
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
       >
-        <motion.div variants={fadeUp} custom={0} className="relative w-20 h-20 mx-auto mb-8">
-          <div className="absolute inset-0 rounded-[1.5rem] gradient-primary blur-xl opacity-40 animate-voice-pulse" />
-          <div className="relative w-20 h-20 rounded-[1.5rem] shadow-elevated overflow-hidden gradient-primary flex items-center justify-center">
-            <MessageCircle className="w-10 h-10 text-primary-foreground" />
+        <motion.div variants={fadeUp} custom={0} className="flex flex-col items-center mb-8">
+          <div className="relative w-20 h-20 mx-auto mb-3">
+            <div className="absolute inset-0 rounded-[1.5rem] gradient-primary blur-xl opacity-40 animate-voice-pulse" />
+            <div className="relative w-20 h-20 rounded-[1.5rem] shadow-elevated overflow-hidden gradient-primary flex items-center justify-center">
+              <MessageCircle className="w-10 h-10 text-primary-foreground" />
+            </div>
           </div>
+          <span className="text-2xl font-extrabold tracking-tight text-foreground">Clevara</span>
         </motion.div>
 
         <motion.div variants={fadeUp} custom={1} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6 border border-primary/20">
