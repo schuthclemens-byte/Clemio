@@ -24,6 +24,7 @@ import InstallPage from "./pages/InstallPage";
 import LandingPage from "./pages/LandingPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import VoiceRecordingsPage from "./pages/VoiceRecordingsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsPage from "./pages/TermsPage";
 import ImpressumPage from "./pages/ImpressumPage";
