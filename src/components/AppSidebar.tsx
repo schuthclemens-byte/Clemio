@@ -20,6 +20,7 @@ const mainItems = [
 ];
 
 const extraItems = [
+  { title: "Stimmen", url: "/voice-recordings", icon: Mic },
   { title: "Fokusmodus", url: "/focus-mode", icon: Moon },
   { title: "Auto-Play", url: "/contact-autoplay", icon: Headphones },
 ];
