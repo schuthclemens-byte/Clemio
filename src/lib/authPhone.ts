@@ -1,5 +1,5 @@
 const MAX_PHONE_DIGITS = 15;
-const MIN_PHONE_DIGITS = 4;
+const MIN_PHONE_DIGITS = 7;
 
 export const sanitizePhoneInput = (value: string): string => {
   const hasLeadingPlus = value.trim().startsWith("+");
