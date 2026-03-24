@@ -27,7 +27,9 @@ const getInitialLocalNumber = (): string => {
 const LoginPage = () => {
   const [country, setCountry] = useState<Country>(getInitialCountry);
   const [localNumber, setLocalNumber] = useState(() => getInitialLocalNumber());
-  const phone = `${country.dial}${localNumber.replace(/\D/g, "")}`;
+  const rawDigits = localNumber.replace(/\D/g, "");
+  const phoneDigits = country.dial !== "" && rawDigits.startsWith("0") ? rawDigits.slice(1) : rawDigits;
+  const phone = `${country.dial}${phoneDigits}`;
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
