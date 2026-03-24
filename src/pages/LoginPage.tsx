@@ -27,7 +27,9 @@ const getInitialLocalNumber = (): string => {
 const LoginPage = () => {
   const [country, setCountry] = useState<Country>(getInitialCountry);
   const [localNumber, setLocalNumber] = useState(() => getInitialLocalNumber());
-  const phone = `${country.dial}${localNumber.replace(/\D/g, "")}`;
+  const rawDigits = localNumber.replace(/\D/g, "");
+  const phoneDigits = country.dial !== "" && rawDigits.startsWith("0") ? rawDigits.slice(1) : rawDigits;
+  const phone = `${country.dial}${phoneDigits}`;
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -78,8 +80,10 @@ const LoginPage = () => {
       return;
     }
 
-    const fullPhone = `${country.dial}${digits}`;
-    if (!isValidAuthPhone(fullPhone)) {
+    // Strip leading 0 when country code is already selected
+    const strippedDigits = country.dial !== "" && digits.startsWith("0") ? digits.slice(1) : digits;
+    const fullPhone = `${country.dial}${strippedDigits}`;
+
       toast.error("Bitte gib eine gültige Handynummer ein");
       return;
     }
@@ -97,7 +101,11 @@ const LoginPage = () => {
       if (mode === "login") {
         const { error } = await signIn(cleanPhone, password);
         if (error) {
-          toast.error(t("app.loginError") || "Anmeldung fehlgeschlagen");
+          if (/invalid.?login.?credentials/i.test(error)) {
+            toast.error("Falsches Passwort oder Nummer nicht registriert");
+          } else {
+            toast.error(error);
+          }
           return;
         }
 
