@@ -1,4 +1,4 @@
-import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2 } from "lucide-react";
+import { Volume2, Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -57,6 +57,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const [expanded, setExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showVoiceSaveConfirm, setShowVoiceSaveConfirm] = useState(false);
   const prevSpeaking = useRef(false);
 
   const isMedia = messageType === "image" || messageType === "video";
@@ -178,17 +179,61 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               <AudioPlayer url={message} isMine={isMine} />
               {/* Save voice sample button - always visible on received audio */}
               {!isMine && senderId && onSaveAsVoiceSample && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); requirePremium(() => onSaveAsVoiceSample(message, senderId!)); }}
-                  className={cn(
-                    "flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors active:scale-95",
-                    "bg-primary/10 text-primary hover:bg-primary/20"
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowVoiceSaveConfirm(true); }}
+                    className={cn(
+                      "flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors active:scale-95",
+                      "bg-primary/10 text-primary hover:bg-primary/20"
+                    )}
+                    aria-label="Als Stimmprobe speichern"
+                  >
+                    {isPremium ? <Mic2 className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                    Stimmprobe speichern
+                  </button>
+
+                  {/* Confirmation dialog */}
+                  {showVoiceSaveConfirm && (
+                    <div
+                      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in"
+                      onClick={(e) => { e.stopPropagation(); setShowVoiceSaveConfirm(false); }}
+                    >
+                      <div
+                        className="bg-background rounded-2xl p-5 mx-6 max-w-sm w-full shadow-xl animate-reveal-up"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <Mic2 className="w-5 h-5 text-primary" />
+                          <h3 className="text-base font-semibold text-foreground">Stimmprobe speichern?</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-1">
+                          Diese Sprachnachricht wird als Stimmprobe für <strong className="text-foreground">{senderName || "diesen Kontakt"}</strong> verwendet.
+                        </p>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                          Danach können Textnachrichten in dieser Stimme vorgelesen werden. Die Stimmprobe wird sicher in der Cloud gespeichert.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowVoiceSaveConfirm(false); }}
+                            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-secondary text-foreground active:scale-95 transition-transform"
+                          >
+                            Abbrechen
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowVoiceSaveConfirm(false);
+                              requirePremium(() => onSaveAsVoiceSample!(message, senderId!));
+                            }}
+                            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-primary text-primary-foreground active:scale-95 transition-transform"
+                          >
+                            Speichern
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                  aria-label="Als Stimmprobe speichern"
-                >
-                  {isPremium ? <Mic2 className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                  Stimmprobe speichern
-                </button>
+                </>
               )}
             </div>
           )}
