@@ -57,6 +57,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const [expanded, setExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showVoiceSaveConfirm, setShowVoiceSaveConfirm] = useState(false);
   const prevSpeaking = useRef(false);
 
   const isMedia = messageType === "image" || messageType === "video";
