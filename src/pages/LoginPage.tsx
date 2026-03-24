@@ -74,23 +74,28 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const digits = localNumber.replace(/\D/g, "");
-    if (digits.length < 4) {
-      toast.error("Bitte gib eine gültige Handynummer ein");
-      return;
-    }
+    // Test account shortcut
+    const isTestLogin = localNumber.trim().toLowerCase() === "test";
 
-    // Strip leading 0 when country code is already selected
-    const strippedDigits = country.dial !== "" && digits.startsWith("0") ? digits.slice(1) : digits;
-    const fullPhone = `${country.dial}${strippedDigits}`;
-    if (!isValidAuthPhone(fullPhone)) {
-      toast.error("Bitte gib eine gültige Handynummer ein");
-      return;
-    }
+    if (!isTestLogin) {
+      const digits = localNumber.replace(/\D/g, "");
+      if (digits.length < 4) {
+        toast.error("Bitte gib eine gültige Handynummer ein");
+        return;
+      }
 
-    if (password.length < 6) {
-      toast.error("Das Passwort muss mindestens 6 Zeichen lang sein");
-      return;
+      // Strip leading 0 when country code is already selected
+      const strippedDigits = country.dial !== "" && digits.startsWith("0") ? digits.slice(1) : digits;
+      const fullPhone = `${country.dial}${strippedDigits}`;
+      if (!isValidAuthPhone(fullPhone)) {
+        toast.error("Bitte gib eine gültige Handynummer ein");
+        return;
+      }
+
+      if (password.length < 6) {
+        toast.error("Das Passwort muss mindestens 6 Zeichen lang sein");
+        return;
+      }
     }
 
     setLoading(true);
