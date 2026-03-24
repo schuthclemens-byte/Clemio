@@ -77,7 +77,7 @@ const ChatListPage = () => {
         const [lastMsgRes, unreadRes, memberRes] = await Promise.all([
           supabase
             .from("messages")
-            .select("content, created_at")
+            .select("content, created_at, message_type")
             .eq("conversation_id", conv.id)
             .order("created_at", { ascending: false })
             .limit(1)
