@@ -118,19 +118,29 @@ const ProfilePage = () => {
     const confirmed = window.confirm(t("profile.deleteVoiceConfirm"));
     if (!confirmed) return;
 
-    await supabase
-      .from("voice_profiles" as any)
-      .delete()
-      .eq("user_id", user.id);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            elevenlabs_voice_id: voiceProfile.elevenlabs_voice_id,
+            type: "own",
+          }),
+        }
+      );
 
-    // Also revoke all consents
-    await supabase
-      .from("voice_consents" as any)
-      .delete()
-      .eq("voice_owner_id", user.id);
+      if (!response.ok) throw new Error("Delete failed");
 
-    setVoiceProfile(null);
-    toast.success(t("profile.voiceDeleted"));
+      setVoiceProfile(null);
+      toast.success(t("profile.voiceDeleted"));
+    } catch {
+      toast.error("Fehler beim Löschen der Stimme");
+    }
   };
 
   const initials = displayName
