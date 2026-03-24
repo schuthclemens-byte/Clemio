@@ -77,7 +77,7 @@ const ChatListPage = () => {
         const [lastMsgRes, unreadRes, memberRes] = await Promise.all([
           supabase
             .from("messages")
-            .select("content, created_at")
+            .select("content, created_at, message_type")
             .eq("conversation_id", conv.id)
             .order("created_at", { ascending: false })
             .limit(1)
@@ -112,10 +112,19 @@ const ChatListPage = () => {
         }
 
         const lastMsg = lastMsgRes.data;
+        const lastMessageDisplay = lastMsg
+          ? lastMsg.message_type === "audio"
+            ? "🎤 Sprachnachricht"
+            : lastMsg.message_type === "image"
+              ? "📷 Bild"
+              : lastMsg.message_type === "video"
+                ? "🎥 Video"
+                : lastMsg.content
+          : "";
         return {
           id: conv.id,
           name: displayName,
-          lastMessage: lastMsg?.content || "",
+          lastMessage: lastMessageDisplay,
           time: lastMsg
             ? new Date(lastMsg.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
             : "",

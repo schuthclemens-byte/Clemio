@@ -174,7 +174,23 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
 
           {/* Audio content */}
           {isAudio && message && (
-            <AudioPlayer url={message} isMine={isMine} />
+            <div>
+              <AudioPlayer url={message} isMine={isMine} />
+              {/* Save voice sample button - always visible on received audio */}
+              {!isMine && senderId && onSaveAsVoiceSample && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); requirePremium(() => onSaveAsVoiceSample(message, senderId!)); }}
+                  className={cn(
+                    "flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors active:scale-95",
+                    "bg-primary/10 text-primary hover:bg-primary/20"
+                  )}
+                  aria-label="Als Stimmprobe speichern"
+                >
+                  {isPremium ? <Mic2 className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                  Stimmprobe speichern
+                </button>
+              )}
+            </div>
           )}
 
           {/* Text */}
