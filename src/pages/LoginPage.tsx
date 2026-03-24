@@ -99,11 +99,35 @@ const LoginPage = () => {
     }
 
     setLoading(true);
-    const cleanPhone = fullPhone;
+
+    // Test account shortcut: use hardcoded credentials
+    const testEmail = "test@phone.clevara.app";
+    const testPassword = "test123";
+    
+    let cleanPhone: string;
+    if (isTestLogin) {
+      cleanPhone = "+49000000000";
+    } else {
+      const digits = localNumber.replace(/\D/g, "");
+      const strippedDigits = country.dial !== "" && digits.startsWith("0") ? digits.slice(1) : digits;
+      cleanPhone = `${country.dial}${strippedDigits}`;
+    }
     localStorage.setItem("clevara_last_phone", cleanPhone);
 
     try {
       if (mode === "login") {
+        if (isTestLogin) {
+          // Direct test login via email
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { error } = await supabase.auth.signInWithPassword({
+            email: testEmail,
+            password: testPassword,
+          });
+          if (error) {
+            toast.error("Test-Login fehlgeschlagen: " + error.message);
+            return;
+          }
+        } else {
         // Check if phone number is registered first
         const normalizedDigits = cleanPhone.replace(/[^0-9]/g, "");
         const normalizedWith49 = normalizedDigits.startsWith("0") ? `49${normalizedDigits.slice(1)}` : normalizedDigits;
