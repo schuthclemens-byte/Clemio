@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Clevara',
   webDir: 'dist',
   server: {
-    url: "https://c52e8e1f-5ad4-47fe-b0e2-e8f9449395ee.lovableproject.com?forceHideBadge=true",
+    url: "https://clevara.lovable.app",
     cleartext: true
   }
 };
