@@ -99,10 +99,23 @@ const LoginPage = () => {
 
     try {
       if (mode === "login") {
+        // Check if phone number is registered first
+        const normalizedDigits = cleanPhone.replace(/[^0-9]/g, "");
+        const normalizedWith49 = normalizedDigits.startsWith("0") ? `49${normalizedDigits.slice(1)}` : normalizedDigits;
+        const { data: profileMatches } = await (await import("@/integrations/supabase/client")).supabase
+          .from("profiles")
+          .select("id")
+          .or(`phone_number.eq.${cleanPhone},phone_number.eq.+${normalizedWith49},phone_number.eq.${normalizedDigits},phone_number.eq.0${normalizedWith49.slice(2)}`)
+          .limit(1);
+
         const { error } = await signIn(cleanPhone, password);
         if (error) {
           if (/invalid.?login.?credentials/i.test(error)) {
-            toast.error("Falsches Passwort oder Nummer nicht registriert");
+            if (!profileMatches || profileMatches.length === 0) {
+              toast.error("Diese Nummer ist nicht registriert. Bitte erstelle zuerst ein Konto.");
+            } else {
+              toast.error("Falsches Passwort. Bitte versuche es erneut.");
+            }
           } else {
             toast.error(error);
           }
