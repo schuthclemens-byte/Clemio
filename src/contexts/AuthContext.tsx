@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return { error: null };
         }
       }
-      // Try old format fallback
+      // Try old format fallback (voicara.app)
       const legacyClean = cleanPhone.replace(/[^0-9+]/g, "").replace("+", "p");
       const legacyEmail2 = `${legacyClean}@phone.voicara.app`;
       if (legacyEmail2 !== email && legacyEmail2 !== legacyEmail) {
@@ -118,6 +118,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!legacyError2) {
           applySession(legacyData2.session);
           return { error: null };
+        }
+      }
+      // Try hearo.app legacy domain
+      const rawDigits = cleanPhone.replace(/[^0-9]/g, "");
+      const heароFormats = [
+        `${rawDigits}@phone.hearo.app`,
+        rawDigits.startsWith("0") ? `${rawDigits}@phone.hearo.app` : `0${rawDigits.replace(/^49/, "")}@phone.hearo.app`,
+      ];
+      for (const hearoEmail of heароFormats) {
+        if (hearoEmail !== email && hearoEmail !== legacyEmail && hearoEmail !== legacyEmail2) {
+          const { data: hearoData, error: hearoError } = await supabase.auth.signInWithPassword({ email: hearoEmail, password });
+          if (!hearoError) {
+            applySession(hearoData.session);
+            return { error: null };
+          }
         }
       }
       return { error: error.message };
