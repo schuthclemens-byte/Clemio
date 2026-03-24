@@ -169,6 +169,7 @@ const LoginPage = () => {
             }
           }
         }
+        } // end else (non-test login)
       } else {
         const { error } = await signUp(cleanPhone, password, displayName || "Nutzer");
         if (error) {
