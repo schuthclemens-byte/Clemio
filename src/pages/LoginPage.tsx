@@ -78,8 +78,10 @@ const LoginPage = () => {
       return;
     }
 
-    const fullPhone = `${country.dial}${digits}`;
-    if (!isValidAuthPhone(fullPhone)) {
+    // Strip leading 0 when country code is already selected
+    const strippedDigits = country.dial !== "" && digits.startsWith("0") ? digits.slice(1) : digits;
+    const fullPhone = `${country.dial}${strippedDigits}`;
+
       toast.error("Bitte gib eine gültige Handynummer ein");
       return;
     }
