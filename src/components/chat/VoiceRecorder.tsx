@@ -51,6 +51,14 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
     }
   };
 
+  // Auto-start recording when autoStart prop is true
+  useEffect(() => {
+    if (autoStart && !autoStartedRef.current && !recording) {
+      autoStartedRef.current = true;
+      startRecording();
+    }
+  }, [autoStart]);
+
   const stopRecording = () => {
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
