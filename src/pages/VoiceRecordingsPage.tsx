@@ -83,37 +83,48 @@ const VoiceRecordingsPage = () => {
     loadData();
   }, [user]);
 
+  const callDeleteVoice = async (body: Record<string, string>) => {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+    if (!response.ok) throw new Error("Delete failed");
+  };
+
   const handleDeleteMyVoice = async () => {
     if (!user || !myVoice) return;
-    const { error } = await supabase
-      .from("voice_profiles")
-      .delete()
-      .eq("user_id", user.id);
-
-    if (error) {
-      toast.error("Fehler beim Löschen");
-    } else {
-      // Also delete consents
-      await supabase
-        .from("voice_consents")
-        .delete()
-        .eq("voice_owner_id", user.id);
+    try {
+      await callDeleteVoice({
+        elevenlabs_voice_id: myVoice.elevenlabs_voice_id,
+        type: "own",
+      });
       setMyVoice(null);
       toast.success("Stimmprofil gelöscht");
+    } catch {
+      toast.error("Fehler beim Löschen");
     }
   };
 
   const handleDeleteContactVoice = async (id: string) => {
-    const { error } = await supabase
-      .from("contact_voice_profiles")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast.error("Fehler beim Löschen");
-    } else {
+    const voice = contactVoices.find((c) => c.id === id);
+    if (!voice) return;
+    try {
+      await callDeleteVoice({
+        elevenlabs_voice_id: voice.elevenlabs_voice_id,
+        type: "contact",
+        contact_voice_id: id,
+      });
       setContactVoices((prev) => prev.filter((c) => c.id !== id));
       toast.success("Kontakt-Stimme gelöscht");
+    } catch {
+      toast.error("Fehler beim Löschen");
     }
   };
 
