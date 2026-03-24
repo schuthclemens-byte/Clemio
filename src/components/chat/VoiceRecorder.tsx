@@ -1,18 +1,20 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Mic, Square, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VoiceRecorderProps {
   onSend: (file: File) => void;
+  autoStart?: boolean;
 }
 
-const VoiceRecorder = ({ onSend }: VoiceRecorderProps) => {
+const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [sending, setSending] = useState(false);
+  const autoStartedRef = useRef(false);
 
   const startRecording = async () => {
     try {
