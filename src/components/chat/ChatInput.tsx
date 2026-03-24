@@ -210,8 +210,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             onChange={handleFileSelect}
           />
 
-          {/* Voice dictation button */}
-          <VoiceButton isListening={isListening} onToggle={onVoiceToggle} />
+          {/* Voice dictation button removed – voice recorder (right side) handles audio */}
 
           {/* Text input */}
           <div className="flex-1 relative">
