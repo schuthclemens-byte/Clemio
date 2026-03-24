@@ -1,4 +1,4 @@
-import { MessageCircle, Settings, User, Moon, Headphones, Shield } from "lucide-react";
+import { MessageCircle, Settings, User, Moon, Headphones, Shield, Mic } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ const mainItems = [
 ];
 
 const extraItems = [
+  { title: "Stimmen", url: "/voice-recordings", icon: Mic },
   { title: "Fokusmodus", url: "/focus-mode", icon: Moon },
   { title: "Auto-Play", url: "/contact-autoplay", icon: Headphones },
 ];
