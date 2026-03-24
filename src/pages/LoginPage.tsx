@@ -97,7 +97,11 @@ const LoginPage = () => {
       if (mode === "login") {
         const { error } = await signIn(cleanPhone, password);
         if (error) {
-          toast.error(t("app.loginError") || "Anmeldung fehlgeschlagen");
+          if (/invalid.?login.?credentials/i.test(error)) {
+            toast.error("Falsches Passwort oder Nummer nicht registriert");
+          } else {
+            toast.error(error);
+          }
           return;
         }
 
