@@ -155,13 +155,13 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
           </div>
         )}
 
-        {/* Voice recorder */}
+        {/* Voice recorder inline */}
         {showVoiceRecorder && onSendVoice && (
           <div className="px-3 pt-3">
             <VoiceRecorder onSend={(file) => {
               onSendVoice(file);
               setShowVoiceRecorder(false);
-            }} />
+            }} autoStart />
           </div>
         )}
 
