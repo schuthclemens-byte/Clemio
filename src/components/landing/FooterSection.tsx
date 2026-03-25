@@ -29,7 +29,7 @@ const FooterSection = () => {
           </button>
         </div>
         <p className="text-[0.688rem] text-muted-foreground/50">
-          © {new Date().getFullYear()} Clevara · Made with ❤️
+          © {new Date().getFullYear()} Clevara
         </p>
       </div>
     </footer>
