@@ -14,6 +14,7 @@ interface AccessibilitySettings {
   compactMode: boolean;
   muteSounds: boolean;
   autoCorrect: boolean;
+  showOnlineStatus: boolean;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
@@ -37,6 +38,7 @@ const defaultSettings: AccessibilitySettings = {
   compactMode: false,
   muteSounds: false,
   autoCorrect: true,
+  showOnlineStatus: true,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({

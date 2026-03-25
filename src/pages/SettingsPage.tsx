@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -481,6 +481,33 @@ const SettingsPage = () => {
                   <div className={cn(
                     "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
                     a11y.muteSounds ? "translate-x-[1.375rem]" : "translate-x-0.5"
+                  )} />
+                </div>
+              </button>
+            </div>
+
+            {/* Online Status */}
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => a11y.toggle("showOnlineStatus")}
+                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
+                role="switch"
+                aria-checked={a11y.showOnlineStatus}
+              >
+                <span className="flex items-center gap-3">
+                  <Radio className="w-4.5 h-4.5 text-muted-foreground" />
+                  <div>
+                    <span className="text-[0.938rem] block">Online-Status anzeigen</span>
+                    <span className="text-xs text-muted-foreground">Zeigt an, wann Kontakte zuletzt online waren</span>
+                  </div>
+                </span>
+                <div className={cn(
+                  "w-11 h-6 rounded-full relative transition-colors duration-200",
+                  a11y.showOnlineStatus ? "bg-primary" : "bg-border"
+                )}>
+                  <div className={cn(
+                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                    a11y.showOnlineStatus ? "translate-x-[1.375rem]" : "translate-x-0.5"
                   )} />
                 </div>
               </button>
