@@ -50,7 +50,7 @@ const ChatPage = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, t } = useI18n();
-  const { autoRead, headphoneAutoPlay, focusMode, isQuietTime } = useAccessibility();
+  const { autoRead, headphoneAutoPlay, focusMode, isQuietTime, showOnlineStatus } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
   const { isPremium } = useSubscription();
   const [focusContactIds, setFocusContactIds] = useState<string[]>([]);
@@ -249,9 +249,24 @@ const ChatPage = () => {
           setMemberNames({ [otherMember.user_id]: profile?.display_name || profile?.phone_number || "" });
           const presence = presenceRes.data;
           if (presence) {
-            setIsOnline(presence.is_online);
+            setIsOnline(showOnlineStatus ? presence.is_online : false);
             if (!presence.is_online && presence.last_seen) {
-              setLastSeen(new Date(presence.last_seen).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }));
+              const seenDate = new Date(presence.last_seen);
+              const now = new Date();
+              const isToday = seenDate.toDateString() === now.toDateString();
+              const yesterday = new Date(now);
+              yesterday.setDate(yesterday.getDate() - 1);
+              const isYesterday = seenDate.toDateString() === yesterday.toDateString();
+
+              let formatted: string;
+              if (isToday) {
+                formatted = `heute, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+              } else if (isYesterday) {
+                formatted = `gestern, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+              } else {
+                formatted = `${seenDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+              }
+              setLastSeen(formatted);
             }
           }
         }
@@ -436,9 +451,24 @@ const ChatPage = () => {
         },
         (payload) => {
           const p = payload.new as any;
-          setIsOnline(p.is_online);
+          setIsOnline(showOnlineStatus ? p.is_online : false);
           if (!p.is_online && p.last_seen) {
-            setLastSeen(new Date(p.last_seen).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }));
+            const seenDate = new Date(p.last_seen);
+            const now = new Date();
+            const isToday = seenDate.toDateString() === now.toDateString();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const isYesterday = seenDate.toDateString() === yesterday.toDateString();
+
+            let formatted: string;
+            if (isToday) {
+              formatted = `heute, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+            } else if (isYesterday) {
+              formatted = `gestern, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+            } else {
+              formatted = `${seenDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+            }
+            setLastSeen(formatted);
           }
         }
       )
@@ -719,9 +749,9 @@ const ChatPage = () => {
                 </span>
               ) : isGroup ? (
                 `${Object.keys(memberNames).length + 1} Mitglieder`
-              ) : isOnline ? (
+              ) : isOnline && showOnlineStatus ? (
                 t("chat.online")
-              ) : lastSeen ? (
+              ) : lastSeen && showOnlineStatus ? (
                 `${t("chat.lastSeen") || "Zuletzt"} ${lastSeen}`
               ) : (
                 t("chat.offline") || "Offline"
