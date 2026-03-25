@@ -32,6 +32,7 @@ interface ChatBubbleProps {
   onSaveAsVoiceSample?: (audioUrl: string, senderId: string) => void;
   replyToText?: string;
   replyToSender?: string;
+  uploadProgress?: number;
 }
 
 /** Animated wave bars shown during playback */
@@ -47,7 +48,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onSaveAsVoiceSample, replyToText, replyToSender }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -59,6 +60,8 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showVoiceSaveConfirm, setShowVoiceSaveConfirm] = useState(false);
   const prevSpeaking = useRef(false);
+
+  const isUploading = typeof uploadProgress === "number";
 
   const isMedia = messageType === "image" || messageType === "video";
   const isAudio = messageType === "audio";
@@ -176,9 +179,37 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
           {/* Audio content */}
           {isAudio && message && (
             <div>
-              <AudioPlayer url={message} isMine={isMine} />
+              {isUploading ? (
+                <div className="flex items-center gap-3 min-w-[180px] py-2">
+                  <div className={cn(
+                    "w-9 h-9 rounded-full flex items-center justify-center shrink-0",
+                    isMine ? "bg-chat-mine-foreground/20" : "bg-primary/15"
+                  )}>
+                    <Loader2 className={cn("w-4 h-4 animate-spin", isMine ? "text-chat-mine-foreground" : "text-primary")} />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <div className="w-full h-1.5 rounded-full bg-border overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-300",
+                          isMine ? "bg-chat-mine-foreground/70" : "bg-primary"
+                        )}
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <span className={cn(
+                      "text-[0.625rem] font-medium",
+                      isMine ? "text-chat-mine-foreground/60" : "text-muted-foreground"
+                    )}>
+                      {uploadProgress < 100 ? `Hochladen… ${uploadProgress}%` : "Wird gespeichert…"}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <AudioPlayer url={message} isMine={isMine} />
+              )}
               {/* Save voice sample button - always visible on received audio */}
-              {!isMine && senderId && onSaveAsVoiceSample && (
+              {!isMine && !isUploading && senderId && onSaveAsVoiceSample && (
                 <>
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowVoiceSaveConfirm(true); }}
