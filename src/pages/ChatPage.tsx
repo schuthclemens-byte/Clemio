@@ -35,6 +35,7 @@ interface Message {
   messageType: string;
   mediaUrl?: string;
   replyTo?: string;
+  uploadProgress?: number;
 }
 
 interface ReplyTarget {
@@ -114,20 +115,55 @@ const ChatPage = () => {
         isRead: false,
         senderId: user.id,
         messageType: "audio",
+        uploadProgress: 0,
       },
     ]);
 
     const filePath = `${user.id}/${conversationId}/${Date.now()}_${file.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from("chat-media")
-      .upload(filePath, file);
 
-    if (uploadError) {
+    // Upload with progress tracking via XHR
+    const uploadSuccess = await new Promise<boolean>((resolve) => {
+      const xhr = new XMLHttpRequest();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const url = `${supabaseUrl}/storage/v1/object/chat-media/${filePath}`;
+
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setMessages((prev) =>
+            prev.map((m) => m.id === tempId ? { ...m, uploadProgress: pct } : m)
+          );
+        }
+      });
+
+      xhr.addEventListener("load", () => {
+        resolve(xhr.status >= 200 && xhr.status < 300);
+      });
+      xhr.addEventListener("error", () => resolve(false));
+      xhr.addEventListener("abort", () => resolve(false));
+
+      supabase.auth.getSession().then(({ data }) => {
+        const token = data.session?.access_token || anonKey;
+        xhr.open("POST", url);
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.setRequestHeader("apikey", anonKey);
+        xhr.setRequestHeader("x-upsert", "false");
+        xhr.send(file);
+      });
+    });
+
+    if (!uploadSuccess) {
       URL.revokeObjectURL(localAudioUrl);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       toast.error("Upload fehlgeschlagen");
       return false;
     }
+
+    // Set to 100% while we insert the DB row
+    setMessages((prev) =>
+      prev.map((m) => m.id === tempId ? { ...m, uploadProgress: 100 } : m)
+    );
 
     const { data: urlData } = supabase.storage
       .from("chat-media")
@@ -156,7 +192,7 @@ const ChatPage = () => {
     setMessages((prev) =>
       prev.map((m) =>
         m.id === tempId
-          ? { ...m, id: inserted.id, text: audioUrl }
+          ? { ...m, id: inserted.id, text: audioUrl, uploadProgress: undefined }
           : m
       )
     );
@@ -866,6 +902,7 @@ const ChatPage = () => {
                   isMine={msg.isMine}
                   isRead={msg.isRead}
                   senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
+                  uploadProgress={msg.uploadProgress}
                   onSpeak={
                     msg.isMine
                       ? (text) => handleSpeak(msg.id, text)
