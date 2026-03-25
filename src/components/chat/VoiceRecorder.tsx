@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Mic, Square, Send, Loader2 } from "lucide-react";
+import { Mic, Square, Send, Loader2, MicOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface VoiceRecorderProps {
   onSend: (file: File) => Promise<boolean | void> | boolean | void;
@@ -37,10 +38,12 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [sending, setSending] = useState(false);
   const autoStartedRef = useRef(false);
+  const [micBlocked, setMicBlocked] = useState(false);
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setMicBlocked(false);
       const mimeType = getSupportedAudioMimeType();
       const recorder = mimeType
         ? new MediaRecorder(stream, { mimeType })
@@ -79,8 +82,16 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
       timerRef.current = setInterval(() => {
         setSeconds((s) => s + 1);
       }, 1000);
-    } catch {
-      // Microphone not available
+    } catch (err: any) {
+      const name = err?.name || "";
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        setMicBlocked(true);
+        toast.error("Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff in deinen Geräteeinstellungen.");
+      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        toast.error("Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.");
+      } else {
+        toast.error("Mikrofon konnte nicht aktiviert werden.");
+      }
     }
   };
 
@@ -104,6 +115,24 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
     const sec = s % 60;
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
+
+  if (micBlocked) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-3 bg-destructive/5 rounded-2xl border border-destructive/20 animate-fade-in">
+        <MicOff className="w-5 h-5 text-destructive shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground">Mikrofon blockiert</p>
+          <p className="text-xs text-muted-foreground">Erlaube den Zugriff in deinen Browser- oder Geräteeinstellungen und versuche es erneut.</p>
+        </div>
+        <button
+          onClick={() => { setMicBlocked(false); startRecording(); }}
+          className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground active:scale-95 transition-transform"
+        >
+          Erneut
+        </button>
+      </div>
+    );
+  }
 
   if (sending) {
     return (
