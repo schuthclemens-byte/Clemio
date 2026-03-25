@@ -13,16 +13,21 @@ const AudioPlayer = ({ url, isMine }: AudioPlayerProps) => {
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const toggle = (e: React.MouseEvent) => {
+  const toggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const audio = audioRef.current;
     if (!audio) return;
-    if (playing) {
-      audio.pause();
-    } else {
-      audio.play();
+
+    try {
+      if (audio.paused) {
+        await audio.play();
+      } else {
+        audio.pause();
+      }
+    } catch (error) {
+      console.error("Audio playback failed:", error);
+      setPlaying(false);
     }
-    setPlaying(!playing);
   };
 
   const formatTime = (s: number) => {
@@ -38,10 +43,16 @@ const AudioPlayer = ({ url, isMine }: AudioPlayerProps) => {
         ref={audioRef}
         src={url}
         preload="metadata"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
         onTimeUpdate={() => {
           const a = audioRef.current;
           if (a && a.duration) setProgress(a.currentTime / a.duration);
+        }}
+        onError={() => {
+          setPlaying(false);
+          setProgress(0);
         }}
         onEnded={() => { setPlaying(false); setProgress(0); }}
       />

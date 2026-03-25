@@ -97,7 +97,25 @@ const ChatPage = () => {
 
   // Voice message
   const handleSendVoiceMessage = async (file: File) => {
-    if (!user || !conversationId) return;
+    if (!user || !conversationId) return false;
+
+    const tempId = crypto.randomUUID();
+    const now = new Date();
+    const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    const localAudioUrl = URL.createObjectURL(file);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        text: localAudioUrl,
+        timestamp: ts,
+        isMine: true,
+        isRead: false,
+        senderId: user.id,
+        messageType: "audio",
+      },
+    ]);
 
     const filePath = `${user.id}/${conversationId}/${Date.now()}_${file.name}`;
     const { error: uploadError } = await supabase.storage
@@ -105,25 +123,52 @@ const ChatPage = () => {
       .upload(filePath, file);
 
     if (uploadError) {
+      URL.revokeObjectURL(localAudioUrl);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       toast.error("Upload fehlgeschlagen");
-      return;
+      return false;
     }
 
     const { data: urlData } = supabase.storage
       .from("chat-media")
       .getPublicUrl(filePath);
 
-    await supabase.from("messages").insert({
+    const audioUrl = urlData.publicUrl;
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("messages")
+      .insert({
       conversation_id: conversationId,
       sender_id: user.id,
-      content: urlData.publicUrl,
+      content: audioUrl,
       message_type: "audio",
-    });
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !inserted) {
+      URL.revokeObjectURL(localAudioUrl);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      toast.error("Sprachnachricht konnte nicht gesendet werden");
+      return false;
+    }
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === tempId
+          ? { ...m, id: inserted.id, text: audioUrl }
+          : m
+      )
+    );
+
+    URL.revokeObjectURL(localAudioUrl);
 
     await supabase
       .from("conversations")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", conversationId);
+
+    return true;
   };
 
   // Auto-play queue

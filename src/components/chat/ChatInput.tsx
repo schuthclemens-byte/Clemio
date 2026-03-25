@@ -17,7 +17,7 @@ interface MediaAttachment {
 interface ChatInputProps {
   onSend: (message: string) => void;
   onSendMedia: (file: File, type: "image" | "video", caption?: string) => void;
-  onSendVoice?: (file: File) => void;
+  onSendVoice?: (file: File) => Promise<boolean> | boolean;
   isListening: boolean;
   onVoiceToggle: () => void;
   transcript: string;
@@ -158,10 +158,16 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
         {/* Voice recorder inline */}
         {showVoiceRecorder && onSendVoice && (
           <div className="px-3 pt-3">
-            <VoiceRecorder onSend={(file) => {
-              onSendVoice(file);
-              setShowVoiceRecorder(false);
-            }} autoStart />
+            <VoiceRecorder
+              onSend={async (file) => {
+                const sent = await onSendVoice(file);
+                if (sent !== false) {
+                  setShowVoiceRecorder(false);
+                }
+                return sent;
+              }}
+              autoStart
+            />
           </div>
         )}
 

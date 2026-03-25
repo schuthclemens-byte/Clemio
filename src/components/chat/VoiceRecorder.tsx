@@ -3,9 +3,31 @@ import { Mic, Square, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VoiceRecorderProps {
-  onSend: (file: File) => void;
+  onSend: (file: File) => Promise<boolean | void> | boolean | void;
   autoStart?: boolean;
 }
+
+const AUDIO_MIME_CANDIDATES = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4",
+  "audio/mp4;codecs=mp4a.40.2",
+  "audio/ogg;codecs=opus",
+];
+
+const getSupportedAudioMimeType = () => {
+  if (typeof MediaRecorder === "undefined" || typeof MediaRecorder.isTypeSupported !== "function") {
+    return "";
+  }
+
+  return AUDIO_MIME_CANDIDATES.find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) || "";
+};
+
+const getAudioExtension = (mimeType: string) => {
+  if (mimeType.includes("mp4")) return "m4a";
+  if (mimeType.includes("ogg")) return "ogg";
+  return "webm";
+};
 
 const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   const [recording, setRecording] = useState(false);
@@ -19,23 +41,34 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const mimeType = getSupportedAudioMimeType();
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       chunksRef.current = [];
 
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
         if (timerRef.current) clearInterval(timerRef.current);
 
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        const file = new File([blob], `voice-${Date.now()}.webm`, { type: "audio/webm" });
+        const actualMimeType = recorder.mimeType || chunksRef.current[0]?.type || mimeType || "audio/webm";
+        const extension = getAudioExtension(actualMimeType);
+        const blob = new Blob(chunksRef.current, { type: actualMimeType });
+        const file = new File([blob], `voice-${Date.now()}.${extension}`, { type: actualMimeType });
+
         setSending(true);
-        onSend(file);
-        setSending(false);
-        setSeconds(0);
+        try {
+          const result = await onSend(file);
+          if (result !== false) {
+            setSeconds(0);
+          }
+        } finally {
+          setSending(false);
+        }
       };
 
       recorder.start();
@@ -76,7 +109,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
     return (
       <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-2xl">
         <Loader2 className="w-4 h-4 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground">Wird gesendet...</span>
+        <span className="text-sm text-muted-foreground">Sprachnachricht wird gesendet...</span>
       </div>
     );
   }
