@@ -143,16 +143,12 @@ const ChatPage = () => {
       xhr.addEventListener("error", () => resolve(false));
       xhr.addEventListener("abort", () => resolve(false));
 
-      xhr.open("POST", url);
-      xhr.setRequestHeader("Authorization", `Bearer ${(supabase as any).auth['storageKey'] ? '' : ''}`.trim() || `Bearer ${anonKey}`);
-      xhr.setRequestHeader("apikey", anonKey);
-      xhr.setRequestHeader("x-upsert", "false");
-
-      // Get the current session token for auth
       supabase.auth.getSession().then(({ data }) => {
-        if (data.session?.access_token) {
-          xhr.setRequestHeader("Authorization", `Bearer ${data.session.access_token}`);
-        }
+        const token = data.session?.access_token || anonKey;
+        xhr.open("POST", url);
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.setRequestHeader("apikey", anonKey);
+        xhr.setRequestHeader("x-upsert", "false");
         xhr.send(file);
       });
     });
