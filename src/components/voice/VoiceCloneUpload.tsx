@@ -3,6 +3,7 @@ import { Mic, Loader2, CheckCircle, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 import { cn } from "@/lib/utils";
 import VoiceConsentPopup from "./VoiceConsentPopup";
 
@@ -49,8 +50,16 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
       timerRef.current = setInterval(() => {
         setSeconds((s) => s + 1);
       }, 1000);
-    } catch {
-      toast.error("Mikrofon konnte nicht aktiviert werden");
+    } catch (err: any) {
+      const name = err?.name || "";
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        toast.error("Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff in deinen Geräteeinstellungen.");
+      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        toast.error("Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.");
+      } else {
+        toast.error("Mikrofon konnte nicht aktiviert werden.");
+      }
+      setPhase("idle");
     }
   };
 
