@@ -26,9 +26,9 @@ const SaveVoiceSampleDialog = ({
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               {isPremium ? <Mic2 className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
             </div>
-            <h3 className="text-lg font-semibold text-foreground">Stimmprobe speichern?</h3>
+            <h3 className="text-lg font-semibold text-foreground">Eigene Stimme erstellen?</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Prüfe kurz die Hinweise und bestätige erst dann das Speichern.
+              Prüfe kurz die Hinweise und bestätige erst dann das Erstellen.
             </p>
           </div>
 
