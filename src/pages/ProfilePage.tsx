@@ -26,7 +26,6 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [loaded, setLoaded] = useState(false);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
