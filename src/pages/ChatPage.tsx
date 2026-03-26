@@ -479,33 +479,41 @@ const ChatPage = () => {
         },
         (payload) => {
           const m = payload.new as any;
-          const newMsg: Message = {
-            id: m.id,
-            text: m.content,
-            timestamp: formatMessageTimestamp(new Date(m.created_at)),
-            isMine: m.sender_id === user.id,
-            isRead: m.is_read ?? false,
-            senderId: m.sender_id,
-            messageType: m.message_type || "text",
-            mediaUrl: m.message_type === "image" || m.message_type === "video"
-              ? m.content.startsWith("http") ? m.content : undefined
-              : undefined,
-          };
+          const newMsg = mapDbMessage(m);
 
           setMessages((prev) => {
-            if (prev.some((p) => p.id === newMsg.id)) return prev;
-            // Skip own messages from realtime – they're already shown via optimistic update
-            if (newMsg.isMine) return prev;
+            const existingIndex = prev.findIndex((msg) => msg.id === newMsg.id);
+            if (existingIndex !== -1) return prev;
+
+            if (newMsg.isMine) {
+              let optimisticIndex = -1;
+              for (let i = prev.length - 1; i >= 0; i -= 1) {
+                const candidate = prev[i];
+                if (
+                  candidate.isMine &&
+                  candidate.senderId === newMsg.senderId &&
+                  candidate.text === newMsg.text &&
+                  candidate.messageType === newMsg.messageType &&
+                  (candidate.replyTo ?? null) === (newMsg.replyTo ?? null)
+                ) {
+                  optimisticIndex = i;
+                  break;
+                }
+              }
+
+              if (optimisticIndex !== -1) {
+                const next = [...prev];
+                next[optimisticIndex] = { ...next[optimisticIndex], ...newMsg };
+                return next;
+              }
+            }
+
             return [...prev, newMsg];
           });
 
-          // Play notification sound & mark as read if from other user
           if (m.sender_id !== user.id) {
             playMessageTone();
-            supabase
-              .from("messages")
-              .update({ is_read: true })
-              .eq("id", m.id);
+            markConversationRead(m.id).then(() => {});
           }
         }
       )
@@ -526,12 +534,31 @@ const ChatPage = () => {
           );
         }
       )
-      .subscribe();
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const deleted = payload.old as any;
+          setMessages((prev) => prev.filter((msg) => msg.id !== deleted.id));
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          refreshConversationMessages().then(() => {
+            markConversationRead().then(() => {});
+          });
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, user]);
+  }, [conversationId, user, mapDbMessage, refreshConversationMessages, markConversationRead]);
 
   // Presence is handled globally in usePresence hook (App-level)
 
