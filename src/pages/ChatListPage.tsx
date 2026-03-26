@@ -108,6 +108,7 @@ const ChatListPage = () => {
     if (!convos || convos.length === 0) {
       setConversations([]);
       setLoading(false);
+      fetchingRef.current = false;
       return;
     }
 
