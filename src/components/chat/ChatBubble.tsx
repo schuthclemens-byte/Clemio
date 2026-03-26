@@ -80,8 +80,14 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   // 1-Click: tap bubble to listen
   const handleBubbleTap = () => {
     if (!message || isMedia) return;
-    if (onSpeak) {
-      onSpeak(displayText);
+    // Only play with cloned voice – no generic TTS
+    if (!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice) {
+      requirePremium(() => onPlayClonedVoice(displayText, senderId, msgId));
+    } else if (!isMine && !hasClonedVoice) {
+      // No voice profile yet – show hint
+      import("sonner").then(({ toast }) =>
+        toast.info("Speichere zuerst eine Stimmprobe, um Nachrichten in dieser Stimme anzuhören.")
+      );
     }
   };
 
@@ -372,9 +378,14 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
         </div>
 
         {/* Tap hint for non-own messages */}
-        {!isMine && message && !isMedia && !isActive && (
+        {!isMine && message && !isMedia && !isActive && hasClonedVoice && (
           <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
             {t("chat.tapToListen") || "Tippen zum Anhören · Doppeltippen für Aktionen"}
+          </p>
+        )}
+        {!isMine && message && !isMedia && !isActive && !hasClonedVoice && (
+          <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
+            Doppeltippen für Aktionen
           </p>
         )}
         {isMine && message && !isMedia && !isActive && (
