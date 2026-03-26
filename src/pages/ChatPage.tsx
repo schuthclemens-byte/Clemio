@@ -903,12 +903,7 @@ const ChatPage = () => {
                   isRead={msg.isRead}
                   senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
                   uploadProgress={msg.uploadProgress}
-                  onSpeak={
-                    msg.isMine
-                      ? (text) => handleSpeak(msg.id, text)
-                      : (text) => handleSpeak(msg.id, text)
-                  }
-                  isSpeaking={speakingId === msg.id && isSpeaking}
+                  isSpeaking={false}
                   messageType={msg.messageType}
                   mediaUrl={msg.mediaUrl}
                   senderId={msg.senderId}
