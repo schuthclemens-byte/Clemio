@@ -58,20 +58,16 @@ const formatMessageTimestamp = (date: Date): string => {
   return `${date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}, ${time}`;
 };
 
-const PRESENCE_FRESHNESS_MS = 3_000;
-
-const getPresenceState = (presence?: { is_online?: boolean; last_seen?: string | null } | null) => {
-  if (!presence?.last_seen) {
-    return { isOnline: false, lastSeen: null as string | null };
-  }
-
-  const seenDate = new Date(presence.last_seen);
-  const isFresh = Date.now() - seenDate.getTime() <= PRESENCE_FRESHNESS_MS;
-
-  if (presence.is_online && isFresh) {
+const getPresenceState = (lastSeenStr?: string | null, realtimeOnline?: boolean) => {
+  if (realtimeOnline) {
     return { isOnline: true, lastSeen: null as string | null };
   }
 
+  if (!lastSeenStr) {
+    return { isOnline: false, lastSeen: null as string | null };
+  }
+
+  const seenDate = new Date(lastSeenStr);
   const now = new Date();
   const isToday = seenDate.toDateString() === now.toDateString();
   const yesterday = new Date(now);
