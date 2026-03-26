@@ -108,7 +108,6 @@ const ChatPage = () => {
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<string | null>(null);
-  const [lastPresenceAt, setLastPresenceAt] = useState<string | null>(null);
   const [isGroup, setIsGroup] = useState(false);
   const [memberNames, setMemberNames] = useState<Record<string, string>>({});
 
