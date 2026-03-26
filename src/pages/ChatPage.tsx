@@ -1155,6 +1155,7 @@ const ChatPage = () => {
             );
           })
         )}
+        <div ref={bottomAnchorRef} className="h-px w-full" />
       </div>
 
       {/* Voice not supported notice */}
