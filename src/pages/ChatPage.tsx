@@ -360,25 +360,9 @@ const ChatPage = () => {
           }
           const presence = presenceRes.data;
           if (presence) {
-            setIsOnline(showOnlineStatus ? presence.is_online : false);
-            if (!presence.is_online && presence.last_seen) {
-              const seenDate = new Date(presence.last_seen);
-              const now = new Date();
-              const isToday = seenDate.toDateString() === now.toDateString();
-              const yesterday = new Date(now);
-              yesterday.setDate(yesterday.getDate() - 1);
-              const isYesterday = seenDate.toDateString() === yesterday.toDateString();
-
-              let formatted: string;
-              if (isToday) {
-                formatted = `heute, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-              } else if (isYesterday) {
-                formatted = `gestern, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-              } else {
-                formatted = `${seenDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-              }
-              setLastSeen(formatted);
-            }
+            const presenceState = getPresenceState(presence as any);
+            setIsOnline(showOnlineStatus ? presenceState.isOnline : false);
+            setLastSeen(showOnlineStatus ? presenceState.lastSeen : null);
           }
         }
       }
