@@ -53,6 +53,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <OfflineBanner />
+            <IncomingCallOverlay />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
