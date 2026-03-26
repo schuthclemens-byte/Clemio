@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2 } from "lucide-react";
-import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
