@@ -301,36 +301,41 @@ const ChatPage = () => {
     if (!conversationId || !user) return;
 
     const loadChat = async () => {
-      // Get conversation
-      const { data: conv } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("id", conversationId)
-        .single();
-
-      if (!conv) {
-        navigate("/chats");
-        return;
-      }
-
-      // Get display name & group info
-      setIsGroup(conv.is_group ?? false);
-
-      // Load members and messages in parallel
-      const [membersRes, msgsRes] = await Promise.all([
-        supabase
-          .from("conversation_members")
-          .select("user_id")
-          .eq("conversation_id", conversationId),
-        supabase
-          .from("messages")
-          .select("*")
-          .eq("conversation_id", conversationId)
-          .order("created_at", { ascending: true }),
+      // Fire ALL queries in parallel for maximum speed
+      const [convRes, membersRes, msgsRes] = await Promise.all([
+        supabase.from("conversations").select("*").eq("id", conversationId).single(),
+        supabase.from("conversation_members").select("user_id").eq("conversation_id", conversationId),
+        supabase.from("messages").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: true }),
       ]);
 
+      const conv = convRes.data;
+      if (!conv) { navigate("/chats"); return; }
+
+      setIsGroup(conv.is_group ?? false);
       const members = membersRes.data;
 
+      // Process messages immediately so UI renders fast
+      const msgs = msgsRes.data;
+      if (msgs) {
+        setMessages(
+          msgs.map((m) => ({
+            id: m.id,
+            text: m.content,
+            timestamp: formatMessageTimestamp(new Date(m.created_at)),
+            isMine: m.sender_id === user.id,
+            isRead: m.is_read ?? false,
+            senderId: m.sender_id,
+            messageType: m.message_type || "text",
+            mediaUrl: m.message_type === "image" || m.message_type === "video"
+              ? m.content.startsWith("http") ? m.content : undefined
+              : undefined,
+            replyTo: (m as any).reply_to || undefined,
+          }))
+        );
+      }
+      setLoading(false);
+
+      // Now load profile/presence/alias/voice in parallel (non-blocking for UI)
       if (conv.is_group && conv.name) {
         setChatName(conv.name);
         if (members) {
@@ -349,18 +354,13 @@ const ChatPage = () => {
         const otherMember = members?.find((m) => m.user_id !== user.id);
         if (otherMember) {
           setOtherUserId(otherMember.user_id);
-          const [profileRes, presenceRes] = await Promise.all([
+          const [profileRes, presenceRes, aliasRes] = await Promise.all([
             supabase.from("profiles").select("display_name, phone_number").eq("id", otherMember.user_id).maybeSingle(),
             supabase.from("user_presence").select("is_online, last_seen").eq("user_id", otherMember.user_id).maybeSingle(),
+            supabase.from("contact_aliases" as any).select("first_name, last_name").eq("user_id", user.id).eq("contact_user_id", otherMember.user_id).maybeSingle(),
           ]);
           const profile = profileRes.data;
-          const { data: alias } = await supabase
-            .from("contact_aliases" as any)
-            .select("first_name, last_name")
-            .eq("user_id", user.id)
-            .eq("contact_user_id", otherMember.user_id)
-            .maybeSingle();
-          const a = alias as any;
+          const a = aliasRes.data as any;
           if (a?.first_name) {
             const fullName = [a.first_name, a.last_name].filter(Boolean).join(" ");
             setChatName(fullName);
@@ -380,39 +380,18 @@ const ChatPage = () => {
         }
       }
 
-      const msgs = msgsRes.data;
-      if (msgs) {
-        setMessages(
-          msgs.map((m) => ({
-            id: m.id,
-            text: m.content,
-            timestamp: formatMessageTimestamp(new Date(m.created_at)),
-            isMine: m.sender_id === user.id,
-            isRead: m.is_read ?? false,
-            senderId: m.sender_id,
-            messageType: m.message_type || "text",
-            mediaUrl: m.message_type === "image" || m.message_type === "video"
-              ? m.content.startsWith("http") ? m.content : undefined
-              : undefined,
-            replyTo: (m as any).reply_to || undefined,
-          }))
-        );
-      }
-
-      // Mark messages as read
-      await supabase
+      // Mark messages as read (fire & forget)
+      supabase
         .from("messages")
         .update({ is_read: true })
         .eq("conversation_id", conversationId)
         .neq("sender_id", user.id)
-        .eq("is_read", false);
+        .eq("is_read", false)
+        .then(() => {});
 
-      setLoading(false);
-
-      // Check which senders have voice profiles (contact-uploaded or own with consent)
+      // Check voice profiles in background
       const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
       const profiles: Record<string, boolean> = {};
-      // Check voice profiles in parallel
       await Promise.all(senderIds.map(async (sid) => {
         const { data: contactVp } = await supabase
           .from("contact_voice_profiles" as any)
