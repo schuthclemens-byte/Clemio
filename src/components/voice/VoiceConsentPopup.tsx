@@ -13,9 +13,9 @@ const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps)
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ touchAction: "none" }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-md mx-4 mb-0 sm:mb-0 bg-card rounded-t-3xl sm:rounded-3xl shadow-elevated overflow-hidden animate-reveal-up max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-md mx-4 mb-0 sm:mb-0 bg-card rounded-t-3xl sm:rounded-3xl shadow-elevated animate-reveal-up flex flex-col" style={{ maxHeight: "90vh", maxHeight: "90dvh" } as React.CSSProperties}>
         {/* Close */}
         <button
           onClick={onCancel}
@@ -25,7 +25,7 @@ const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps)
         </button>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" } as React.CSSProperties}>
           {/* Header */}
           <div className="pt-10 pb-4 px-6 text-center">
             <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
