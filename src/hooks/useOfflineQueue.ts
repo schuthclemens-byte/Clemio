@@ -33,6 +33,8 @@ export const useOfflineQueue = (onSent?: (tempId: string, realId: string) => voi
     const queue = getQueue();
     queue.push(msg);
     setQueue(queue);
+    // Mirror to IndexedDB + register Background Sync for when app is closed
+    scheduleOfflineSync();
   }, []);
 
   const flush = useCallback(async () => {
