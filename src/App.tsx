@@ -56,9 +56,8 @@ const App = () => (
             <BrowserRouter>
               <IncomingCallOverlay />
               <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/home" element={<Index />} />
-                <Route path="/landing" element={<Navigate to="/" replace />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/landing" element={<LandingPage />} />
                 <Route path="/onboarding" element={<OnboardingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
