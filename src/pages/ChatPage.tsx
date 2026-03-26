@@ -107,8 +107,20 @@ const ChatPage = () => {
   const { getChatBackground, setChatBackground, clearChatBackground } = useChatBackground();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
 
+  // Pre-populate chat name from cached conversations for instant display
+  const cachedName = (() => {
+    try {
+      const cached = localStorage.getItem("clevara_conversations");
+      if (cached) {
+        const convs = JSON.parse(cached) as { id: string; name: string }[];
+        return convs.find((c) => c.id === conversationId)?.name || "...";
+      }
+    } catch {}
+    return "...";
+  })();
+
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chatName, setChatName] = useState("...");
+  const [chatName, setChatName] = useState(cachedName);
   const [loading, setLoading] = useState(true);
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(false);
