@@ -46,6 +46,7 @@ const LoginPage = () => {
   const [forgotSent, setForgotSent] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
