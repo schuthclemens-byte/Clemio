@@ -278,23 +278,39 @@ const ChatListPage = () => {
     requestPermission();
   }, [user]);
 
-  // Realtime: debounced refresh on new messages
+  // Realtime: debounced refresh on new messages + visibility resync
   useEffect(() => {
+    if (!user) return;
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const triggerRefresh = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchConversations();
+      }, 300);
+    };
+
     const channel = supabase
       .channel("chat-list-updates")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          fetchingRef.current = false; // allow re-fetch
-          fetchConversations();
-        }, 500);
-      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, triggerRefresh)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, triggerRefresh)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "conversations" }, triggerRefresh)
       .subscribe();
+
+    // Resync when tab becomes visible or comes back online
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") triggerRefresh();
+    };
+    const handleOnline = () => triggerRefresh();
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("online", handleOnline);
 
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("online", handleOnline);
     };
   }, [user]);
 
