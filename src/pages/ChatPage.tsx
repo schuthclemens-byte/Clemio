@@ -926,11 +926,18 @@ const ChatPage = () => {
             <ImageIcon className="w-5 h-5 text-muted-foreground" />
           </button>
           <button
-            onClick={() => navigate(`/call/${conversationId}`)}
+            onClick={() => navigate(`/call/${conversationId}?video=false`)}
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
             aria-label="Anrufen"
           >
             <Phone className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <button
+            onClick={() => navigate(`/call/${conversationId}?video=true`)}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
+            aria-label="Videoanruf"
+          >
+            <Video className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
       </header>
