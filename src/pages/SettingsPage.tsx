@@ -510,6 +510,9 @@ const SettingsPage = () => {
           </div>
         </CollapsibleSection>
 
+        {/* Push Notifications Debug */}
+        <PushDebugSection />
+
         {/* Stay logged in toggle */}
         <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "95ms" }}>
           <button
