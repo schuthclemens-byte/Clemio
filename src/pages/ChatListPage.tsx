@@ -64,151 +64,149 @@ const ChatListPage = () => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;
 
-    const { data: memberships } = await supabase
-      .from("conversation_members")
-      .select("conversation_id")
-      .eq("user_id", user.id);
-
-    if (!memberships || memberships.length === 0) {
-      setConversations([]);
-      setLoading(false);
-      fetchingRef.current = false;
-      return;
-    }
-
-    const convIds = memberships.map((m) => m.conversation_id);
-
-    // Fetch conversations, all members, and latest messages in parallel
-    const [convosRes, allMembersRes, allMessagesRes, unreadRes] = await Promise.all([
-      supabase
-        .from("conversations")
-        .select("*")
-        .in("id", convIds)
-        .eq("is_archived", false)
-        .order("updated_at", { ascending: false }),
-      supabase
+    try {
+      const { data: memberships } = await supabase
         .from("conversation_members")
-        .select("conversation_id, user_id")
-        .in("conversation_id", convIds)
-        .neq("user_id", user.id),
-      supabase
-        .from("messages")
-        .select("conversation_id, content, created_at, message_type, sender_id, is_read")
-        .in("conversation_id", convIds)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("messages")
-        .select("conversation_id", { count: "exact" })
-        .in("conversation_id", convIds)
-        .eq("is_read", false)
-        .neq("sender_id", user.id),
-    ]);
+        .select("conversation_id")
+        .eq("user_id", user.id);
 
-    const convos = convosRes.data;
-    if (!convos || convos.length === 0) {
-      setConversations([]);
-      setLoading(false);
-      fetchingRef.current = false;
-      return;
-    }
-
-    // Build lookup: convId -> other member user_id
-    const otherMemberMap = new Map<string, string>();
-    allMembersRes.data?.forEach((m) => {
-      if (!otherMemberMap.has(m.conversation_id)) {
-        otherMemberMap.set(m.conversation_id, m.user_id);
+      if (!memberships || memberships.length === 0) {
+        setConversations([]);
+        setLoading(false);
+        return;
       }
-    });
 
-    // Build lookup: convId -> latest message
-    const latestMsgMap = new Map<string, { content: string; created_at: string; message_type: string | null }>();
-    allMessagesRes.data?.forEach((msg) => {
-      if (!latestMsgMap.has(msg.conversation_id)) {
-        latestMsgMap.set(msg.conversation_id, msg);
+      const convIds = memberships.map((m) => m.conversation_id);
+
+      // Fetch conversations, all members, and latest messages in parallel
+      const [convosRes, allMembersRes, allMessagesRes] = await Promise.all([
+        supabase
+          .from("conversations")
+          .select("*")
+          .in("id", convIds)
+          .eq("is_archived", false)
+          .order("updated_at", { ascending: false }),
+        supabase
+          .from("conversation_members")
+          .select("conversation_id, user_id")
+          .in("conversation_id", convIds)
+          .neq("user_id", user.id),
+        supabase
+          .from("messages")
+          .select("conversation_id, content, created_at, message_type, sender_id, is_read")
+          .in("conversation_id", convIds)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      const convos = convosRes.data;
+      if (!convos || convos.length === 0) {
+        setConversations([]);
+        setLoading(false);
+        return;
       }
-    });
 
-    // Build lookup: convId -> unread count
-    const unreadMap = new Map<string, number>();
-    allMessagesRes.data?.forEach((msg) => {
-      if (!msg.is_read && msg.sender_id !== user.id) {
-        unreadMap.set(msg.conversation_id, (unreadMap.get(msg.conversation_id) || 0) + 1);
-      }
-    });
-
-    // Batch-fetch all needed profiles at once
-    const profileIds = new Set<string>();
-    convos.forEach((conv) => {
-      if (!conv.is_group) {
-        const otherId = otherMemberMap.get(conv.id);
-        if (otherId) profileIds.add(otherId);
-      }
-    });
-
-    const profileMap = new Map<string, { display_name: string | null; phone_number: string }>();
-    if (profileIds.size > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, phone_number")
-        .in("id", Array.from(profileIds));
-      profiles?.forEach((p) => profileMap.set(p.id, p));
-    }
-
-    // Fetch aliases for all contacts
-    const aliasMap = new Map<string, string>();
-    if (profileIds.size > 0) {
-      const { data: aliases } = await supabase
-        .from("contact_aliases" as any)
-        .select("contact_user_id, first_name, last_name")
-        .eq("user_id", user.id)
-        .in("contact_user_id", Array.from(profileIds));
-      (aliases as any[])?.forEach((a: any) => {
-        const name = [a.first_name, a.last_name].filter(Boolean).join(" ");
-        if (name) aliasMap.set(a.contact_user_id, name);
+      // Build lookup: convId -> other member user_id
+      const otherMemberMap = new Map<string, string>();
+      allMembersRes.data?.forEach((m) => {
+        if (!otherMemberMap.has(m.conversation_id)) {
+          otherMemberMap.set(m.conversation_id, m.user_id);
+        }
       });
-    }
 
-    const items: ConversationItem[] = convos.map((conv) => {
-      let displayName = conv.name || "Chat";
-      if (!conv.is_group) {
-        const otherId = otherMemberMap.get(conv.id);
-        if (otherId) {
-          const alias = aliasMap.get(otherId);
-          if (alias) {
-            displayName = alias;
-          } else {
-            const profile = profileMap.get(otherId);
-            if (profile) displayName = profile.display_name || profile.phone_number;
+      // Build lookup: convId -> latest message
+      const latestMsgMap = new Map<string, { content: string; created_at: string; message_type: string | null }>();
+      allMessagesRes.data?.forEach((msg) => {
+        if (!latestMsgMap.has(msg.conversation_id)) {
+          latestMsgMap.set(msg.conversation_id, msg);
+        }
+      });
+
+      // Build lookup: convId -> unread count
+      const unreadMap = new Map<string, number>();
+      allMessagesRes.data?.forEach((msg) => {
+        if (!msg.is_read && msg.sender_id !== user.id) {
+          unreadMap.set(msg.conversation_id, (unreadMap.get(msg.conversation_id) || 0) + 1);
+        }
+      });
+
+      // Batch-fetch all needed profiles at once
+      const profileIds = new Set<string>();
+      convos.forEach((conv) => {
+        if (!conv.is_group) {
+          const otherId = otherMemberMap.get(conv.id);
+          if (otherId) profileIds.add(otherId);
+        }
+      });
+
+      const profileMap = new Map<string, { display_name: string | null; phone_number: string }>();
+      if (profileIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, display_name, phone_number")
+          .in("id", Array.from(profileIds));
+        profiles?.forEach((p) => profileMap.set(p.id, p));
+      }
+
+      // Fetch aliases for all contacts
+      const aliasMap = new Map<string, string>();
+      if (profileIds.size > 0) {
+        const { data: aliases } = await supabase
+          .from("contact_aliases" as any)
+          .select("contact_user_id, first_name, last_name")
+          .eq("user_id", user.id)
+          .in("contact_user_id", Array.from(profileIds));
+        (aliases as any[])?.forEach((a: any) => {
+          const name = [a.first_name, a.last_name].filter(Boolean).join(" ");
+          if (name) aliasMap.set(a.contact_user_id, name);
+        });
+      }
+
+      const items: ConversationItem[] = convos.map((conv) => {
+        let displayName = conv.name || "Chat";
+        if (!conv.is_group) {
+          const otherId = otherMemberMap.get(conv.id);
+          if (otherId) {
+            const alias = aliasMap.get(otherId);
+            if (alias) {
+              displayName = alias;
+            } else {
+              const profile = profileMap.get(otherId);
+              if (profile) displayName = profile.display_name || profile.phone_number;
+            }
           }
         }
-      }
 
-      const lastMsg = latestMsgMap.get(conv.id);
-      const lastMessageDisplay = lastMsg
-        ? lastMsg.message_type === "audio"
-          ? "🎤 Sprachnachricht"
-          : lastMsg.message_type === "image"
-            ? "📷 Bild"
-            : lastMsg.message_type === "video"
-              ? "🎥 Video"
-              : lastMsg.content
-        : "";
+        const lastMsg = latestMsgMap.get(conv.id);
+        const lastMessageDisplay = lastMsg
+          ? lastMsg.message_type === "audio"
+            ? "🎤 Sprachnachricht"
+            : lastMsg.message_type === "image"
+              ? "📷 Bild"
+              : lastMsg.message_type === "video"
+                ? "🎥 Video"
+                : lastMsg.content
+          : "";
 
-      return {
-        id: conv.id,
-        name: displayName,
-        lastMessage: lastMessageDisplay,
-        time: lastMsg
-          ? new Date(lastMsg.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
-          : "",
-        unread: unreadMap.get(conv.id) || 0,
-      };
-    });
+        return {
+          id: conv.id,
+          name: displayName,
+          lastMessage: lastMessageDisplay,
+          time: lastMsg
+            ? new Date(lastMsg.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+            : "",
+          unread: unreadMap.get(conv.id) || 0,
+        };
+      });
 
-    setConversations(items);
-    setLoading(false);
-    try { localStorage.setItem(cacheKey, JSON.stringify(items)); } catch {}
-    fetchingRef.current = false;
+      setConversations(items);
+      setLoading(false);
+      try { localStorage.setItem(cacheKey, JSON.stringify(items)); } catch {}
+    } catch (err) {
+      console.error("Failed to fetch conversations:", err);
+      setLoading(false);
+    } finally {
+      fetchingRef.current = false;
+    }
   };
 
   // Search messages across all conversations
@@ -280,23 +278,39 @@ const ChatListPage = () => {
     requestPermission();
   }, [user]);
 
-  // Realtime: debounced refresh on new messages
+  // Realtime: debounced refresh on new messages + visibility resync
   useEffect(() => {
+    if (!user) return;
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const triggerRefresh = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchConversations();
+      }, 300);
+    };
+
     const channel = supabase
       .channel("chat-list-updates")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          fetchingRef.current = false; // allow re-fetch
-          fetchConversations();
-        }, 500);
-      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, triggerRefresh)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, triggerRefresh)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "conversations" }, triggerRefresh)
       .subscribe();
+
+    // Resync when tab becomes visible or comes back online
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") triggerRefresh();
+    };
+    const handleOnline = () => triggerRefresh();
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("online", handleOnline);
 
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("online", handleOnline);
     };
   }, [user]);
 
