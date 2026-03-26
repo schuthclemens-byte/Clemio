@@ -48,6 +48,7 @@ const App = () => (
       <AccessibilityProvider>
         <AuthProvider>
           <PresenceTracker>
+          <TooltipProvider>
             <Toaster />
             <Sonner />
             <OfflineBanner />
@@ -74,6 +75,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+          </TooltipProvider>
           </PresenceTracker>
         </AuthProvider>
       </AccessibilityProvider>
