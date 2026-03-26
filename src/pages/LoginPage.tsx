@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, UserPlus, LogIn, Sparkles, Fingerprint, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
