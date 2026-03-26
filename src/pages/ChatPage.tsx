@@ -1106,7 +1106,7 @@ const ChatPage = () => {
       )}
 
       {/* Typing indicator */}
-      {typingNames.length > 0 && (
+      {typingNames.length > 0 && showTypingIndicator && (
         <div className="px-5 py-2 flex items-center gap-2">
           <div className="flex gap-1 items-center">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
