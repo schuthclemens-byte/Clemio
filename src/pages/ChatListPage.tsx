@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Search, Plus, MessageSquare, X } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
