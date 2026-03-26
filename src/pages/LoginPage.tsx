@@ -38,14 +38,13 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { t, locale, setLocale } = useI18n();
   const [langOpen, setLangOpen] = useState(false);
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { signIn, signUp, resetPassword, user, loading: authLoading } = useAuth();
   const biometric = useBiometricAuth();
   const [showForgot, setShowForgot] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [stayLoggedIn, setStayLoggedIn] = useState(true);
 
   const handleBiometricLogin = useCallback(async () => {
     setBiometricLoading(true);
