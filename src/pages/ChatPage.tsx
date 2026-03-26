@@ -537,7 +537,19 @@ const ChatPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [otherUserId]);
+  }, [otherUserId, showOnlineStatus]);
+
+  useEffect(() => {
+    if (!lastPresenceAt || !showOnlineStatus) return;
+
+    const interval = setInterval(() => {
+      const presenceState = getPresenceState({ is_online: true, last_seen: lastPresenceAt });
+      setIsOnline(presenceState.isOnline);
+      setLastSeen(presenceState.lastSeen);
+    }, 5_000);
+
+    return () => clearInterval(interval);
+  }, [lastPresenceAt, showOnlineStatus]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
