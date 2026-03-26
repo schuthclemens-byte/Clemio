@@ -25,6 +25,7 @@ import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useMessageReactions } from "@/hooks/useMessageReactions";
 import { toast } from "sonner";
 import EditContactNameDialog from "@/components/chat/EditContactNameDialog";
+import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 
 interface Message {
   id: string;
@@ -83,6 +84,16 @@ const ChatPage = () => {
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [showEditName, setShowEditName] = useState(false);
   const [contactAlias, setContactAlias] = useState<{ firstName: string; lastName: string } | null>(null);
+
+  // Offline queue: swap temp IDs when messages are sent
+  const handleOfflineSent = useCallback((tempId: string, realId: string) => {
+    setMessages((prev) => {
+      const realtimeExists = prev.some((m) => m.id === realId);
+      if (realtimeExists) return prev.filter((m) => m.id !== tempId);
+      return prev.map((m) => m.id === tempId ? { ...m, id: realId } : m);
+    });
+  }, []);
+  const { enqueue: enqueueOffline } = useOfflineQueue(handleOfflineSent);
 
   // Typing indicator
   const { sendTyping, clearTyping, typingNames } = useTypingIndicator(conversationId);
@@ -734,29 +745,56 @@ const ChatPage = () => {
     if (replyTarget) insertData.reply_to = replyTarget.id;
     setReplyTarget(null);
 
-    const { data: inserted, error } = await supabase.from("messages").insert(insertData).select("id").single();
-
-    if (error) {
-      console.error("Send failed:", error);
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-    } else if (inserted) {
-      // Replace temp id with real DB id so realtime dedup works
-      setMessages((prev) => {
-        // If realtime already delivered this message, just remove the temp
-        const realtimeExists = prev.some((m) => m.id === inserted.id);
-        if (realtimeExists) {
-          return prev.filter((m) => m.id !== tempId);
-        }
-        // Otherwise swap temp id for real id
-        return prev.map((m) => m.id === tempId ? { ...m, id: inserted.id } : m);
+    if (!navigator.onLine) {
+      // Queue for later
+      enqueueOffline({
+        tempId,
+        conversationId,
+        senderId: user.id,
+        content: text,
+        messageType: "text",
+        replyTo: replyTarget?.id || undefined,
+        queuedAt: Date.now(),
       });
+      return;
     }
 
-    // Update conversation timestamp
-    await supabase
-      .from("conversations")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", conversationId);
+    try {
+      const { data: inserted, error } = await supabase.from("messages").insert(insertData).select("id").single();
+
+      if (error) {
+        // Network error during send – queue it
+        enqueueOffline({
+          tempId,
+          conversationId,
+          senderId: user.id,
+          content: text,
+          messageType: "text",
+          replyTo: replyTarget?.id || undefined,
+          queuedAt: Date.now(),
+        });
+      } else if (inserted) {
+        setMessages((prev) => {
+          const realtimeExists = prev.some((m) => m.id === inserted.id);
+          if (realtimeExists) return prev.filter((m) => m.id !== tempId);
+          return prev.map((m) => m.id === tempId ? { ...m, id: inserted.id } : m);
+        });
+        await supabase
+          .from("conversations")
+          .update({ updated_at: new Date().toISOString() })
+          .eq("id", conversationId);
+      }
+    } catch {
+      enqueueOffline({
+        tempId,
+        conversationId,
+        senderId: user.id,
+        content: text,
+        messageType: "text",
+        replyTo: replyTarget?.id || undefined,
+        queuedAt: Date.now(),
+      });
+    }
   };
 
   const handleSendMedia = async (file: File, type: "image" | "video", caption?: string) => {
