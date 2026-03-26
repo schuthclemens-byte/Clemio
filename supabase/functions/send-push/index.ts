@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const vapidPrivateKey = await importVapidPrivateKey(VAPID_PRIVATE_KEY_B64);
+    const vapidPrivateKey = await importVapidPrivateKey(VAPID_PRIVATE_KEY_B64, VAPID_PUBLIC_KEY);
     const { user_id, title, body, data } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
