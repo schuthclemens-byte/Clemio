@@ -154,13 +154,32 @@ const ChatListPage = () => {
       profiles?.forEach((p) => profileMap.set(p.id, p));
     }
 
+    // Fetch aliases for all contacts
+    const aliasMap = new Map<string, string>();
+    if (profileIds.size > 0) {
+      const { data: aliases } = await supabase
+        .from("contact_aliases" as any)
+        .select("contact_user_id, first_name, last_name")
+        .eq("user_id", user.id)
+        .in("contact_user_id", Array.from(profileIds));
+      (aliases as any[])?.forEach((a: any) => {
+        const name = [a.first_name, a.last_name].filter(Boolean).join(" ");
+        if (name) aliasMap.set(a.contact_user_id, name);
+      });
+    }
+
     const items: ConversationItem[] = convos.map((conv) => {
       let displayName = conv.name || "Chat";
       if (!conv.is_group) {
         const otherId = otherMemberMap.get(conv.id);
         if (otherId) {
-          const profile = profileMap.get(otherId);
-          if (profile) displayName = profile.display_name || profile.phone_number;
+          const alias = aliasMap.get(otherId);
+          if (alias) {
+            displayName = alias;
+          } else {
+            const profile = profileMap.get(otherId);
+            if (profile) displayName = profile.display_name || profile.phone_number;
+          }
         }
       }
 
