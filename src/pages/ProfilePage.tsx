@@ -180,7 +180,7 @@ const ProfilePage = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {isPremium
-                    ? daysRemaining > 0
+                    ? (daysRemaining > 0 && !isFoundingUser && daysRemaining !== -1)
                       ? t("profile.daysRemaining").replace("{n}", String(daysRemaining))
                       : t("profile.premiumActive")
                     : t("profile.upgradeHint")
@@ -196,11 +196,6 @@ const ProfilePage = () => {
                 </button>
               )}
             </div>
-            {isFoundingUser && isPremium && (
-              <p className="text-xs text-muted-foreground mt-3 bg-primary/5 rounded-xl p-3">
-                {t("profile.foundingHint")}
-              </p>
-            )}
           </div>
         </section>
         <section className="flex flex-col items-center animate-reveal-up">
