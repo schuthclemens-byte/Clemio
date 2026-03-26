@@ -1136,8 +1136,8 @@ const ChatPage = () => {
         isListening={isListening}
         onVoiceToggle={toggle}
         transcript={transcript}
-        onTyping={sendTyping}
-        onStopTyping={clearTyping}
+        onTyping={showTypingIndicator ? sendTyping : undefined}
+        onStopTyping={showTypingIndicator ? clearTyping : undefined}
       />
 
       {/* Background picker */}
