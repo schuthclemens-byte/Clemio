@@ -39,6 +39,20 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   const [sending, setSending] = useState(false);
   const autoStartedRef = useRef(false);
   const [micBlocked, setMicBlocked] = useState(false);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  const requestWakeLock = async () => {
+    try {
+      if ("wakeLock" in navigator) {
+        wakeLockRef.current = await (navigator as any).wakeLock.request("screen");
+      }
+    } catch {}
+  };
+
+  const releaseWakeLock = () => {
+    wakeLockRef.current?.release().catch(() => {});
+    wakeLockRef.current = null;
+  };
 
   const startRecording = async () => {
     try {
@@ -56,6 +70,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
 
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        releaseWakeLock();
         if (timerRef.current) clearInterval(timerRef.current);
 
         const actualMimeType = recorder.mimeType || chunksRef.current[0]?.type || mimeType || "audio/webm";
@@ -75,6 +90,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
       };
 
       recorder.start();
+      await requestWakeLock();
       mediaRecorderRef.current = recorder;
       setRecording(true);
       setSeconds(0);
