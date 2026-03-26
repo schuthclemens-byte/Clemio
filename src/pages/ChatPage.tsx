@@ -546,7 +546,7 @@ const ChatPage = () => {
       const presenceState = getPresenceState({ is_online: true, last_seen: lastPresenceAt });
       setIsOnline(presenceState.isOnline);
       setLastSeen(presenceState.lastSeen);
-    }, 5_000);
+    }, 1_000);
 
     return () => clearInterval(interval);
   }, [lastPresenceAt, showOnlineStatus]);
