@@ -281,8 +281,10 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           display_name: string | null
+          first_name: string | null
           id: string
           language: string | null
+          last_name: string | null
           phone_number: string
           updated_at: string | null
           voice_enabled: boolean | null
@@ -291,8 +293,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           display_name?: string | null
+          first_name?: string | null
           id: string
           language?: string | null
+          last_name?: string | null
           phone_number: string
           updated_at?: string | null
           voice_enabled?: boolean | null
@@ -301,8 +305,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           display_name?: string | null
+          first_name?: string | null
           id?: string
           language?: string | null
+          last_name?: string | null
           phone_number?: string
           updated_at?: string | null
           voice_enabled?: boolean | null
