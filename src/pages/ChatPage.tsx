@@ -439,10 +439,7 @@ const ChatPage = () => {
           const newMsg: Message = {
             id: m.id,
             text: m.content,
-            timestamp: new Date(m.created_at).toLocaleTimeString("de-DE", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            timestamp: formatMessageTimestamp(new Date(m.created_at)),
             isMine: m.sender_id === user.id,
             isRead: m.is_read ?? false,
             senderId: m.sender_id,
