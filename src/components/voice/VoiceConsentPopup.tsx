@@ -15,7 +15,7 @@ const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps)
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ touchAction: "none" }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-md mx-4 mb-0 sm:mb-0 bg-card rounded-t-3xl sm:rounded-3xl shadow-elevated animate-reveal-up flex flex-col" style={{ maxHeight: "90vh", maxHeight: "90dvh" } as React.CSSProperties}>
+      <div className="relative w-full max-w-md mx-4 mb-0 sm:mb-0 bg-card rounded-t-3xl sm:rounded-3xl shadow-elevated animate-reveal-up flex flex-col" style={{ maxHeight: "90dvh" } as React.CSSProperties}>
         {/* Close */}
         <button
           onClick={onCancel}
