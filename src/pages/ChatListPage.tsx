@@ -61,6 +61,8 @@ const ChatListPage = () => {
 
   const fetchConversations = async () => {
     if (!user) return;
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
 
     const { data: memberships } = await supabase
       .from("conversation_members")
