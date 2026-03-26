@@ -58,6 +58,38 @@ const formatMessageTimestamp = (date: Date): string => {
   return `${date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}, ${time}`;
 };
 
+const PRESENCE_FRESHNESS_MS = 45_000;
+
+const getPresenceState = (presence?: { is_online?: boolean; last_seen?: string | null } | null) => {
+  if (!presence?.last_seen) {
+    return { isOnline: false, lastSeen: null as string | null };
+  }
+
+  const seenDate = new Date(presence.last_seen);
+  const isFresh = Date.now() - seenDate.getTime() <= PRESENCE_FRESHNESS_MS;
+
+  if (presence.is_online && isFresh) {
+    return { isOnline: true, lastSeen: null as string | null };
+  }
+
+  const now = new Date();
+  const isToday = seenDate.toDateString() === now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = seenDate.toDateString() === yesterday.toDateString();
+
+  let formatted: string;
+  if (isToday) {
+    formatted = `heute, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+  } else if (isYesterday) {
+    formatted = `gestern, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+  } else {
+    formatted = `${seenDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
+  }
+
+  return { isOnline: false, lastSeen: formatted };
+};
+
 const ChatPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -80,6 +112,7 @@ const ChatPage = () => {
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<string | null>(null);
+  const [lastPresenceAt, setLastPresenceAt] = useState<string | null>(null);
   const [isGroup, setIsGroup] = useState(false);
   const [memberNames, setMemberNames] = useState<Record<string, string>>({});
 
@@ -328,25 +361,10 @@ const ChatPage = () => {
           }
           const presence = presenceRes.data;
           if (presence) {
-            setIsOnline(showOnlineStatus ? presence.is_online : false);
-            if (!presence.is_online && presence.last_seen) {
-              const seenDate = new Date(presence.last_seen);
-              const now = new Date();
-              const isToday = seenDate.toDateString() === now.toDateString();
-              const yesterday = new Date(now);
-              yesterday.setDate(yesterday.getDate() - 1);
-              const isYesterday = seenDate.toDateString() === yesterday.toDateString();
-
-              let formatted: string;
-              if (isToday) {
-                formatted = `heute, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-              } else if (isYesterday) {
-                formatted = `gestern, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-              } else {
-                formatted = `${seenDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-              }
-              setLastSeen(formatted);
-            }
+            const presenceState = getPresenceState(presence as any);
+            setLastPresenceAt((presence as any).last_seen || null);
+            setIsOnline(showOnlineStatus ? presenceState.isOnline : false);
+            setLastSeen(showOnlineStatus ? presenceState.lastSeen : null);
           }
         }
       }
@@ -508,25 +526,10 @@ const ChatPage = () => {
         },
         (payload) => {
           const p = payload.new as any;
-          setIsOnline(showOnlineStatus ? p.is_online : false);
-          if (!p.is_online && p.last_seen) {
-            const seenDate = new Date(p.last_seen);
-            const now = new Date();
-            const isToday = seenDate.toDateString() === now.toDateString();
-            const yesterday = new Date(now);
-            yesterday.setDate(yesterday.getDate() - 1);
-            const isYesterday = seenDate.toDateString() === yesterday.toDateString();
-
-            let formatted: string;
-            if (isToday) {
-              formatted = `heute, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-            } else if (isYesterday) {
-              formatted = `gestern, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-            } else {
-              formatted = `${seenDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}, ${seenDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-            }
-            setLastSeen(formatted);
-          }
+          const presenceState = getPresenceState(p);
+          setLastPresenceAt(p?.last_seen || null);
+          setIsOnline(showOnlineStatus ? presenceState.isOnline : false);
+          setLastSeen(showOnlineStatus ? presenceState.lastSeen : null);
         }
       )
       .subscribe();
@@ -534,7 +537,19 @@ const ChatPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [otherUserId]);
+  }, [otherUserId, showOnlineStatus]);
+
+  useEffect(() => {
+    if (!lastPresenceAt || !showOnlineStatus) return;
+
+    const interval = setInterval(() => {
+      const presenceState = getPresenceState({ is_online: true, last_seen: lastPresenceAt });
+      setIsOnline(presenceState.isOnline);
+      setLastSeen(presenceState.lastSeen);
+    }, 5_000);
+
+    return () => clearInterval(interval);
+  }, [lastPresenceAt, showOnlineStatus]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
