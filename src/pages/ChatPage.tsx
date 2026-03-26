@@ -592,8 +592,47 @@ const ChatPage = () => {
   }, [otherUserId, showOnlineStatus]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+    initialScrollDoneRef.current = false;
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (loading) return;
+    scrollToBottom(initialScrollDoneRef.current ? "smooth" : "auto");
+    if (!initialScrollDoneRef.current) {
+      initialScrollDoneRef.current = true;
+    }
+  }, [messages.length, loading, scrollToBottom]);
+
+  useEffect(() => {
+    if (!conversationId || !user) return;
+
+    const resync = () => {
+      refreshConversationMessages().then(() => {
+        markConversationRead().then(() => {});
+      });
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        resync();
+      }
+    };
+
+    window.addEventListener("online", resync);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible" && navigator.onLine) {
+        resync();
+      }
+    }, 12000);
+
+    return () => {
+      window.removeEventListener("online", resync);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.clearInterval(interval);
+    };
+  }, [conversationId, user, refreshConversationMessages, markConversationRead]);
 
   // Load focus contacts
   useEffect(() => {
