@@ -46,6 +46,12 @@ const LoginPage = () => {
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/chats", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
   const handleBiometricLogin = useCallback(async () => {
     setBiometricLoading(true);
     try {
@@ -61,7 +67,6 @@ const LoginPage = () => {
         setBiometricLoading(false);
         return;
       }
-      localStorage.setItem("clevara_stay_logged_in", stayLoggedIn ? "true" : "false");
       navigate("/chats");
     } catch {
       toast.error("Biometrische Anmeldung fehlgeschlagen");
