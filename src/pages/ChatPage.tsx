@@ -96,7 +96,9 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const swipeBack = useSwipeBack({ fallbackPath: "/chats" });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialScrollDoneRef = useRef(false);
   const { locale, t } = useI18n();
   const { autoRead, headphoneAutoPlay, focusMode, isQuietTime, showOnlineStatus, showTypingIndicator } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
