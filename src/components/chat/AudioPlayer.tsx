@@ -91,10 +91,12 @@ const AudioPlayer = ({ url, isMine }: AudioPlayerProps) => {
         </div>
 
         <span className={cn(
-          "text-[0.625rem]",
+          "text-[0.625rem] tabular-nums",
           isMine ? "text-chat-mine-foreground/60" : "text-muted-foreground"
         )}>
-          {playing ? formatTime((audioRef.current?.currentTime || 0)) : formatTime(duration)}
+          {playing
+            ? `${formatTime(audioRef.current?.currentTime || 0)} / ${formatTime(duration)}`
+            : formatTime(duration)}
         </span>
       </div>
     </div>
