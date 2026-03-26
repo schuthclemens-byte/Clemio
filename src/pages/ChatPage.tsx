@@ -748,8 +748,7 @@ const ChatPage = () => {
 
     // Optimistic update
     const tempId = crypto.randomUUID();
-    const now = new Date();
-    const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    const ts = formatMessageTimestamp(now);
     const optimisticMsg: Message = { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id };
     setMessages((prev) => [...prev, optimisticMsg]);
 
