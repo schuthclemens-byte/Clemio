@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Headphones, X, ImageIcon, Info, Mic2, Trash2 } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
