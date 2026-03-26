@@ -24,6 +24,7 @@ import { playMessageTone } from "@/lib/sounds";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useMessageReactions } from "@/hooks/useMessageReactions";
 import { toast } from "sonner";
+import EditContactNameDialog from "@/components/chat/EditContactNameDialog";
 
 interface Message {
   id: string;
@@ -80,6 +81,8 @@ const ChatPage = () => {
   const [contactVoiceProfileId, setContactVoiceProfileId] = useState<string | null>(null);
   const [contactElevenLabsId, setContactElevenLabsId] = useState<string | null>(null);
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
+  const [showEditName, setShowEditName] = useState(false);
+  const [contactAlias, setContactAlias] = useState<{ firstName: string; lastName: string } | null>(null);
 
   // Typing indicator
   const { sendTyping, clearTyping, typingNames } = useTypingIndicator(conversationId);
@@ -283,8 +286,23 @@ const ChatPage = () => {
             supabase.from("user_presence").select("is_online, last_seen").eq("user_id", otherMember.user_id).maybeSingle(),
           ]);
           const profile = profileRes.data;
-          setChatName(profile?.display_name || profile?.phone_number || "Chat");
-          setMemberNames({ [otherMember.user_id]: profile?.display_name || profile?.phone_number || "" });
+          const { data: alias } = await supabase
+            .from("contact_aliases" as any)
+            .select("first_name, last_name")
+            .eq("user_id", user.id)
+            .eq("contact_user_id", otherMember.user_id)
+            .maybeSingle();
+          const a = alias as any;
+          if (a?.first_name) {
+            const fullName = [a.first_name, a.last_name].filter(Boolean).join(" ");
+            setChatName(fullName);
+            setMemberNames({ [otherMember.user_id]: fullName });
+            setContactAlias({ firstName: a.first_name || "", lastName: a.last_name || "" });
+          } else {
+            setChatName(profile?.display_name || profile?.phone_number || "Chat");
+            setMemberNames({ [otherMember.user_id]: profile?.display_name || profile?.phone_number || "" });
+            setContactAlias(null);
+          }
           const presence = presenceRes.data;
           if (presence) {
             setIsOnline(showOnlineStatus ? presence.is_online : false);
