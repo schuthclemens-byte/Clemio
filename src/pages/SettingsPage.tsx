@@ -10,6 +10,7 @@ import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } f
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import PremiumBadge from "@/components/PremiumBadge";
 import { useSubscription } from "@/hooks/useSubscription";
