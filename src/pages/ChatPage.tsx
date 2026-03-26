@@ -53,7 +53,7 @@ const ChatPage = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, t } = useI18n();
-  const { autoRead, headphoneAutoPlay, focusMode, isQuietTime, showOnlineStatus } = useAccessibility();
+  const { autoRead, headphoneAutoPlay, focusMode, isQuietTime, showOnlineStatus, showTypingIndicator } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
   const { isPremium } = useSubscription();
   const [focusContactIds, setFocusContactIds] = useState<string[]>([]);
@@ -484,28 +484,40 @@ const ChatPage = () => {
     };
   }, [conversationId, user]);
 
-  // Presence tracking - set online/offline
+  // Presence tracking - only online when app is actively visible
   useEffect(() => {
     if (!user) return;
 
     const setPresence = async (online: boolean) => {
+      // If user disabled online status, never broadcast as online
+      const effectiveOnline = showOnlineStatus ? online : false;
       await supabase.from("user_presence").upsert({
         user_id: user.id,
-        is_online: online,
+        is_online: effectiveOnline,
         last_seen: new Date().toISOString(),
       });
     };
 
-    setPresence(true);
+    // Set online only if document is visible
+    if (document.visibilityState === "visible") {
+      setPresence(true);
+    }
+
+    const handleVisibilityChange = () => {
+      setPresence(document.visibilityState === "visible");
+    };
 
     const handleBeforeUnload = () => setPresence(false);
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
       setPresence(false);
     };
-  }, [user]);
+  }, [user, showOnlineStatus]);
 
   // Listen for other user's presence changes
   useEffect(() => {
@@ -917,9 +929,14 @@ const ChatPage = () => {
               {chatName}
             </h2>
             <p className="text-xs text-muted-foreground truncate">
-              {typingNames.length > 0 ? (
-                <span className="text-primary font-medium">
-                  {typingNames.join(", ")} schreibt…
+              {typingNames.length > 0 && showTypingIndicator ? (
+                <span className="text-primary font-medium flex items-center gap-1">
+                  {typingNames.join(", ")} schreibt
+                  <span className="inline-flex gap-0.5 ml-0.5">
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
                 </span>
               ) : isListening ? (
                 <span className="text-accent font-medium flex items-center gap-1">
@@ -1089,7 +1106,7 @@ const ChatPage = () => {
       )}
 
       {/* Typing indicator */}
-      {typingNames.length > 0 && (
+      {typingNames.length > 0 && showTypingIndicator && (
         <div className="px-5 py-2 flex items-center gap-2">
           <div className="flex gap-1 items-center">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -1119,8 +1136,8 @@ const ChatPage = () => {
         isListening={isListening}
         onVoiceToggle={toggle}
         transcript={transcript}
-        onTyping={sendTyping}
-        onStopTyping={clearTyping}
+        onTyping={showTypingIndicator ? sendTyping : undefined}
+        onStopTyping={showTypingIndicator ? clearTyping : undefined}
       />
 
       {/* Background picker */}
