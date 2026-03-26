@@ -276,11 +276,8 @@ const ProfilePage = () => {
               if (!window.confirm(t("profile.deleteAccountConfirm"))) return;
               if (!user) return;
               try {
-                // Delete all user data
-                await supabase.from("voice_profiles" as any).delete().eq("user_id", user.id);
-                await supabase.from("voice_consents" as any).delete().eq("voice_owner_id", user.id);
-                await supabase.from("subscriptions" as any).delete().eq("user_id", user.id);
-                await supabase.from("profiles").delete().eq("id", user.id);
+                const { data, error } = await supabase.functions.invoke("delete-account");
+                if (error) throw error;
                 await signOut();
                 navigate("/login");
                 toast.success(t("profile.accountDeleted"));
