@@ -26,21 +26,23 @@ function uint8ToB64url(arr: Uint8Array): string {
 
 // ── VAPID JWT (ES256) ────────────────────────────────────────────────
 
-async function importVapidPrivateKey(rawB64url: string): Promise<CryptoKey> {
-  const raw = base64urlToUint8Array(rawB64url);
-  // Build PKCS8 wrapper for 32-byte raw EC private key
-  const pkcs8Prefix = new Uint8Array([
-    0x30, 0x81, 0x87, 0x02, 0x01, 0x00, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86,
-    0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d,
-    0x03, 0x01, 0x07, 0x04, 0x6d, 0x30, 0x6b, 0x02, 0x01, 0x01, 0x04, 0x20,
-  ]);
-  const pkcs8Suffix = new Uint8Array([0xa1, 0x44, 0x03, 0x42, 0x00, 0x04, ...new Array(64).fill(0)]);
-  const pkcs8 = new Uint8Array(pkcs8Prefix.length + raw.length + pkcs8Suffix.length);
-  pkcs8.set(pkcs8Prefix);
-  pkcs8.set(raw, pkcs8Prefix.length);
-  pkcs8.set(pkcs8Suffix, pkcs8Prefix.length + raw.length);
+async function importVapidPrivateKey(rawB64url: string, publicKeyB64url: string): Promise<CryptoKey> {
+  // Decode public key (65 bytes: 0x04 || x(32) || y(32))
+  const pubBytes = base64urlToUint8Array(publicKeyB64url);
+  const x = uint8ToB64url(pubBytes.slice(1, 33));
+  const y = uint8ToB64url(pubBytes.slice(33, 65));
 
-  return crypto.subtle.importKey("pkcs8", pkcs8.buffer, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  // Import as JWK with the actual public key coordinates
+  const jwk = {
+    kty: "EC",
+    crv: "P-256",
+    x,
+    y,
+    d: rawB64url,
+    ext: true,
+  };
+
+  return crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
 }
 
 function derToRaw(der: Uint8Array): Uint8Array {
