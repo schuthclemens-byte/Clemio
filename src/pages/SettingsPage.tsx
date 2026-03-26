@@ -161,20 +161,22 @@ const SettingsPage = () => {
           </div>
         </button>
 
-        {/* App installieren */}
-        <button
-          onClick={() => navigate("/install")}
-          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
-          style={{ animationDelay: "90ms" }}
-        >
-          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
-            <Download className="w-6 h-6 text-accent" />
-          </div>
-          <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
-            <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
-          </div>
-        </button>
+        {/* App installieren – nur im Browser zeigen, nicht wenn bereits als PWA installiert */}
+        {!window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
+          <button
+            onClick={() => navigate("/install")}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+            style={{ animationDelay: "90ms" }}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
+              <Download className="w-6 h-6 text-accent" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
+            </div>
+          </button>
+        )}
 
         {/* Biometric Auth */}
         {biometric.isAvailable && (
