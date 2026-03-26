@@ -30,15 +30,6 @@ const ProfilePage = () => {
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
-  const loadVoiceProfile = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("voice_profiles" as any)
-      .select("voice_name, elevenlabs_voice_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    setVoiceProfile(data as any);
-  };
 
   useEffect(() => {
     if (!user) return;
