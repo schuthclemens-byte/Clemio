@@ -362,6 +362,7 @@ const ChatPage = () => {
           const presence = presenceRes.data;
           if (presence) {
             const presenceState = getPresenceState(presence as any);
+            setLastPresenceAt((presence as any).last_seen || null);
             setIsOnline(showOnlineStatus ? presenceState.isOnline : false);
             setLastSeen(showOnlineStatus ? presenceState.lastSeen : null);
           }
