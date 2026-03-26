@@ -187,6 +187,7 @@ const ChatListPage = () => {
     setConversations(items);
     setLoading(false);
     try { localStorage.setItem(cacheKey, JSON.stringify(items)); } catch {}
+    fetchingRef.current = false;
   };
 
   // Search messages across all conversations
