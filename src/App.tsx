@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ColorThemeProvider } from "@/contexts/ColorThemeContext";
 import { ChatBackgroundProvider } from "@/contexts/ChatBackgroundContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { usePresence } from "@/hooks/usePresence";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
@@ -32,6 +33,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+/** Runs presence tracking globally inside AuthProvider context */
+const PresenceTracker = ({ children }: { children: React.ReactNode }) => {
+  usePresence();
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <I18nProvider>
@@ -40,6 +47,7 @@ const App = () => (
       <ChatBackgroundProvider>
       <AccessibilityProvider>
         <AuthProvider>
+          <PresenceTracker>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -68,6 +76,7 @@ const App = () => (
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
+          </PresenceTracker>
         </AuthProvider>
       </AccessibilityProvider>
       </ChatBackgroundProvider>
