@@ -960,13 +960,6 @@ const ChatPage = () => {
           <p className="flex-1 text-[11px] text-muted-foreground leading-snug">
             Stimmprobe von <strong className="text-foreground">{chatName}</strong> aktiv – tippe auf Nachrichten zum Anhören.
           </p>
-          <button
-            onClick={handleDeleteContactVoice}
-            className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors active:scale-95"
-          >
-            <Trash2 className="w-3 h-3" />
-            Löschen
-          </button>
         </div>
       )}
       {currentItem && (
