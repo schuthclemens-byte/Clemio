@@ -929,9 +929,14 @@ const ChatPage = () => {
               {chatName}
             </h2>
             <p className="text-xs text-muted-foreground truncate">
-              {typingNames.length > 0 ? (
-                <span className="text-primary font-medium">
-                  {typingNames.join(", ")} schreibt…
+              {typingNames.length > 0 && showTypingIndicator ? (
+                <span className="text-primary font-medium flex items-center gap-1">
+                  {typingNames.join(", ")} schreibt
+                  <span className="inline-flex gap-0.5 ml-0.5">
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
                 </span>
               ) : isListening ? (
                 <span className="text-accent font-medium flex items-center gap-1">
