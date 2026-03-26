@@ -906,9 +906,7 @@ const ChatPage = () => {
                   onSpeak={
                     msg.isMine
                       ? (text) => handleSpeak(msg.id, text)
-                      : voiceProfiles[msg.senderId]
-                        ? (text) => handleSpeak(msg.id, text)
-                        : undefined
+                      : (text) => handleSpeak(msg.id, text)
                   }
                   isSpeaking={speakingId === msg.id && isSpeaking}
                   messageType={msg.messageType}
