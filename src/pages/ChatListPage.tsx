@@ -43,7 +43,6 @@ const ChatListPage = () => {
   const fetchConversations = async () => {
     if (!user) return;
 
-    // Get conversations the user is a member of
     const { data: memberships } = await supabase
       .from("conversation_members")
       .select("conversation_id")
@@ -57,83 +56,112 @@ const ChatListPage = () => {
 
     const convIds = memberships.map((m) => m.conversation_id);
 
-    const { data: convos } = await supabase
-      .from("conversations")
-      .select("*")
-      .in("id", convIds)
-      .eq("is_archived", false)
-      .order("updated_at", { ascending: false });
+    // Fetch conversations, all members, and latest messages in parallel
+    const [convosRes, allMembersRes, allMessagesRes, unreadRes] = await Promise.all([
+      supabase
+        .from("conversations")
+        .select("*")
+        .in("id", convIds)
+        .eq("is_archived", false)
+        .order("updated_at", { ascending: false }),
+      supabase
+        .from("conversation_members")
+        .select("conversation_id, user_id")
+        .in("conversation_id", convIds)
+        .neq("user_id", user.id),
+      supabase
+        .from("messages")
+        .select("conversation_id, content, created_at, message_type, sender_id, is_read")
+        .in("conversation_id", convIds)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("messages")
+        .select("conversation_id", { count: "exact" })
+        .in("conversation_id", convIds)
+        .eq("is_read", false)
+        .neq("sender_id", user.id),
+    ]);
 
-    if (!convos) {
+    const convos = convosRes.data;
+    if (!convos || convos.length === 0) {
       setConversations([]);
       setLoading(false);
       return;
     }
 
-    // Get last message and unread count for each conversation
-    const items: ConversationItem[] = [];
-    const convItems = await Promise.all(
-      convos.map(async (conv) => {
-        const [lastMsgRes, unreadRes, memberRes] = await Promise.all([
-          supabase
-            .from("messages")
-            .select("content, created_at, message_type")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
-          supabase
-            .from("messages")
-            .select("*", { count: "exact", head: true })
-            .eq("conversation_id", conv.id)
-            .eq("is_read", false)
-            .neq("sender_id", user.id),
-          !conv.is_group
-            ? supabase
-                .from("conversation_members")
-                .select("user_id")
-                .eq("conversation_id", conv.id)
-                .neq("user_id", user.id)
-                .limit(1)
-                .maybeSingle()
-            : Promise.resolve({ data: null }),
-        ]);
+    // Build lookup: convId -> other member user_id
+    const otherMemberMap = new Map<string, string>();
+    allMembersRes.data?.forEach((m) => {
+      if (!otherMemberMap.has(m.conversation_id)) {
+        otherMemberMap.set(m.conversation_id, m.user_id);
+      }
+    });
 
-        let displayName = conv.name || "Chat";
-        if (!conv.is_group && memberRes.data) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("display_name, phone_number")
-            .eq("id", memberRes.data.user_id)
-            .maybeSingle();
-          if (profile) {
-            displayName = profile.display_name || profile.phone_number;
-          }
+    // Build lookup: convId -> latest message
+    const latestMsgMap = new Map<string, { content: string; created_at: string; message_type: string | null }>();
+    allMessagesRes.data?.forEach((msg) => {
+      if (!latestMsgMap.has(msg.conversation_id)) {
+        latestMsgMap.set(msg.conversation_id, msg);
+      }
+    });
+
+    // Build lookup: convId -> unread count
+    const unreadMap = new Map<string, number>();
+    allMessagesRes.data?.forEach((msg) => {
+      if (!msg.is_read && msg.sender_id !== user.id) {
+        unreadMap.set(msg.conversation_id, (unreadMap.get(msg.conversation_id) || 0) + 1);
+      }
+    });
+
+    // Batch-fetch all needed profiles at once
+    const profileIds = new Set<string>();
+    convos.forEach((conv) => {
+      if (!conv.is_group) {
+        const otherId = otherMemberMap.get(conv.id);
+        if (otherId) profileIds.add(otherId);
+      }
+    });
+
+    const profileMap = new Map<string, { display_name: string | null; phone_number: string }>();
+    if (profileIds.size > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, phone_number")
+        .in("id", Array.from(profileIds));
+      profiles?.forEach((p) => profileMap.set(p.id, p));
+    }
+
+    const items: ConversationItem[] = convos.map((conv) => {
+      let displayName = conv.name || "Chat";
+      if (!conv.is_group) {
+        const otherId = otherMemberMap.get(conv.id);
+        if (otherId) {
+          const profile = profileMap.get(otherId);
+          if (profile) displayName = profile.display_name || profile.phone_number;
         }
+      }
 
-        const lastMsg = lastMsgRes.data;
-        const lastMessageDisplay = lastMsg
-          ? lastMsg.message_type === "audio"
-            ? "🎤 Sprachnachricht"
-            : lastMsg.message_type === "image"
-              ? "📷 Bild"
-              : lastMsg.message_type === "video"
-                ? "🎥 Video"
-                : lastMsg.content
-          : "";
-        return {
-          id: conv.id,
-          name: displayName,
-          lastMessage: lastMessageDisplay,
-          time: lastMsg
-            ? new Date(lastMsg.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
-            : "",
-          unread: unreadRes.count || 0,
-        };
-      })
-    );
+      const lastMsg = latestMsgMap.get(conv.id);
+      const lastMessageDisplay = lastMsg
+        ? lastMsg.message_type === "audio"
+          ? "🎤 Sprachnachricht"
+          : lastMsg.message_type === "image"
+            ? "📷 Bild"
+            : lastMsg.message_type === "video"
+              ? "🎥 Video"
+              : lastMsg.content
+        : "";
 
-    items.push(...convItems);
+      return {
+        id: conv.id,
+        name: displayName,
+        lastMessage: lastMessageDisplay,
+        time: lastMsg
+          ? new Date(lastMsg.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
+          : "",
+        unread: unreadMap.get(conv.id) || 0,
+      };
+    });
 
     setConversations(items);
     setLoading(false);
@@ -174,27 +202,28 @@ const ChatListPage = () => {
       return;
     }
 
-    // Build results with conversation & sender names
-    const results: MessageSearchResult[] = [];
-    for (const msg of msgs) {
+    // Batch-fetch sender profiles
+    const senderIds = [...new Set(msgs.map((m) => m.sender_id))];
+    const { data: senderProfiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, phone_number")
+      .in("id", senderIds);
+
+    const senderMap = new Map<string, { display_name: string | null; phone_number: string }>();
+    senderProfiles?.forEach((p) => senderMap.set(p.id, p));
+
+    const results: MessageSearchResult[] = msgs.map((msg) => {
       const conv = conversations.find((c) => c.id === msg.conversation_id);
-      const convName = conv?.name || "Chat";
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name, phone_number")
-        .eq("id", msg.sender_id)
-        .maybeSingle();
-
-      results.push({
+      const profile = senderMap.get(msg.sender_id);
+      return {
         messageId: msg.id,
         conversationId: msg.conversation_id,
-        conversationName: convName,
+        conversationName: conv?.name || "Chat",
         content: msg.content,
         time: new Date(msg.created_at!).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
         senderName: profile?.display_name || profile?.phone_number || "Unbekannt",
-      });
-    }
+      };
+    });
 
     setMessageResults(results);
     setSearchingMessages(false);
@@ -312,7 +341,6 @@ const ChatListPage = () => {
           </div>
         ) : (
           <>
-            {/* Conversation results */}
             {filtered.length > 0 && (
               <>
                 {search.length >= 2 && (
@@ -344,7 +372,6 @@ const ChatListPage = () => {
               </>
             )}
 
-            {/* Message search results */}
             {search.length >= 2 && (
               <>
                 <div className="px-5 pt-4 pb-1">
@@ -381,7 +408,6 @@ const ChatListPage = () => {
               </>
             )}
 
-            {/* Empty state */}
             {filtered.length === 0 && messageResults.length === 0 && !searchingMessages && (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <p className="text-sm">{search ? "Keine Ergebnisse" : t("chat.noChats")}</p>
