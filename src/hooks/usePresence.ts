@@ -9,12 +9,12 @@ import { useAccessibility } from "@/contexts/AccessibilityContext";
  * immediately toggle it off.
  */
 export const usePresence = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { showOnlineStatus } = useAccessibility();
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (loading || !user) return;
 
     const setPresence = async (online: boolean) => {
       const effectiveOnline = showOnlineStatus ? online : false;
@@ -25,30 +25,33 @@ export const usePresence = () => {
       });
     };
 
-    const isVisible = () => document.visibilityState === "visible";
-
-    // Initial
-    setPresence(isVisible());
-
-    // Heartbeat – re-affirm "online" every 30s while visible
-    heartbeatRef.current = setInterval(() => {
-      if (isVisible()) setPresence(true);
-    }, 2_000);
-
-    const handleVisibilityChange = () => {
-      setPresence(isVisible());
+    const isActive = () => document.visibilityState === "visible" && document.hasFocus();
+    const syncPresence = () => {
+      void setPresence(isActive());
     };
 
-    const handleBeforeUnload = () => setPresence(false);
+    void setPresence(isActive());
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    heartbeatRef.current = setInterval(() => {
+      if (isActive()) void setPresence(true);
+    }, 2_000);
+
+    const handleBeforeUnload = () => {
+      void setPresence(false);
+    };
+
+    document.addEventListener("visibilitychange", syncPresence);
+    window.addEventListener("focus", syncPresence);
+    window.addEventListener("blur", syncPresence);
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", syncPresence);
+      window.removeEventListener("focus", syncPresence);
+      window.removeEventListener("blur", syncPresence);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      setPresence(false);
+      void setPresence(false);
     };
-  }, [user, showOnlineStatus]);
+  }, [user, showOnlineStatus, loading]);
 };
