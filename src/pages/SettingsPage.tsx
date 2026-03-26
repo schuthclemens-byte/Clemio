@@ -61,7 +61,7 @@ const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
   const { globalBackground, setGlobalBackground } = useChatBackground();
-  const biometric = useBiometricAuth();
+  
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
