@@ -6,7 +6,6 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePremiumGate } from "@/hooks/usePremiumGate";
