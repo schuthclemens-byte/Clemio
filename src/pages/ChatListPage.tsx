@@ -40,6 +40,23 @@ const ChatListPage = () => {
   const [messageResults, setMessageResults] = useState<MessageSearchResult[]>([]);
   const [searchingMessages, setSearchingMessages] = useState(false);
 
+  const cacheKey = user ? `clevara_chats_${user.id}` : "";
+
+  // Load cached conversations instantly on mount
+  useEffect(() => {
+    if (!cacheKey) return;
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as ConversationItem[];
+        if (parsed.length > 0) {
+          setConversations(parsed);
+          setLoading(false);
+        }
+      }
+    } catch {}
+  }, [cacheKey]);
+
   const fetchConversations = async () => {
     if (!user) return;
 
@@ -165,6 +182,7 @@ const ChatListPage = () => {
 
     setConversations(items);
     setLoading(false);
+    try { localStorage.setItem(cacheKey, JSON.stringify(items)); } catch {}
   };
 
   // Search messages across all conversations
