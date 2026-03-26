@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Headphones, X, ImageIcon, Info, Mic2, Trash2 } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -926,11 +926,18 @@ const ChatPage = () => {
             <ImageIcon className="w-5 h-5 text-muted-foreground" />
           </button>
           <button
-            onClick={() => navigate(`/call/${conversationId}`)}
+            onClick={() => navigate(`/call/${conversationId}?video=false`)}
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
             aria-label="Anrufen"
           >
             <Phone className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <button
+            onClick={() => navigate(`/call/${conversationId}?video=true`)}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
+            aria-label="Videoanruf"
+          >
+            <Video className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
       </header>
