@@ -46,7 +46,7 @@ const ProfilePage = () => {
         setLastName((data as any).last_name || "");
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
-        if (data.language) setLocale(data.language as Locale);
+        
       }
       setLoaded(true);
     };
