@@ -15,6 +15,7 @@ interface AccessibilitySettings {
   muteSounds: boolean;
   autoCorrect: boolean;
   showOnlineStatus: boolean;
+  showTypingIndicator: boolean;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
