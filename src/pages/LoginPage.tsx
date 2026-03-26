@@ -153,7 +153,6 @@ const LoginPage = () => {
         toast.success(t("app.signupSuccess") || "Konto erstellt!");
       }
 
-      localStorage.setItem("clevara_stay_logged_in", "true");
       navigate("/chats");
     } finally {
       setLoading(false);
