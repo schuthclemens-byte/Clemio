@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, Fingerprint, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
-import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+
 import { useAuth } from "@/contexts/AuthContext";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import PremiumBadge from "@/components/PremiumBadge";
@@ -61,7 +61,7 @@ const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
   const { globalBackground, setGlobalBackground } = useChatBackground();
-  const biometric = useBiometricAuth();
+  
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
@@ -161,56 +161,23 @@ const SettingsPage = () => {
           </div>
         </button>
 
-        {/* App installieren */}
-        <button
-          onClick={() => navigate("/install")}
-          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
-          style={{ animationDelay: "90ms" }}
-        >
-          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
-            <Download className="w-6 h-6 text-accent" />
-          </div>
-          <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
-            <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
-          </div>
-        </button>
-
-        {/* Biometric Auth */}
-        {biometric.isAvailable && (
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "100ms" }}>
-            <button
-              onClick={async () => {
-                if (biometric.isEnabled) {
-                  biometric.disableBiometric();
-                  toast.success(t("settings.biometricDisabled"));
-                } else {
-                  toast.info(t("settings.biometricHint"));
-                }
-              }}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-              role="switch"
-              aria-checked={biometric.isEnabled}
-            >
-              <span className="flex items-center gap-3">
-                <Fingerprint className="w-5 h-5 text-primary" />
-                <div>
-                  <span className="text-[0.938rem] block font-medium">{t("settings.biometric")}</span>
-                  <span className="text-xs text-muted-foreground">{t("settings.biometricDesc")}</span>
-                </div>
-              </span>
-              <div className={cn(
-                "w-11 h-6 rounded-full relative transition-colors duration-200",
-                biometric.isEnabled ? "bg-primary" : "bg-border"
-              )}>
-                <div className={cn(
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                  biometric.isEnabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                )} />
-              </div>
-            </button>
-          </div>
+        {/* App installieren – nur im Browser zeigen, nicht wenn bereits als PWA installiert */}
+        {!window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
+          <button
+            onClick={() => navigate("/install")}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+            style={{ animationDelay: "90ms" }}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
+              <Download className="w-6 h-6 text-accent" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
+            </div>
+          </button>
         )}
+
 
         {/* Theme - Collapsible */}
         <CollapsibleSection icon={Moon} title={t("settings.theme")} delay="40ms">
@@ -569,71 +536,68 @@ const SettingsPage = () => {
           </button>
         </div>
 
-        {/* Subscription / Premium */}
-        <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "95ms" }}>
-          <div className="px-4 py-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center",
-                  isPremium ? "gradient-primary" : "bg-muted"
-                )}>
-                  <Crown className={cn("w-5 h-5", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
+        {/* Subscription / Premium – nur für normale Nutzer zeigen (nicht Whitelist/Founding mit permanentem Zugang) */}
+        {!(isFoundingUser && daysRemaining === -1) && (
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "95ms" }}>
+            <div className="px-4 py-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center",
+                    isPremium ? "gradient-primary" : "bg-muted"
+                  )}>
+                    <Crown className={cn("w-5 h-5", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[0.938rem]">{planLabel}</p>
+                    {isPremium && daysRemaining > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {stripeActive ? t("sub.nextPayment").replace("{n}", String(daysRemaining)) : t("sub.daysLeft").replace("{n}", String(daysRemaining))}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-[0.938rem]">{planLabel}</p>
-                  {isPremium && daysRemaining > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {stripeActive ? t("sub.nextPayment").replace("{n}", String(daysRemaining)) : t("sub.daysLeft").replace("{n}", String(daysRemaining))}
-                    </p>
-                  )}
-                  {isFoundingUser && (
-                    <p className="text-xs text-accent font-medium">
-                      {daysRemaining === -1 ? t("sub.permanentAccess") : t("sub.foundingThanks")}
-                    </p>
-                  )}
-                </div>
+                <button
+                  onClick={() => refreshSubscription()}
+                  className="p-2 rounded-full hover:bg-secondary transition-colors"
+                  aria-label={t("sub.refreshStatus")}
+                >
+                  <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                </button>
               </div>
-              <button
-                onClick={() => refreshSubscription()}
-                className="p-2 rounded-full hover:bg-secondary transition-colors"
-                aria-label={t("sub.refreshStatus")}
-              >
-                <RefreshCw className="w-4 h-4 text-muted-foreground" />
-              </button>
+
+              {!isPremium && (
+                <button
+                  onClick={startCheckout}
+                  disabled={checkoutLoading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+                >
+                  {checkoutLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-4 h-4" />
+                  )}
+                  {t("sub.subscribe")}
+                </button>
+              )}
+
+              {stripeActive && (
+                <button
+                  onClick={openPortal}
+                  disabled={portalLoading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+                >
+                  {portalLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="w-4 h-4" />
+                  )}
+                  {t("sub.manage")}
+                </button>
+              )}
             </div>
-
-            {!isPremium && (
-              <button
-                onClick={startCheckout}
-                disabled={checkoutLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-              >
-                {checkoutLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CreditCard className="w-4 h-4" />
-                )}
-                {t("sub.subscribe")}
-              </button>
-            )}
-
-            {stripeActive && (
-              <button
-                onClick={openPortal}
-                disabled={portalLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-              >
-                {portalLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <ExternalLink className="w-4 h-4" />
-                )}
-                {t("sub.manage")}
-              </button>
-            )}
           </div>
-        </div>
+        )}
 
         {/* Logout button */}
         <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
