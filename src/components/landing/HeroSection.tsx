@@ -153,7 +153,7 @@ const HeroSection = () => {
 
         {/* Subtitle */}
         <motion.p variants={fadeUp} custom={3} className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-8">
-          {t("landing.heroSubtitle")}
+          {t("landing.heroSubtitleNew")}
         </motion.p>
 
         {/* CTA */}
