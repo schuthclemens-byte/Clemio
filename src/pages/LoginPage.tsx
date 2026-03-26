@@ -289,26 +289,6 @@ const LoginPage = () => {
               </button>
             </div>
 
-            {mode === "login" && (
-              <button
-                type="button"
-                onClick={() => setStayLoggedIn(!stayLoggedIn)}
-                className="flex items-center justify-between w-full px-1 py-1 cursor-pointer select-none group"
-              >
-                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Eingeloggt bleiben</span>
-                <div
-                  className={`relative w-11 h-6 rounded-full transition-colors duration-300 ${
-                    stayLoggedIn ? "gradient-primary" : "bg-border"
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
-                      stayLoggedIn ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </div>
-              </button>
-            )}
 
             <button
               type="submit"
