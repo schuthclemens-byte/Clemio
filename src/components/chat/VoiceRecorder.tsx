@@ -89,6 +89,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
       };
 
       recorder.start();
+      await requestWakeLock();
       mediaRecorderRef.current = recorder;
       setRecording(true);
       setSeconds(0);
