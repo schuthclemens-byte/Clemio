@@ -175,7 +175,7 @@ const PushDebugSection = () => {
           <div>
             <span className="text-sm font-medium block">Nachrichtenvorschau</span>
             <span className="text-xs text-muted-foreground">
-              {previewEnabled ? "Vorschau der ersten 30 Zeichen" : "Nur „Neue Nachricht" anzeigen"}
+              {previewEnabled ? "Vorschau der ersten 30 Zeichen" : 'Nur "Neue Nachricht" anzeigen'}
             </span>
           </div>
           <div className={cn(
