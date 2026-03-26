@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { Play, Pause, ArrowRight } from "lucide-react";
-import { useState, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { Play, Pause, ArrowRight, Volume2 } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
 import demoVoice from "@/assets/demo-voice.mp3";
 
@@ -10,7 +10,7 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.12, duration: 0.6, ease: "easeOut" as const },
+    transition: { delay: i * 0.15, duration: 0.7, ease: "easeOut" as const },
   }),
 };
 
@@ -18,23 +18,45 @@ const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playDemo = useCallback(() => {
+  const ensureAudio = useCallback(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio(demoVoice);
       audioRef.current.onended = () => setIsPlaying(false);
       audioRef.current.onerror = () => setIsPlaying(false);
     }
+    return audioRef.current;
+  }, []);
+
+  // Auto-play after a short delay (requires user gesture on most browsers, so we attempt it)
+  useEffect(() => {
+    if (hasAutoPlayed) return;
+    const timer = setTimeout(() => {
+      const audio = ensureAudio();
+      audio.play().then(() => {
+        setIsPlaying(true);
+        setHasAutoPlayed(true);
+      }).catch(() => {
+        // Autoplay blocked – user will tap manually
+        setHasAutoPlayed(true);
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [hasAutoPlayed, ensureAudio]);
+
+  const togglePlay = useCallback(() => {
+    const audio = ensureAudio();
     if (isPlaying) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      audio.pause();
+      audio.currentTime = 0;
       setIsPlaying(false);
       return;
     }
-    audioRef.current.play();
+    audio.play();
     setIsPlaying(true);
-  }, [isPlaying]);
+  }, [isPlaying, ensureAudio]);
 
   return (
     <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
@@ -42,7 +64,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
           className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full opacity-30 blur-[100px]"
-          style={{ background: "radial-gradient(circle, hsl(45 95% 58%), hsl(18 90% 55%) 60%, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, hsl(var(--primary)), hsl(18 90% 55%) 60%, transparent 70%)" }}
           animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -58,60 +80,89 @@ const HeroSection = () => {
         className="relative z-10 max-w-md mx-auto"
         initial="hidden"
         animate="visible"
-        variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+        variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
       >
+        {/* Brand */}
+        <motion.div variants={fadeUp} custom={0} className="mb-2">
+          <span className="text-4xl sm:text-5xl font-black tracking-tight text-foreground">
+            Clevara
+          </span>
+        </motion.div>
+
         {/* Title */}
-        <motion.h1 variants={fadeUp} custom={0} className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mb-3 leading-tight">
-          {t("landing.startTitle")}
+        <motion.h1 variants={fadeUp} custom={1} className="text-lg sm:text-xl font-semibold text-foreground/80 mb-6 leading-snug">
+          {t("landing.heroListenTitle")}
         </motion.h1>
 
-        {/* Voice demo card */}
-        <motion.div variants={fadeUp} custom={1} className="mb-6">
+        {/* Voice demo card – auto-playing */}
+        <motion.div variants={fadeUp} custom={2} className="mb-5">
           <motion.button
-            onClick={playDemo}
+            onClick={togglePlay}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="group relative inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border border-border shadow-elevated hover:shadow-soft transition-all duration-300 w-full"
+            className="group relative inline-flex items-center gap-4 px-5 py-4 rounded-2xl bg-card border border-border shadow-elevated hover:shadow-soft transition-all duration-300 w-full"
           >
-            <span className={`relative w-14 h-14 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-all duration-300 ${isPlaying ? "animate-voice-pulse" : "group-hover:scale-105"}`}>
+            <span className={`relative w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-all duration-300 ${isPlaying ? "animate-voice-pulse" : "group-hover:scale-105"}`}>
               {isPlaying ? (
-                <Pause className="w-6 h-6 text-primary-foreground" />
+                <Pause className="w-5 h-5 text-primary-foreground" />
               ) : (
-                <Play className="w-6 h-6 text-primary-foreground ml-0.5" />
+                <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
               )}
             </span>
-            <span className="text-left flex-1">
-              <span className="block text-sm font-semibold text-foreground leading-snug">
-                {t("landing.startDemoText")}
+            <span className="text-left flex-1 min-w-0">
+              <span className="block text-sm font-medium text-foreground leading-snug">
+                {t("landing.heroDemoText")}
               </span>
             </span>
-            {isPlaying && (
-              <span className="flex items-center gap-[3px] ml-1">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <motion.span
-                    key={i}
-                    className="w-[3px] bg-primary rounded-full"
-                    animate={{ height: [6, 18, 6] }}
-                    transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1, ease: "easeInOut" }}
-                  />
-                ))}
-              </span>
-            )}
+            <AnimatePresence>
+              {isPlaying && (
+                <motion.span
+                  className="flex items-center gap-[3px] ml-1"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <motion.span
+                      key={i}
+                      className="w-[3px] bg-primary rounded-full"
+                      animate={{ height: [6, 18, 6] }}
+                      transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1, ease: "easeInOut" }}
+                    />
+                  ))}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </motion.button>
+
+          {/* Auto-play hint */}
+          <AnimatePresence>
+            {isPlaying && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mt-2"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                {t("landing.heroAutoPlay")}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* Subtitle */}
-        <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-8">
-          {t("landing.startSubtitle")}
+        <motion.p variants={fadeUp} custom={3} className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-8">
+          {t("landing.heroSubtitleNew")}
         </motion.p>
 
         {/* CTA */}
-        <motion.div variants={fadeUp} custom={3}>
+        <motion.div variants={fadeUp} custom={4}>
           <button
             onClick={() => navigate("/login")}
             className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2 shadow-soft active:scale-[0.97] transition-transform"
           >
-            {t("landing.startCTA")}
+            {t("landing.heroCTA")}
             <ArrowRight className="w-4.5 h-4.5" />
           </button>
         </motion.div>
