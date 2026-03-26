@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2, ShieldCheck } from "lucide-react";
-import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
+import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2 } from "lucide-react";
+import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
-import VoiceConsentManager from "@/components/voice/VoiceConsentManager";
-import PremiumBadge from "@/components/PremiumBadge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -29,19 +26,9 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [voiceProfile, setVoiceProfile] = useState<{ voice_name: string; elevenlabs_voice_id: string } | null>(null);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
-  const loadVoiceProfile = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("voice_profiles" as any)
-      .select("voice_name, elevenlabs_voice_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    setVoiceProfile(data as any);
-  };
 
   useEffect(() => {
     if (!user) return;
@@ -58,12 +45,12 @@ const ProfilePage = () => {
         setLastName((data as any).last_name || "");
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
-        if (data.language) setLocale(data.language as Locale);
+        
       }
       setLoaded(true);
     };
     load();
-    loadVoiceProfile();
+    
   }, [user]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,35 +107,6 @@ const ProfilePage = () => {
     navigate("/login");
   };
 
-  const handleDeleteVoice = async () => {
-    if (!user || !voiceProfile) return;
-    const confirmed = window.confirm(t("profile.deleteVoiceConfirm"));
-    if (!confirmed) return;
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-          body: JSON.stringify({
-            elevenlabs_voice_id: voiceProfile.elevenlabs_voice_id,
-            type: "own",
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Delete failed");
-
-      setVoiceProfile(null);
-      toast.success(t("profile.voiceDeleted"));
-    } catch {
-      toast.error("Fehler beim Löschen der Stimme");
-    }
-  };
 
   const initials = [firstName, lastName]
     .filter(Boolean)
@@ -157,7 +115,7 @@ const ProfilePage = () => {
     .slice(0, 2)
     .toUpperCase() || "?";
 
-  const languages = Object.entries(localeNames) as [Locale, string][];
+  
 
   if (!loaded) {
     return (
@@ -307,75 +265,6 @@ const ProfilePage = () => {
           </div>
         </section>
 
-        {/* Language */}
-        <section className="animate-reveal-up" style={{ animationDelay: "120ms" }}>
-          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-            {t("settings.language")}
-          </label>
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            {languages.map(([code, name]) => (
-              <button
-                key={code}
-                onClick={() => setLocale(code)}
-                className={cn(
-                  "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
-                  "hover:bg-secondary/50 active:scale-[0.99]",
-                  "border-b border-border last:border-b-0",
-                  locale === code && "bg-primary/5"
-                )}
-              >
-                <span className="text-[0.938rem]">{name}</span>
-                {locale === code && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                )}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Voice Cloning */}
-        <section className="animate-reveal-up" style={{ animationDelay: "180ms" }}>
-          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
-            {t("profile.voice")}
-            {!isPremium && <PremiumBadge />}
-          </label>
-          <VoiceCloneUpload existingVoice={voiceProfile} onCloned={loadVoiceProfile} />
-          {voiceProfile && (
-            <button
-              onClick={handleDeleteVoice}
-              className="w-full mt-3 flex items-center justify-center gap-2 h-11 rounded-xl bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors active:scale-[0.97]"
-            >
-              <Trash2 className="w-4 h-4" />
-              {t("profile.deleteVoice")}
-            </button>
-          )}
-          <div className="mt-3 p-4 rounded-2xl bg-accent/5 border border-accent/10 space-y-2">
-            <div className="flex items-start gap-2.5">
-              <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">{t("profile.voiceProtected")}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                  {t("profile.voiceProtectedDesc")}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate("/privacy")}
-              className="text-xs text-primary font-medium hover:underline ml-7"
-            >
-              {t("profile.morePrivacy")}
-            </button>
-          </div>
-        </section>
-
-        {/* Voice Consent */}
-        <section className="animate-reveal-up" style={{ animationDelay: "240ms" }}>
-          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
-            {t("profile.voiceConsents")}
-            {!isPremium && <PremiumBadge />}
-          </label>
-          <VoiceConsentManager />
-        </section>
 
         {/* Sign Out */}
         <section className="animate-reveal-up space-y-3" style={{ animationDelay: "300ms" }}>
