@@ -10,6 +10,7 @@ import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } f
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import PremiumBadge from "@/components/PremiumBadge";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -58,6 +59,26 @@ const CollapsibleSection = ({
 const PushDebugSection = () => {
   const { debug, subscribe, sendTestPush } = usePushSubscription();
   const [testLoading, setTestLoading] = useState(false);
+  const { user } = useAuth();
+  const [previewEnabled, setPreviewEnabled] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Load push_preview_enabled from profile
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("push_preview_enabled").eq("id", user.id).single().then(({ data }) => {
+      if (data) setPreviewEnabled(!!data.push_preview_enabled);
+    });
+  }, [user]);
+
+  const togglePreview = async () => {
+    if (!user) return;
+    setPreviewLoading(true);
+    const next = !previewEnabled;
+    const { error } = await supabase.from("profiles").update({ push_preview_enabled: next } as any).eq("id", user.id);
+    if (!error) setPreviewEnabled(next);
+    setPreviewLoading(false);
+  };
 
   const StatusIcon = ({ ok }: { ok: boolean | null }) => {
     if (ok === null) return <AlertTriangle className="w-4 h-4 text-muted-foreground" />;
@@ -143,6 +164,31 @@ const PushDebugSection = () => {
             Test-Push
           </button>
         </div>
+
+        {/* Preview toggle */}
+        <button
+          onClick={togglePreview}
+          disabled={previewLoading}
+          className="w-full flex items-center justify-between px-3 py-3 rounded-xl bg-secondary/50 text-left transition-colors hover:bg-secondary/70"
+          role="switch"
+          aria-checked={previewEnabled}
+        >
+          <div>
+            <span className="text-sm font-medium block">Nachrichtenvorschau</span>
+            <span className="text-xs text-muted-foreground">
+              {previewEnabled ? "Vorschau der ersten 30 Zeichen" : 'Nur "Neue Nachricht" anzeigen'}
+            </span>
+          </div>
+          <div className={cn(
+            "w-11 h-6 rounded-full relative transition-colors duration-200",
+            previewEnabled ? "bg-primary" : "bg-border"
+          )}>
+            <div className={cn(
+              "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+              previewEnabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
+            )} />
+          </div>
+        </button>
 
         {!debug.isStandalone && (
           <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">

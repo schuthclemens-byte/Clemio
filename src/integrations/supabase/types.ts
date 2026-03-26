@@ -286,6 +286,7 @@ export type Database = {
           language: string | null
           last_name: string | null
           phone_number: string
+          push_preview_enabled: boolean
           updated_at: string | null
           voice_enabled: boolean | null
         }
@@ -298,6 +299,7 @@ export type Database = {
           language?: string | null
           last_name?: string | null
           phone_number: string
+          push_preview_enabled?: boolean
           updated_at?: string | null
           voice_enabled?: boolean | null
         }
@@ -310,6 +312,7 @@ export type Database = {
           language?: string | null
           last_name?: string | null
           phone_number?: string
+          push_preview_enabled?: boolean
           updated_at?: string | null
           voice_enabled?: boolean | null
         }
