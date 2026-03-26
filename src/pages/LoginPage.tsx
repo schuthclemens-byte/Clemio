@@ -398,6 +398,7 @@ const LoginPage = () => {
               setForgotSent(false);
               setPassword("");
               setDisplayName("");
+              setAgeConfirmed(false);
               setLocalNumber(nextMode === "login" ? getInitialLocalNumber() : "");
               setCountry(nextMode === "login" ? getInitialCountry() : countries[0]);
             }}
