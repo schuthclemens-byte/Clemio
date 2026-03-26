@@ -24,6 +24,7 @@ const HeroSection = () => {
   const ensureAudio = useCallback(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio(demoVoice);
+      audioRef.current.volume = 0.18;
       audioRef.current.onended = () => setIsPlaying(false);
       audioRef.current.onerror = () => setIsPlaying(false);
     }
@@ -35,6 +36,7 @@ const HeroSection = () => {
     if (hasAutoPlayed) return;
     const timer = setTimeout(() => {
       const audio = ensureAudio();
+      audio.volume = 0.18;
       audio.play().then(() => {
         setIsPlaying(true);
         setHasAutoPlayed(true);

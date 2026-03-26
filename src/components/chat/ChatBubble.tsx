@@ -229,10 +229,10 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       "flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors active:scale-95",
                       "bg-primary/10 text-primary hover:bg-primary/20"
                     )}
-                    aria-label="Als Stimmprobe speichern"
+                    aria-label="Eigene Stimme erstellen"
                   >
                     {isPremium ? <Mic2 className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                    Stimmprobe speichern
+                    Eigene Stimme erstellen
                   </button>
                 </>
               )}
@@ -328,8 +328,8 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                     <button
                       onClick={(e) => { e.stopPropagation(); setShowVoiceSaveConfirm(true); }}
                       className="p-1.5 rounded-full bg-primary/10 text-primary transition-colors active:scale-90"
-                      aria-label="Als Stimmprobe speichern"
-                      title="Als Stimmprobe speichern"
+                      aria-label="Eigene Stimme erstellen"
+                      title="Eigene Stimme erstellen"
                     >
                       {isPremium ? <Mic2 className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     </button>

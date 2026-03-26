@@ -96,7 +96,9 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const swipeBack = useSwipeBack({ fallbackPath: "/chats" });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialScrollDoneRef = useRef(false);
   const { locale, t } = useI18n();
   const { autoRead, headphoneAutoPlay, focusMode, isQuietTime, showOnlineStatus, showTypingIndicator } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
@@ -141,6 +143,59 @@ const ChatPage = () => {
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [showEditName, setShowEditName] = useState(false);
   const [contactAlias, setContactAlias] = useState<{ firstName: string; lastName: string } | null>(null);
+
+  const mapDbMessage = useCallback((m: any): Message => ({
+    id: m.id,
+    text: m.content,
+    timestamp: formatMessageTimestamp(new Date(m.created_at)),
+    isMine: m.sender_id === user?.id,
+    isRead: m.is_read ?? false,
+    senderId: m.sender_id,
+    messageType: m.message_type || "text",
+    mediaUrl:
+      m.message_type === "image" || m.message_type === "video"
+        ? m.content.startsWith("http")
+          ? m.content
+          : undefined
+        : undefined,
+    replyTo: m.reply_to || undefined,
+  }), [user?.id]);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    requestAnimationFrame(() => {
+      bottomAnchorRef.current?.scrollIntoView({ behavior, block: "end" });
+    });
+  }, []);
+
+  const refreshConversationMessages = useCallback(async () => {
+    if (!conversationId || !user) return;
+
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+
+    if (data) {
+      setMessages(data.map(mapDbMessage));
+    }
+  }, [conversationId, user, mapDbMessage]);
+
+  const markConversationRead = useCallback(async (messageId?: string) => {
+    if (!conversationId || !user) return;
+
+    if (messageId) {
+      await supabase.from("messages").update({ is_read: true }).eq("id", messageId);
+      return;
+    }
+
+    await supabase
+      .from("messages")
+      .update({ is_read: true })
+      .eq("conversation_id", conversationId)
+      .neq("sender_id", user.id)
+      .eq("is_read", false);
+  }, [conversationId, user]);
 
   // Offline queue: swap temp IDs when messages are sent
   const handleOfflineSent = useCallback((tempId: string, realId: string) => {
@@ -317,21 +372,7 @@ const ChatPage = () => {
       // Process messages immediately so UI renders fast
       const msgs = msgsRes.data;
       if (msgs) {
-        setMessages(
-          msgs.map((m) => ({
-            id: m.id,
-            text: m.content,
-            timestamp: formatMessageTimestamp(new Date(m.created_at)),
-            isMine: m.sender_id === user.id,
-            isRead: m.is_read ?? false,
-            senderId: m.sender_id,
-            messageType: m.message_type || "text",
-            mediaUrl: m.message_type === "image" || m.message_type === "video"
-              ? m.content.startsWith("http") ? m.content : undefined
-              : undefined,
-            replyTo: (m as any).reply_to || undefined,
-          }))
-        );
+        setMessages(msgs.map(mapDbMessage));
       }
       setLoading(false);
 
@@ -380,14 +421,8 @@ const ChatPage = () => {
         }
       }
 
-      // Mark messages as read (fire & forget)
-      supabase
-        .from("messages")
-        .update({ is_read: true })
-        .eq("conversation_id", conversationId)
-        .neq("sender_id", user.id)
-        .eq("is_read", false)
-        .then(() => {});
+      markConversationRead().then(() => {});
+      scrollToBottom("auto");
 
       // Check voice profiles in background
       const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
@@ -444,33 +479,41 @@ const ChatPage = () => {
         },
         (payload) => {
           const m = payload.new as any;
-          const newMsg: Message = {
-            id: m.id,
-            text: m.content,
-            timestamp: formatMessageTimestamp(new Date(m.created_at)),
-            isMine: m.sender_id === user.id,
-            isRead: m.is_read ?? false,
-            senderId: m.sender_id,
-            messageType: m.message_type || "text",
-            mediaUrl: m.message_type === "image" || m.message_type === "video"
-              ? m.content.startsWith("http") ? m.content : undefined
-              : undefined,
-          };
+          const newMsg = mapDbMessage(m);
 
           setMessages((prev) => {
-            if (prev.some((p) => p.id === newMsg.id)) return prev;
-            // Skip own messages from realtime – they're already shown via optimistic update
-            if (newMsg.isMine) return prev;
+            const existingIndex = prev.findIndex((msg) => msg.id === newMsg.id);
+            if (existingIndex !== -1) return prev;
+
+            if (newMsg.isMine) {
+              let optimisticIndex = -1;
+              for (let i = prev.length - 1; i >= 0; i -= 1) {
+                const candidate = prev[i];
+                if (
+                  candidate.isMine &&
+                  candidate.senderId === newMsg.senderId &&
+                  candidate.text === newMsg.text &&
+                  candidate.messageType === newMsg.messageType &&
+                  (candidate.replyTo ?? null) === (newMsg.replyTo ?? null)
+                ) {
+                  optimisticIndex = i;
+                  break;
+                }
+              }
+
+              if (optimisticIndex !== -1) {
+                const next = [...prev];
+                next[optimisticIndex] = { ...next[optimisticIndex], ...newMsg };
+                return next;
+              }
+            }
+
             return [...prev, newMsg];
           });
 
-          // Play notification sound & mark as read if from other user
           if (m.sender_id !== user.id) {
             playMessageTone();
-            supabase
-              .from("messages")
-              .update({ is_read: true })
-              .eq("id", m.id);
+            markConversationRead(m.id).then(() => {});
           }
         }
       )
@@ -491,12 +534,31 @@ const ChatPage = () => {
           );
         }
       )
-      .subscribe();
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const deleted = payload.old as any;
+          setMessages((prev) => prev.filter((msg) => msg.id !== deleted.id));
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          refreshConversationMessages().then(() => {
+            markConversationRead().then(() => {});
+          });
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, user]);
+  }, [conversationId, user, mapDbMessage, refreshConversationMessages, markConversationRead]);
 
   // Presence is handled globally in usePresence hook (App-level)
 
@@ -530,8 +592,47 @@ const ChatPage = () => {
   }, [otherUserId, showOnlineStatus]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+    initialScrollDoneRef.current = false;
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (loading) return;
+    scrollToBottom(initialScrollDoneRef.current ? "smooth" : "auto");
+    if (!initialScrollDoneRef.current) {
+      initialScrollDoneRef.current = true;
+    }
+  }, [messages.length, loading, scrollToBottom]);
+
+  useEffect(() => {
+    if (!conversationId || !user) return;
+
+    const resync = () => {
+      refreshConversationMessages().then(() => {
+        markConversationRead().then(() => {});
+      });
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        resync();
+      }
+    };
+
+    window.addEventListener("online", resync);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible" && navigator.onLine) {
+        resync();
+      }
+    }, 12000);
+
+    return () => {
+      window.removeEventListener("online", resync);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.clearInterval(interval);
+    };
+  }, [conversationId, user, refreshConversationMessages, markConversationRead]);
 
   // Load focus contacts
   useEffect(() => {
@@ -858,7 +959,7 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background" {...swipeBack}>
+    <div className="flex flex-col h-[100dvh] overflow-hidden bg-background" {...swipeBack}>
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-3 py-3">
@@ -990,7 +1091,7 @@ const ChatPage = () => {
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 py-4 bg-cover bg-center bg-no-repeat relative"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 pb-3 bg-cover bg-center bg-no-repeat relative"
         role="log"
         aria-label={t("chat.chats")}
         aria-live="polite"
@@ -1054,6 +1155,7 @@ const ChatPage = () => {
             );
           })
         )}
+        <div ref={bottomAnchorRef} className="h-px w-full" />
       </div>
 
       {/* Voice not supported notice */}
@@ -1087,16 +1189,18 @@ const ChatPage = () => {
       )}
 
       {/* Input */}
-      <ChatInput
-        onSend={handleSend}
-        onSendMedia={handleSendMedia}
-        onSendVoice={handleSendVoiceMessage}
-        isListening={isListening}
-        onVoiceToggle={toggle}
-        transcript={transcript}
-        onTyping={showTypingIndicator ? sendTyping : undefined}
-        onStopTyping={showTypingIndicator ? clearTyping : undefined}
-      />
+      <div className="sticky bottom-0 z-20 shrink-0 pb-[env(safe-area-inset-bottom)]">
+        <ChatInput
+          onSend={handleSend}
+          onSendMedia={handleSendMedia}
+          onSendVoice={handleSendVoiceMessage}
+          isListening={isListening}
+          onVoiceToggle={toggle}
+          transcript={transcript}
+          onTyping={showTypingIndicator ? sendTyping : undefined}
+          onStopTyping={showTypingIndicator ? clearTyping : undefined}
+        />
+      </div>
 
       {/* Background picker */}
       {conversationId && (

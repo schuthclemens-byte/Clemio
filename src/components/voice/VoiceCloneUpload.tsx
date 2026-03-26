@@ -243,7 +243,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         onClick={() => setPhase("consent")}
         className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
       >
-        Jetzt aufnehmen
+        Eigene Stimme erstellen
       </button>
       <p className="text-[0.688rem] text-muted-foreground">
         🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.

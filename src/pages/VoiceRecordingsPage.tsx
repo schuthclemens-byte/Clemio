@@ -218,7 +218,7 @@ const VoiceRecordingsPage = () => {
                     Noch keine Kontakt-Stimmen gespeichert.
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Tippe im Chat auf „Als Stimmprobe speichern" bei einer Sprachnachricht.
+                    Tippe im Chat auf „Eigene Stimme erstellen" bei einer Sprachnachricht.
                   </p>
                 </div>
               ) : (
