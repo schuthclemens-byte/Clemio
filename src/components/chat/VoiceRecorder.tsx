@@ -70,6 +70,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
 
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        releaseWakeLock();
         if (timerRef.current) clearInterval(timerRef.current);
 
         const actualMimeType = recorder.mimeType || chunksRef.current[0]?.type || mimeType || "audio/webm";
