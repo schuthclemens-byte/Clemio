@@ -233,9 +233,9 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
                 isListening && "border-2 border-accent/40 bg-accent/5"
               )}
               readOnly={isListening}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
+              autoComplete="on"
+              autoCorrect="on"
+              spellCheck={true}
               aria-label={t("chat.placeholder")}
             />
           </div>
