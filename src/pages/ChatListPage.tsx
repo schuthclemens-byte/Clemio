@@ -72,6 +72,7 @@ const ChatListPage = () => {
     if (!memberships || memberships.length === 0) {
       setConversations([]);
       setLoading(false);
+      fetchingRef.current = false;
       return;
     }
 
