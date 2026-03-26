@@ -1189,16 +1189,18 @@ const ChatPage = () => {
       )}
 
       {/* Input */}
-      <ChatInput
-        onSend={handleSend}
-        onSendMedia={handleSendMedia}
-        onSendVoice={handleSendVoiceMessage}
-        isListening={isListening}
-        onVoiceToggle={toggle}
-        transcript={transcript}
-        onTyping={showTypingIndicator ? sendTyping : undefined}
-        onStopTyping={showTypingIndicator ? clearTyping : undefined}
-      />
+      <div className="sticky bottom-0 z-20 shrink-0 pb-[env(safe-area-inset-bottom)]">
+        <ChatInput
+          onSend={handleSend}
+          onSendMedia={handleSendMedia}
+          onSendVoice={handleSendVoiceMessage}
+          isListening={isListening}
+          onVoiceToggle={toggle}
+          transcript={transcript}
+          onTyping={showTypingIndicator ? sendTyping : undefined}
+          onStopTyping={showTypingIndicator ? clearTyping : undefined}
+        />
+      </div>
 
       {/* Background picker */}
       {conversationId && (
