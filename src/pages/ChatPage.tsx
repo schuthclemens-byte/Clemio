@@ -349,11 +349,16 @@ const ChatPage = () => {
       await Promise.all(senderIds.map(async (sid) => {
         const { data: contactVp } = await supabase
           .from("contact_voice_profiles" as any)
-          .select("id")
+          .select("id, elevenlabs_voice_id")
           .eq("user_id", user.id)
           .eq("contact_user_id", sid)
           .maybeSingle();
-        if (contactVp) { profiles[sid] = true; return; }
+        if (contactVp) {
+          profiles[sid] = true;
+          setContactVoiceProfileId(contactVp.id);
+          setContactElevenLabsId(contactVp.elevenlabs_voice_id);
+          return;
+        }
         const { data: vp } = await supabase
           .from("voice_profiles" as any)
           .select("id")
