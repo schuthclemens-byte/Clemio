@@ -21,6 +21,8 @@ const ProfilePage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -45,12 +47,14 @@ const ProfilePage = () => {
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, phone_number, avatar_url, language")
+        .select("display_name, phone_number, avatar_url, language, first_name, last_name")
         .eq("id", user.id)
         .maybeSingle();
 
       if (data) {
         setDisplayName(data.display_name || "");
+        setFirstName((data as any).first_name || "");
+        setLastName((data as any).last_name || "");
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
         if (data.language) setLocale(data.language as Locale);
@@ -95,7 +99,9 @@ const ProfilePage = () => {
     const { error } = await supabase
       .from("profiles")
       .update({
-        display_name: displayName.trim() || "Nutzer",
+        display_name: [firstName.trim(), lastName.trim()].filter(Boolean).join(" ") || "Nutzer",
+        first_name: firstName.trim() || null,
+        last_name: lastName.trim() || null,
         language: locale,
       })
       .eq("id", user.id);
@@ -143,8 +149,8 @@ const ProfilePage = () => {
     }
   };
 
-  const initials = displayName
-    .split(" ")
+  const initials = [firstName, lastName]
+    .filter(Boolean)
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -274,15 +280,30 @@ const ProfilePage = () => {
         {/* Name */}
         <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
           <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-            {t("settings.displayName") || "Anzeigename"}
+            {t("settings.displayName") || "Name"}
           </label>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder={t("profile.namePlaceholder")}
-            className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-          />
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block ml-1">Vorname</label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Vorname eingeben…"
+                className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block ml-1">Nachname</label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Nachname eingeben… (optional)"
+                className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
         </section>
 
         {/* Language */}
