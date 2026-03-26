@@ -35,8 +35,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let sessionResolved = false;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      applySession(session);
+    // Try to restore session – if the stored refresh token is still valid
+    // Supabase will auto-refresh the access token.
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
+        // Fallback: try to recover from a potentially stale session
+        // by explicitly refreshing the token
+        const { data: refreshData } = await supabase.auth.refreshSession();
+        if (refreshData?.session) {
+          applySession(refreshData.session);
+        } else {
+          applySession(null);
+        }
+      } else {
+        applySession(session);
+      }
       sessionResolved = true;
       setLoading(false);
     });
