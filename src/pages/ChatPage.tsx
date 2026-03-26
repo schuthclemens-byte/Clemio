@@ -144,6 +144,59 @@ const ChatPage = () => {
   const [showEditName, setShowEditName] = useState(false);
   const [contactAlias, setContactAlias] = useState<{ firstName: string; lastName: string } | null>(null);
 
+  const mapDbMessage = useCallback((m: any): Message => ({
+    id: m.id,
+    text: m.content,
+    timestamp: formatMessageTimestamp(new Date(m.created_at)),
+    isMine: m.sender_id === user?.id,
+    isRead: m.is_read ?? false,
+    senderId: m.sender_id,
+    messageType: m.message_type || "text",
+    mediaUrl:
+      m.message_type === "image" || m.message_type === "video"
+        ? m.content.startsWith("http")
+          ? m.content
+          : undefined
+        : undefined,
+    replyTo: m.reply_to || undefined,
+  }), [user?.id]);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    requestAnimationFrame(() => {
+      bottomAnchorRef.current?.scrollIntoView({ behavior, block: "end" });
+    });
+  }, []);
+
+  const refreshConversationMessages = useCallback(async () => {
+    if (!conversationId || !user) return;
+
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+
+    if (data) {
+      setMessages(data.map(mapDbMessage));
+    }
+  }, [conversationId, user, mapDbMessage]);
+
+  const markConversationRead = useCallback(async (messageId?: string) => {
+    if (!conversationId || !user) return;
+
+    if (messageId) {
+      await supabase.from("messages").update({ is_read: true }).eq("id", messageId);
+      return;
+    }
+
+    await supabase
+      .from("messages")
+      .update({ is_read: true })
+      .eq("conversation_id", conversationId)
+      .neq("sender_id", user.id)
+      .eq("is_read", false);
+  }, [conversationId, user]);
+
   // Offline queue: swap temp IDs when messages are sent
   const handleOfflineSent = useCallback((tempId: string, realId: string) => {
     setMessages((prev) => {
