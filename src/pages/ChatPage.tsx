@@ -548,10 +548,13 @@ const ChatPage = () => {
         }
       )
       .subscribe((status) => {
-        if (status === "SUBSCRIBED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        if (status === "SUBSCRIBED") {
+          // Initial sync when channel is ready
           refreshConversationMessages().then(() => {
             markConversationRead().then(() => {});
           });
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn("Realtime channel issue:", status, "– will retry on reconnect");
         }
       });
 
