@@ -291,10 +291,25 @@ const LoginPage = () => {
               </button>
             </div>
 
+            {/* Age verification for signup */}
+            {mode === "signup" && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-card border border-border animate-reveal-up">
+                <Checkbox
+                  id="age-confirm"
+                  checked={ageConfirmed}
+                  onCheckedChange={(v) => setAgeConfirmed(v === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="age-confirm" className="text-sm text-foreground leading-snug cursor-pointer">
+                  <span className="text-muted-foreground text-xs block mb-0.5">{t("landing.ageText")}</span>
+                  {t("landing.ageCheckbox")}
+                </label>
+              </div>
+            )}
 
             <button
               type="submit"
-              disabled={localNumber.replace(/\D/g, "").length < 4 || password.length < 6 || loading}
+              disabled={localNumber.replace(/\D/g, "").length < 4 || password.length < 6 || loading || (mode === "signup" && !ageConfirmed)}
               className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2.5 shadow-soft hover:shadow-elevated transition-all duration-300 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none mt-1"
             >
               {loading ? (
