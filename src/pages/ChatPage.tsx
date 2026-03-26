@@ -58,7 +58,7 @@ const formatMessageTimestamp = (date: Date): string => {
   return `${date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}, ${time}`;
 };
 
-const PRESENCE_FRESHNESS_MS = 45_000;
+const PRESENCE_FRESHNESS_MS = 3_000;
 
 const getPresenceState = (presence?: { is_online?: boolean; last_seen?: string | null } | null) => {
   if (!presence?.last_seen) {

@@ -33,7 +33,7 @@ export const usePresence = () => {
     // Heartbeat – re-affirm "online" every 30s while visible
     heartbeatRef.current = setInterval(() => {
       if (isVisible()) setPresence(true);
-    }, 30_000);
+    }, 2_000);
 
     const handleVisibilityChange = () => {
       setPresence(isVisible());
