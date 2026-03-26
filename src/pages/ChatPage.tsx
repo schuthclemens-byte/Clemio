@@ -372,21 +372,7 @@ const ChatPage = () => {
       // Process messages immediately so UI renders fast
       const msgs = msgsRes.data;
       if (msgs) {
-        setMessages(
-          msgs.map((m) => ({
-            id: m.id,
-            text: m.content,
-            timestamp: formatMessageTimestamp(new Date(m.created_at)),
-            isMine: m.sender_id === user.id,
-            isRead: m.is_read ?? false,
-            senderId: m.sender_id,
-            messageType: m.message_type || "text",
-            mediaUrl: m.message_type === "image" || m.message_type === "video"
-              ? m.content.startsWith("http") ? m.content : undefined
-              : undefined,
-            replyTo: (m as any).reply_to || undefined,
-          }))
-        );
+        setMessages(msgs.map(mapDbMessage));
       }
       setLoading(false);
 
@@ -435,14 +421,8 @@ const ChatPage = () => {
         }
       }
 
-      // Mark messages as read (fire & forget)
-      supabase
-        .from("messages")
-        .update({ is_read: true })
-        .eq("conversation_id", conversationId)
-        .neq("sender_id", user.id)
-        .eq("is_read", false)
-        .then(() => {});
+      markConversationRead().then(() => {});
+      scrollToBottom("auto");
 
       // Check voice profiles in background
       const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
