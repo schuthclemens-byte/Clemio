@@ -1,4 +1,53 @@
-// Custom Service Worker additions – Background Sync for offline message queue
+// Custom Service Worker additions – Background Sync + Web Push
+
+// ---- Push Notification Handler ----
+self.addEventListener("push", (event) => {
+  let data = { title: "Clevara", body: "Neue Nachricht", data: {} };
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (e) {
+    // fallback to text
+    if (event.data) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    tag: data.data?.conversation_id || "clevara-push",
+    data: data.data || {},
+    vibrate: [200, 100, 200],
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+// Handle notification click
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const conversationId = event.notification.data?.conversation_id;
+  const url = conversationId ? `/chat/${conversationId}` : "/chats";
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      // Focus existing window if available
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin)) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      // Otherwise open new window
+      return self.clients.openWindow(url);
+    })
+  );
+});
+
+// ---- Background Sync for offline message queue ----
 
 const SUPABASE_URL = self.__SUPABASE_URL; // injected at registration time via query param
 const SUPABASE_KEY = self.__SUPABASE_KEY;
