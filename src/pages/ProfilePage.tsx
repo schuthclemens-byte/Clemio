@@ -51,7 +51,7 @@ const ProfilePage = () => {
       setLoaded(true);
     };
     load();
-    loadVoiceProfile();
+    
   }, [user]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
