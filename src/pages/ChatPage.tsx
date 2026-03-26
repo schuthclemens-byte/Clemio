@@ -527,6 +527,7 @@ const ChatPage = () => {
         (payload) => {
           const p = payload.new as any;
           const presenceState = getPresenceState(p);
+          setLastPresenceAt(p?.last_seen || null);
           setIsOnline(showOnlineStatus ? presenceState.isOnline : false);
           setLastSeen(showOnlineStatus ? presenceState.lastSeen : null);
         }
