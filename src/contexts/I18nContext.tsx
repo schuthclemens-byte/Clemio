@@ -57,7 +57,20 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const [strings, setStrings] = useState<Record<string, string>>(de);
+  const [ready, setReady] = useState(locale === "de");
   const loadedRef = useRef<Locale>("de");
+
+  // Load initial locale before first render
+  useEffect(() => {
+    if (locale !== "de") {
+      loaders[locale]().then((mod) => {
+        setStrings(mod.default);
+        loadedRef.current = locale;
+        setReady(true);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (locale === loadedRef.current) return;
@@ -67,16 +80,9 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [locale]);
 
-  // Load initial locale if not de
   useEffect(() => {
-    if (locale !== "de") {
-      loaders[locale]().then((mod) => {
-        setStrings(mod.default);
-        loadedRef.current = locale;
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+  }, [locale]);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
@@ -88,6 +94,8 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     (key: string) => strings[key] || de[key] || key,
     [strings]
   );
+
+  if (!ready) return null;
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>
