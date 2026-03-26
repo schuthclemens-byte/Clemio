@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ShieldCheck, X } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -10,12 +11,23 @@ interface VoiceConsentPopupProps {
 const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps) => {
   const { t } = useI18n();
 
+  // Prevent body scrolling when popup is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [open]);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ touchAction: "none" }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-md mx-4 mb-0 sm:mb-0 bg-card rounded-t-3xl sm:rounded-3xl shadow-elevated animate-reveal-up flex flex-col" style={{ maxHeight: "90dvh" } as React.CSSProperties}>
+      <div
+        className="relative w-full max-w-md bg-card rounded-3xl shadow-elevated animate-reveal-up flex flex-col"
+        style={{ maxHeight: "85vh" }}
+      >
         {/* Close */}
         <button
           onClick={onCancel}
@@ -25,7 +37,10 @@ const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps)
         </button>
 
         {/* Scrollable content */}
-        <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" } as React.CSSProperties}>
+        <div
+          className="flex-1 min-h-0 overflow-y-auto rounded-t-3xl"
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className="pt-10 pb-4 px-6 text-center">
             <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
@@ -53,7 +68,7 @@ const VoiceConsentPopup = ({ open, onAccept, onCancel }: VoiceConsentPopupProps)
         </div>
 
         {/* Buttons – always visible at bottom */}
-        <div className="px-6 pb-6 pt-2 space-y-3 shrink-0 border-t border-border/30">
+        <div className="px-6 pb-6 pt-3 space-y-3 shrink-0 border-t border-border/30 rounded-b-3xl">
           <button
             onClick={onAccept}
             className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
