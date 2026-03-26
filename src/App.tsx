@@ -46,8 +46,8 @@ const App = () => (
             <OfflineBanner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/landing" element={<LandingPage />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/home" element={<Index />} />
                 <Route path="/onboarding" element={<OnboardingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
