@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, Bell, CheckCircle, XCircle, AlertTriangle, Send } from "lucide-react";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
