@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { scheduleOfflineSync, listenForSWFlushRequest } from "@/lib/offlineSync";
 
 interface QueuedMessage {
   tempId: string;
@@ -32,6 +33,8 @@ export const useOfflineQueue = (onSent?: (tempId: string, realId: string) => voi
     const queue = getQueue();
     queue.push(msg);
     setQueue(queue);
+    // Mirror to IndexedDB + register Background Sync for when app is closed
+    scheduleOfflineSync();
   }, []);
 
   const flush = useCallback(async () => {
@@ -83,10 +86,16 @@ export const useOfflineQueue = (onSent?: (tempId: string, realId: string) => voi
     const handleOnline = () => flush();
     window.addEventListener("online", handleOnline);
 
+    // Listen for SW requesting a flush (when app is open but SW triggered sync)
+    const unsubSW = listenForSWFlushRequest(flush);
+
     // Also try flushing on mount if online
     if (navigator.onLine) flush();
 
-    return () => window.removeEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      unsubSW();
+    };
   }, [flush]);
 
   return { enqueue, flush, queueSize: getQueue().length };
