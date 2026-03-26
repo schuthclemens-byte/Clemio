@@ -86,10 +86,16 @@ export const useOfflineQueue = (onSent?: (tempId: string, realId: string) => voi
     const handleOnline = () => flush();
     window.addEventListener("online", handleOnline);
 
+    // Listen for SW requesting a flush (when app is open but SW triggered sync)
+    const unsubSW = listenForSWFlushRequest(flush);
+
     // Also try flushing on mount if online
     if (navigator.onLine) flush();
 
-    return () => window.removeEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      unsubSW();
+    };
   }, [flush]);
 
   return { enqueue, flush, queueSize: getQueue().length };
