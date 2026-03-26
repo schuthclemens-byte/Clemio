@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const swipeBackProps = useSwipeBack({ fallbackPath: "/chats" });
   const { locale, setLocale, t } = useI18n();
   const { user, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
