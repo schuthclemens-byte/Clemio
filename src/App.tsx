@@ -11,6 +11,7 @@ import { ColorThemeProvider } from "@/contexts/ColorThemeContext";
 import { ChatBackgroundProvider } from "@/contexts/ChatBackgroundContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { usePresence } from "@/hooks/usePresence";
+import IncomingCallOverlay from "@/components/IncomingCallOverlay";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
