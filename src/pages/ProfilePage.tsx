@@ -26,7 +26,7 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [voiceProfile, setVoiceProfile] = useState<{ voice_name: string; elevenlabs_voice_id: string } | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
