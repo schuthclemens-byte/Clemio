@@ -155,6 +155,7 @@ const PushDebugSection = () => {
   );
 };
 
+const SettingsPage = () => {
 
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
