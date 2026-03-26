@@ -58,16 +58,21 @@ const formatMessageTimestamp = (date: Date): string => {
   return `${date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}, ${time}`;
 };
 
-const getPresenceState = (lastSeenStr?: string | null, realtimeOnline?: boolean) => {
-  if (realtimeOnline) {
-    return { isOnline: true, lastSeen: null as string | null };
-  }
+const PRESENCE_FRESHNESS_MS = 90_000; // 90s grace for 60s DB heartbeat
 
+const getPresenceState = (lastSeenStr?: string | null, dbIsOnline?: boolean) => {
   if (!lastSeenStr) {
     return { isOnline: false, lastSeen: null as string | null };
   }
 
   const seenDate = new Date(lastSeenStr);
+  const ageSec = (Date.now() - seenDate.getTime()) / 1000;
+
+  // Online if DB says online AND last_seen is fresh enough
+  if (dbIsOnline && ageSec <= PRESENCE_FRESHNESS_MS / 1000) {
+    return { isOnline: true, lastSeen: null as string | null };
+  }
+
   const now = new Date();
   const isToday = seenDate.toDateString() === now.toDateString();
   const yesterday = new Date(now);
