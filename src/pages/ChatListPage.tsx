@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Search, Plus, MessageSquare, X } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
@@ -39,6 +39,8 @@ const ChatListPage = () => {
   const [showNewChat, setShowNewChat] = useState(false);
   const [messageResults, setMessageResults] = useState<MessageSearchResult[]>([]);
   const [searchingMessages, setSearchingMessages] = useState(false);
+  const fetchingRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
 
   const cacheKey = user ? `clevara_chats_${user.id}` : "";
 
@@ -59,6 +61,8 @@ const ChatListPage = () => {
 
   const fetchConversations = async () => {
     if (!user) return;
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
 
     const { data: memberships } = await supabase
       .from("conversation_members")
@@ -68,6 +72,7 @@ const ChatListPage = () => {
     if (!memberships || memberships.length === 0) {
       setConversations([]);
       setLoading(false);
+      fetchingRef.current = false;
       return;
     }
 
@@ -103,6 +108,7 @@ const ChatListPage = () => {
     if (!convos || convos.length === 0) {
       setConversations([]);
       setLoading(false);
+      fetchingRef.current = false;
       return;
     }
 
@@ -183,6 +189,7 @@ const ChatListPage = () => {
     setConversations(items);
     setLoading(false);
     try { localStorage.setItem(cacheKey, JSON.stringify(items)); } catch {}
+    fetchingRef.current = false;
   };
 
   // Search messages across all conversations
@@ -248,20 +255,28 @@ const ChatListPage = () => {
   }, [user, conversations]);
 
   useEffect(() => {
+    if (!user || lastUserIdRef.current === user.id) return;
+    lastUserIdRef.current = user.id;
     fetchConversations();
     requestPermission();
   }, [user]);
 
-  // Realtime: refresh on new messages
+  // Realtime: debounced refresh on new messages
   useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel("chat-list-updates")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
-        fetchConversations();
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          fetchingRef.current = false; // allow re-fetch
+          fetchConversations();
+        }, 500);
       })
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [user]);
