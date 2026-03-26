@@ -58,16 +58,21 @@ const formatMessageTimestamp = (date: Date): string => {
   return `${date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}, ${time}`;
 };
 
-const getPresenceState = (lastSeenStr?: string | null, realtimeOnline?: boolean) => {
-  if (realtimeOnline) {
-    return { isOnline: true, lastSeen: null as string | null };
-  }
+const PRESENCE_FRESHNESS_MS = 90_000; // 90s grace for 60s DB heartbeat
 
+const getPresenceState = (lastSeenStr?: string | null, dbIsOnline?: boolean) => {
   if (!lastSeenStr) {
     return { isOnline: false, lastSeen: null as string | null };
   }
 
   const seenDate = new Date(lastSeenStr);
+  const ageSec = (Date.now() - seenDate.getTime()) / 1000;
+
+  // Online if DB says online AND last_seen is fresh enough
+  if (dbIsOnline && ageSec <= PRESENCE_FRESHNESS_MS / 1000) {
+    return { isOnline: true, lastSeen: null as string | null };
+  }
+
   const now = new Date();
   const isToday = seenDate.toDateString() === now.toDateString();
   const yesterday = new Date(now);
@@ -504,65 +509,32 @@ const ChatPage = () => {
 
   // Presence is handled globally in usePresence hook (App-level)
 
-  // Watch other user's presence via Realtime Presence channel
+  // Watch other user's presence via DB changes (written by their usePresence hook)
   useEffect(() => {
     if (!otherUserId) return;
 
-    const channel = supabase.channel(`presence-watch-${otherUserId}`, {
-      config: { presence: { key: otherUserId } },
-    });
-
-    // Also listen for the global-presence channel where all users broadcast
-    const globalChannel = supabase.channel("global-presence");
-
-    const checkPresence = () => {
-      const state = globalChannel.presenceState();
-      const otherPresences = state[otherUserId];
-      if (otherPresences && otherPresences.length > 0) {
-        const latest = otherPresences[otherPresences.length - 1] as any;
-        if (latest.is_online) {
-          setIsOnline(showOnlineStatus);
-          setLastSeen(null);
-          return;
-        }
-      }
-      // Fallback: user not in realtime presence → show DB last_seen
-      supabase
-        .from("user_presence")
-        .select("last_seen")
-        .eq("user_id", otherUserId)
-        .maybeSingle()
-        .then(({ data }) => {
-          const presenceState = getPresenceState(data?.last_seen, false);
-          setIsOnline(false);
-          setLastSeen(showOnlineStatus ? presenceState.lastSeen : null);
-        });
-    };
-
-    globalChannel
-      .on("presence", { event: "sync" }, checkPresence)
-      .on("presence", { event: "join" }, ({ key }) => {
-        if (key === otherUserId) {
-          setIsOnline(showOnlineStatus);
-          setLastSeen(null);
-        }
-      })
-      .on("presence", { event: "leave" }, ({ key }) => {
-        if (key === otherUserId) {
-          const presenceState = getPresenceState(new Date().toISOString(), false);
-          setIsOnline(false);
+    const channel = supabase
+      .channel(`presence-watch-${otherUserId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_presence",
+          filter: `user_id=eq.${otherUserId}`,
+        },
+        (payload) => {
+          const p = payload.new as any;
+          if (!p) return;
+          const presenceState = getPresenceState(p.last_seen, p.is_online);
+          setIsOnline(showOnlineStatus ? presenceState.isOnline : false);
           setLastSeen(showOnlineStatus ? presenceState.lastSeen : null);
         }
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          // Initial check after subscription
-          setTimeout(checkPresence, 500);
-        }
-      });
+      )
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(globalChannel);
+      supabase.removeChannel(channel);
     };
   }, [otherUserId, showOnlineStatus]);
 
