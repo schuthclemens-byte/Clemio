@@ -55,7 +55,107 @@ const CollapsibleSection = ({
   );
 };
 
-const SettingsPage = () => {
+const PushDebugSection = () => {
+  const { debug, subscribe, sendTestPush } = usePushSubscription();
+  const [testLoading, setTestLoading] = useState(false);
+
+  const StatusIcon = ({ ok }: { ok: boolean | null }) => {
+    if (ok === null) return <AlertTriangle className="w-4 h-4 text-muted-foreground" />;
+    return ok ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-destructive" />;
+  };
+
+  const handleSubscribe = async () => {
+    await subscribe();
+  };
+
+  const handleTest = async () => {
+    setTestLoading(true);
+    await sendTestPush();
+    setTestLoading(false);
+  };
+
+  return (
+    <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" delay="85ms">
+      <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4 space-y-3">
+        {/* Status rows */}
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Service Worker</span>
+            <span className="flex items-center gap-1.5 font-medium">
+              <StatusIcon ok={debug.swRegistered} />
+              {debug.swRegistered ? "Registriert" : "Nicht registriert"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Berechtigung</span>
+            <span className="flex items-center gap-1.5 font-medium">
+              <StatusIcon ok={debug.notificationPermission === "granted"} />
+              {debug.notificationPermission}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Push-Subscription</span>
+            <span className="flex items-center gap-1.5 font-medium">
+              <StatusIcon ok={debug.pushSubscription} />
+              {debug.pushSubscription ? "Vorhanden" : "Fehlt"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Standalone (PWA)</span>
+            <span className="flex items-center gap-1.5 font-medium">
+              <StatusIcon ok={debug.isStandalone} />
+              {debug.isStandalone ? "Ja" : "Nein (Browser)"}
+            </span>
+          </div>
+          {debug.lastPushSuccess !== null && (
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Letzter Push</span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <StatusIcon ok={debug.lastPushSuccess} />
+                {debug.lastPushSuccess ? "Erfolgreich" : "Fehlgeschlagen"}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {debug.lastError && (
+          <div className="text-xs text-destructive bg-destructive/10 rounded-xl p-3 break-all">
+            {debug.lastError}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={handleSubscribe}
+            disabled={debug.loading}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+          >
+            {debug.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+            Aktivieren
+          </button>
+          <button
+            onClick={handleTest}
+            disabled={testLoading || !debug.pushSubscription}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+          >
+            {testLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            Test-Push
+          </button>
+        </div>
+
+        {!debug.isStandalone && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+            Push funktioniert auf iPhone nur als installierte Home-Screen-App (PWA).
+          </p>
+        )}
+      </div>
+    </CollapsibleSection>
+  );
+};
+
+
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
