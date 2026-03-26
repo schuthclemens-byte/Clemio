@@ -490,40 +490,7 @@ const ChatPage = () => {
     };
   }, [conversationId, user]);
 
-  // Presence tracking - only online when app is actively visible
-  useEffect(() => {
-    if (!user) return;
-
-    const setPresence = async (online: boolean) => {
-      // If user disabled online status, never broadcast as online
-      const effectiveOnline = showOnlineStatus ? online : false;
-      await supabase.from("user_presence").upsert({
-        user_id: user.id,
-        is_online: effectiveOnline,
-        last_seen: new Date().toISOString(),
-      });
-    };
-
-    // Set online only if document is visible
-    if (document.visibilityState === "visible") {
-      setPresence(true);
-    }
-
-    const handleVisibilityChange = () => {
-      setPresence(document.visibilityState === "visible");
-    };
-
-    const handleBeforeUnload = () => setPresence(false);
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      setPresence(false);
-    };
-  }, [user, showOnlineStatus]);
+  // Presence is handled globally in usePresence hook (App-level)
 
   // Listen for other user's presence changes
   useEffect(() => {
