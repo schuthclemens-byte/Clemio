@@ -689,6 +689,30 @@ const ChatPage = () => {
     }
   };
 
+  const handleSaveContactName = async (firstName: string, lastName: string) => {
+    if (!user || !otherUserId) return;
+    const fullName = [firstName, lastName].filter(Boolean).join(" ");
+    try {
+      const { error } = await supabase
+        .from("contact_aliases" as any)
+        .upsert({
+          user_id: user.id,
+          contact_user_id: otherUserId,
+          first_name: firstName || null,
+          last_name: lastName || null,
+          updated_at: new Date().toISOString(),
+        } as any, { onConflict: "user_id,contact_user_id" });
+      if (error) throw error;
+      setChatName(fullName || "Chat");
+      setMemberNames((prev) => ({ ...prev, [otherUserId]: fullName }));
+      setContactAlias({ firstName, lastName });
+      toast.success("Name gespeichert");
+    } catch (err) {
+      console.error("Save alias error:", err);
+      toast.error("Name konnte nicht gespeichert werden");
+    }
+  };
+
   const handleSend = async (text: string) => {
     if (isListening) stop();
     if (!user || !conversationId) return;
@@ -847,7 +871,13 @@ const ChatPage = () => {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-base truncate">{chatName}</h2>
+            <h2
+              className="font-semibold text-base truncate cursor-pointer hover:text-primary transition-colors"
+              onClick={() => !isGroup && setShowEditName(true)}
+              title={!isGroup ? "Name bearbeiten" : undefined}
+            >
+              {chatName}
+            </h2>
             <p className="text-xs text-muted-foreground truncate">
               {typingNames.length > 0 ? (
                 <span className="text-primary font-medium">
@@ -1064,6 +1094,16 @@ const ChatPage = () => {
           onSelect={(bg) => setChatBackground(conversationId, bg)}
           onReset={() => clearChatBackground(conversationId)}
           showReset={true}
+        />
+      )}
+
+      {!isGroup && otherUserId && (
+        <EditContactNameDialog
+          open={showEditName}
+          onOpenChange={setShowEditName}
+          currentFirstName={contactAlias?.firstName || chatName.split(" ")[0] || ""}
+          currentLastName={contactAlias?.lastName || chatName.split(" ").slice(1).join(" ") || ""}
+          onSave={handleSaveContactName}
         />
       )}
     </div>
