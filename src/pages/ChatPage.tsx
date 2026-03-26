@@ -46,6 +46,18 @@ interface ReplyTarget {
   senderName: string;
 }
 
+const formatMessageTimestamp = (date: Date): string => {
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+  const time = date.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  if (isToday) return time;
+  if (isYesterday) return `Gestern, ${time}`;
+  return `${date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}, ${time}`;
+};
+
 const ChatPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -345,10 +357,7 @@ const ChatPage = () => {
           msgs.map((m) => ({
             id: m.id,
             text: m.content,
-            timestamp: new Date(m.created_at).toLocaleTimeString("de-DE", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            timestamp: formatMessageTimestamp(new Date(m.created_at)),
             isMine: m.sender_id === user.id,
             isRead: m.is_read ?? false,
             senderId: m.sender_id,
@@ -430,10 +439,7 @@ const ChatPage = () => {
           const newMsg: Message = {
             id: m.id,
             text: m.content,
-            timestamp: new Date(m.created_at).toLocaleTimeString("de-DE", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            timestamp: formatMessageTimestamp(new Date(m.created_at)),
             isMine: m.sender_id === user.id,
             isRead: m.is_read ?? false,
             senderId: m.sender_id,
@@ -742,8 +748,7 @@ const ChatPage = () => {
 
     // Optimistic update
     const tempId = crypto.randomUUID();
-    const now = new Date();
-    const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    const ts = formatMessageTimestamp(new Date());
     const optimisticMsg: Message = { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id };
     setMessages((prev) => [...prev, optimisticMsg]);
 
