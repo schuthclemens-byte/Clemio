@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Headphones, X, ImageIcon, Info } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Headphones, X, ImageIcon, Info, Mic2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -77,6 +77,8 @@ const ChatPage = () => {
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
   const [otherHasVoice, setOtherHasVoice] = useState<boolean | null>(null);
+  const [contactVoiceProfileId, setContactVoiceProfileId] = useState<string | null>(null);
+  const [contactElevenLabsId, setContactElevenLabsId] = useState<string | null>(null);
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
 
   // Typing indicator
@@ -608,10 +610,59 @@ const ChatPage = () => {
       // Update voiceProfiles to reflect the new voice
       setVoiceProfiles((prev) => ({ ...prev, [contactSenderId]: true }));
       setOtherHasVoice(true);
+      // Reload contact voice profile info
+      const { data: newProfile } = await supabase
+        .from("contact_voice_profiles")
+        .select("id, elevenlabs_voice_id")
+        .eq("user_id", user.id)
+        .eq("contact_user_id", contactSenderId)
+        .maybeSingle();
+      if (newProfile) {
+        setContactVoiceProfileId(newProfile.id);
+        setContactElevenLabsId(newProfile.elevenlabs_voice_id);
+      }
     } catch (err) {
       console.error("Save voice sample error:", err);
       const { toast } = await import("sonner");
       toast.error("Stimmprobe konnte nicht gespeichert werden");
+    }
+  };
+
+  // Delete contact voice profile
+  const handleDeleteContactVoice = async () => {
+    if (!user || !contactVoiceProfileId || !contactElevenLabsId || !otherUserId) return;
+    try {
+      toast.info("Stimmprobe wird gelöscht…");
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) return;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            elevenlabs_voice_id: contactElevenLabsId,
+            type: "contact",
+            contact_voice_id: contactVoiceProfileId,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Delete failed");
+
+      setVoiceProfiles((prev) => ({ ...prev, [otherUserId]: false }));
+      setOtherHasVoice(false);
+      setContactVoiceProfileId(null);
+      setContactElevenLabsId(null);
+      toast.success("Stimmprobe gelöscht. Du kannst jetzt eine neue speichern.");
+    } catch (err) {
+      console.error("Delete contact voice error:", err);
+      toast.error("Stimmprobe konnte nicht gelöscht werden");
     }
   };
 
@@ -819,6 +870,21 @@ const ChatPage = () => {
           <p className="text-[11px] text-muted-foreground leading-snug">
             Noch keine Stimmprobe von <strong className="text-foreground">{chatName}</strong>. Doppeltippe auf eine Sprachnachricht und speichere sie als Stimmprobe.
           </p>
+        </div>
+      )}
+      {!isGroup && otherHasVoice === true && (
+        <div className="flex items-center gap-2.5 px-4 py-2 bg-primary/5 border-b border-border/50">
+          <Mic2 className="w-4 h-4 text-primary shrink-0" />
+          <p className="flex-1 text-[11px] text-muted-foreground leading-snug">
+            Stimmprobe von <strong className="text-foreground">{chatName}</strong> aktiv – tippe auf Nachrichten zum Anhören.
+          </p>
+          <button
+            onClick={handleDeleteContactVoice}
+            className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors active:scale-95"
+          >
+            <Trash2 className="w-3 h-3" />
+            Löschen
+          </button>
         </div>
       )}
       {currentItem && (
