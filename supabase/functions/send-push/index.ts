@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
 
   try {
     const VAPID_PRIVATE_KEY_B64 = Deno.env.get("VAPID_PRIVATE_KEY");
-    const VAPID_PUBLIC_KEY = "BI5673858uhr-tH_qZ3fOR9YRnZWCMuZBdIPqI_QyMUXqCLhQXzaCOkjl_Jj-ld4j_7Vg90phsJt9VS3fv59idw";
+    const VAPID_PUBLIC_KEY = "BMNPLUnCNDmHxeNFyTMIp1ZoPlq36VoiDuEIQnh9SFVKbzAHb1NzRS_BNj1ndnfklLMhobepS0TCIjyiSPci_hY";
     const VAPID_SUBJECT = "mailto:support@clevara.app";
 
     if (!VAPID_PRIVATE_KEY_B64) {
