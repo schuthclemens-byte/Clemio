@@ -7,7 +7,7 @@ import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
-import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+
 import { useAuth } from "@/contexts/AuthContext";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import PremiumBadge from "@/components/PremiumBadge";
