@@ -355,8 +355,8 @@ const ChatPage = () => {
           .maybeSingle();
         if (contactVp) {
           profiles[sid] = true;
-          setContactVoiceProfileId(contactVp.id);
-          setContactElevenLabsId(contactVp.elevenlabs_voice_id);
+          setContactVoiceProfileId((contactVp as any).id);
+          setContactElevenLabsId((contactVp as any).elevenlabs_voice_id);
           return;
         }
         const { data: vp } = await supabase
