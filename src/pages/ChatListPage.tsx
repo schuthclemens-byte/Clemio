@@ -39,6 +39,8 @@ const ChatListPage = () => {
   const [showNewChat, setShowNewChat] = useState(false);
   const [messageResults, setMessageResults] = useState<MessageSearchResult[]>([]);
   const [searchingMessages, setSearchingMessages] = useState(false);
+  const fetchingRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
 
   const cacheKey = user ? `clevara_chats_${user.id}` : "";
 
