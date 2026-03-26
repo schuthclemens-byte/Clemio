@@ -253,20 +253,28 @@ const ChatListPage = () => {
   }, [user, conversations]);
 
   useEffect(() => {
+    if (!user || lastUserIdRef.current === user.id) return;
+    lastUserIdRef.current = user.id;
     fetchConversations();
     requestPermission();
   }, [user]);
 
-  // Realtime: refresh on new messages
+  // Realtime: debounced refresh on new messages
   useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel("chat-list-updates")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
-        fetchConversations();
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          fetchingRef.current = false; // allow re-fetch
+          fetchConversations();
+        }, 500);
       })
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [user]);
