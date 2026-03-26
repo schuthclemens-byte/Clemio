@@ -47,7 +47,7 @@ const App = () => (
       <ChatBackgroundProvider>
       <AccessibilityProvider>
         <AuthProvider>
-          <TooltipProvider>
+          <PresenceTracker>
             <Toaster />
             <Sonner />
             <OfflineBanner />
