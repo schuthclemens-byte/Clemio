@@ -53,7 +53,7 @@ const ChatPage = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { locale, t } = useI18n();
-  const { autoRead, headphoneAutoPlay, focusMode, isQuietTime, showOnlineStatus } = useAccessibility();
+  const { autoRead, headphoneAutoPlay, focusMode, isQuietTime, showOnlineStatus, showTypingIndicator } = useAccessibility();
   const headphonesConnected = useHeadphoneDetection();
   const { isPremium } = useSubscription();
   const [focusContactIds, setFocusContactIds] = useState<string[]>([]);

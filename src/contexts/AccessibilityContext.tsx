@@ -40,6 +40,7 @@ const defaultSettings: AccessibilitySettings = {
   muteSounds: false,
   autoCorrect: true,
   showOnlineStatus: true,
+  showTypingIndicator: true,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
