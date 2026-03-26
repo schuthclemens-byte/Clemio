@@ -116,7 +116,7 @@ const ProfilePage = () => {
     .slice(0, 2)
     .toUpperCase() || "?";
 
-  const languages = Object.entries(localeNames) as [Locale, string][];
+  
 
   if (!loaded) {
     return (
