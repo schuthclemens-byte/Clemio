@@ -158,7 +158,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.heroDemoText": "Hey… jede Nachricht, die ich dir schreibe, klingt wie meine echte Stimme.",
     "landing.heroAutoPlay": "Voice startet automatisch",
     "landing.heroSubtitleNew": "Statt lesen – einfach zuhören.",
-    "landing.heroCTA": "Jetzt hören statt lesen",
+    "landing.heroCTA": "Jetzt hören",
     "landing.promoHeadline": "Schreiben war gestern.",
     "landing.promoDesc": "Mit Clevara hörst du Nachrichten in echten Stimmen – so wie sie wirklich gemeint sind.",
     "landing.promoFeat1": "Nachrichten werden automatisch vorgelesen",
