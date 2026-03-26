@@ -72,7 +72,7 @@ const InstallPage = () => {
                 </p>
 
                 {isStandalone || installed ? (
-                  <p className="text-xs text-green-600 font-medium">✓ Bereits installiert</p>
+                  <p className="text-xs text-primary font-medium">✓ Bereits installiert</p>
                 ) : installPrompt ? (
                   <Button size="sm" className="rounded-full gap-2" onClick={handleInstallPWA}>
                     <Download className="w-4 h-4" />
