@@ -309,7 +309,7 @@ const StatusRow = ({ ok, label }: { ok: boolean; label: string }) => (
               /* Push NOT supported in this context */
               <div className="px-4 py-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <Info className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                  <Info className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[0.938rem] font-medium">Push wird nicht unterstützt</p>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{pushCap.reason}</p>
