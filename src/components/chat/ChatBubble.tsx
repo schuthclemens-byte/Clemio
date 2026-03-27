@@ -23,8 +23,9 @@ interface ChatBubbleProps {
   messageType?: string;
   mediaUrl?: string;
   senderId?: string;
-  onPlayClonedVoice?: (text: string, senderId: string, msgId: string) => void;
+  onPlayClonedVoice?: (text: string, senderId: string, msgId: string, lang?: string) => void;
   isPlayingCloned?: boolean;
+  isLoadingCloned?: boolean;
   msgId?: string;
   hasClonedVoice?: boolean;
   reactions?: Reaction[];
@@ -49,7 +50,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -67,7 +68,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const isMedia = messageType === "image" || messageType === "video";
   const isAudio = messageType === "audio";
   const displayText = showTranslation && translated ? translated : message;
-  const isActive = isSpeaking || isPlayingCloned;
+  const isActive = isSpeaking || isPlayingCloned || isLoadingCloned;
 
   // Play subtle pop when speech starts
   useEffect(() => {
@@ -82,9 +83,8 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     if (!message || isMedia) return;
     // Only play with cloned voice – no generic TTS
     if (!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice) {
-      requirePremium(() => onPlayClonedVoice(displayText, senderId, msgId));
+      requirePremium(() => onPlayClonedVoice(displayText, senderId, msgId, locale));
     } else if (!isMine && !hasClonedVoice) {
-      // No voice profile yet – show hint
       import("sonner").then(({ toast }) =>
         toast.info("Speichere zuerst eine Stimmprobe, um Nachrichten in dieser Stimme anzuhören.")
       );
@@ -118,7 +118,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
 
   const handlePlayCloned = (e: React.MouseEvent) => {
     e.stopPropagation();
-    requirePremium(() => onPlayClonedVoice?.(message, senderId!, msgId!));
+    requirePremium(() => onPlayClonedVoice?.(message, senderId!, msgId!, locale));
   };
 
   const handleConfirmVoiceSave = () => {
@@ -126,7 +126,9 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     requirePremium(() => onSaveAsVoiceSample?.(message, senderId!));
   };
 
-  const speakingLabel = isPlayingCloned
+  const speakingLabel = isLoadingCloned
+    ? "Lädt Stimme…"
+    : isPlayingCloned
     ? `${senderName || t("chat.contact") || "Kontakt"} ${t("chat.speaking") || "spricht…"}`
     : t("chat.readingAloud") || "Wird vorgelesen…";
 

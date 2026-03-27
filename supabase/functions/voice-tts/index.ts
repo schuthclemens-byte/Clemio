@@ -36,7 +36,7 @@ serve(async (req) => {
       });
     }
 
-    const { text, senderId } = await req.json();
+    const { text, senderId, lang } = await req.json();
 
     if (!text || !senderId) {
       return new Response(JSON.stringify({ error: "Missing text or senderId" }), {
@@ -44,6 +44,12 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Map short locale codes to ElevenLabs language codes
+    const langMap: Record<string, string> = {
+      de: "de", en: "en", fr: "fr", es: "es", tr: "tr", ar: "ar",
+    };
+    const languageCode = langMap[lang] || "de";
 
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,

@@ -134,7 +134,7 @@ const ChatPage = () => {
     localeSpeechCodes[locale]
   );
   const { speak, stop: stopSpeaking, isSpeaking } = useTextToSpeech();
-  const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned } = useVoiceTTS();
+  const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned, isLoading: isLoadingCloned, stop: stopClonedVoice } = useVoiceTTS();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
   const [otherHasVoice, setOtherHasVoice] = useState<boolean | null>(null);
@@ -1083,7 +1083,7 @@ const ChatPage = () => {
             ))}
           </div>
           <button
-            onClick={() => { stopSpeaking(); clearQueue(); setSpeakingId(null); }}
+            onClick={() => { stopSpeaking(); stopClonedVoice(); clearQueue(); setSpeakingId(null); }}
             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
             aria-label="Auto-Play stoppen"
           >
@@ -1147,6 +1147,7 @@ const ChatPage = () => {
                   hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
                   onPlayClonedVoice={playClonedVoice}
                   isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
+                  isLoadingCloned={playingMsgId === msg.id && isLoadingCloned}
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
