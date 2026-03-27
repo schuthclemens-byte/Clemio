@@ -88,12 +88,10 @@ export const usePushSubscription = () => {
     updateDebug({ loading: true, lastError: null });
 
     try {
-      // 1) Check Notification support
       if (!("Notification" in window)) {
         throw new Error("Notifications nicht unterstützt in diesem Browser");
       }
 
-      // 2) Request permission
       const permission = await Notification.requestPermission();
       updateDebug({ notificationPermission: permission });
 
@@ -101,7 +99,6 @@ export const usePushSubscription = () => {
         throw new Error(`Notification-Berechtigung: ${permission}`);
       }
 
-      // 3) Get SW registration
       if (!("serviceWorker" in navigator)) {
         throw new Error("Service Worker nicht unterstützt");
       }
@@ -109,34 +106,44 @@ export const usePushSubscription = () => {
       const registration = await navigator.serviceWorker.ready;
       updateDebug({ swRegistered: true });
 
-      // 4) Subscribe to push
+      // Always get fresh subscription - unsubscribe old one first if exists
       let subscription = await registration.pushManager.getSubscription();
-      if (!subscription) {
-        const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: appServerKey.buffer as ArrayBuffer,
-        });
+      if (subscription) {
+        // Re-subscribe to ensure keys are fresh
+        await subscription.unsubscribe();
       }
+      
+      const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: appServerKey.buffer as ArrayBuffer,
+      });
 
       updateDebug({ pushSubscription: true });
 
-      // 5) Save to backend
+      // Save to backend - clean up old subscriptions for this user first
       if (user) {
         const subJson = subscription.toJSON();
-        const { error } = await supabase.from("push_subscriptions").upsert(
-          {
-            user_id: user.id,
-            endpoint: subJson.endpoint!,
-            p256dh: subJson.keys!.p256dh!,
-            auth: subJson.keys!.auth!,
-          },
-          { onConflict: "endpoint" }
-        );
+        
+        // Delete all old subscriptions for this user (different endpoints)
+        await supabase
+          .from("push_subscriptions")
+          .delete()
+          .eq("user_id", user.id);
+        
+        // Insert the fresh subscription
+        const { error } = await supabase.from("push_subscriptions").insert({
+          user_id: user.id,
+          endpoint: subJson.endpoint!,
+          p256dh: subJson.keys!.p256dh!,
+          auth: subJson.keys!.auth!,
+        });
 
         if (error) {
           throw new Error(`Subscription speichern fehlgeschlagen: ${error.message}`);
         }
+        
+        console.log("[Push] Fresh subscription saved for user", user.id);
       }
 
       updateDebug({ loading: false });
@@ -156,6 +163,11 @@ export const usePushSubscription = () => {
     updateDebug({ lastPushSuccess: null, lastError: null });
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Keine aktive Session");
+      }
+
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/send-push`,
@@ -163,7 +175,7 @@ export const usePushSubscription = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             user_id: user.id,
@@ -174,6 +186,7 @@ export const usePushSubscription = () => {
       );
 
       const data = await res.json();
+      console.log("[Push] Test push result:", JSON.stringify(data));
       const success = data.sent > 0;
       updateDebug({ lastPushSuccess: success, lastError: success ? null : JSON.stringify(data) });
       return success;
