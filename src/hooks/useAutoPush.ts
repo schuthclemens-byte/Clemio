@@ -4,8 +4,10 @@ import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { usePushCapability } from "@/hooks/usePushCapability";
 
 /**
- * Automatically subscribes the user to push notifications after login.
- * Silently skips if the device/context doesn't support push.
+ * Re-subscribes push if the user already granted permission previously
+ * but the subscription is missing (e.g. after clearing browser data).
+ * Does NOT trigger the browser permission dialog on its own –
+ * the PushPromptSheet handles the initial permission request.
  */
 export const useAutoPush = () => {
   const { user } = useAuth();
@@ -22,12 +24,12 @@ export const useAutoPush = () => {
     if (debug.loading) return;
     if (!canUsePush) return;
 
-    // Don't prompt if already subscribed or permission denied
+    // Only auto-re-subscribe if permission was ALREADY granted
+    // but subscription is missing (e.g. browser cleared data)
+    if (debug.notificationPermission !== "granted") return;
     if (debug.pushSubscription) return;
-    if (debug.notificationPermission === "denied") return;
 
     attempted.current = true;
-    // Small delay so the app feels loaded before the browser prompt appears
     const timer = setTimeout(() => {
       subscribe();
     }, 2000);
