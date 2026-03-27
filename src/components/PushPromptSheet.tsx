@@ -49,9 +49,13 @@ const PushPromptSheet = () => {
   }, [user, debug.loading, debug.pushSubscription, debug.backendSubscription, debug.notificationPermission, pushCap.canUsePush]);
 
   const handleDismiss = useCallback(() => {
-    localStorage.setItem(DISMISSED_KEY, "true");
+    if (pushCap.canUsePush) {
+      localStorage.setItem(DISMISSED_KEY, "true");
+    } else {
+      localStorage.setItem(DISMISSED_UNSUPPORTED_KEY, "true");
+    }
     setVisible(false);
-  }, []);
+  }, [pushCap.canUsePush]);
 
   const handleActivate = useCallback(async () => {
     setActivating(true);
