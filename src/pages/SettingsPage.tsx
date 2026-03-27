@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, Bell, CheckCircle, XCircle, AlertTriangle, Send } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, Bell, CheckCircle, XCircle, AlertTriangle, Send, MessageSquareText } from "lucide-react";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
-
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
@@ -56,6 +55,54 @@ const CollapsibleSection = ({
   );
 };
 
+/** Reusable toggle row */
+const ToggleRow = ({ 
+  icon: Icon, 
+  label, 
+  description, 
+  checked, 
+  onChange, 
+  disabled,
+  borderBottom = true 
+}: { 
+  icon?: React.ElementType; 
+  label: string; 
+  description?: string; 
+  checked: boolean; 
+  onChange: () => void; 
+  disabled?: boolean;
+  borderBottom?: boolean;
+}) => (
+  <button
+    onClick={onChange}
+    disabled={disabled}
+    className={cn(
+      "w-full flex items-center justify-between px-4 py-4 text-left transition-colors",
+      "hover:bg-secondary/50 active:scale-[0.99] disabled:opacity-60",
+      borderBottom && "border-b border-border last:border-b-0"
+    )}
+    role="switch"
+    aria-checked={checked}
+  >
+    <span className="flex items-start gap-3 flex-1 min-w-0">
+      {Icon && <Icon className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />}
+      <div className="min-w-0">
+        <span className="text-[0.938rem] block font-medium">{label}</span>
+        {description && <span className="text-xs text-muted-foreground leading-relaxed">{description}</span>}
+      </div>
+    </span>
+    <div className={cn(
+      "w-11 h-6 rounded-full relative transition-colors duration-200 shrink-0 ml-3",
+      checked ? "bg-primary" : "bg-border"
+    )}>
+      <div className={cn(
+        "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+        checked ? "translate-x-[1.375rem]" : "translate-x-0.5"
+      )} />
+    </div>
+  </button>
+);
+
 const PushDebugSection = () => {
   const { debug, subscribe, sendTestPush } = usePushSubscription();
   const [testLoading, setTestLoading] = useState(false);
@@ -63,7 +110,6 @@ const PushDebugSection = () => {
   const [previewEnabled, setPreviewEnabled] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
 
-  // Load push_preview_enabled from profile
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("push_preview_enabled").eq("id", user.id).single().then(({ data }) => {
@@ -85,136 +131,96 @@ const PushDebugSection = () => {
     return ok ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-destructive" />;
   };
 
-  const handleSubscribe = async () => {
-    await subscribe();
-  };
-
-  const handleTest = async () => {
-    setTestLoading(true);
-    await sendTestPush();
-    setTestLoading(false);
-  };
-
   return (
-    <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" delay="85ms">
-      <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4 space-y-3">
-        {/* Status rows */}
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Service Worker</span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <StatusIcon ok={debug.swRegistered} />
-              {debug.swRegistered ? "Registriert" : "Nicht registriert"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Berechtigung</span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <StatusIcon ok={debug.notificationPermission === "granted"} />
-              {debug.notificationPermission}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Push-Subscription</span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <StatusIcon ok={debug.pushSubscription} />
-              {debug.pushSubscription ? "Vorhanden" : "Fehlt"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Standalone (PWA)</span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <StatusIcon ok={debug.isStandalone} />
-              {debug.isStandalone ? "Ja" : "Nein (Browser)"}
-            </span>
-          </div>
-          {debug.lastPushSuccess !== null && (
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Letzter Push</span>
-              <span className="flex items-center gap-1.5 font-medium">
-                <StatusIcon ok={debug.lastPushSuccess} />
-                {debug.lastPushSuccess ? "Erfolgreich" : "Fehlgeschlagen"}
-              </span>
-            </div>
-          )}
+    <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4 space-y-3">
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Service Worker</span>
+          <span className="flex items-center gap-1.5 font-medium">
+            <StatusIcon ok={debug.swRegistered} />
+            {debug.swRegistered ? "Registriert" : "Nicht registriert"}
+          </span>
         </div>
-
-        {debug.lastError && (
-          <div className="text-xs text-destructive bg-destructive/10 rounded-xl p-3 break-all">
-            {debug.lastError}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <button
-            onClick={handleSubscribe}
-            disabled={debug.loading}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-          >
-            {debug.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
-            Aktivieren
-          </button>
-          <button
-            onClick={handleTest}
-            disabled={testLoading || !debug.pushSubscription}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-          >
-            {testLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            Test-Push
-          </button>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Berechtigung</span>
+          <span className="flex items-center gap-1.5 font-medium">
+            <StatusIcon ok={debug.notificationPermission === "granted"} />
+            {debug.notificationPermission}
+          </span>
         </div>
-
-        {/* Preview toggle */}
-        <button
-          onClick={togglePreview}
-          disabled={previewLoading}
-          className="w-full flex items-center justify-between px-3 py-3 rounded-xl bg-secondary/50 text-left transition-colors hover:bg-secondary/70"
-          role="switch"
-          aria-checked={previewEnabled}
-        >
-          <div>
-            <span className="text-sm font-medium block">Nachrichtenvorschau</span>
-            <span className="text-xs text-muted-foreground">
-              {previewEnabled ? "Vorschau der ersten 30 Zeichen" : 'Nur "Neue Nachricht" anzeigen'}
-            </span>
-          </div>
-          <div className={cn(
-            "w-11 h-6 rounded-full relative transition-colors duration-200",
-            previewEnabled ? "bg-primary" : "bg-border"
-          )}>
-            <div className={cn(
-              "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-              previewEnabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
-            )} />
-          </div>
-        </button>
-
-        {!debug.isStandalone && (
-          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-            Push funktioniert auf iPhone nur als installierte Home-Screen-App (PWA).
-          </p>
-        )}
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Push-Subscription</span>
+          <span className="flex items-center gap-1.5 font-medium">
+            <StatusIcon ok={debug.pushSubscription} />
+            {debug.pushSubscription ? "Vorhanden" : "Fehlt"}
+          </span>
+        </div>
       </div>
-    </CollapsibleSection>
+
+      {debug.lastError && (
+        <div className="text-xs text-destructive bg-destructive/10 rounded-xl p-3 break-all">
+          {debug.lastError}
+        </div>
+      )}
+
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={() => subscribe()}
+          disabled={debug.loading}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+        >
+          {debug.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+          Aktivieren
+        </button>
+        <button
+          onClick={async () => { setTestLoading(true); await sendTestPush(); setTestLoading(false); }}
+          disabled={testLoading || !debug.pushSubscription}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+        >
+          {testLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          Test-Push
+        </button>
+      </div>
+
+      {!debug.isStandalone && (
+        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+          Push funktioniert auf iPhone nur als installierte Home-Screen-App (PWA).
+        </p>
+      )}
+    </div>
   );
 };
 
 const SettingsPage = () => {
-
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
   const { globalBackground, setGlobalBackground } = useChatBackground();
-  
+  const { user } = useAuth();
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clevara_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [previewEnabled, setPreviewEnabled] = useState(false);
+
+  // Load push preview from profile
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("push_preview_enabled").eq("id", user.id).single().then(({ data }) => {
+      if (data) setPreviewEnabled(!!data.push_preview_enabled);
+    });
+  }, [user]);
+
+  const togglePreview = async () => {
+    if (!user) return;
+    const next = !previewEnabled;
+    const { error } = await supabase.from("profiles").update({ push_preview_enabled: next } as any).eq("id", user.id);
+    if (!error) setPreviewEnabled(next);
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -225,20 +231,10 @@ const SettingsPage = () => {
     const next = !stayLoggedIn;
     setStayLoggedIn(next);
     localStorage.setItem("clevara_stay_logged_in", next ? "true" : "false");
-    toast.success(next ? t("settings.stayLoggedIn") + " ✓" : t("settings.logout") + " – " + t("settings.stayLoggedInDesc"));
   };
 
   const languages = Object.entries(localeNames) as [Locale, string][];
   const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
-
-  const toggleItems = [
-    { key: "dyslexiaFont" as const, icon: Type, label: t("settings.dyslexiaFont") },
-    { key: "largeText" as const, icon: Eye, label: t("settings.largeText") },
-    { key: "highContrast" as const, icon: Contrast, label: t("settings.highContrast") },
-    { key: "autoRead" as const, icon: Volume2, label: t("settings.autoRead") },
-    { key: "headphoneAutoPlay" as const, icon: Headphones, label: t("settings.headphoneAutoPlay") },
-    { key: "autoCorrect" as const, icon: SpellCheck, label: t("settings.autoCorrect") },
-  ];
 
   const themeOptions = [
     { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
@@ -276,140 +272,132 @@ const SettingsPage = () => {
           </div>
         </button>
 
-        {/* Focus Mode link */}
-        <button
-          onClick={() => navigate("/focus-mode")}
-          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
-          style={{ animationDelay: "30ms" }}
-        >
-          <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
-            <Shield className="w-6 h-6 text-accent" />
-          </div>
-          <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">{t("settings.focusMode")}</p>
-            <p className="text-xs text-muted-foreground">{t("settings.focusModeDesc")}</p>
-          </div>
-        </button>
-
-        {/* Contact Auto-Play link */}
-        <button
-          onClick={() => navigate("/contact-autoplay")}
-          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
-          style={{ animationDelay: "60ms" }}
-        >
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Volume2 className="w-6 h-6 text-primary" />
-          </div>
-          <div className="text-left">
-            <p className="font-semibold text-[0.938rem] flex items-center gap-2">
-              {t("settings.autoPlayContact")}
-              {!isPremium && <PremiumBadge />}
-            </p>
-            <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
-          </div>
-        </button>
-
-        {/* App installieren – nur im Browser zeigen, nicht wenn bereits als PWA installiert */}
-        {!window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
-          <button
-            onClick={() => navigate("/install")}
-            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
-            style={{ animationDelay: "90ms" }}
-          >
-            <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
-              <Download className="w-6 h-6 text-accent" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
-              <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
-            </div>
-          </button>
-        )}
-
-
-        {/* Theme - Collapsible */}
-        <CollapsibleSection icon={Moon} title={t("settings.theme")} delay="40ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
-            {themeOptions.map(({ value, icon: Icon, label }) => (
-              <button
-                key={value}
-                onClick={() => setTheme(value)}
-                className={cn(
-                  "flex-1 flex flex-col items-center gap-2 py-4 transition-all duration-200",
-                  "hover:bg-secondary/50 active:scale-[0.97]",
-                  theme === value && "bg-primary/10"
-                )}
-              >
-                <Icon className={cn("w-5 h-5", theme === value ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-xs font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
-                  {label}
-                </span>
-              </button>
-            ))}
+        {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
+        <CollapsibleSection icon={Shield} title="Privatsphäre & Nachrichten" defaultOpen={true} delay="30ms">
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+            <ToggleRow
+              icon={MessageSquareText}
+              label="Nachrichtenvorschau anzeigen"
+              description="Zeigt eine kurze Vorschau der Nachricht in Push-Benachrichtigungen."
+              checked={previewEnabled}
+              onChange={togglePreview}
+            />
+            <ToggleRow
+              icon={Eye}
+              label="Lesebestätigungen senden"
+              description="Andere sehen, wenn du ihre Nachricht gelesen hast."
+              checked={localStorage.getItem("clevara_read_receipts") !== "false"}
+              onChange={() => {
+                const next = localStorage.getItem("clevara_read_receipts") === "false";
+                localStorage.setItem("clevara_read_receipts", next ? "true" : "false");
+                toast.success(next ? "Lesebestätigungen aktiviert" : "Lesebestätigungen deaktiviert");
+              }}
+            />
+            <ToggleRow
+              icon={Radio}
+              label="Online-Status anzeigen"
+              description="Anderen zeigen, dass du online bist, und Status von Kontakten sehen."
+              checked={a11y.showOnlineStatus}
+              onChange={() => a11y.toggle("showOnlineStatus")}
+            />
+            <ToggleRow
+              icon={Type}
+              label="Tipp-Anzeige"
+              description="Zeigen wenn jemand tippt und anderen zeigen wenn du tippst."
+              checked={a11y.showTypingIndicator}
+              onChange={() => a11y.toggle("showTypingIndicator")}
+            />
+            <ToggleRow
+              icon={Volume2}
+              label="Sprachnachrichten automatisch transkribieren"
+              description="Sprachnachrichten werden als Text unter der Nachricht angezeigt."
+              checked={a11y.autoRead}
+              onChange={() => a11y.toggle("autoRead")}
+              borderBottom={false}
+            />
           </div>
         </CollapsibleSection>
 
-        {/* Color Theme - Collapsible */}
-        <CollapsibleSection icon={Palette} title={t("settings.colorTheme")} delay="50ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4">
-            <div className="grid grid-cols-4 gap-3">
-              {colorThemes.map((ct) => (
+        {/* ──────────── BENACHRICHTIGUNGEN ──────────── */}
+        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" delay="50ms">
+          <PushDebugSection />
+        </CollapsibleSection>
+
+        {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
+        <CollapsibleSection icon={Palette} title="Erscheinungsbild" delay="60ms">
+          <div className="space-y-4">
+            {/* Theme */}
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
+              {themeOptions.map(({ value, icon: Icon, label }) => (
                 <button
-                  key={ct}
-                  onClick={() => setColorTheme(ct)}
+                  key={value}
+                  onClick={() => setTheme(value)}
                   className={cn(
-                    "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
-                    "hover:bg-secondary/50 active:scale-[0.95]",
-                    colorTheme === ct && "ring-2 ring-primary bg-primary/10"
+                    "flex-1 flex flex-col items-center gap-2 py-4 transition-all duration-200",
+                    "hover:bg-secondary/50 active:scale-[0.97]",
+                    theme === value && "bg-primary/10"
                   )}
                 >
-                  <div className="flex gap-0.5">
-                    {colorThemePreview[ct].map((color, i) => (
-                      <div
-                        key={i}
-                        className="w-5 h-5 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                  <span className={cn(
-                    "text-xs font-medium",
-                    colorTheme === ct ? "text-primary" : "text-muted-foreground"
-                  )}>
-                    {colorThemeLabels[ct]}
+                  <Icon className={cn("w-5 h-5", theme === value ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
+                    {label}
                   </span>
                 </button>
               ))}
             </div>
+
+            {/* Color Theme */}
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4">
+              <div className="grid grid-cols-4 gap-3">
+                {colorThemes.map((ct) => (
+                  <button
+                    key={ct}
+                    onClick={() => setColorTheme(ct)}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
+                      "hover:bg-secondary/50 active:scale-[0.95]",
+                      colorTheme === ct && "ring-2 ring-primary bg-primary/10"
+                    )}
+                  >
+                    <div className="flex gap-0.5">
+                      {colorThemePreview[ct].map((color, i) => (
+                        <div key={i} className="w-5 h-5 rounded-full" style={{ backgroundColor: color }} />
+                      ))}
+                    </div>
+                    <span className={cn("text-xs font-medium", colorTheme === ct ? "text-primary" : "text-muted-foreground")}>
+                      {colorThemeLabels[ct]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chat Background */}
+            <button
+              onClick={() => setBgPickerOpen(true)}
+              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div
+                className="w-12 h-12 rounded-2xl border-2 border-border overflow-hidden flex items-center justify-center"
+                style={
+                  globalBackground.type === "gradient" || globalBackground.type === "color"
+                    ? { background: globalBackground.value }
+                    : globalBackground.type === "image"
+                      ? { backgroundImage: `url(${globalBackground.value})`, backgroundSize: "cover" }
+                      : { backgroundColor: "hsl(var(--background))" }
+                }
+              >
+                {globalBackground.type === "none" && <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-[0.938rem]">{t("settings.changeBackground")}</p>
+                <p className="text-xs text-muted-foreground">{t("settings.backgroundDesc")}</p>
+              </div>
+            </button>
           </div>
         </CollapsibleSection>
 
-        {/* Chat Background - Collapsible */}
-        <CollapsibleSection icon={ImageIcon} title={t("settings.chatBackground")} delay="60ms">
-          <button
-            onClick={() => setBgPickerOpen(true)}
-            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-          >
-            <div
-              className="w-12 h-12 rounded-2xl border-2 border-border overflow-hidden flex items-center justify-center"
-              style={
-                globalBackground.type === "gradient" || globalBackground.type === "color"
-                  ? { background: globalBackground.value }
-                  : globalBackground.type === "image"
-                    ? { backgroundImage: `url(${globalBackground.value})`, backgroundSize: "cover", backgroundPosition: "center" }
-                    : { backgroundColor: "hsl(var(--background))" }
-              }
-            >
-              {globalBackground.type === "none" && <ImageIcon className="w-5 h-5 text-muted-foreground" />}
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-[0.938rem]">{t("settings.changeBackground")}</p>
-              <p className="text-xs text-muted-foreground">{t("settings.backgroundDesc")}</p>
-            </div>
-          </button>
-        </CollapsibleSection>
-
-        {/* Language - Collapsible */}
+        {/* ──────────── SPRACHE ──────────── */}
         <CollapsibleSection icon={Globe} title={t("settings.language")} delay="70ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {languages.map(([code, name]) => (
@@ -424,105 +412,60 @@ const SettingsPage = () => {
                 )}
               >
                 <span className="text-[0.938rem]">{name}</span>
-                {locale === code && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                )}
+                {locale === code && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
               </button>
             ))}
           </div>
         </CollapsibleSection>
 
-        {/* Accessibility - Collapsible */}
+        {/* ──────────── BARRIEREFREIHEIT ──────────── */}
         <CollapsibleSection icon={Eye} title={t("settings.accessibility")} delay="80ms">
           <div className="space-y-3">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              {toggleItems.map(({ key, icon: Icon, label }) => (
-                <button
-                  key={key}
-                  onClick={() => a11y.toggle(key)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
-                    "hover:bg-secondary/50 active:scale-[0.99]",
-                    "border-b border-border last:border-b-0"
-                  )}
-                  role="switch"
-                  aria-checked={a11y[key]}
-                >
-                  <span className="flex items-center gap-3">
-                    <Icon className="w-4.5 h-4.5 text-muted-foreground" />
-                    <span className="text-[0.938rem]">{label}</span>
-                  </span>
-                  <div
-                    className={cn(
-                      "w-11 h-6 rounded-full relative transition-colors duration-200",
-                      a11y[key] ? "bg-primary" : "bg-border"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                        a11y[key] ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                      )}
-                    />
-                  </div>
-                </button>
-              ))}
+              <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => a11y.toggle("dyslexiaFont")} />
+              <ToggleRow icon={Eye} label={t("settings.largeText")} checked={a11y.largeText} onChange={() => a11y.toggle("largeText")} />
+              <ToggleRow icon={Contrast} label={t("settings.highContrast")} checked={a11y.highContrast} onChange={() => a11y.toggle("highContrast")} />
+              <ToggleRow icon={Headphones} label={t("settings.headphoneAutoPlay")} checked={a11y.headphoneAutoPlay} onChange={() => a11y.toggle("headphoneAutoPlay")} />
+              <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} checked={a11y.autoCorrect} onChange={() => a11y.toggle("autoCorrect")} borderBottom={false} />
             </div>
 
             {/* Speech Rate */}
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-4 py-3.5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="flex items-center gap-3">
-                    <Volume2 className="w-4.5 h-4.5 text-muted-foreground" />
-                    <span className="text-[0.938rem]">{t("settings.speechRate")}</span>
-                  </span>
-                  <span className="text-sm font-semibold text-primary">{a11y.speechRate}×</span>
-                </div>
-                <div className="flex gap-2">
-                  {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                    <button
-                      key={rate}
-                      onClick={() => a11y.setSpeechRate(rate)}
-                      className={cn(
-                        "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
-                        a11y.speechRate === rate
-                          ? "gradient-primary text-primary-foreground shadow-soft"
-                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                      )}
-                    >
-                      {rate}×
-                    </button>
-                  ))}
-                </div>
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden px-4 py-3.5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="flex items-center gap-3">
+                  <Volume2 className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-[0.938rem]">{t("settings.speechRate")}</span>
+                </span>
+                <span className="text-sm font-semibold text-primary">{a11y.speechRate}×</span>
+              </div>
+              <div className="flex gap-2">
+                {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                  <button
+                    key={rate}
+                    onClick={() => a11y.setSpeechRate(rate)}
+                    className={cn(
+                      "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
+                      a11y.speechRate === rate
+                        ? "gradient-primary text-primary-foreground shadow-soft"
+                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                    )}
+                  >
+                    {rate}×
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Smart Silence */}
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <button
-                onClick={() => a11y.toggle("smartSilence")}
-                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-                role="switch"
-                aria-checked={a11y.smartSilence}
-              >
-                <span className="flex items-center gap-3">
-                  <BellOff className="w-4.5 h-4.5 text-muted-foreground" />
-                  <div>
-                    <span className="text-[0.938rem] block">{t("settings.smartSilence")}</span>
-                    <span className="text-xs text-muted-foreground">{t("settings.smartSilenceDesc")}</span>
-                  </div>
-                </span>
-                <div className={cn(
-                  "w-11 h-6 rounded-full relative transition-colors duration-200",
-                  a11y.smartSilence ? "bg-primary" : "bg-border"
-                )}>
-                  <div className={cn(
-                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                    a11y.smartSilence ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                  )} />
-                </div>
-              </button>
+              <ToggleRow
+                icon={BellOff}
+                label={t("settings.smartSilence")}
+                description={t("settings.smartSilenceDesc")}
+                checked={a11y.smartSilence}
+                onChange={() => a11y.toggle("smartSilence")}
+                borderBottom={false}
+              />
               {a11y.smartSilence && (
                 <div className="px-4 pb-3.5 flex gap-3 items-center">
                   <div className="flex-1">
@@ -547,156 +490,82 @@ const SettingsPage = () => {
               )}
             </div>
 
-            {/* Compact Mode */}
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <button
-                onClick={() => a11y.toggle("compactMode")}
-                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-                role="switch"
-                aria-checked={a11y.compactMode}
-              >
-                <span className="flex items-center gap-3">
-                  <AlignLeft className="w-4.5 h-4.5 text-muted-foreground" />
-                  <div>
-                    <span className="text-[0.938rem] block">{t("settings.compactMode")}</span>
-                    <span className="text-xs text-muted-foreground">{t("settings.compactModeDesc")}</span>
-                  </div>
-                </span>
-                <div className={cn(
-                  "w-11 h-6 rounded-full relative transition-colors duration-200",
-                  a11y.compactMode ? "bg-primary" : "bg-border"
-                )}>
-                  <div className={cn(
-                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                    a11y.compactMode ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                  )} />
-                </div>
-              </button>
-            </div>
-
-            {/* Mute Sounds */}
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <button
-                onClick={() => a11y.toggle("muteSounds")}
-                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-                role="switch"
-                aria-checked={a11y.muteSounds}
-              >
-                <span className="flex items-center gap-3">
-                  <VolumeX className="w-4.5 h-4.5 text-muted-foreground" />
-                  <div>
-                    <span className="text-[0.938rem] block">{t("settings.muteSounds")}</span>
-                    <span className="text-xs text-muted-foreground">{t("settings.muteSoundsDesc")}</span>
-                  </div>
-                </span>
-                <div className={cn(
-                  "w-11 h-6 rounded-full relative transition-colors duration-200",
-                  a11y.muteSounds ? "bg-primary" : "bg-border"
-                )}>
-                  <div className={cn(
-                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                    a11y.muteSounds ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                  )} />
-                </div>
-              </button>
-            </div>
-
-            {/* Online Status */}
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <button
-                onClick={() => a11y.toggle("showOnlineStatus")}
-                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-                role="switch"
-                aria-checked={a11y.showOnlineStatus}
-              >
-                <span className="flex items-center gap-3">
-                  <Radio className="w-4.5 h-4.5 text-muted-foreground" />
-                  <div>
-                    <span className="text-[0.938rem] block">Online-Status</span>
-                    <span className="text-xs text-muted-foreground">Anderen zeigen, dass du online bist & Status von Kontakten sehen</span>
-                  </div>
-                </span>
-                <div className={cn(
-                  "w-11 h-6 rounded-full relative transition-colors duration-200",
-                  a11y.showOnlineStatus ? "bg-primary" : "bg-border"
-                )}>
-                  <div className={cn(
-                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                    a11y.showOnlineStatus ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                  )} />
-                </div>
-              </button>
-            </div>
-
-            {/* Typing Indicator */}
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <button
-                onClick={() => a11y.toggle("showTypingIndicator")}
-                className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-                role="switch"
-                aria-checked={a11y.showTypingIndicator}
-              >
-                <span className="flex items-center gap-3">
-                  <Type className="w-4.5 h-4.5 text-muted-foreground" />
-                  <div>
-                    <span className="text-[0.938rem] block">Tipp-Anzeige</span>
-                    <span className="text-xs text-muted-foreground">Zeigen wenn jemand tippt & anderen zeigen wenn du tippst</span>
-                  </div>
-                </span>
-                <div className={cn(
-                  "w-11 h-6 rounded-full relative transition-colors duration-200",
-                  a11y.showTypingIndicator ? "bg-primary" : "bg-border"
-                )}>
-                  <div className={cn(
-                    "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                    a11y.showTypingIndicator ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                  )} />
-                </div>
-              </button>
+              <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")} checked={a11y.compactMode} onChange={() => a11y.toggle("compactMode")} />
+              <ToggleRow icon={VolumeX} label={t("settings.muteSounds")} description={t("settings.muteSoundsDesc")} checked={a11y.muteSounds} onChange={() => a11y.toggle("muteSounds")} borderBottom={false} />
             </div>
           </div>
         </CollapsibleSection>
 
-        {/* Push Notifications Debug */}
-        <PushDebugSection />
-
-        {/* Stay logged in toggle */}
-        <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "95ms" }}>
+        {/* ──────────── WEITERE LINKS ──────────── */}
+        <div className="space-y-3">
+          {/* Focus Mode */}
           <button
-            onClick={toggleStayLoggedIn}
-            className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50"
-            role="switch"
-            aria-checked={stayLoggedIn}
+            onClick={() => navigate("/focus-mode")}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
           >
-            <span className="flex items-center gap-3">
-              <KeyRound className="w-5 h-5 text-primary" />
-              <div>
-                <span className="text-[0.938rem] block font-medium">{t("settings.stayLoggedIn")}</span>
-                <span className="text-xs text-muted-foreground">{t("settings.stayLoggedInDesc")}</span>
-              </div>
-            </span>
-            <div className={cn(
-              "w-11 h-6 rounded-full relative transition-colors duration-200",
-              stayLoggedIn ? "bg-primary" : "bg-border"
-            )}>
-              <div className={cn(
-                "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                stayLoggedIn ? "translate-x-[1.375rem]" : "translate-x-0.5"
-              )} />
+            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-accent" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-[0.938rem]">{t("settings.focusMode")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.focusModeDesc")}</p>
             </div>
           </button>
+
+          {/* Auto-Play Contact */}
+          <button
+            onClick={() => navigate("/contact-autoplay")}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Volume2 className="w-5 h-5 text-primary" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-[0.938rem] flex items-center gap-2">
+                {t("settings.autoPlayContact")}
+                {!isPremium && <PremiumBadge />}
+              </p>
+              <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
+            </div>
+          </button>
+
+          {/* Install App */}
+          {!window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
+            <button
+              onClick={() => navigate("/install")}
+              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <Download className="w-5 h-5 text-accent" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
+                <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
+              </div>
+            </button>
+          )}
         </div>
 
-        {/* Subscription / Premium – nur für normale Nutzer zeigen (nicht Whitelist/Founding mit permanentem Zugang) */}
+        {/* Stay logged in */}
+        <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+          <ToggleRow
+            icon={KeyRound}
+            label={t("settings.stayLoggedIn")}
+            description={t("settings.stayLoggedInDesc")}
+            checked={stayLoggedIn}
+            onChange={toggleStayLoggedIn}
+            borderBottom={false}
+          />
+        </div>
+
+        {/* Subscription */}
         {!(isFoundingUser && daysRemaining === -1) && (
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden animate-reveal-up" style={{ animationDelay: "95ms" }}>
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <div className="px-4 py-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center",
-                    isPremium ? "gradient-primary" : "bg-muted"
-                  )}>
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", isPremium ? "gradient-primary" : "bg-muted")}>
                     <Crown className={cn("w-5 h-5", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
                   </div>
                   <div>
@@ -708,41 +577,27 @@ const SettingsPage = () => {
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => refreshSubscription()}
-                  className="p-2 rounded-full hover:bg-secondary transition-colors"
-                  aria-label={t("sub.refreshStatus")}
-                >
+                <button onClick={() => refreshSubscription()} className="p-2 rounded-full hover:bg-secondary transition-colors">
                   <RefreshCw className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
-
               {!isPremium && (
                 <button
                   onClick={startCheckout}
                   disabled={checkoutLoading}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
                 >
-                  {checkoutLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <CreditCard className="w-4 h-4" />
-                  )}
+                  {checkoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
                   {t("sub.subscribe")}
                 </button>
               )}
-
               {stripeActive && (
                 <button
                   onClick={openPortal}
                   disabled={portalLoading}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
                 >
-                  {portalLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <ExternalLink className="w-4 h-4" />
-                  )}
+                  {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
                   {t("sub.manage")}
                 </button>
               )}
@@ -750,7 +605,7 @@ const SettingsPage = () => {
           </div>
         )}
 
-        {/* Logout button */}
+        {/* Logout */}
         <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
           {!showLogoutConfirm ? (
             <button
@@ -764,16 +619,10 @@ const SettingsPage = () => {
             <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
               <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
               <div className="flex gap-3">
-                <button
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm"
-                >
+                <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
                   {t("a11y.back")}
                 </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm"
-                >
+                <button onClick={handleLogout} className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm">
                   {t("settings.logout")}
                 </button>
               </div>
@@ -781,14 +630,14 @@ const SettingsPage = () => {
           )}
         </div>
 
-        {/* Legal & Privacy */}
+        {/* Legal */}
         <CollapsibleSection icon={Lock} title={t("settings.legal")} delay="110ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <button
               onClick={() => navigate("/privacy")}
               className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors border-b border-border"
             >
-              <Shield className="w-4.5 h-4.5 text-muted-foreground" />
+              <Shield className="w-5 h-5 text-muted-foreground" />
               <div>
                 <span className="text-[0.938rem] block">{t("settings.privacy")}</span>
                 <span className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</span>
@@ -798,7 +647,7 @@ const SettingsPage = () => {
               onClick={() => navigate("/terms")}
               className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
             >
-              <FileText className="w-4.5 h-4.5 text-muted-foreground" />
+              <FileText className="w-5 h-5 text-muted-foreground" />
               <div>
                 <span className="text-[0.938rem] block">{t("settings.terms")}</span>
                 <span className="text-xs text-muted-foreground">{t("settings.termsDesc")}</span>
