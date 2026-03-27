@@ -1,27 +1,39 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useVoiceTTS = () => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [playingMsgId, setPlayingMsgId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const playClonedVoice = async (text: string, senderId: string, msgId: string) => {
-    // Stop if already playing this message
-    if (playingMsgId === msgId && isPlaying) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
-      setPlayingMsgId(null);
+  const stop = useCallback(() => {
+    // Abort any in-flight fetch
+    abortRef.current?.abort();
+    abortRef.current = null;
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setIsPlaying(false);
+    setIsLoading(false);
+    setPlayingMsgId(null);
+  }, []);
+
+  const playClonedVoice = useCallback(async (text: string, senderId: string, msgId: string, lang?: string) => {
+    // Toggle off if already playing/loading this message
+    if (playingMsgId === msgId && (isPlaying || isLoading)) {
+      stop();
       return;
     }
 
-    // Stop any currently playing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
+    // Stop any current playback
+    stop();
 
-    setIsPlaying(true);
+    setIsLoading(true);
     setPlayingMsgId(msgId);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
       const session = (await supabase.auth.getSession()).data.session;
@@ -36,7 +48,8 @@ export const useVoiceTTS = () => {
             Authorization: `Bearer ${session.access_token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ text, senderId }),
+          body: JSON.stringify({ text, senderId, lang: lang || "de" }),
+          signal: controller.signal,
         }
       );
 
@@ -52,29 +65,29 @@ export const useVoiceTTS = () => {
 
       audio.onended = () => {
         setIsPlaying(false);
+        setIsLoading(false);
         setPlayingMsgId(null);
         URL.revokeObjectURL(audioUrl);
       };
 
       audio.onerror = () => {
         setIsPlaying(false);
+        setIsLoading(false);
         setPlayingMsgId(null);
         URL.revokeObjectURL(audioUrl);
       };
 
+      setIsLoading(false);
+      setIsPlaying(true);
       await audio.play();
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === "AbortError") return;
       console.error("Voice TTS error:", error);
       setIsPlaying(false);
+      setIsLoading(false);
       setPlayingMsgId(null);
     }
-  };
+  }, [playingMsgId, isPlaying, isLoading, stop]);
 
-  const stop = () => {
-    audioRef.current?.pause();
-    setIsPlaying(false);
-    setPlayingMsgId(null);
-  };
-
-  return { playClonedVoice, isPlaying, playingMsgId, stop };
+  return { playClonedVoice, isPlaying, isLoading, playingMsgId, stop };
 };
