@@ -19,71 +19,92 @@ const HeroSection = () => {
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [activated, setActivated] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audio] = useState(() => {
+    const nextAudio = new Audio(demoVoice);
+    nextAudio.preload = "auto";
+    nextAudio.volume = 0.18;
+    return nextAudio;
+  });
+  const audioRef = useRef<HTMLAudioElement>(audio);
   const triggeredRef = useRef(false);
 
-  // Preload audio eagerly on mount
   useEffect(() => {
-    const audio = new Audio(demoVoice);
-    audio.preload = "auto";
-    audio.volume = 0.18;
-    audio.onended = () => setIsPlaying(false);
-    audio.onerror = () => setIsPlaying(false);
-    audioRef.current = audio;
+    const currentAudio = audioRef.current;
 
-    // Force browser to start buffering
-    audio.load();
+    const handleEnded = () => setIsPlaying(false);
+    const handleError = () => {
+      setIsPlaying(false);
+      triggeredRef.current = false;
+    };
+
+    currentAudio.load();
+    currentAudio.addEventListener("ended", handleEnded);
+    currentAudio.addEventListener("error", handleError);
 
     return () => {
-      audio.pause();
-      audio.src = "";
+      currentAudio.pause();
+      currentAudio.removeEventListener("ended", handleEnded);
+      currentAudio.removeEventListener("error", handleError);
+      currentAudio.src = "";
     };
   }, []);
 
-  // Global interaction trigger – fires once on any touch/click/scroll
+  const startDemo = useCallback(async () => {
+    const currentAudio = audioRef.current;
+    if (!currentAudio || triggeredRef.current) return;
+
+    triggeredRef.current = true;
+
+    try {
+      currentAudio.currentTime = 0;
+      await currentAudio.play();
+      setIsPlaying(true);
+      setActivated(true);
+    } catch {
+      triggeredRef.current = false;
+    }
+  }, []);
+
   useEffect(() => {
     if (activated) return;
 
-    const trigger = () => {
-      if (triggeredRef.current) return;
-      triggeredRef.current = true;
-
-      const audio = audioRef.current;
-      if (!audio) return;
-
-      audio.currentTime = 0;
-      audio.play().then(() => {
-        setIsPlaying(true);
-        setActivated(true);
-      }).catch(() => {
-        // Edge case: still blocked, mark as activated so UI shows
-        setActivated(true);
-      });
-
-      cleanup();
+    const handleTrigger = () => {
+      void startDemo();
     };
 
-    const events = ["touchstart", "click", "pointerdown", "scroll", "keydown"];
-    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+    document.addEventListener("touchstart", handleTrigger, { passive: true, capture: true });
+    document.addEventListener("click", handleTrigger, true);
+    document.addEventListener("scroll", handleTrigger, { passive: true, capture: true });
+    document.addEventListener("keydown", handleTrigger, true);
 
-    const cleanup = () => {
-      events.forEach(e => document.removeEventListener(e, trigger));
+    return () => {
+      document.removeEventListener("touchstart", handleTrigger, true);
+      document.removeEventListener("click", handleTrigger, true);
+      document.removeEventListener("scroll", handleTrigger, true);
+      document.removeEventListener("keydown", handleTrigger, true);
     };
-
-    return cleanup;
-  }, [activated]);
+  }, [activated, startDemo]);
 
   const togglePlay = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const currentAudio = audioRef.current;
+    if (!currentAudio) return;
+
     if (isPlaying) {
-      audio.pause();
-      audio.currentTime = 0;
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
       setIsPlaying(false);
-    } else {
-      audio.play();
-      setIsPlaying(true);
+      return;
     }
+
+    triggeredRef.current = true;
+    void currentAudio.play()
+      .then(() => {
+        setIsPlaying(true);
+        setActivated(true);
+      })
+      .catch(() => {
+        triggeredRef.current = false;
+      });
   }, [isPlaying]);
 
   return (
