@@ -110,7 +110,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      // Try legacy voicara.app domain for existing users
+      // Try legacy clevara.app domain for existing users
+      const legacyClevaraEmail = `${normalizePhone(cleanPhone)}@phone.clevara.app`;
+      if (legacyClevaraEmail !== email) {
+        const { data: lcData, error: lcError } = await supabase.auth.signInWithPassword({ email: legacyClevaraEmail, password });
+        if (!lcError) {
+          applySession(lcData.session);
+          return { error: null };
+        }
+      }
+      // Try legacy voicara.app domain
       const legacyEmail = `${normalizePhone(cleanPhone)}@phone.voicara.app`;
       if (legacyEmail !== email) {
         const { data: legacyData, error: legacyError } = await supabase.auth.signInWithPassword({ email: legacyEmail, password });
