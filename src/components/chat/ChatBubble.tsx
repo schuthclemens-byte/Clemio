@@ -68,7 +68,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const isMedia = messageType === "image" || messageType === "video";
   const isAudio = messageType === "audio";
   const displayText = showTranslation && translated ? translated : message;
-  const isActive = isSpeaking || isPlayingCloned;
+  const isActive = isSpeaking || isPlayingCloned || isLoadingCloned;
 
   // Play subtle pop when speech starts
   useEffect(() => {
