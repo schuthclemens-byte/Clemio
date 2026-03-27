@@ -1,13 +1,14 @@
+import { forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
-const FooterSection = () => {
+const FooterSection = forwardRef<HTMLElement>((_, ref) => {
   const navigate = useNavigate();
   const { t } = useI18n();
 
   return (
-    <footer className="border-t border-border px-6 py-10">
+    <footer ref={ref} className="border-t border-border px-6 py-10">
       <div className="max-w-lg mx-auto flex flex-col items-center gap-4">
         <div className="flex items-center gap-2 text-muted-foreground">
           <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
@@ -34,6 +35,6 @@ const FooterSection = () => {
       </div>
     </footer>
   );
-};
+});
 
 export default FooterSection;

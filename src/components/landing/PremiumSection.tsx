@@ -1,8 +1,9 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Mic2, Zap, Gauge, Sparkles } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
-const PremiumSection = () => {
+const PremiumSection = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useI18n();
 
   const features = [
@@ -13,7 +14,7 @@ const PremiumSection = () => {
   ];
 
   return (
-    <section className="px-6 py-16">
+    <section ref={ref} className="px-6 py-16">
       <motion.div
         className="max-w-md mx-auto"
         initial={{ opacity: 0, y: 20 }}
@@ -46,6 +47,6 @@ const PremiumSection = () => {
       </motion.div>
     </section>
   );
-};
+});
 
 export default PremiumSection;
