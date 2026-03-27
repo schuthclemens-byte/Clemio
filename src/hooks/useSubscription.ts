@@ -47,6 +47,8 @@ export const useSubscription = () => {
   // Check Stripe subscription
   const checkStripe = useCallback(async () => {
     if (!user) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
     try {
       const { data, error } = await supabase.functions.invoke<StripeStatus>("check-subscription");
       if (error) {
