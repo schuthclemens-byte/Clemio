@@ -60,6 +60,8 @@ const HeroSection = () => {
     setHasPlayed(true);
   }, [isPlaying, ensureAudio]);
 
+  return (
+    <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
       {/* Ambient blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
