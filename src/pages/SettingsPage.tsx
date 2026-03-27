@@ -3,7 +3,6 @@ import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
-import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
