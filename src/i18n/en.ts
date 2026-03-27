@@ -152,6 +152,7 @@ const en: Record<string, string> = {
     "landing.heroListenTitle": "Listen to this 👇",
     "landing.heroDemoText": "Hey… every message I write to you sounds like my real voice.",
     "landing.heroAutoPlay": "Voice plays automatically",
+    "landing.tapToStart": "Tap to start",
     "landing.heroSubtitleNew": "Instead of reading – just listen.",
     "landing.heroCTA": "Listen now",
     "landing.promoHeadline": "Typing is so yesterday.",
