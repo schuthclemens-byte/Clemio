@@ -118,7 +118,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
 
   const handlePlayCloned = (e: React.MouseEvent) => {
     e.stopPropagation();
-    requirePremium(() => onPlayClonedVoice?.(message, senderId!, msgId!));
+    requirePremium(() => onPlayClonedVoice?.(message, senderId!, msgId!, locale));
   };
 
   const handleConfirmVoiceSave = () => {
@@ -126,7 +126,9 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     requirePremium(() => onSaveAsVoiceSample?.(message, senderId!));
   };
 
-  const speakingLabel = isPlayingCloned
+  const speakingLabel = isLoadingCloned
+    ? "Lädt Stimme…"
+    : isPlayingCloned
     ? `${senderName || t("chat.contact") || "Kontakt"} ${t("chat.speaking") || "spricht…"}`
     : t("chat.readingAloud") || "Wird vorgelesen…";
 
