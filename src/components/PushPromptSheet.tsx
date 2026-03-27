@@ -21,13 +21,20 @@ const PushPromptSheet = () => {
   const pushCap = usePushCapability();
   const { debug, subscribe } = usePushSubscription();
   const navigate = useNavigate();
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [activating, setActivating] = useState(false);
   const [result, setResult] = useState<"success" | "denied" | null>(null);
 
   // Decide whether to show the prompt
   useEffect(() => {
+    // Must be logged in
     if (!user) return;
+
+    // Only show on protected app routes, not landing/login/install etc.
+    const onAllowedRoute = ALLOWED_ROUTES.some(r => location.pathname.startsWith(r));
+    if (!onAllowedRoute) return;
+
     if (debug.loading) return;
 
     // Already subscribed → don't show
@@ -48,7 +55,7 @@ const PushPromptSheet = () => {
     // Small delay so the app feels loaded
     const timer = setTimeout(() => setVisible(true), 1500);
     return () => clearTimeout(timer);
-  }, [user, debug.loading, debug.pushSubscription, debug.backendSubscription, debug.notificationPermission, pushCap.canUsePush]);
+  }, [user, location.pathname, debug.loading, debug.pushSubscription, debug.backendSubscription, debug.notificationPermission, pushCap.canUsePush]);
 
   const handleDismiss = useCallback(() => {
     if (pushCap.canUsePush) {
