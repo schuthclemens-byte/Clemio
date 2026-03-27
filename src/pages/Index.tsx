@@ -16,12 +16,7 @@ const Index = () => {
       return;
     }
 
-    const done = localStorage.getItem(ONBOARDING_KEY);
-    if (!done) {
-      navigate("/onboarding", { replace: true });
-    } else {
-      navigate("/landing", { replace: true });
-    }
+    navigate("/landing", { replace: true });
   }, [navigate, user, loading]);
 
   if (loading) {
