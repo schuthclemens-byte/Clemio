@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import PremiumBadge from "@/components/PremiumBadge";
 import { useSubscription } from "@/hooks/useSubscription";
-import { usePushSubscription } from "@/hooks/usePushSubscription";
+
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -114,14 +114,12 @@ const SettingsPage = () => {
   const { user } = useAuth();
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
-  const { debug: pushDebug, subscribe: subscribeToPush, sendTestPush, refreshStatus: refreshPushStatus } = usePushSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
   const [refreshingSubscription, setRefreshingSubscription] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
-  const [pushAction, setPushAction] = useState<"subscribe" | "test" | "refresh" | null>(null);
 
   // Load push preview from profile
   useEffect(() => {
@@ -166,28 +164,6 @@ const SettingsPage = () => {
     );
     setLastChecked(new Date());
     setRefreshingSubscription(false);
-  };
-
-  const handleEnablePush = async () => {
-    setPushAction("subscribe");
-    const success = await subscribeToPush();
-    await refreshPushStatus();
-    toast[success ? "success" : "error"](success ? "Push wurde neu aktiviert" : "Push-Aktivierung fehlgeschlagen");
-    setPushAction(null);
-  };
-
-  const handleTestPush = async () => {
-    setPushAction("test");
-    const result = await sendTestPush();
-    await refreshPushStatus();
-    toast[result.ok ? "success" : "error"](result.ok ? "Test-Push versendet" : "Test-Push fehlgeschlagen");
-    setPushAction(null);
-  };
-
-  const handleRefreshPushStatus = async () => {
-    setPushAction("refresh");
-    await refreshPushStatus();
-    setPushAction(null);
   };
 
   const languages = Object.entries(localeNames) as [Locale, string][];
@@ -274,52 +250,6 @@ const SettingsPage = () => {
             />
           </div>
 
-          <div className="bg-card rounded-2xl shadow-sm p-4 mt-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[0.938rem] font-medium">System-Push Debug</p>
-                <p className="text-xs text-muted-foreground">Echte Hintergrund-Benachrichtigungen über Service Worker statt In-App-Refresh.</p>
-              </div>
-              <button
-                onClick={handleRefreshPushStatus}
-                disabled={pushAction !== null}
-                className="p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-60"
-                aria-label="Push-Status aktualisieren"
-              >
-                <RefreshCw className={cn("w-4 h-4 text-muted-foreground", pushAction === "refresh" && "animate-spin")} />
-              </button>
-            </div>
-
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Service Worker: {pushDebug.swRegistered ? `aktiv (${pushDebug.swState ?? "bereit"})` : "nicht registriert"}</p>
-              <p>Berechtigung: {pushDebug.notificationPermission}</p>
-              <p>Browser-Subscription: {pushDebug.pushSubscription ? "vorhanden" : "keine"}</p>
-              <p>Backend-Subscription: {pushDebug.backendSubscription ? "gespeichert" : "keine"}</p>
-              <p>Endpoint-Abgleich: {pushDebug.backendEndpointMatches === null ? "–" : pushDebug.backendEndpointMatches ? "identisch" : "abweichend"}</p>
-              <p>SW-Ereignis: {pushDebug.lastServiceWorkerEvent ?? "noch keines"}</p>
-              <p className="break-all">Versand-Response: {pushDebug.lastTestResponse ?? "noch kein Test"}</p>
-              {pushDebug.lastError && <p className="text-destructive">Fehler: {pushDebug.lastError}</p>}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleEnablePush}
-                disabled={pushAction !== null}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-              >
-                {pushAction === "subscribe" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Radio className="w-4 h-4" />}
-                Push aktivieren
-              </button>
-              <button
-                onClick={handleTestPush}
-                disabled={pushAction !== null || !pushDebug.pushSubscription}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-              >
-                {pushAction === "test" ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquareText className="w-4 h-4" />}
-                Test-Push senden
-              </button>
-            </div>
-          </div>
         </CollapsibleSection>
 
 
