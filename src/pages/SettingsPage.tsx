@@ -115,6 +115,11 @@ const SettingsPage = () => {
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
+  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [previewEnabled, setPreviewEnabled] = useState(false);
+  const [refreshingSubscription, setRefreshingSubscription] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   // Load push preview from profile
   useEffect(() => {
