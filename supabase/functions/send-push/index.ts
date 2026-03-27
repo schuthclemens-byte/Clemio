@@ -243,11 +243,18 @@ Deno.serve(async (req) => {
           body: pushBody,
         });
 
-        if (pushRes.status === 410 || pushRes.status === 404) {
+        const errText = pushRes.ok ? null : await pushRes.text();
+        const isStaleVapidSubscription = !!errText && pushRes.status === 400 && /VapidPkHashMismatch|BadJwtToken|UnauthorizedRegistration/i.test(errText);
+
+        if (pushRes.status === 410 || pushRes.status === 404 || isStaleVapidSubscription) {
           await supabase.from("push_subscriptions").delete().eq("id", sub.id);
-          results.push({ endpoint, status: "expired_removed" });
+          results.push({
+            endpoint,
+            status: isStaleVapidSubscription ? "stale_removed" : "expired_removed",
+            code: pushRes.status,
+            error: errText,
+          });
         } else if (!pushRes.ok) {
-          const errText = await pushRes.text();
           results.push({ endpoint, status: "failed", code: pushRes.status, error: errText });
         } else {
           results.push({ endpoint, status: "sent" });

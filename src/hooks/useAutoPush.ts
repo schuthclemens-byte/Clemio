@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { usePushCapability } from "@/hooks/usePushCapability";
@@ -14,10 +14,13 @@ export const useAutoPush = () => {
   const { subscribe, debug } = usePushSubscription();
   const { canUsePush } = usePushCapability();
   const attempted = useRef(false);
+  const retryCount = useRef(0);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     if (!user) {
       attempted.current = false;
+      retryCount.current = 0;
       return;
     }
     if (attempted.current) return;
@@ -25,19 +28,35 @@ export const useAutoPush = () => {
     if (!canUsePush) return;
     if (!debug.subscriptionNeedsRefresh && debug.pushSubscription && debug.backendEndpointMatches !== false) {
       attempted.current = false;
+      retryCount.current = 0;
       return;
     }
 
     // Only auto-re-subscribe if permission was ALREADY granted
     // and the subscription is missing, stale or not synced to backend.
     if (debug.notificationPermission !== "granted") return;
+    if (retryCount.current >= 3) return;
 
     attempted.current = true;
-    const timer = setTimeout(() => {
-      subscribe();
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const success = await subscribe();
+      if (cancelled) return;
+
+      if (success) {
+        retryCount.current = 0;
+        return;
+      }
+
+      attempted.current = false;
+      retryCount.current += 1;
+      setRetryNonce((value) => value + 1);
     }, 2000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [
     user,
     debug.loading,
@@ -47,5 +66,6 @@ export const useAutoPush = () => {
     debug.backendEndpointMatches,
     subscribe,
     canUsePush,
+    retryNonce,
   ]);
 };
