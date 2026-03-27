@@ -318,10 +318,6 @@ const SettingsPage = () => {
           </div>
         </CollapsibleSection>
 
-        {/* ──────────── BENACHRICHTIGUNGEN ──────────── */}
-        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" delay="50ms">
-          <PushDebugSection />
-        </CollapsibleSection>
 
         {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
         <CollapsibleSection icon={Palette} title="Erscheinungsbild" delay="60ms">
