@@ -105,8 +105,15 @@ const ToggleRow = ({
   </button>
 );
 
+/** Small status indicator row */
+const StatusRow = ({ ok, label }: { ok: boolean; label: string }) => (
+  <div className="flex items-center gap-2">
+    {ok ? <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" /> : <XCircle className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />}
+    <span className={cn("text-xs", ok ? "text-foreground" : "text-muted-foreground")}>{label}</span>
+  </div>
+);
 
-const SettingsPage = () => {
+
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
