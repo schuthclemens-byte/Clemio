@@ -116,7 +116,7 @@ const SettingsPage = () => {
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const { debug: pushDebug, subscribe: subscribeToPush, sendTestPush, refreshStatus: refreshPushStatus } = usePushSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
-  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clevara_stay_logged_in") !== "false");
+  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
   const [refreshingSubscription, setRefreshingSubscription] = useState(false);
@@ -146,7 +146,7 @@ const SettingsPage = () => {
   const toggleStayLoggedIn = () => {
     const next = !stayLoggedIn;
     setStayLoggedIn(next);
-    localStorage.setItem("clevara_stay_logged_in", next ? "true" : "false");
+    localStorage.setItem("clemio_stay_logged_in", next ? "true" : "false");
   };
 
   const handleRefreshSubscription = async () => {
@@ -243,10 +243,10 @@ const SettingsPage = () => {
               icon={Eye}
               label="Lesebestätigungen senden"
               description="Andere sehen, wenn du ihre Nachricht gelesen hast."
-              checked={localStorage.getItem("clevara_read_receipts") !== "false"}
+              checked={localStorage.getItem("clemio_read_receipts") !== "false"}
               onChange={() => {
-                const next = localStorage.getItem("clevara_read_receipts") === "false";
-                localStorage.setItem("clevara_read_receipts", next ? "true" : "false");
+                const next = localStorage.getItem("clemio_read_receipts") === "false";
+                localStorage.setItem("clemio_read_receipts", next ? "true" : "false");
                 toast.success(next ? "Lesebestätigungen aktiviert" : "Lesebestätigungen deaktiviert");
               }}
             />

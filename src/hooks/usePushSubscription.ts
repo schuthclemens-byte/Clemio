@@ -241,7 +241,7 @@ export const usePushSubscription = () => {
         },
         body: JSON.stringify({
           user_id: user.id,
-          title: "🔔 Clevara Test",
+          title: "🔔 Clemio Test",
           body: "Push-Benachrichtigungen funktionieren!",
           data: { source: "manual-test" },
         }),

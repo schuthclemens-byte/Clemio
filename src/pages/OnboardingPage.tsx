@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 
-const ONBOARDING_KEY = "clevara_onboarding_done";
+const ONBOARDING_KEY = "clemio_onboarding_done";
 
 const OnboardingPage = () => {
   const [selected, setSelected] = useState<"simple" | "private" | null>(null);
@@ -19,14 +19,14 @@ const OnboardingPage = () => {
       // Private mode: disable previews, read receipts, online status, typing
       if (a11y.showOnlineStatus) a11y.toggle("showOnlineStatus");
       if (a11y.showTypingIndicator) a11y.toggle("showTypingIndicator");
-      localStorage.setItem("clevara_push_preview", "false");
-      localStorage.setItem("clevara_read_receipts", "false");
+      localStorage.setItem("clemio_push_preview", "false");
+      localStorage.setItem("clemio_read_receipts", "false");
     } else {
       // Simple mode: enable everything
       if (!a11y.showOnlineStatus) a11y.toggle("showOnlineStatus");
       if (!a11y.showTypingIndicator) a11y.toggle("showTypingIndicator");
-      localStorage.setItem("clevara_push_preview", "true");
-      localStorage.setItem("clevara_read_receipts", "true");
+      localStorage.setItem("clemio_push_preview", "true");
+      localStorage.setItem("clemio_read_receipts", "true");
     }
 
     localStorage.setItem(ONBOARDING_KEY, "true");

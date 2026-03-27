@@ -12,7 +12,7 @@ interface QueuedMessage {
   queuedAt: number;
 }
 
-const STORAGE_KEY = "clevara_offline_queue";
+const STORAGE_KEY = "clemio_offline_queue";
 
 const getQueue = (): QueuedMessage[] => {
   try {

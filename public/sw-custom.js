@@ -31,7 +31,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("push", (event) => {
   console.log("[SW-Custom] Push event received");
   event.waitUntil((async () => {
-    let data = { title: "Clevara", body: "Neue Nachricht", data: {} };
+    let data = { title: "Clemio", body: "Neue Nachricht", data: {} };
     try {
       if (event.data) {
         data = event.data.json();
@@ -47,7 +47,7 @@ self.addEventListener("push", (event) => {
       body: data.body,
       icon: data.icon || "/icon-192.png",
       badge: data.badge || "/icon-192.png",
-      tag: data.data?.conversation_id || "clevara-push",
+      tag: data.data?.conversation_id || "clemio-push",
       data: data.data || {},
       vibrate: [200, 100, 200],
       renotify: true,
@@ -183,7 +183,7 @@ async function flushQueue() {
 // ---- IndexedDB helpers for SW (no localStorage access) ----
 function openIDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open("clevara_offline", 1);
+    const req = indexedDB.open("clemio_offline", 1);
     req.onupgradeneeded = () => {
       req.result.createObjectStore("queue");
     };

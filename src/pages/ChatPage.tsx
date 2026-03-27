@@ -112,7 +112,7 @@ const ChatPage = () => {
   // Pre-populate chat name from cached conversations for instant display
   const cachedName = (() => {
     try {
-      const cached = localStorage.getItem("clevara_conversations");
+      const cached = localStorage.getItem("clemio_conversations");
       if (cached) {
         const convs = JSON.parse(cached) as { id: string; name: string }[];
         return convs.find((c) => c.id === conversationId)?.name || "...";

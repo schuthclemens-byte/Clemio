@@ -39,7 +39,7 @@ export function AppSidebar() {
             <MessageCircle className="w-5 h-5 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="text-lg font-extrabold tracking-tight">Clevara</span>
+            <span className="text-lg font-extrabold tracking-tight">Clemio</span>
           )}
         </div>
 

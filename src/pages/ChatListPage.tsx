@@ -39,7 +39,7 @@ const ChatListPage = () => {
   const fetchingRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
 
-  const cacheKey = user ? `clevara_chats_${user.id}` : "";
+  const cacheKey = user ? `clemio_chats_${user.id}` : "";
 
   // Load cached conversations instantly on mount
   useEffect(() => {
