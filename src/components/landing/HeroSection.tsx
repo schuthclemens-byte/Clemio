@@ -31,20 +31,33 @@ const HeroSection = () => {
     return audioRef.current;
   }, []);
 
-  // Auto-play on first tap/click anywhere
+  // Try autoplay on load, then fall back to first interaction if blocked by the browser
   useEffect(() => {
     if (hasPlayed) return;
-    const handler = () => {
+
+    const audio = ensureAudio();
+    audio.play().then(() => {
+      setIsPlaying(true);
       setHasPlayed(true);
-      const audio = ensureAudio();
-      audio.play().then(() => setIsPlaying(true)).catch(() => {});
-    };
-    document.addEventListener("click", handler, { once: true });
-    document.addEventListener("touchstart", handler, { once: true });
-    return () => {
-      document.removeEventListener("click", handler);
-      document.removeEventListener("touchstart", handler);
-    };
+    }).catch(() => {
+      const handler = () => {
+        const fallbackAudio = ensureAudio();
+        fallbackAudio.play().then(() => {
+          setIsPlaying(true);
+          setHasPlayed(true);
+        }).catch(() => {});
+      };
+
+      document.addEventListener("pointerdown", handler, { once: true });
+      document.addEventListener("touchstart", handler, { once: true });
+      document.addEventListener("keydown", handler, { once: true });
+
+      return () => {
+        document.removeEventListener("pointerdown", handler);
+        document.removeEventListener("touchstart", handler);
+        document.removeEventListener("keydown", handler);
+      };
+    });
   }, [hasPlayed, ensureAudio]);
 
   const togglePlay = useCallback(() => {
