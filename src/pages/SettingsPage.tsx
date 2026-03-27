@@ -125,7 +125,7 @@ const SettingsPage = () => {
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const pushCap = usePushCapability();
-  const { debug: pushDebug, subscribe: pushSubscribe } = usePushSubscription();
+  const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
