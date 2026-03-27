@@ -29,5 +29,5 @@ export const isValidAuthPhone = (phone: string): boolean => {
 };
 
 export const phoneToEmail = (phone: string): string => {
-  return `${normalizePhone(phone)}@phone.clevara.app`;
+  return `${normalizePhone(phone)}@phone.clemio.app`;
 };

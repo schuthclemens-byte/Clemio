@@ -1,11 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.clevara.chat',
-  appName: 'Clevara',
+  appId: 'app.clemio.chat',
+  appName: 'Clemio',
   webDir: 'dist',
   server: {
-    url: "https://clevara.lovable.app",
+    url: "https://clemio.lovable.app",
     cleartext: true
   }
 };

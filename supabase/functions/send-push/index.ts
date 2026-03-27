@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
   try {
     const VAPID_PRIVATE_KEY_B64 = Deno.env.get("VAPID_PRIVATE_KEY");
     const VAPID_PUBLIC_KEY = "BMNPLUnCNDmHxeNFyTMIp1ZoPlq36VoiDuEIQnh9SFVKbzAHb1NzRS_BNj1ndnfklLMhobepS0TCIjyiSPci_hY";
-    const VAPID_SUBJECT = "mailto:support@clevara.app";
+    const VAPID_SUBJECT = "mailto:support@clemio.app";
 
     if (!VAPID_PRIVATE_KEY_B64) {
       return new Response(JSON.stringify({ error: "VAPID_PRIVATE_KEY not configured" }),
@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
     console.log("[send-push] subscriptions found", { user_id, count: subscriptions.length });
 
     const payload = JSON.stringify({
-      title: title || "Clevara",
+      title: title || "Clemio",
       body: body || "Du hast eine neue Nachricht",
       icon: "/icon-192.png",
       badge: "/icon-192.png",

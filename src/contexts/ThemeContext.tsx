@@ -21,14 +21,14 @@ const getSystemTheme = (): "light" | "dark" =>
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    return (localStorage.getItem("clevara-theme") as Theme) || "system";
+    return (localStorage.getItem("clemio-theme") as Theme) || "system";
   });
 
   const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
 
   const setTheme = (t: Theme) => {
     setThemeState(t);
-    localStorage.setItem("clevara-theme", t);
+    localStorage.setItem("clemio-theme", t);
   };
 
   useEffect(() => {

@@ -80,8 +80,8 @@ const TermsPage = () => {
           <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.terms5Title")}</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {t("legal.terms5Text")}{" "}
-            <a href="mailto:support@clevara.app" className="text-primary font-medium hover:underline">
-              support@clevara.app
+            <a href="mailto:support@clemio.app" className="text-primary font-medium hover:underline">
+              support@clemio.app
             </a>
           </p>
         </section>

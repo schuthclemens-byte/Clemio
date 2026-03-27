@@ -134,8 +134,8 @@ const PrivacyPolicyPage = () => {
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "600ms" }}>
           <p className="text-sm text-muted-foreground">
             Kontakt:{" "}
-            <a href="mailto:privacy@clevara.app" className="text-primary font-medium hover:underline">
-              privacy@clevara.app
+            <a href="mailto:privacy@clemio.app" className="text-primary font-medium hover:underline">
+              privacy@clemio.app
             </a>
           </p>
         </section>

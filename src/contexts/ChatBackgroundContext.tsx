@@ -42,8 +42,8 @@ export const animatedPresets: { label: string; bg: ChatBackground; premium: true
   { label: "Nebel", bg: { type: "animated", value: "nebula" }, premium: true },
 ];
 
-const STORAGE_KEY = "clevara-chat-bg-global";
-const PER_CHAT_KEY = "clevara-chat-bg-";
+const STORAGE_KEY = "clemio-chat-bg-global";
+const PER_CHAT_KEY = "clemio-chat-bg-";
 
 export const ChatBackgroundProvider = ({ children }: { children: ReactNode }) => {
   const [globalBackground, setGlobalBgState] = useState<ChatBackground>(() => {

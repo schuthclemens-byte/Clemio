@@ -12,8 +12,8 @@ const InstallPage = () => {
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    fetch("/clevara-setup.zip", { method: "HEAD" })
-      .then((r) => { if (r.ok) setDesktopUrl("/clevara-setup.zip"); })
+    fetch("/clemio-setup.zip", { method: "HEAD" })
+      .then((r) => { if (r.ok) setDesktopUrl("/clemio-setup.zip"); })
       .catch(() => {})
       .finally(() => setCheckingDesktop(false));
 
@@ -43,18 +43,18 @@ const InstallPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-semibold text-lg">Clevara herunterladen</h1>
+          <h1 className="font-semibold text-lg">Clemio herunterladen</h1>
         </div>
       </header>
 
       <div className="flex-1 flex flex-col items-center px-6 pt-8 pb-12">
         <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mb-6 shadow-lg">
-          <img src="/icon-192.png" alt="Clevara" className="w-20 h-20 rounded-2xl" />
+          <img src="/icon-192.png" alt="Clemio" className="w-20 h-20 rounded-2xl" />
         </div>
 
-        <h2 className="text-2xl font-bold text-foreground mb-2">Clevara</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Clemio</h2>
         <p className="text-muted-foreground text-center text-sm mb-10 max-w-xs">
-          Lade Clevara als App herunter – für dein Handy oder deinen Computer.
+          Lade Clemio als App herunter – für dein Handy oder deinen Computer.
         </p>
 
         <div className="w-full max-w-sm space-y-4">
@@ -68,7 +68,7 @@ const InstallPage = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-[0.938rem]">Web-App installieren</h3>
                 <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-                  Installiere Clevara direkt auf deinem Gerät – ohne App Store. Funktioniert auf Handy & Computer.
+                  Installiere Clemio direkt auf deinem Gerät – ohne App Store. Funktioniert auf Handy & Computer.
                 </p>
 
                 {isStandalone || installed ? (
@@ -81,7 +81,7 @@ const InstallPage = () => {
                 ) : (
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">
-                      Öffne Clevara im Browser und tippe auf <strong>„Teilen"</strong> → <strong>„Zum Startbildschirm"</strong> (iPhone) oder auf das <strong>Menü ⋮</strong> → <strong>„App installieren"</strong> (Android / Desktop).
+                      Öffne Clemio im Browser und tippe auf <strong>„Teilen"</strong> → <strong>„Zum Startbildschirm"</strong> (iPhone) oder auf das <strong>Menü ⋮</strong> → <strong>„App installieren"</strong> (Android / Desktop).
                     </p>
                   </div>
                 )}
@@ -109,11 +109,11 @@ const InstallPage = () => {
           <DownloadCard
             icon={Monitor}
             title="Windows"
-            description="ZIP herunterladen, entpacken & Clevara.exe starten"
+            description="ZIP herunterladen, entpacken & Clemio.exe starten"
             loading={checkingDesktop}
             available={!!desktopUrl}
             url={desktopUrl}
-            fileName="clevara-setup.zip"
+            fileName="clemio-setup.zip"
             buttonLabel="Für Windows herunterladen"
             unavailableText="Desktop-App kommt bald"
           />
@@ -127,7 +127,7 @@ const InstallPage = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-[0.938rem]">Im Browser nutzen</h3>
                 <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-                  Kein Download nötig – Clevara funktioniert auch direkt im Browser.
+                  Kein Download nötig – Clemio funktioniert auch direkt im Browser.
                 </p>
                 <Button
                   variant="outline"

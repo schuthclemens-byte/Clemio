@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
-const BIOMETRIC_ENABLED_KEY = "clevara_biometric_enabled";
-const BIOMETRIC_CRED_KEY = "clevara_biometric_cred";
+const BIOMETRIC_ENABLED_KEY = "clemio_biometric_enabled";
+const BIOMETRIC_CRED_KEY = "clemio_biometric_cred";
 
 function isWebAuthnAvailable(): boolean {
   return (
@@ -57,7 +57,7 @@ function bytesToHex(bytes: Uint8Array): string {
 }
 
 async function deriveDeviceKey(): Promise<string> {
-  const seed = `${window.location.origin}|${navigator.userAgent}|clevara-biometric-v2`;
+  const seed = `${window.location.origin}|${navigator.userAgent}|clemio-biometric-v2`;
   const digest = await crypto.subtle.digest("SHA-256", textToBuffer(seed));
   return bytesToHex(new Uint8Array(digest));
 }
@@ -107,12 +107,12 @@ export function useBiometricAuth() {
         publicKey: {
           challenge,
           rp: {
-            name: "Clevara Messenger",
+            name: "Clemio Messenger",
           },
           user: {
             id: userId.buffer as ArrayBuffer,
             name: phone.trim(),
-            displayName: `Clevara - ${phone.trim()}`,
+            displayName: `Clemio - ${phone.trim()}`,
           },
           pubKeyCredParams: [
             { alg: -7, type: "public-key" },

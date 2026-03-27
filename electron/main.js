@@ -9,7 +9,7 @@ function createWindow() {
     height: 800,
     minWidth: 400,
     minHeight: 600,
-    title: "Clevara",
+    title: "Clemio",
     icon: path.join(__dirname, "../public/icon-512.png"),
     webPreferences: {
       nodeIntegration: false,
