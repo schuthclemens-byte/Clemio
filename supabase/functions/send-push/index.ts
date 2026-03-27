@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
 
   try {
     const VAPID_PRIVATE_KEY_B64 = Deno.env.get("VAPID_PRIVATE_KEY");
-    const VAPID_PUBLIC_KEY = "BEbm6ne3s04r3rcsuC9aDv-U4xMIucuB7aIu7FilHlXVfaLvQcIOSDBE9afONxsUZ7sw59QIqCy1ogQ8EhZ98Ik";
+    const VAPID_PUBLIC_KEY = "BL2_0Ki93BHS5ty1Blv8Rxxw0FTgAJEBPq7TN6xk09czbSWSpnINsCBe46uv6LaiKbtkHlwmiiRSDifoFt5ZDVM";
     const VAPID_SUBJECT = "mailto:support@clemio.app";
 
     if (!VAPID_PRIVATE_KEY_B64) {
