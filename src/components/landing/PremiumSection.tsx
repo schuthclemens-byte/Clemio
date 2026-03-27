@@ -1,8 +1,9 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Mic2, Zap, Gauge, Sparkles } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
-const PremiumSection = () => {
+const PremiumSection = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useI18n();
 
   const features = [
