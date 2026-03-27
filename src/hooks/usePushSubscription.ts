@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const VAPID_PUBLIC_KEY =
   "BEbm6ne3s04r3rcsuC9aDv-U4xMIucuB7aIu7FilHlXVfaLvQcIOSDBE9afONxsUZ7sw59QIqCy1ogQ8EhZ98Ik";
+const VAPID_KEY_STORAGE_KEY = "clemio_push_vapid_public_key";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -20,11 +21,20 @@ function getServiceWorkerState(registration: ServiceWorkerRegistration | null) {
   return registration?.active?.state || registration?.waiting?.state || registration?.installing?.state || null;
 }
 
+function arrayBufferMatches(a: ArrayBuffer | null, b: Uint8Array) {
+  if (!a) return false;
+  const left = new Uint8Array(a);
+  if (left.length !== b.length) return false;
+  return left.every((value, index) => value === b[index]);
+}
+
 export interface PushDebugInfo {
   swRegistered: boolean;
   swState: string | null;
   notificationPermission: NotificationPermission | "unsupported";
   pushSubscription: boolean;
+   subscriptionUsesCurrentKey: boolean | null;
+   subscriptionNeedsRefresh: boolean;
   backendSubscription: boolean;
   backendEndpointMatches: boolean | null;
   subscriptionEndpoint: string | null;
@@ -49,6 +59,8 @@ export const usePushSubscription = () => {
     swState: null,
     notificationPermission: "unsupported",
     pushSubscription: false,
+    subscriptionUsesCurrentKey: null,
+    subscriptionNeedsRefresh: false,
     backendSubscription: false,
     backendEndpointMatches: null,
     subscriptionEndpoint: null,
@@ -76,6 +88,8 @@ export const usePushSubscription = () => {
         swState: null,
         notificationPermission: notifSupported ? Notification.permission : "unsupported",
         pushSubscription: false,
+        subscriptionUsesCurrentKey: null,
+        subscriptionNeedsRefresh: false,
         backendSubscription: false,
         backendEndpointMatches: null,
         subscriptionEndpoint: null,
@@ -93,6 +107,11 @@ export const usePushSubscription = () => {
       registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
       const browserEndpoint = subscription?.endpoint ?? null;
+      const currentVapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      const subscriptionUsesCurrentKey = subscription
+        ? arrayBufferMatches(subscription.options.applicationServerKey, currentVapidKey)
+        : null;
+      const storedVapidKey = localStorage.getItem(VAPID_KEY_STORAGE_KEY);
 
       let backendRows: Array<{ endpoint: string }> = [];
       if (user) {
@@ -114,12 +133,24 @@ export const usePushSubscription = () => {
         : backendSubscription
           ? false
           : null;
+      const subscriptionNeedsRefresh = Notification.permission === "granted" && (
+        (!!subscription && subscriptionUsesCurrentKey === false) ||
+        (!!subscription && subscriptionUsesCurrentKey !== true && storedVapidKey !== VAPID_PUBLIC_KEY) ||
+        backendEndpointMatches === false ||
+        (!subscription && backendSubscription)
+      );
+
+      if (subscription && subscriptionUsesCurrentKey) {
+        localStorage.setItem(VAPID_KEY_STORAGE_KEY, VAPID_PUBLIC_KEY);
+      }
 
       updateDebug({
         swRegistered: true,
         swState: getServiceWorkerState(registration),
         notificationPermission: Notification.permission,
         pushSubscription: !!subscription,
+        subscriptionUsesCurrentKey,
+        subscriptionNeedsRefresh,
         backendSubscription,
         backendEndpointMatches,
         subscriptionEndpoint: browserEndpoint,
@@ -184,6 +215,8 @@ export const usePushSubscription = () => {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
       });
+
+      localStorage.setItem(VAPID_KEY_STORAGE_KEY, VAPID_PUBLIC_KEY);
 
       if (user) {
         const subJson = subscription.toJSON();
