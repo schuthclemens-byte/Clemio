@@ -124,20 +124,24 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
-      {/* Tap-to-start overlay – invisible trigger area */}
+      {/* Fullscreen tap layer – acts as a real button for maximum compatibility */}
       <AnimatePresence>
         {!activated && (
-          <motion.div
+          <motion.button
             key="tap-overlay"
+            type="button"
+            onClick={() => void startDemo()}
+            onTouchStart={() => void startDemo()}
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeOut" } }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background cursor-pointer border-none outline-none w-full h-full"
+            aria-label="Tippe um Audio zu starten"
           >
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-col items-center gap-5"
+              className="flex flex-col items-center gap-5 pointer-events-none"
             >
               <span className="text-4xl sm:text-5xl font-black tracking-tight text-foreground">
                 Clemio
@@ -168,6 +172,21 @@ const HeroSection = () => {
                 {t("landing.tapToStart") || "Tippe irgendwo, um zu starten"}
               </motion.p>
             </motion.div>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Play error fallback hint */}
+      <AnimatePresence>
+        {playError && !isPlaying && activated && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border shadow-elevated text-sm text-muted-foreground"
+          >
+            <VolumeX className="w-4 h-4 text-destructive shrink-0" />
+            <span>Audio konnte nicht gestartet werden – nutze den Play-Button</span>
           </motion.div>
         )}
       </AnimatePresence>
