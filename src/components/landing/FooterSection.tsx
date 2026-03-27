@@ -1,8 +1,9 @@
+import { forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
-const FooterSection = () => {
+const FooterSection = forwardRef<HTMLElement>((_, ref) => {
   const navigate = useNavigate();
   const { t } = useI18n();
 
