@@ -23,7 +23,6 @@ const HeroSection = () => {
     const nextAudio = new Audio(demoVoice);
     nextAudio.preload = "auto";
     nextAudio.volume = 0.18;
-    nextAudio.playsInline = true;
     return nextAudio;
   });
   const audioRef = useRef<HTMLAudioElement>(audio);
