@@ -8,7 +8,7 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useI18n();
 
   return (
-    <footer className="border-t border-border px-6 py-10">
+    <footer ref={ref} className="border-t border-border px-6 py-10">
       <div className="max-w-lg mx-auto flex flex-col items-center gap-4">
         <div className="flex items-center gap-2 text-muted-foreground">
           <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
