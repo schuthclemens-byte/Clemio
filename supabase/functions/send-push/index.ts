@@ -172,6 +172,7 @@ Deno.serve(async (req) => {
 
     const vapidPrivateKey = await importVapidPrivateKey(VAPID_PRIVATE_KEY_B64, VAPID_PUBLIC_KEY);
     const { user_id, title, body, data } = await req.json();
+    console.log("[send-push] request", { user_id, title, hasData: !!data });
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -199,9 +200,12 @@ Deno.serve(async (req) => {
     }
 
     if (!subscriptions || subscriptions.length === 0) {
+      console.log("[send-push] no subscriptions", { user_id });
       return new Response(JSON.stringify({ error: "No push subscriptions", sent: 0 }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    console.log("[send-push] subscriptions found", { user_id, count: subscriptions.length });
 
     const payload = JSON.stringify({
       title: title || "Clevara",
@@ -253,11 +257,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.log("[send-push] result", { user_id, sent: results.filter((r) => r.status === "sent").length, results });
+
     return new Response(
       JSON.stringify({ sent: results.filter((r) => r.status === "sent").length, results }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    console.error("[send-push] fatal", String(err));
     return new Response(JSON.stringify({ error: String(err) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }

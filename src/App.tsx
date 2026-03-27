@@ -12,7 +12,6 @@ import { ColorThemeProvider } from "@/contexts/ColorThemeContext";
 import { ChatBackgroundProvider } from "@/contexts/ChatBackgroundContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { usePresence } from "@/hooks/usePresence";
-import { useAutoPush } from "@/hooks/useAutoPush";
 import IncomingCallOverlay from "@/components/IncomingCallOverlay";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -49,7 +48,6 @@ const PageLoader = () => (
 /** Runs presence tracking globally inside AuthProvider context */
 const PresenceTracker = ({ children }: { children: React.ReactNode }) => {
   usePresence();
-  useAutoPush();
   return <>{children}</>;
 };
 

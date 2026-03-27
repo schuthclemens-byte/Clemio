@@ -1,44 +1,74 @@
 // Custom Service Worker additions – Background Sync + Web Push
 
+async function notifyClients(message) {
+  const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  clients.forEach((client) => client.postMessage({ type: "SW_DEBUG", ...message }));
+}
+
 // ── Force activation: skip waiting and claim clients immediately ──
 // This ensures the latest SW version always handles push events
 self.addEventListener("install", (event) => {
   console.log("[SW-Custom] Installing, calling skipWaiting()");
-  self.skipWaiting();
+  event.waitUntil(
+    Promise.all([
+      self.skipWaiting(),
+      notifyClients({ phase: "install", message: "skipWaiting ausgeführt" }),
+    ])
+  );
 });
 
 self.addEventListener("activate", (event) => {
   console.log("[SW-Custom] Activating, calling clients.claim()");
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      notifyClients({ phase: "activate", message: "clients.claim ausgeführt" }),
+    ])
+  );
 });
 
 // ---- Push Notification Handler ----
 self.addEventListener("push", (event) => {
   console.log("[SW-Custom] Push event received");
-  let data = { title: "Clevara", body: "Neue Nachricht", data: {} };
-  try {
-    if (event.data) {
-      data = event.data.json();
+  event.waitUntil((async () => {
+    let data = { title: "Clevara", body: "Neue Nachricht", data: {} };
+    try {
+      if (event.data) {
+        data = event.data.json();
+      }
+    } catch (e) {
+      console.warn("[SW-Custom] Failed to parse push data as JSON:", e);
+      if (event.data) {
+        data.body = event.data.text();
+      }
     }
-  } catch (e) {
-    console.warn("[SW-Custom] Failed to parse push data as JSON:", e);
-    if (event.data) {
-      data.body = event.data.text();
-    }
-  }
 
-  const options = {
-    body: data.body,
-    icon: data.icon || "/icon-192.png",
-    badge: data.badge || "/icon-192.png",
-    tag: data.data?.conversation_id || "clevara-push",
-    data: data.data || {},
-    vibrate: [200, 100, 200],
-    renotify: true,
-  };
+    const options = {
+      body: data.body,
+      icon: data.icon || "/icon-192.png",
+      badge: data.badge || "/icon-192.png",
+      tag: data.data?.conversation_id || "clevara-push",
+      data: data.data || {},
+      vibrate: [200, 100, 200],
+      renotify: true,
+    };
 
-  console.log("[SW-Custom] Showing notification:", data.title, options.body);
-  event.waitUntil(self.registration.showNotification(data.title, options));
+    await notifyClients({
+      phase: "push",
+      message: "push-Event ausgelöst",
+      title: data.title,
+      body: options.body,
+    });
+
+    console.log("[SW-Custom] Showing notification:", data.title, options.body);
+    await self.registration.showNotification(data.title, options);
+    await notifyClients({
+      phase: "showNotification",
+      message: "showNotification ausgeführt",
+      title: data.title,
+      body: options.body,
+    });
+  })());
 });
 
 // Handle notification click
@@ -73,6 +103,10 @@ self.addEventListener("sync", (event) => {
 
 // Message from main thread to trigger sync or pass config
 self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
   if (event.data && event.data.type === "INIT_CONFIG") {
     self.__SUPABASE_URL = event.data.supabaseUrl;
     self.__SUPABASE_KEY = event.data.supabaseKey;
