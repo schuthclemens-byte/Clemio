@@ -47,6 +47,6 @@ const PremiumSection = forwardRef<HTMLElement>((_, ref) => {
       </motion.div>
     </section>
   );
-};
+});
 
 export default PremiumSection;

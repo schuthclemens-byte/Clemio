@@ -35,6 +35,6 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
       </div>
     </footer>
   );
-};
+});
 
 export default FooterSection;
