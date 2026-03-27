@@ -83,9 +83,8 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     if (!message || isMedia) return;
     // Only play with cloned voice – no generic TTS
     if (!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice) {
-      requirePremium(() => onPlayClonedVoice(displayText, senderId, msgId));
+      requirePremium(() => onPlayClonedVoice(displayText, senderId, msgId, locale));
     } else if (!isMine && !hasClonedVoice) {
-      // No voice profile yet – show hint
       import("sonner").then(({ toast }) =>
         toast.info("Speichere zuerst eine Stimmprobe, um Nachrichten in dieser Stimme anzuhören.")
       );
