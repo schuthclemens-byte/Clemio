@@ -67,6 +67,7 @@ const App = () => (
             <OfflineBanner />
             <BrowserRouter>
               <IncomingCallOverlay />
+              <PushPromptSheet />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
