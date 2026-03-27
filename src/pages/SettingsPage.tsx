@@ -114,6 +114,7 @@ const StatusRow = ({ ok, label }: { ok: boolean; label: string }) => (
 );
 
 
+const SettingsPage = () => {
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
