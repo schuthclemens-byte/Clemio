@@ -128,7 +128,7 @@ const PushDebugSection = () => {
 
   const StatusIcon = ({ ok }: { ok: boolean | null }) => {
     if (ok === null) return <AlertTriangle className="w-4 h-4 text-muted-foreground" />;
-    return ok ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-destructive" />;
+    return ok ? <CheckCircle className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-destructive" />;
   };
 
   return (
