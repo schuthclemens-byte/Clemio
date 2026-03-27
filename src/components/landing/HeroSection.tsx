@@ -18,63 +18,124 @@ const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasPlayed, setHasPlayed] = useState(false);
+  const [activated, setActivated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const triggeredRef = useRef(false);
 
-  const ensureAudio = useCallback(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio(demoVoice);
-      audioRef.current.volume = 0.18;
-      audioRef.current.onended = () => setIsPlaying(false);
-      audioRef.current.onerror = () => setIsPlaying(false);
-    }
-    return audioRef.current;
+  // Preload audio eagerly on mount
+  useEffect(() => {
+    const audio = new Audio(demoVoice);
+    audio.preload = "auto";
+    audio.volume = 0.18;
+    audio.onended = () => setIsPlaying(false);
+    audio.onerror = () => setIsPlaying(false);
+    audioRef.current = audio;
+
+    // Force browser to start buffering
+    audio.load();
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+    };
   }, []);
 
-  // Try autoplay on load, then fall back to first interaction if blocked by the browser
+  // Global interaction trigger – fires once on any touch/click/scroll
   useEffect(() => {
-    if (hasPlayed) return;
+    if (activated) return;
 
-    const audio = ensureAudio();
-    audio.play().then(() => {
-      setIsPlaying(true);
-      setHasPlayed(true);
-    }).catch(() => {
-      const handler = () => {
-        const fallbackAudio = ensureAudio();
-        fallbackAudio.play().then(() => {
-          setIsPlaying(true);
-          setHasPlayed(true);
-        }).catch(() => {});
-      };
+    const trigger = () => {
+      if (triggeredRef.current) return;
+      triggeredRef.current = true;
 
-      document.addEventListener("pointerdown", handler, { once: true });
-      document.addEventListener("touchstart", handler, { once: true });
-      document.addEventListener("keydown", handler, { once: true });
+      const audio = audioRef.current;
+      if (!audio) return;
 
-      return () => {
-        document.removeEventListener("pointerdown", handler);
-        document.removeEventListener("touchstart", handler);
-        document.removeEventListener("keydown", handler);
-      };
-    });
-  }, [hasPlayed, ensureAudio]);
+      audio.currentTime = 0;
+      audio.play().then(() => {
+        setIsPlaying(true);
+        setActivated(true);
+      }).catch(() => {
+        // Edge case: still blocked, mark as activated so UI shows
+        setActivated(true);
+      });
+
+      cleanup();
+    };
+
+    const events = ["touchstart", "click", "pointerdown", "scroll", "keydown"];
+    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+
+    const cleanup = () => {
+      events.forEach(e => document.removeEventListener(e, trigger));
+    };
+
+    return cleanup;
+  }, [activated]);
 
   const togglePlay = useCallback(() => {
-    const audio = ensureAudio();
+    const audio = audioRef.current;
+    if (!audio) return;
     if (isPlaying) {
       audio.pause();
       audio.currentTime = 0;
       setIsPlaying(false);
-      return;
+    } else {
+      audio.play();
+      setIsPlaying(true);
     }
-    audio.play();
-    setIsPlaying(true);
-    setHasPlayed(true);
-  }, [isPlaying, ensureAudio]);
+  }, [isPlaying]);
 
   return (
     <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
+      {/* Tap-to-start overlay – invisible trigger area */}
+      <AnimatePresence>
+        {!activated && (
+          <motion.div
+            key="tap-overlay"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeOut" } }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex flex-col items-center gap-5"
+            >
+              <span className="text-4xl sm:text-5xl font-black tracking-tight text-foreground">
+                Clemio
+              </span>
+
+              {/* Pulsing sound ring */}
+              <div className="relative flex items-center justify-center">
+                <motion.div
+                  className="absolute w-20 h-20 rounded-full gradient-primary opacity-20"
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0, 0.2] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="absolute w-20 h-20 rounded-full gradient-primary opacity-15"
+                  animate={{ scale: [1, 1.8, 1], opacity: [0.15, 0, 0.15] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+                />
+                <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shadow-soft z-10">
+                  <Volume2 className="w-7 h-7 text-primary-foreground" />
+                </div>
+              </div>
+
+              <motion.p
+                className="text-muted-foreground text-sm"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {t("landing.tapToStart") || "Tippe irgendwo, um zu starten"}
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Ambient blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
@@ -150,7 +211,7 @@ const HeroSection = () => {
             </AnimatePresence>
           </motion.button>
 
-          {/* Auto-play hint */}
+          {/* Playing hint */}
           <AnimatePresence>
             {isPlaying && (
               <motion.p
