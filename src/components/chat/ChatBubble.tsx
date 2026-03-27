@@ -23,8 +23,9 @@ interface ChatBubbleProps {
   messageType?: string;
   mediaUrl?: string;
   senderId?: string;
-  onPlayClonedVoice?: (text: string, senderId: string, msgId: string) => void;
+  onPlayClonedVoice?: (text: string, senderId: string, msgId: string, lang?: string) => void;
   isPlayingCloned?: boolean;
+  isLoadingCloned?: boolean;
   msgId?: string;
   hasClonedVoice?: boolean;
   reactions?: Reaction[];
