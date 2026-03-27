@@ -256,6 +256,81 @@ const SettingsPage = () => {
 
         </CollapsibleSection>
 
+        {/* ──────────── PUSH-BENACHRICHTIGUNGEN ──────────── */}
+        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" defaultOpen={true} delay="45ms">
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+            {pushCap.canUsePush ? (
+              <>
+                {/* Toggle - enabled state */}
+                <div className="px-4 py-4 flex items-center justify-between border-b border-border">
+                  <span className="flex items-start gap-3 flex-1 min-w-0">
+                    <Bell className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="text-[0.938rem] block font-medium">Push-Benachrichtigungen</span>
+                      <span className="text-xs text-muted-foreground leading-relaxed">
+                        {pushDebug.pushSubscription ? "Aktiv – du erhältst Benachrichtigungen" : "Nicht aktiv"}
+                      </span>
+                    </div>
+                  </span>
+                  {!pushDebug.pushSubscription && (
+                    <button
+                      onClick={() => pushSubscribe().then(ok => {
+                        if (ok) toast.success("Push-Benachrichtigungen aktiviert");
+                        else toast.error("Push konnte nicht aktiviert werden");
+                      })}
+                      disabled={pushDebug.loading}
+                      className="px-4 py-2 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold shrink-0 ml-3 disabled:opacity-60"
+                    >
+                      {pushDebug.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aktivieren"}
+                    </button>
+                  )}
+                  {pushDebug.pushSubscription && (
+                    <span className="w-3 h-3 rounded-full bg-primary shrink-0 ml-3" />
+                  )}
+                </div>
+
+                {/* Status indicators */}
+                <div className="px-4 py-3 space-y-2">
+                  <StatusRow ok={pushDebug.swRegistered} label="Service Worker registriert" />
+                  <StatusRow ok={pushDebug.notificationPermission === "granted"} label={`Benachrichtigungen: ${pushDebug.notificationPermission}`} />
+                  <StatusRow ok={pushDebug.pushSubscription} label="Push-Subscription vorhanden" />
+                  <StatusRow ok={pushDebug.backendSubscription} label="Im Backend gespeichert" />
+                  <StatusRow ok={pushCap.isStandalone} label={pushCap.isStandalone ? "Installierte Web-App" : "Läuft im Browser"} />
+                </div>
+              </>
+            ) : (
+              /* Push NOT supported in this context */
+              <div className="px-4 py-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[0.938rem] font-medium">Push wird nicht unterstützt</p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{pushCap.reason}</p>
+                  </div>
+                </div>
+
+                {pushCap.isIOSBrowserOnly && (
+                  <button
+                    onClick={() => navigate("/install")}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary font-semibold text-sm transition-all active:scale-[0.97]"
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    App zum Home-Bildschirm hinzufügen
+                  </button>
+                )}
+
+                {/* Debug info even when unsupported */}
+                <div className="pt-2 space-y-2 border-t border-border">
+                  <StatusRow ok={pushCap.swSupported} label="Service Worker" />
+                  <StatusRow ok={pushCap.notificationSupported} label="Notification API" />
+                  <StatusRow ok={pushCap.pushSupported} label="Push API" />
+                  <StatusRow ok={pushCap.isStandalone} label={pushCap.isStandalone ? "Standalone-Modus" : "Browser-Modus"} />
+                  {pushCap.isIOS && <StatusRow ok={false} label="iOS erkannt – Standalone erforderlich" />}
+                </div>
+              </div>
+            )}
+          </div>
+
 
         {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
         <CollapsibleSection icon={Palette} title="Erscheinungsbild" delay="60ms">
