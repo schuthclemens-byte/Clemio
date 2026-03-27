@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { usePushCapability } from "@/hooks/usePushCapability";
@@ -15,7 +15,6 @@ export const useAutoPush = () => {
   const { canUsePush } = usePushCapability();
   const attempted = useRef(false);
   const retryCount = useRef(0);
-  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -50,7 +49,9 @@ export const useAutoPush = () => {
 
       attempted.current = false;
       retryCount.current += 1;
-      setRetryNonce((value) => value + 1);
+      window.setTimeout(() => {
+        attempted.current = false;
+      }, 1500);
     }, 2000);
 
     return () => {
@@ -66,6 +67,5 @@ export const useAutoPush = () => {
     debug.backendEndpointMatches,
     subscribe,
     canUsePush,
-    retryNonce,
   ]);
 };
