@@ -134,7 +134,7 @@ const ChatPage = () => {
     localeSpeechCodes[locale]
   );
   const { speak, stop: stopSpeaking, isSpeaking } = useTextToSpeech();
-  const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned } = useVoiceTTS();
+  const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned, isLoading: isLoadingCloned, stop: stopClonedVoice } = useVoiceTTS();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
   const [otherHasVoice, setOtherHasVoice] = useState<boolean | null>(null);
