@@ -1083,7 +1083,7 @@ const ChatPage = () => {
             ))}
           </div>
           <button
-            onClick={() => { stopSpeaking(); clearQueue(); setSpeakingId(null); }}
+            onClick={() => { stopSpeaking(); stopClonedVoice(); clearQueue(); setSpeakingId(null); }}
             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
             aria-label="Auto-Play stoppen"
           >
