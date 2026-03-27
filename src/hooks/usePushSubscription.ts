@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const VAPID_PUBLIC_KEY =
-  "BEbm6ne3s04r3rcsuC9aDv-U4xMIucuB7aIu7FilHlXVfaLvQcIOSDBE9afONxsUZ7sw59QIqCy1ogQ8EhZ98Ik";
+  "BL2_0Ki93BHS5ty1Blv8Rxxw0FTgAJEBPq7TN6xk09czbSWSpnINsCBe46uv6LaiKbtkHlwmiiRSDifoFt5ZDVM";
 const VAPID_KEY_STORAGE_KEY = "clemio_push_vapid_public_key";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
