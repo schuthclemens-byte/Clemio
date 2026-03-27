@@ -166,28 +166,6 @@ const SettingsPage = () => {
     setRefreshingSubscription(false);
   };
 
-  const handleEnablePush = async () => {
-    setPushAction("subscribe");
-    const success = await subscribeToPush();
-    await refreshPushStatus();
-    toast[success ? "success" : "error"](success ? "Push wurde neu aktiviert" : "Push-Aktivierung fehlgeschlagen");
-    setPushAction(null);
-  };
-
-  const handleTestPush = async () => {
-    setPushAction("test");
-    const result = await sendTestPush();
-    await refreshPushStatus();
-    toast[result.ok ? "success" : "error"](result.ok ? "Test-Push versendet" : "Test-Push fehlgeschlagen");
-    setPushAction(null);
-  };
-
-  const handleRefreshPushStatus = async () => {
-    setPushAction("refresh");
-    await refreshPushStatus();
-    setPushAction(null);
-  };
-
   const languages = Object.entries(localeNames) as [Locale, string][];
   const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
 
