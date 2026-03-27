@@ -51,6 +51,8 @@ export default defineConfig(({ mode }) => ({
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         importScripts: ["/sw-custom.js"],
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ].filter(Boolean),
