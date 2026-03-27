@@ -4,11 +4,13 @@ import { usePushCapability } from "@/hooks/usePushCapability";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const DISMISSED_KEY = "clemio_push_prompt_dismissed";
 const DISMISSED_UNSUPPORTED_KEY = "clemio_push_unsupported_dismissed";
 
+/** Routes where the push prompt should appear */
+const ALLOWED_ROUTES = ["/chats", "/chat/", "/settings", "/profile", "/focus-mode", "/contact-autoplay", "/voice-recordings"];
 /**
  * Bottom-sheet style prompt shown once after login to encourage
  * push activation. Only triggers the browser permission dialog
@@ -19,13 +21,20 @@ const PushPromptSheet = () => {
   const pushCap = usePushCapability();
   const { debug, subscribe } = usePushSubscription();
   const navigate = useNavigate();
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [activating, setActivating] = useState(false);
   const [result, setResult] = useState<"success" | "denied" | null>(null);
 
   // Decide whether to show the prompt
   useEffect(() => {
+    // Must be logged in
     if (!user) return;
+
+    // Only show on protected app routes, not landing/login/install etc.
+    const onAllowedRoute = ALLOWED_ROUTES.some(r => location.pathname.startsWith(r));
+    if (!onAllowedRoute) return;
+
     if (debug.loading) return;
 
     // Already subscribed → don't show
@@ -46,7 +55,7 @@ const PushPromptSheet = () => {
     // Small delay so the app feels loaded
     const timer = setTimeout(() => setVisible(true), 1500);
     return () => clearTimeout(timer);
-  }, [user, debug.loading, debug.pushSubscription, debug.backendSubscription, debug.notificationPermission, pushCap.canUsePush]);
+  }, [user, location.pathname, debug.loading, debug.pushSubscription, debug.backendSubscription, debug.notificationPermission, pushCap.canUsePush]);
 
   const handleDismiss = useCallback(() => {
     if (pushCap.canUsePush) {
