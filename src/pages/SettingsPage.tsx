@@ -117,6 +117,7 @@ const SettingsPage = () => {
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clevara_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
+  const [refreshingSubscription, setRefreshingSubscription] = useState(false);
 
   // Load push preview from profile
   useEffect(() => {
@@ -142,6 +143,24 @@ const SettingsPage = () => {
     const next = !stayLoggedIn;
     setStayLoggedIn(next);
     localStorage.setItem("clevara_stay_logged_in", next ? "true" : "false");
+  };
+
+  const handleRefreshSubscription = async () => {
+    setRefreshingSubscription(true);
+    const result = await refreshSubscription();
+
+    if (!result?.ok) {
+      toast.error(result?.error ?? "Premium-Status konnte nicht geprüft werden");
+      setRefreshingSubscription(false);
+      return;
+    }
+
+    toast.success(
+      result.subscribed
+        ? "Premium-Abo wurde erkannt"
+        : "Kein aktives Premium-Abo gefunden"
+    );
+    setRefreshingSubscription(false);
   };
 
   const languages = Object.entries(localeNames) as [Locale, string][];
@@ -484,8 +503,13 @@ const SettingsPage = () => {
                     )}
                   </div>
                 </div>
-                <button onClick={() => refreshSubscription()} className="p-2 rounded-full hover:bg-secondary transition-colors">
-                  <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                <button
+                  onClick={handleRefreshSubscription}
+                  disabled={refreshingSubscription}
+                  className="p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-60"
+                  aria-label="Premium-Status aktualisieren"
+                >
+                  <RefreshCw className={cn("w-4 h-4 text-muted-foreground", refreshingSubscription && "animate-spin")} />
                 </button>
               </div>
               {!isPremium && (

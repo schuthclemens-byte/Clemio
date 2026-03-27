@@ -15,6 +15,12 @@ interface StripeStatus {
   subscription_end: string | null;
 }
 
+interface RefreshSubscriptionResult {
+  ok: boolean;
+  subscribed: boolean;
+  error?: string;
+}
+
 export const useSubscription = () => {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -45,10 +51,18 @@ export const useSubscription = () => {
   }, [user]);
 
   // Check Stripe subscription
-  const checkStripe = useCallback(async () => {
-    if (!user) return;
+  const checkStripe = useCallback(async (): Promise<RefreshSubscriptionResult> => {
+    if (!user) {
+      setLoading(false);
+      return { ok: false, subscribed: false, error: "Keine aktive Sitzung" };
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setLoading(false);
+      return { ok: false, subscribed: false, error: "Keine aktive Sitzung" };
+    }
+
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
@@ -64,16 +78,31 @@ export const useSubscription = () => {
       
       if (!res.ok) {
         console.warn("check-subscription returned", res.status);
-        return;
+        return {
+          ok: false,
+          subscribed: false,
+          error: `Statusprüfung fehlgeschlagen (${res.status})`,
+        };
       }
       
       const data: StripeStatus = await res.json();
       if (data) {
         setStripeActive(data.subscribed);
         setStripeEnd(data.subscription_end ?? null);
+        return {
+          ok: true,
+          subscribed: data.subscribed,
+        };
       }
+
+      return { ok: true, subscribed: false };
     } catch (err) {
       console.error("check-subscription failed:", err);
+      return {
+        ok: false,
+        subscribed: false,
+        error: err instanceof Error ? err.message : "Unbekannter Fehler",
+      };
     } finally {
       setLoading(false);
     }
