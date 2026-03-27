@@ -38,7 +38,12 @@ const PushPromptSheet = () => {
     if (debug.loading) return;
 
     // Already subscribed → don't show
-    if (debug.pushSubscription && debug.backendSubscription) return;
+    if (
+      debug.pushSubscription &&
+      debug.backendSubscription &&
+      debug.subscriptionNeedsRefresh === false &&
+      debug.backendEndpointMatches !== false
+    ) return;
 
     // Permission already denied by browser → don't show (can't recover)
     if (debug.notificationPermission === "denied") return;
@@ -55,7 +60,17 @@ const PushPromptSheet = () => {
     // Small delay so the app feels loaded
     const timer = setTimeout(() => setVisible(true), 1500);
     return () => clearTimeout(timer);
-  }, [user, location.pathname, debug.loading, debug.pushSubscription, debug.backendSubscription, debug.notificationPermission, pushCap.canUsePush]);
+  }, [
+    user,
+    location.pathname,
+    debug.loading,
+    debug.pushSubscription,
+    debug.backendSubscription,
+    debug.subscriptionNeedsRefresh,
+    debug.backendEndpointMatches,
+    debug.notificationPermission,
+    pushCap.canUsePush,
+  ]);
 
   const handleDismiss = useCallback(() => {
     if (pushCap.canUsePush) {

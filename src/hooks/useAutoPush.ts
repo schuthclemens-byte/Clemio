@@ -23,11 +23,14 @@ export const useAutoPush = () => {
     if (attempted.current) return;
     if (debug.loading) return;
     if (!canUsePush) return;
+    if (!debug.subscriptionNeedsRefresh && debug.pushSubscription && debug.backendEndpointMatches !== false) {
+      attempted.current = false;
+      return;
+    }
 
     // Only auto-re-subscribe if permission was ALREADY granted
-    // but subscription is missing (e.g. browser cleared data)
+    // and the subscription is missing, stale or not synced to backend.
     if (debug.notificationPermission !== "granted") return;
-    if (debug.pushSubscription) return;
 
     attempted.current = true;
     const timer = setTimeout(() => {
@@ -35,5 +38,14 @@ export const useAutoPush = () => {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [user, debug.loading, debug.pushSubscription, debug.notificationPermission, subscribe, canUsePush]);
+  }, [
+    user,
+    debug.loading,
+    debug.pushSubscription,
+    debug.notificationPermission,
+    debug.subscriptionNeedsRefresh,
+    debug.backendEndpointMatches,
+    subscribe,
+    canUsePush,
+  ]);
 };
