@@ -518,8 +518,8 @@ const SettingsPage = () => {
               {/* Status line */}
               <div className="flex items-center gap-2 px-1">
                 <span className={cn(
-                  "w-2 h-2 rounded-full shrink-0",
-                  isPremium ? "bg-green-500" : "bg-muted-foreground/40"
+                  "w-2 h-2 rounded-full shrink-0 transition-colors",
+                  isPremium ? "bg-primary" : "bg-muted-foreground/40"
                 )} />
                 <p className="text-xs text-muted-foreground">
                   {isPremium ? "Abo aktiv" : "Kein aktives Abo"}
