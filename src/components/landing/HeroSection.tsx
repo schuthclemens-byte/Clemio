@@ -19,6 +19,7 @@ const HeroSection = () => {
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [activated, setActivated] = useState(false);
+  const [playError, setPlayError] = useState(false);
   const [audio] = useState(() => {
     const nextAudio = new Audio(demoVoice);
     nextAudio.preload = "auto";
@@ -27,6 +28,7 @@ const HeroSection = () => {
   });
   const audioRef = useRef<HTMLAudioElement>(audio);
   const triggeredRef = useRef(false);
+  const retryCountRef = useRef(0);
 
   useEffect(() => {
     const currentAudio = audioRef.current;
@@ -55,13 +57,26 @@ const HeroSection = () => {
 
     triggeredRef.current = true;
 
+    // Haptic feedback if available
+    if (navigator.vibrate) {
+      navigator.vibrate(15);
+    }
+
     try {
       currentAudio.currentTime = 0;
       await currentAudio.play();
       setIsPlaying(true);
       setActivated(true);
+      setPlayError(false);
     } catch {
+      retryCountRef.current += 1;
       triggeredRef.current = false;
+
+      // After 3 failed attempts, show fallback error
+      if (retryCountRef.current >= 3) {
+        setPlayError(true);
+        setActivated(true);
+      }
     }
   }, []);
 
