@@ -16,24 +16,46 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+function getServiceWorkerState(registration: ServiceWorkerRegistration | null) {
+  return registration?.active?.state || registration?.waiting?.state || registration?.installing?.state || null;
+}
+
 export interface PushDebugInfo {
   swRegistered: boolean;
+  swState: string | null;
   notificationPermission: NotificationPermission | "unsupported";
   pushSubscription: boolean;
+  backendSubscription: boolean;
+  backendEndpointMatches: boolean | null;
+  subscriptionEndpoint: string | null;
   lastPushSuccess: boolean | null;
   lastError: string | null;
+  lastTestResponse: string | null;
+  lastServiceWorkerEvent: string | null;
   isStandalone: boolean;
   loading: boolean;
+}
+
+interface PushTestResult {
+  ok: boolean;
+  sent: number;
+  response: string;
 }
 
 export const usePushSubscription = () => {
   const { user } = useAuth();
   const [debug, setDebug] = useState<PushDebugInfo>({
     swRegistered: false,
+    swState: null,
     notificationPermission: "unsupported",
     pushSubscription: false,
+    backendSubscription: false,
+    backendEndpointMatches: null,
+    subscriptionEndpoint: null,
     lastPushSuccess: null,
     lastError: null,
+    lastTestResponse: null,
+    lastServiceWorkerEvent: null,
     isStandalone:
       window.matchMedia("(display-mode: standalone)").matches ||
       !!(window.navigator as any).standalone,
@@ -44,48 +66,97 @@ export const usePushSubscription = () => {
     setDebug((prev) => ({ ...prev, ...partial }));
   }, []);
 
-  // Check current state on mount
+  const refreshStatus = useCallback(async () => {
+    const swSupported = "serviceWorker" in navigator;
+    const notifSupported = "Notification" in window;
+
+    if (!swSupported || !notifSupported) {
+      updateDebug({
+        swRegistered: false,
+        swState: null,
+        notificationPermission: notifSupported ? Notification.permission : "unsupported",
+        pushSubscription: false,
+        backendSubscription: false,
+        backendEndpointMatches: null,
+        subscriptionEndpoint: null,
+        loading: false,
+      });
+      return null;
+    }
+
+    try {
+      let registration = await navigator.serviceWorker.getRegistration();
+      if (registration?.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      const browserEndpoint = subscription?.endpoint ?? null;
+
+      let backendRows: Array<{ endpoint: string }> = [];
+      if (user) {
+        const { data, error } = await supabase
+          .from("push_subscriptions")
+          .select("endpoint")
+          .eq("user_id", user.id);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        backendRows = data ?? [];
+      }
+
+      const backendSubscription = backendRows.length > 0;
+      const backendEndpointMatches = browserEndpoint
+        ? backendRows.some((row) => row.endpoint === browserEndpoint)
+        : backendSubscription
+          ? false
+          : null;
+
+      updateDebug({
+        swRegistered: true,
+        swState: getServiceWorkerState(registration),
+        notificationPermission: Notification.permission,
+        pushSubscription: !!subscription,
+        backendSubscription,
+        backendEndpointMatches,
+        subscriptionEndpoint: browserEndpoint,
+        loading: false,
+      });
+
+      return { registration, subscription };
+    } catch (err) {
+      updateDebug({
+        lastError: err instanceof Error ? err.message : String(err),
+        loading: false,
+      });
+      return null;
+    }
+  }, [updateDebug, user]);
+
   useEffect(() => {
-    const check = async () => {
-      const swSupported = "serviceWorker" in navigator;
-      const notifSupported = "Notification" in window;
+    updateDebug({ loading: true });
+    refreshStatus();
+  }, [refreshStatus, updateDebug]);
 
-      if (!swSupported || !notifSupported) {
-        updateDebug({
-          swRegistered: false,
-          notificationPermission: notifSupported
-            ? Notification.permission
-            : "unsupported",
-          loading: false,
-        });
-        return;
-      }
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
 
-      try {
-        const registration = await navigator.serviceWorker.getRegistration();
-        const hasSubscription = registration
-          ? !!(await registration.pushManager?.getSubscription())
-          : false;
-
-        updateDebug({
-          swRegistered: !!registration,
-          notificationPermission: Notification.permission,
-          pushSubscription: hasSubscription,
-          loading: false,
-        });
-      } catch (err) {
-        updateDebug({
-          lastError: String(err),
-          loading: false,
-        });
-      }
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "SW_DEBUG") return;
+      updateDebug({
+        lastServiceWorkerEvent: `${event.data.phase}: ${event.data.message}`,
+      });
     };
-    check();
+
+    navigator.serviceWorker.addEventListener("message", handleMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", handleMessage);
   }, [updateDebug]);
 
-  // Subscribe to push
   const subscribe = useCallback(async () => {
-    updateDebug({ loading: true, lastError: null });
+    updateDebug({ loading: true, lastError: null, lastPushSuccess: null, lastTestResponse: null });
 
     try {
       if (!("Notification" in window)) {
@@ -99,39 +170,26 @@ export const usePushSubscription = () => {
         throw new Error(`Notification-Berechtigung: ${permission}`);
       }
 
-      if (!("serviceWorker" in navigator)) {
-        throw new Error("Service Worker nicht unterstützt");
+      const registration = await navigator.serviceWorker.ready;
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
       }
 
-      const registration = await navigator.serviceWorker.ready;
-      updateDebug({ swRegistered: true });
-
-      // Always get fresh subscription - unsubscribe old one first if exists
       let subscription = await registration.pushManager.getSubscription();
       if (subscription) {
-        // Re-subscribe to ensure keys are fresh
         await subscription.unsubscribe();
       }
-      
-      const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: appServerKey.buffer as ArrayBuffer,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
 
-      updateDebug({ pushSubscription: true });
-
-      // Save to backend - clean up old subscriptions for this user first
       if (user) {
         const subJson = subscription.toJSON();
-        
-        // Delete all old subscriptions for this user (different endpoints)
-        await supabase
-          .from("push_subscriptions")
-          .delete()
-          .eq("user_id", user.id);
-        
-        // Insert the fresh subscription
+
+        await supabase.from("push_subscriptions").delete().eq("user_id", user.id);
+
         const { error } = await supabase.from("push_subscriptions").insert({
           user_id: user.id,
           endpoint: subJson.endpoint!,
@@ -142,62 +200,78 @@ export const usePushSubscription = () => {
         if (error) {
           throw new Error(`Subscription speichern fehlgeschlagen: ${error.message}`);
         }
-        
-        console.log("[Push] Fresh subscription saved for user", user.id);
       }
 
+      updateDebug({
+        lastServiceWorkerEvent: "subscription: neue Push-Subscription erstellt",
+      });
+      await refreshStatus();
       updateDebug({ loading: false });
       return true;
-    } catch (err: any) {
+    } catch (err) {
       updateDebug({
-        lastError: err?.message || String(err),
+        lastError: err instanceof Error ? err.message : String(err),
         loading: false,
       });
       return false;
     }
-  }, [user, updateDebug]);
+  }, [refreshStatus, updateDebug, user]);
 
-  // Send test push
-  const sendTestPush = useCallback(async () => {
-    if (!user) return false;
-    updateDebug({ lastPushSuccess: null, lastError: null });
+  const sendTestPush = useCallback(async (): Promise<PushTestResult> => {
+    if (!user) {
+      return { ok: false, sent: 0, response: "Keine aktive Sitzung" };
+    }
+
+    updateDebug({ lastPushSuccess: null, lastError: null, lastServiceWorkerEvent: null });
 
     try {
+      await refreshStatus();
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         throw new Error("Keine aktive Session");
       }
 
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/send-push`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            user_id: user.id,
-            title: "🔔 Clevara Test",
-            body: "Push-Benachrichtigungen funktionieren!",
-          }),
-        }
-      );
+      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/send-push`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          title: "🔔 Clevara Test",
+          body: "Push-Benachrichtigungen funktionieren!",
+          data: { source: "manual-test" },
+        }),
+      });
 
       const data = await res.json();
-      console.log("[Push] Test push result:", JSON.stringify(data));
-      const success = data.sent > 0;
-      updateDebug({ lastPushSuccess: success, lastError: success ? null : JSON.stringify(data) });
-      return success;
-    } catch (err: any) {
+      const response = JSON.stringify(data);
+      const success = res.ok && (data?.sent ?? 0) > 0;
+
+      updateDebug({
+        lastPushSuccess: success,
+        lastError: success ? null : data?.error ?? response,
+        lastTestResponse: response,
+      });
+
+      return {
+        ok: success,
+        sent: data?.sent ?? 0,
+        response,
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
       updateDebug({
         lastPushSuccess: false,
-        lastError: err?.message || String(err),
+        lastError: message,
+        lastTestResponse: message,
       });
-      return false;
+      return { ok: false, sent: 0, response: message };
     }
-  }, [user, updateDebug]);
+  }, [refreshStatus, updateDebug, user]);
 
-  return { debug, subscribe, sendTestPush };
+  return { debug, subscribe, sendTestPush, refreshStatus };
 };
