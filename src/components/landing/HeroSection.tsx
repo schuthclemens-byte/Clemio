@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Play, Pause, ArrowRight, Volume2 } from "lucide-react";
+import { Play, Pause, ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
