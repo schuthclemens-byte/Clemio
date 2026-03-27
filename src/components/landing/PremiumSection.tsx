@@ -14,7 +14,7 @@ const PremiumSection = forwardRef<HTMLElement>((_, ref) => {
   ];
 
   return (
-    <section className="px-6 py-16">
+    <section ref={ref} className="px-6 py-16">
       <motion.div
         className="max-w-md mx-auto"
         initial={{ opacity: 0, y: 20 }}
