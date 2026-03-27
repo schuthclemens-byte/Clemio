@@ -1,14 +1,27 @@
 // Custom Service Worker additions – Background Sync + Web Push
 
+// ── Force activation: skip waiting and claim clients immediately ──
+// This ensures the latest SW version always handles push events
+self.addEventListener("install", (event) => {
+  console.log("[SW-Custom] Installing, calling skipWaiting()");
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  console.log("[SW-Custom] Activating, calling clients.claim()");
+  event.waitUntil(self.clients.claim());
+});
+
 // ---- Push Notification Handler ----
 self.addEventListener("push", (event) => {
+  console.log("[SW-Custom] Push event received");
   let data = { title: "Clevara", body: "Neue Nachricht", data: {} };
   try {
     if (event.data) {
       data = event.data.json();
     }
   } catch (e) {
-    // fallback to text
+    console.warn("[SW-Custom] Failed to parse push data as JSON:", e);
     if (event.data) {
       data.body = event.data.text();
     }
@@ -16,32 +29,33 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body,
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
+    icon: data.icon || "/icon-192.png",
+    badge: data.badge || "/icon-192.png",
     tag: data.data?.conversation_id || "clevara-push",
     data: data.data || {},
     vibrate: [200, 100, 200],
+    renotify: true,
   };
 
+  console.log("[SW-Custom] Showing notification:", data.title, options.body);
   event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 // Handle notification click
 self.addEventListener("notificationclick", (event) => {
+  console.log("[SW-Custom] Notification clicked");
   event.notification.close();
   const conversationId = event.notification.data?.conversation_id;
   const url = conversationId ? `/chat/${conversationId}` : "/chats";
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      // Focus existing window if available
       for (const client of clients) {
         if (client.url.includes(self.location.origin)) {
           client.navigate(url);
           return client.focus();
         }
       }
-      // Otherwise open new window
       return self.clients.openWindow(url);
     })
   );
@@ -49,21 +63,12 @@ self.addEventListener("notificationclick", (event) => {
 
 // ---- Background Sync for offline message queue ----
 
-const SUPABASE_URL = self.__SUPABASE_URL; // injected at registration time via query param
-const SUPABASE_KEY = self.__SUPABASE_KEY;
-const STORAGE_KEY = "clevara_offline_queue";
 const SYNC_TAG = "flush-offline-queue";
 
-// Listen for Background Sync events
 self.addEventListener("sync", (event) => {
   if (event.tag === SYNC_TAG) {
     event.waitUntil(flushQueue());
   }
-});
-
-// Fallback: periodically check on SW activation if there's a queue
-self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
 });
 
 // Message from main thread to trigger sync or pass config
@@ -74,7 +79,6 @@ self.addEventListener("message", (event) => {
   }
   if (event.data && event.data.type === "TRIGGER_FLUSH") {
     flushQueue().then(() => {
-      // Notify all clients that flush completed
       self.clients.matchAll().then((clients) => {
         clients.forEach((client) => {
           client.postMessage({ type: "FLUSH_COMPLETE" });
@@ -89,16 +93,12 @@ async function flushQueue() {
   const key = self.__SUPABASE_KEY;
   if (!url || !key) return;
 
-  // Read queue from all clients via BroadcastChannel or direct fetch
-  // Since SW can't access localStorage, we ask a client for the queue
   const clients = await self.clients.matchAll();
   if (clients.length > 0) {
-    // If a client is available, let the client handle it (it has localStorage)
     clients[0].postMessage({ type: "REQUEST_FLUSH" });
     return;
   }
 
-  // No clients open – use IndexedDB as fallback
   const queue = await getQueueFromIDB();
   if (!queue || queue.length === 0) return;
 
@@ -128,7 +128,6 @@ async function flushQueue() {
       if (!res.ok) {
         remaining.push(msg);
       } else {
-        // Update conversation timestamp
         await fetch(`${url}/rest/v1/conversations?id=eq.${msg.conversationId}`, {
           method: "PATCH",
           headers: {
