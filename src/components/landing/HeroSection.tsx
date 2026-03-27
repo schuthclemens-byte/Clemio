@@ -18,7 +18,7 @@ const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const ensureAudio = useCallback(() => {
@@ -31,22 +31,17 @@ const HeroSection = () => {
     return audioRef.current;
   }, []);
 
-  // Auto-play after a short delay (requires user gesture on most browsers, so we attempt it)
-  useEffect(() => {
-    if (hasAutoPlayed) return;
-    const timer = setTimeout(() => {
-      const audio = ensureAudio();
-      audio.volume = 0.18;
-      audio.play().then(() => {
-        setIsPlaying(true);
-        setHasAutoPlayed(true);
-      }).catch(() => {
-        // Autoplay blocked – user will tap manually
-        setHasAutoPlayed(true);
-      });
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [hasAutoPlayed, ensureAudio]);
+  // Dismiss splash & auto-play voice (user gesture unlocks autoplay)
+  const dismissSplash = useCallback(() => {
+    setShowSplash(false);
+    const audio = ensureAudio();
+    audio.volume = 0.18;
+    audio.play().then(() => {
+      setIsPlaying(true);
+    }).catch(() => {
+      // Still dismissed, user can tap play manually
+    });
+  }, [ensureAudio]);
 
   const togglePlay = useCallback(() => {
     const audio = ensureAudio();
@@ -62,6 +57,43 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
+      {/* Splash overlay – tap to enter & unlock audio */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.5 } }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 cursor-pointer"
+            onClick={dismissSplash}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="flex flex-col items-center gap-6"
+            >
+              <span className="text-5xl sm:text-6xl font-black tracking-tight text-foreground">
+                Clemio
+              </span>
+              <p className="text-muted-foreground text-base max-w-xs leading-relaxed">
+                {t("landing.heroListenTitle")}
+              </p>
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shadow-soft"
+              >
+                <Volume2 className="w-7 h-7 text-primary-foreground" />
+              </motion.div>
+              <p className="text-xs text-muted-foreground/60 mt-2">
+                {t("landing.tapToStart") || "Tippe zum Starten"}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Ambient blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
@@ -96,7 +128,7 @@ const HeroSection = () => {
           {t("landing.heroListenTitle")}
         </motion.h1>
 
-        {/* Voice demo card – auto-playing */}
+        {/* Voice demo card */}
         <motion.div variants={fadeUp} custom={2} className="mb-5">
           <motion.button
             onClick={togglePlay}
