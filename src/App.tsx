@@ -49,6 +49,7 @@ const PageLoader = () => (
 /** Runs presence tracking globally inside AuthProvider context */
 const PresenceTracker = ({ children }: { children: React.ReactNode }) => {
   usePresence();
+  useAutoPush();
   return <>{children}</>;
 };
 
