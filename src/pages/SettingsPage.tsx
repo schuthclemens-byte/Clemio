@@ -274,52 +274,6 @@ const SettingsPage = () => {
             />
           </div>
 
-          <div className="bg-card rounded-2xl shadow-sm p-4 mt-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[0.938rem] font-medium">System-Push Debug</p>
-                <p className="text-xs text-muted-foreground">Echte Hintergrund-Benachrichtigungen über Service Worker statt In-App-Refresh.</p>
-              </div>
-              <button
-                onClick={handleRefreshPushStatus}
-                disabled={pushAction !== null}
-                className="p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-60"
-                aria-label="Push-Status aktualisieren"
-              >
-                <RefreshCw className={cn("w-4 h-4 text-muted-foreground", pushAction === "refresh" && "animate-spin")} />
-              </button>
-            </div>
-
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Service Worker: {pushDebug.swRegistered ? `aktiv (${pushDebug.swState ?? "bereit"})` : "nicht registriert"}</p>
-              <p>Berechtigung: {pushDebug.notificationPermission}</p>
-              <p>Browser-Subscription: {pushDebug.pushSubscription ? "vorhanden" : "keine"}</p>
-              <p>Backend-Subscription: {pushDebug.backendSubscription ? "gespeichert" : "keine"}</p>
-              <p>Endpoint-Abgleich: {pushDebug.backendEndpointMatches === null ? "–" : pushDebug.backendEndpointMatches ? "identisch" : "abweichend"}</p>
-              <p>SW-Ereignis: {pushDebug.lastServiceWorkerEvent ?? "noch keines"}</p>
-              <p className="break-all">Versand-Response: {pushDebug.lastTestResponse ?? "noch kein Test"}</p>
-              {pushDebug.lastError && <p className="text-destructive">Fehler: {pushDebug.lastError}</p>}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleEnablePush}
-                disabled={pushAction !== null}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-              >
-                {pushAction === "subscribe" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Radio className="w-4 h-4" />}
-                Push aktivieren
-              </button>
-              <button
-                onClick={handleTestPush}
-                disabled={pushAction !== null || !pushDebug.pushSubscription}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-              >
-                {pushAction === "test" ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquareText className="w-4 h-4" />}
-                Test-Push senden
-              </button>
-            </div>
-          </div>
         </CollapsibleSection>
 
 
