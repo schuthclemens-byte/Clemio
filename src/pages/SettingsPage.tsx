@@ -337,7 +337,7 @@ const StatusRow = ({ ok, label }: { ok: boolean; label: string }) => (
               </div>
             )}
           </div>
-
+        </CollapsibleSection>
 
         {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
         <CollapsibleSection icon={Palette} title="Erscheinungsbild" delay="60ms">
