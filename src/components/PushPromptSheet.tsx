@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
 const DISMISSED_KEY = "clemio_push_prompt_dismissed";
+const DISMISSED_UNSUPPORTED_KEY = "clemio_push_unsupported_dismissed";
 
 /**
  * Bottom-sheet style prompt shown once after login to encourage
@@ -30,21 +31,31 @@ const PushPromptSheet = () => {
     // Already subscribed → don't show
     if (debug.pushSubscription && debug.backendSubscription) return;
 
-    // Already dismissed → don't show
-    if (localStorage.getItem(DISMISSED_KEY) === "true") return;
-
-    // Permission already denied → don't show (can't recover)
+    // Permission already denied by browser → don't show (can't recover)
     if (debug.notificationPermission === "denied") return;
+
+    // If push is supported: check if already dismissed
+    if (pushCap.canUsePush) {
+      if (localStorage.getItem(DISMISSED_KEY) === "true") return;
+    } else {
+      // Push not supported (e.g. iOS browser): show install hint
+      // but only once per "unsupported" dismissal
+      if (localStorage.getItem(DISMISSED_UNSUPPORTED_KEY) === "true") return;
+    }
 
     // Small delay so the app feels loaded
     const timer = setTimeout(() => setVisible(true), 1500);
     return () => clearTimeout(timer);
-  }, [user, debug.loading, debug.pushSubscription, debug.backendSubscription, debug.notificationPermission]);
+  }, [user, debug.loading, debug.pushSubscription, debug.backendSubscription, debug.notificationPermission, pushCap.canUsePush]);
 
   const handleDismiss = useCallback(() => {
-    localStorage.setItem(DISMISSED_KEY, "true");
+    if (pushCap.canUsePush) {
+      localStorage.setItem(DISMISSED_KEY, "true");
+    } else {
+      localStorage.setItem(DISMISSED_UNSUPPORTED_KEY, "true");
+    }
     setVisible(false);
-  }, []);
+  }, [pushCap.canUsePush]);
 
   const handleActivate = useCallback(async () => {
     setActivating(true);
