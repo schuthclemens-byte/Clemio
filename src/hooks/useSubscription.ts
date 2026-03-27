@@ -50,11 +50,24 @@ export const useSubscription = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return;
     try {
-      const { data, error } = await supabase.functions.invoke<StripeStatus>("check-subscription");
-      if (error) {
-        console.error("check-subscription error:", error);
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/check-subscription`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+      
+      if (!res.ok) {
+        console.warn("check-subscription returned", res.status);
         return;
       }
+      
+      const data: StripeStatus = await res.json();
       if (data) {
         setStripeActive(data.subscribed);
         setStripeEnd(data.subscription_end ?? null);
@@ -134,10 +147,24 @@ export const useSubscription = () => {
   const startCheckout = async () => {
     setCheckoutLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout");
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Keine Session");
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/create-checkout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+      const data = await res.json();
       if (data?.url) {
         window.open(data.url, "_blank");
+      } else if (data?.error) {
+        console.error("Checkout error:", data.error);
       }
     } catch (err) {
       console.error("Checkout error:", err);
@@ -149,10 +176,24 @@ export const useSubscription = () => {
   const openPortal = async () => {
     setPortalLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Keine Session");
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/customer-portal`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+      const data = await res.json();
       if (data?.url) {
         window.open(data.url, "_blank");
+      } else if (data?.error) {
+        console.error("Portal error:", data.error);
       }
     } catch (err) {
       console.error("Portal error:", err);
