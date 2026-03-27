@@ -118,6 +118,7 @@ const SettingsPage = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
   const [refreshingSubscription, setRefreshingSubscription] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   // Load push preview from profile
   useEffect(() => {
@@ -160,6 +161,7 @@ const SettingsPage = () => {
         ? "Premium-Abo wurde erkannt"
         : "Kein aktives Premium-Abo gefunden"
     );
+    setLastChecked(new Date());
     setRefreshingSubscription(false);
   };
 
@@ -512,6 +514,21 @@ const SettingsPage = () => {
                   <RefreshCw className={cn("w-4 h-4 text-muted-foreground", refreshingSubscription && "animate-spin")} />
                 </button>
               </div>
+
+              {/* Status line */}
+              <div className="flex items-center gap-2 px-1">
+                <span className={cn(
+                  "w-2 h-2 rounded-full shrink-0 transition-colors",
+                  isPremium ? "bg-primary" : "bg-muted-foreground/40"
+                )} />
+                <p className="text-xs text-muted-foreground">
+                  {isPremium ? "Abo aktiv" : "Kein aktives Abo"}
+                  {lastChecked && (
+                    <> · Zuletzt geprüft {lastChecked.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</>
+                  )}
+                </p>
+              </div>
+
               {!isPremium && (
                 <button
                   onClick={startCheckout}
