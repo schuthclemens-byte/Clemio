@@ -4,11 +4,13 @@ import { usePushCapability } from "@/hooks/usePushCapability";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const DISMISSED_KEY = "clemio_push_prompt_dismissed";
 const DISMISSED_UNSUPPORTED_KEY = "clemio_push_unsupported_dismissed";
 
+/** Routes where the push prompt should appear */
+const ALLOWED_ROUTES = ["/chats", "/chat/", "/settings", "/profile", "/focus-mode", "/contact-autoplay", "/voice-recordings"];
 /**
  * Bottom-sheet style prompt shown once after login to encourage
  * push activation. Only triggers the browser permission dialog
