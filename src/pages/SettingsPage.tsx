@@ -279,12 +279,16 @@ const SettingsPage = () => {
                       </span>
                     </div>
                   </span>
-                  {!pushStatus.savedToBackend && (
+                  {!pushStatus.savedToBackend && pushCap.canUsePush && (
                     <button
-                      onClick={() => pushSubscribe().then(ok => {
-                        if (ok) toast.success("Push-Benachrichtigungen aktiviert");
-                        else toast.error(pushStatus.lastError || "Push konnte nicht aktiviert werden");
-                      })}
+                      onClick={async () => {
+                        const ok = await pushSubscribe();
+                        if (ok) {
+                          toast.success("Push-Benachrichtigungen aktiviert");
+                        } else {
+                          toast.error("Push konnte nicht aktiviert werden – prüfe die Status-Anzeige unten");
+                        }
+                      }}
                       disabled={pushStatus.loading}
                       className="px-4 py-2 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold shrink-0 ml-3 disabled:opacity-60"
                     >
