@@ -208,11 +208,9 @@ Deno.serve(async (req) => {
 
     console.log("[send-push] subscriptions found", { user_id, count: subscriptions.length });
 
-    const normalizedTitle = title === "" ? "Neue Nachricht" : title;
-
     const payload = JSON.stringify({
-      title: normalizedTitle !== undefined && normalizedTitle !== null ? normalizedTitle : "Clemio",
-      body: body || "Du hast eine neue Nachricht",
+      title: title || "",
+      body: body || "Neue Nachricht",
       icon: "/icon-192.png",
       badge: "/icon-192.png",
       data: data || {},
