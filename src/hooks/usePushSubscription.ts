@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -39,6 +39,49 @@ export const usePushSubscription = () => {
     loading: false,
     lastError: null,
   });
+
+  // Check on mount if user already has a push subscription saved
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("push_subscriptions")
+          .select("id")
+          .eq("user_id", user.id)
+          .limit(1);
+
+        if (cancelled) return;
+
+        if (data && data.length > 0) {
+          // Also check browser-side state
+          const swReady = "serviceWorker" in navigator;
+          const permOk = "Notification" in window && Notification.permission === "granted";
+          let subExists = false;
+
+          if (swReady) {
+            try {
+              const reg = await navigator.serviceWorker.ready;
+              const sub = await reg.pushManager.getSubscription();
+              subExists = !!sub;
+            } catch { /* ignore */ }
+          }
+
+          setStatus((s) => ({
+            ...s,
+            savedToBackend: true,
+            swActive: swReady,
+            permissionGranted: permOk,
+            subscriptionCreated: subExists,
+          }));
+        }
+      } catch { /* ignore */ }
+    })();
+
+    return () => { cancelled = true; };
+  }, [user]);
 
   const subscribe = useCallback(async (): Promise<boolean> => {
     setStatus((s) => ({ ...s, loading: true, lastError: null }));
