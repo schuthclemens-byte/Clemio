@@ -300,12 +300,12 @@ const SettingsPage = () => {
                   )}
                 </div>
 
-                {/* iPhone Status */}
+                {/* Push Status */}
                 <div className="px-4 py-3 space-y-2">
-                  <StatusRow ok={pushStatus.isStandalone} label={pushStatus.isStandalone ? "Läuft als Web-App" : "Nicht als Web-App installiert"} />
+                  <StatusRow ok={pushCap.isIOS ? pushStatus.isStandalone : true} label={pushCap.isIOS ? (pushStatus.isStandalone ? "Läuft als Web-App" : "Nicht als Web-App installiert") : "Android / Desktop – kein Standalone nötig"} />
                   <StatusRow ok={pushStatus.swActive} label="Service Worker aktiv" />
                   <StatusRow ok={pushStatus.permissionGranted} label="Permission granted" />
-                  <StatusRow ok={pushStatus.subscriptionCreated} label="Neue Subscription erstellt" />
+                  <StatusRow ok={pushStatus.subscriptionCreated} label="Subscription erstellt" />
                   <StatusRow ok={pushStatus.savedToBackend} label="Im Backend gespeichert" />
                 </div>
                 {pushStatus.lastError && (
