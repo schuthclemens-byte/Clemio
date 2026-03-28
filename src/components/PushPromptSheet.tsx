@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Bell, X, Smartphone } from "lucide-react";
 import { usePushCapability } from "@/hooks/usePushCapability";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
