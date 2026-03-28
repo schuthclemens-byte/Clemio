@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
 
     const payload = JSON.stringify({
       title: title || "Neue Nachricht",
-      body: body || "Du hast eine neue Nachricht",
+      body: body ?? "",
       icon: "/icon-192.png",
       badge: "/icon-192.png",
       data: data || {},
