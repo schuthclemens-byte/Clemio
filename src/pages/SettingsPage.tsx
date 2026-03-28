@@ -279,12 +279,16 @@ const SettingsPage = () => {
                       </span>
                     </div>
                   </span>
-                  {!pushStatus.savedToBackend && (
+                  {!pushStatus.savedToBackend && pushCap.canUsePush && (
                     <button
-                      onClick={() => pushSubscribe().then(ok => {
-                        if (ok) toast.success("Push-Benachrichtigungen aktiviert");
-                        else toast.error(pushStatus.lastError || "Push konnte nicht aktiviert werden");
-                      })}
+                      onClick={async () => {
+                        const ok = await pushSubscribe();
+                        if (ok) {
+                          toast.success("Push-Benachrichtigungen aktiviert");
+                        } else {
+                          toast.error("Push konnte nicht aktiviert werden – prüfe die Status-Anzeige unten");
+                        }
+                      }}
                       disabled={pushStatus.loading}
                       className="px-4 py-2 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold shrink-0 ml-3 disabled:opacity-60"
                     >
@@ -296,12 +300,12 @@ const SettingsPage = () => {
                   )}
                 </div>
 
-                {/* iPhone Status */}
+                {/* Push Status */}
                 <div className="px-4 py-3 space-y-2">
-                  <StatusRow ok={pushStatus.isStandalone} label={pushStatus.isStandalone ? "Läuft als Web-App" : "Nicht als Web-App installiert"} />
+                  <StatusRow ok={pushCap.isIOS ? pushStatus.isStandalone : true} label={pushCap.isIOS ? (pushStatus.isStandalone ? "Läuft als Web-App" : "Nicht als Web-App installiert") : "Android / Desktop – kein Standalone nötig"} />
                   <StatusRow ok={pushStatus.swActive} label="Service Worker aktiv" />
                   <StatusRow ok={pushStatus.permissionGranted} label="Permission granted" />
-                  <StatusRow ok={pushStatus.subscriptionCreated} label="Neue Subscription erstellt" />
+                  <StatusRow ok={pushStatus.subscriptionCreated} label="Subscription erstellt" />
                   <StatusRow ok={pushStatus.savedToBackend} label="Im Backend gespeichert" />
                 </div>
                 {pushStatus.lastError && (
