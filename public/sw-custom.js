@@ -31,7 +31,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("push", (event) => {
   console.log("[SW-Custom] Push event received");
   event.waitUntil((async () => {
-    let data = { title: "", body: "Neue Nachricht", data: {} };
+    let data = { title: "Neue Nachricht", body: "Du hast eine neue Nachricht", data: {} };
     try {
       if (event.data) {
         data = event.data.json();
