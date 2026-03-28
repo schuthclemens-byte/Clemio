@@ -16,6 +16,24 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+/** Get SW registration with a timeout – never hangs */
+async function getSwRegistration(timeoutMs = 3000): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) return null;
+
+  // Try to register SW first (idempotent if already registered)
+  try {
+    await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  } catch {
+    // SW file might not exist in dev/preview – that's ok
+  }
+
+  // Race: wait for ready vs timeout
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+  ]);
+}
+
 export interface PushStatus {
   isStandalone: boolean;
   swActive: boolean;
@@ -47,6 +65,7 @@ export const usePushSubscription = () => {
 
     (async () => {
       try {
+        console.log("[Push] Checking existing subscription...");
         const { data } = await supabase
           .from("push_subscriptions")
           .select("id, endpoint")
@@ -55,18 +74,20 @@ export const usePushSubscription = () => {
 
         if (cancelled) return;
 
-        if (!data || data.length === 0) return;
+        if (!data || data.length === 0) {
+          console.log("[Push] No subscription in DB → prompt will show");
+          return;
+        }
 
         const dbEndpoint = data[0].endpoint;
 
-        // Check browser-side state
-        const swReady = "serviceWorker" in navigator;
+        // Check browser-side state with timeout
         const permOk = "Notification" in window && Notification.permission === "granted";
         let browserEndpoint: string | null = null;
 
-        if (swReady) {
+        const reg = await getSwRegistration(2000);
+        if (reg) {
           try {
-            const reg = await navigator.serviceWorker.ready;
             const sub = await reg.pushManager.getSubscription();
             browserEndpoint = sub?.endpoint || null;
           } catch { /* ignore */ }
@@ -74,21 +95,22 @@ export const usePushSubscription = () => {
 
         if (cancelled) return;
 
-        // Only mark as saved if the browser subscription matches the DB
         if (browserEndpoint && browserEndpoint === dbEndpoint) {
+          console.log("[Push] Browser subscription matches DB → saved");
           setStatus((s) => ({
             ...s,
             savedToBackend: true,
-            swActive: swReady,
+            swActive: true,
             permissionGranted: permOk,
             subscriptionCreated: true,
           }));
         } else {
-          // Mismatch or no browser subscription → need to re-subscribe
-          // Delete stale DB entry so prompt shows
+          console.log("[Push] Mismatch or no browser sub → deleting stale DB entry");
           await supabase.from("push_subscriptions").delete().eq("user_id", user.id);
         }
-      } catch { /* ignore */ }
+      } catch (e) {
+        console.warn("[Push] Mount check error:", e);
+      }
     })();
 
     return () => { cancelled = true; };
@@ -96,16 +118,16 @@ export const usePushSubscription = () => {
 
   const subscribe = useCallback(async (): Promise<boolean> => {
     setStatus((s) => ({ ...s, loading: true, lastError: null }));
+    console.log("[Push] Subscribe started");
 
     try {
-      // Step 1: Check standalone / platform
+      // Step 1: Platform check
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         !!(window.navigator as any).standalone;
 
       setStatus((s) => ({ ...s, isStandalone }));
 
-      // iOS requires standalone (PWA) for push; Android works in any context
       const ua = navigator.userAgent || "";
       const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
@@ -113,12 +135,12 @@ export const usePushSubscription = () => {
         throw new Error("Auf iOS muss die App zum Home-Bildschirm hinzugefügt werden");
       }
 
-      // Step 2: Register/get Service Worker
-      if (!("serviceWorker" in navigator)) {
-        throw new Error("Service Worker nicht unterstützt");
+      // Step 2: Get Service Worker (with registration + timeout)
+      const registration = await getSwRegistration(5000);
+      if (!registration) {
+        throw new Error("Service Worker konnte nicht gestartet werden");
       }
-
-      const registration = await navigator.serviceWorker.ready;
+      console.log("[Push] SW ready");
       setStatus((s) => ({ ...s, swActive: true }));
 
       // Step 3: Request notification permission
@@ -127,14 +149,14 @@ export const usePushSubscription = () => {
       }
 
       const permission = await Notification.requestPermission();
+      console.log("[Push] Permission:", permission);
       setStatus((s) => ({ ...s, permissionGranted: permission === "granted" }));
 
       if (permission !== "granted") {
         throw new Error(`Berechtigung: ${permission}`);
       }
 
-      // Step 4: Create new push subscription
-      // First unsubscribe any existing
+      // Step 4: Create push subscription
       const existing = await registration.pushManager.getSubscription();
       if (existing) {
         await existing.unsubscribe();
@@ -144,7 +166,7 @@ export const usePushSubscription = () => {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
       });
-
+      console.log("[Push] Subscription created");
       setStatus((s) => ({ ...s, subscriptionCreated: true }));
 
       // Step 5: Save to backend
@@ -154,7 +176,6 @@ export const usePushSubscription = () => {
 
       const subJson = subscription.toJSON();
 
-      // Delete any old subscriptions for this user
       await supabase.from("push_subscriptions").delete().eq("user_id", user.id);
 
       const { error } = await supabase.from("push_subscriptions").insert({
@@ -168,9 +189,11 @@ export const usePushSubscription = () => {
         throw new Error(`Backend-Speicherung fehlgeschlagen: ${error.message}`);
       }
 
+      console.log("[Push] Saved to backend ✓");
       setStatus((s) => ({ ...s, savedToBackend: true, loading: false }));
       return true;
     } catch (err) {
+      console.error("[Push] Subscribe error:", err);
       setStatus((s) => ({
         ...s,
         lastError: err instanceof Error ? err.message : String(err),
