@@ -209,8 +209,8 @@ Deno.serve(async (req) => {
     console.log("[send-push] subscriptions found", { user_id, count: subscriptions.length });
 
     const payload = JSON.stringify({
-      title: title || "",
-      body: body || "Neue Nachricht",
+      title: title || "Neue Nachricht",
+      body: body || "Du hast eine neue Nachricht",
       icon: "/icon-192.png",
       badge: "/icon-192.png",
       data: data || {},
