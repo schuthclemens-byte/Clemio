@@ -40,7 +40,7 @@ export const usePushSubscription = () => {
     lastError: null,
   });
 
-  // Check on mount if user already has a push subscription saved
+  // Check on mount if user already has a valid push subscription
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -49,33 +49,44 @@ export const usePushSubscription = () => {
       try {
         const { data } = await supabase
           .from("push_subscriptions")
-          .select("id")
+          .select("id, endpoint")
           .eq("user_id", user.id)
           .limit(1);
 
         if (cancelled) return;
 
-        if (data && data.length > 0) {
-          // Also check browser-side state
-          const swReady = "serviceWorker" in navigator;
-          const permOk = "Notification" in window && Notification.permission === "granted";
-          let subExists = false;
+        if (!data || data.length === 0) return;
 
-          if (swReady) {
-            try {
-              const reg = await navigator.serviceWorker.ready;
-              const sub = await reg.pushManager.getSubscription();
-              subExists = !!sub;
-            } catch { /* ignore */ }
-          }
+        const dbEndpoint = data[0].endpoint;
 
+        // Check browser-side state
+        const swReady = "serviceWorker" in navigator;
+        const permOk = "Notification" in window && Notification.permission === "granted";
+        let browserEndpoint: string | null = null;
+
+        if (swReady) {
+          try {
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.getSubscription();
+            browserEndpoint = sub?.endpoint || null;
+          } catch { /* ignore */ }
+        }
+
+        if (cancelled) return;
+
+        // Only mark as saved if the browser subscription matches the DB
+        if (browserEndpoint && browserEndpoint === dbEndpoint) {
           setStatus((s) => ({
             ...s,
             savedToBackend: true,
             swActive: swReady,
             permissionGranted: permOk,
-            subscriptionCreated: subExists,
+            subscriptionCreated: true,
           }));
+        } else {
+          // Mismatch or no browser subscription → need to re-subscribe
+          // Delete stale DB entry so prompt shows
+          await supabase.from("push_subscriptions").delete().eq("user_id", user.id);
         }
       } catch { /* ignore */ }
     })();
