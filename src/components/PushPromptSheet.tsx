@@ -21,13 +21,18 @@ const PushPromptSheet = () => {
   const [activating, setActivating] = useState(false);
   const [result, setResult] = useState<"success" | "denied" | null>(null);
 
-  // Reset dismissed state when push subscription is lost (e.g. after reinstall)
+  // Only reset dismissed state when push was previously saved but is now lost (e.g. reinstall)
+  const hadPushRef = useRef(false);
   useEffect(() => {
     if (!user) return;
-    if (status.savedToBackend) return;
-    // If we know push CAN work but it's not saved, clear dismiss so prompt re-appears
-    if (pushCap.canUsePush && !status.savedToBackend) {
+    if (status.savedToBackend) {
+      hadPushRef.current = true;
+      return;
+    }
+    // Only clear dismiss if user HAD push before (reinstall scenario)
+    if (hadPushRef.current && pushCap.canUsePush) {
       localStorage.removeItem(DISMISSED_KEY);
+      hadPushRef.current = false;
     }
   }, [user, pushCap.canUsePush, status.savedToBackend]);
 

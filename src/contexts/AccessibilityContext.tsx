@@ -29,7 +29,7 @@ const defaultSettings: AccessibilitySettings = {
   dyslexiaFont: false,
   largeText: false,
   highContrast: false,
-  autoRead: true,
+  autoRead: false,
   headphoneAutoPlay: false,
   focusMode: false,
   speechRate: 1,
