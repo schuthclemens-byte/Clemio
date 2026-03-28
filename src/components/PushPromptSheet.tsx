@@ -45,7 +45,7 @@ const PushPromptSheet = () => {
       if (localStorage.getItem(DISMISSED_UNSUPPORTED_KEY) === "true") return;
     }
 
-    const timer = setTimeout(() => setVisible(true), 1500);
+    const timer = setTimeout(() => setVisible(true), 500);
     return () => clearTimeout(timer);
   }, [user, location.pathname, status.savedToBackend, pushCap.canUsePush]);
 
