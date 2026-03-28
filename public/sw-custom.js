@@ -43,6 +43,8 @@ self.addEventListener("push", (event) => {
       }
     }
 
+    const normalizedTitle = typeof data.title === "string" && data.title.trim().length === 0 ? "\u00A0" : data.title;
+
     const options = {
       body: data.body,
       icon: data.icon || "/icon-192.png",
@@ -56,16 +58,16 @@ self.addEventListener("push", (event) => {
     await notifyClients({
       phase: "push",
       message: "push-Event ausgelöst",
-      title: data.title,
+      title: normalizedTitle,
       body: options.body,
     });
 
-    console.log("[SW-Custom] Showing notification:", data.title, options.body);
-    await self.registration.showNotification(data.title, options);
+    console.log("[SW-Custom] Showing notification:", normalizedTitle, options.body);
+    await self.registration.showNotification(normalizedTitle, options);
     await notifyClients({
       phase: "showNotification",
       message: "showNotification ausgeführt",
-      title: data.title,
+      title: normalizedTitle,
       body: options.body,
     });
   })());
