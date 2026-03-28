@@ -96,6 +96,15 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
+
+    // Handle Stripe rate limit gracefully
+    if (errorMessage.includes("rate limit") || errorMessage.includes("Rate limit")) {
+      return new Response(JSON.stringify({ subscribed: false, rate_limited: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

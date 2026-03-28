@@ -50,11 +50,29 @@ export const useSubscription = () => {
     load();
   }, [user]);
 
-  // Check Stripe subscription
-  const checkStripe = useCallback(async (): Promise<RefreshSubscriptionResult> => {
+  // Check Stripe subscription (with client-side cache to avoid rate limits)
+  const checkStripe = useCallback(async (force = false): Promise<RefreshSubscriptionResult> => {
     if (!user) {
       setLoading(false);
       return { ok: false, subscribed: false, error: "Keine aktive Sitzung" };
+    }
+
+    // Client-side cache: skip if last successful check was < 5 minutes ago
+    const CACHE_KEY = "clemio_stripe_cache";
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+    if (!force) {
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const { ts, subscribed, subscription_end } = JSON.parse(cached);
+          if (Date.now() - ts < CACHE_TTL) {
+            setStripeActive(subscribed);
+            setStripeEnd(subscription_end ?? null);
+            setLoading(false);
+            return { ok: true, subscribed };
+          }
+        }
+      } catch { /* ignore */ }
     }
 
     const { data: { session } } = await supabase.auth.getSession();
@@ -89,6 +107,14 @@ export const useSubscription = () => {
       if (data) {
         setStripeActive(data.subscribed);
         setStripeEnd(data.subscription_end ?? null);
+        // Cache successful result
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            ts: Date.now(),
+            subscribed: data.subscribed,
+            subscription_end: data.subscription_end,
+          }));
+        } catch { /* ignore */ }
         return {
           ok: true,
           subscribed: data.subscribed,
@@ -111,7 +137,7 @@ export const useSubscription = () => {
   useEffect(() => {
     if (!user) return;
     checkStripe();
-    const interval = setInterval(checkStripe, 60_000);
+    const interval = setInterval(checkStripe, 5 * 60_000); // every 5 min instead of 1 min
     return () => clearInterval(interval);
   }, [user, checkStripe]);
 
@@ -123,7 +149,7 @@ export const useSubscription = () => {
       params.delete("checkout");
       const newUrl = window.location.pathname + (params.toString() ? `?${params}` : "");
       window.history.replaceState({}, "", newUrl);
-      setTimeout(checkStripe, 2000);
+      setTimeout(() => checkStripe(true), 2000);
     }
   }, [checkStripe]);
 
