@@ -21,6 +21,16 @@ const PushPromptSheet = () => {
   const [activating, setActivating] = useState(false);
   const [result, setResult] = useState<"success" | "denied" | null>(null);
 
+  // Reset dismissed state when push subscription is lost (e.g. after reinstall)
+  useEffect(() => {
+    if (!user) return;
+    if (status.savedToBackend) return;
+    // If we know push CAN work but it's not saved, clear dismiss so prompt re-appears
+    if (pushCap.canUsePush && !status.savedToBackend) {
+      localStorage.removeItem(DISMISSED_KEY);
+    }
+  }, [user, pushCap.canUsePush, status.savedToBackend]);
+
   useEffect(() => {
     if (!user) return;
     const onAllowedRoute = ALLOWED_ROUTES.some(r => location.pathname.startsWith(r));
