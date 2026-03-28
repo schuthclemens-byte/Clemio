@@ -98,15 +98,19 @@ export const usePushSubscription = () => {
     setStatus((s) => ({ ...s, loading: true, lastError: null }));
 
     try {
-      // Step 1: Check standalone
+      // Step 1: Check standalone / platform
       const isStandalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         !!(window.navigator as any).standalone;
 
       setStatus((s) => ({ ...s, isStandalone }));
 
-      if (!isStandalone) {
-        throw new Error("App läuft nicht als installierte Web-App");
+      // iOS requires standalone (PWA) for push; Android works in any context
+      const ua = navigator.userAgent || "";
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+      if (isIOS && !isStandalone) {
+        throw new Error("Auf iOS muss die App zum Home-Bildschirm hinzugefügt werden");
       }
 
       // Step 2: Register/get Service Worker
