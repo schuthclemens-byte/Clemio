@@ -108,24 +108,11 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     const shouldSearchByName = /[^\d\s()+-]/.test(query);
     const shouldSearchByPhone = digitsQuery.length >= 3 || isPhoneQuery(query);
 
-    const emptyResponse = { data: [] as FoundUser[] | null, error: null };
+    const searchTerm = shouldSearchByName ? query : (digitsQuery || normalizedDigitsQuery);
+    const { data: rpcData } = await supabase
+      .rpc("search_profiles_by_query", { search_query: searchTerm });
 
-    const [nameResponse, phoneResponse] = await Promise.all([
-      shouldSearchByName
-        ? supabase
-            .from("profiles")
-            .select("id, display_name, phone_number")
-            .ilike("display_name", `%${query}%`)
-            .limit(10)
-        : Promise.resolve(emptyResponse),
-      shouldSearchByPhone
-        ? supabase
-            .from("profiles")
-            .select("id, display_name, phone_number")
-            .or(`phone_number.ilike.%${digitsQuery}%,phone_number.ilike.%${normalizedDigitsQuery}%`)
-            .limit(10)
-        : Promise.resolve(emptyResponse),
-    ]);
+    const merged = (rpcData ?? []) as FoundUser[];
 
     const merged = [...(nameResponse.data ?? []), ...(phoneResponse.data ?? [])];
     const deduped = merged.filter((candidate, index, arr) => arr.findIndex((item) => item.id === candidate.id) === index);
