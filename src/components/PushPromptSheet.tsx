@@ -27,11 +27,13 @@ const PushPromptSheet = () => {
     if (!user) return;
     if (status.savedToBackend) {
       hadPushRef.current = true;
+      sessionStorage.removeItem(DISMISSED_KEY);
+      sessionStorage.removeItem(DISMISSED_UNSUPPORTED_KEY);
       return;
     }
     // Only clear dismiss if user HAD push before (reinstall scenario)
     if (hadPushRef.current && pushCap.canUsePush) {
-      localStorage.removeItem(DISMISSED_KEY);
+      sessionStorage.removeItem(DISMISSED_KEY);
       hadPushRef.current = false;
     }
   }, [user, pushCap.canUsePush, status.savedToBackend]);
@@ -47,9 +49,9 @@ const PushPromptSheet = () => {
     if (status.savedToBackend) return;
 
     if (pushCap.canUsePush) {
-      if (localStorage.getItem(DISMISSED_KEY) === "true") return;
+      if (sessionStorage.getItem(DISMISSED_KEY) === "true") return;
     } else {
-      if (localStorage.getItem(DISMISSED_UNSUPPORTED_KEY) === "true") return;
+      if (sessionStorage.getItem(DISMISSED_UNSUPPORTED_KEY) === "true") return;
     }
 
     const timer = setTimeout(() => setVisible(true), 500);
@@ -58,9 +60,9 @@ const PushPromptSheet = () => {
 
   const handleDismiss = useCallback(() => {
     if (pushCap.canUsePush) {
-      localStorage.setItem(DISMISSED_KEY, "true");
+      sessionStorage.setItem(DISMISSED_KEY, "true");
     } else {
-      localStorage.setItem(DISMISSED_UNSUPPORTED_KEY, "true");
+      sessionStorage.setItem(DISMISSED_UNSUPPORTED_KEY, "true");
     }
     setVisible(false);
   }, [pushCap.canUsePush]);

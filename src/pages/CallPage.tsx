@@ -45,6 +45,25 @@ const CallPage = () => {
     setCallError(error);
   }, []);
 
+  const notifyIncomingCall = useCallback(async () => {
+    if (!conversationId || !user || isIncoming) return;
+
+    try {
+      const { error } = await supabase.functions.invoke("notify-incoming-call", {
+        body: {
+          conversationId,
+          isVideo: isVideoCall,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.warn("[CallPage] Incoming call push failed:", error);
+    }
+  }, [conversationId, user, isIncoming, isVideoCall]);
+
   const {
     callState,
     isVideoEnabled,
@@ -124,6 +143,9 @@ const CallPage = () => {
       } else {
         // Starting an outgoing call
         stream = await startCall(isVideoCall);
+        if (stream) {
+          await notifyIncomingCall();
+        }
       }
 
       if (localVideoRef.current && stream) {

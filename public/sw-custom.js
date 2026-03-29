@@ -44,15 +44,20 @@ self.addEventListener("push", (event) => {
     }
 
     const normalizedTitle = typeof data.title === "string" && data.title.trim().length === 0 ? "\u00A0" : data.title;
+    const notificationData = data.data || {};
+    const isIncomingCall = notificationData.type === "incoming_call";
 
     const options = {
       body: data.body,
       icon: data.icon || "/icon-192.png",
       badge: data.badge || "/icon-192.png",
-      tag: data.data?.conversation_id || "clemio-push",
-      data: data.data || {},
-      vibrate: [200, 100, 200],
+      tag: isIncomingCall
+        ? `incoming-call-${notificationData.conversation_id || "clemio"}`
+        : notificationData.conversation_id || "clemio-push",
+      data: notificationData,
+      vibrate: isIncomingCall ? [300, 150, 300, 150, 300] : [200, 100, 200],
       renotify: true,
+      requireInteraction: isIncomingCall,
     };
 
     await notifyClients({
@@ -77,8 +82,15 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   console.log("[SW-Custom] Notification clicked");
   event.notification.close();
-  const conversationId = event.notification.data?.conversation_id;
-  const url = conversationId ? `/chat/${conversationId}` : "/chats";
+  const notificationData = event.notification.data || {};
+  const conversationId = notificationData.conversation_id;
+  const url = notificationData.type === "incoming_call"
+    ? notificationData.path || (conversationId
+      ? `/call/${conversationId}?incoming=true&video=${notificationData.is_video !== false}`
+      : "/chats")
+    : conversationId
+      ? `/chat/${conversationId}`
+      : "/chats";
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
