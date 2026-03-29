@@ -19,23 +19,12 @@ export interface CallRecord {
   declined_at: string | null;
 }
 
-interface CallerInfo {
-  name: string;
-  isVideo: boolean;
-}
-
 interface CallContextType {
-  /** Incoming call waiting to be answered */
   incomingCall: (CallRecord & { callerName: string }) | null;
-  /** Currently active call (accepted & in progress) */
   activeCall: CallRecord | null;
-  /** Start an outgoing call — returns the call ID or null on error */
   startCall: (conversationId: string, receiverId: string, isVideo: boolean) => Promise<string | null>;
-  /** Accept an incoming call */
   acceptCall: () => Promise<void>;
-  /** Decline an incoming call */
   declineCall: () => Promise<void>;
-  /** End an active call (hang up) */
   endCall: () => Promise<void>;
 }
 
@@ -48,8 +37,7 @@ export const useCallContext = () => {
 };
 
 const CALL_TIMEOUT_MS = 30_000;
-
-/* ── Provider ── */
+const RECONCILE_INTERVAL_MS = 5_000;
 
 export const CallProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
@@ -57,6 +45,7 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
   const [activeCall, setActiveCall] = useState<CallRecord | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ringtoneActiveRef = useRef(false);
+  const handledIncomingIdsRef = useRef<Set<string>>(new Set());
 
   const clearCallTimeout = useCallback(() => {
     if (timeoutRef.current) {
@@ -72,14 +61,162 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  /* ── Global subscription for incoming calls via Realtime postgres_changes ── */
+  const resolveCallerName = useCallback(async (call: CallRecord) => {
+    if (!user) return "Unbekannt";
+
+    let callerName = "Unbekannt";
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("display_name, phone_number")
+      .eq("id", call.caller_id)
+      .maybeSingle();
+
+    console.log("[CallContext] Caller profile lookup:", { callId: call.id, profile, profileError });
+
+    if (profile) {
+      const { data: alias, error: aliasError } = await supabase
+        .from("contact_aliases")
+        .select("first_name, last_name")
+        .eq("user_id", user.id)
+        .eq("contact_user_id", call.caller_id)
+        .maybeSingle();
+
+      console.log("[CallContext] Caller alias lookup:", { callId: call.id, alias, aliasError });
+
+      if (alias?.first_name) {
+        callerName = [alias.first_name, alias.last_name].filter(Boolean).join(" ");
+      } else {
+        callerName = profile.display_name || profile.phone_number;
+      }
+    }
+
+    return callerName;
+  }, [user]);
+
+  const showIncomingCall = useCallback(async (call: CallRecord, source: string) => {
+    if (!user || call.receiver_id !== user.id || call.status !== "calling") return;
+
+    if (handledIncomingIdsRef.current.has(call.id) && incomingCall?.id === call.id) {
+      console.log("[CallContext] Incoming call already visible:", { callId: call.id, source });
+      return;
+    }
+
+    handledIncomingIdsRef.current.add(call.id);
+
+    const callerName = await resolveCallerName(call);
+    console.log("[CallContext] Showing incoming call overlay:", {
+      source,
+      callId: call.id,
+      callerId: call.caller_id,
+      receiverId: call.receiver_id,
+      conversationId: call.conversation_id,
+      callType: call.call_type,
+      callerName,
+    });
+
+    setIncomingCall({ ...call, callerName });
+    startRingtone();
+    ringtoneActiveRef.current = true;
+    console.log("[CallContext] overlay visible yes", { currentIncomingCall: call.id });
+  }, [user, resolveCallerName, incomingCall?.id]);
+
+  const insertMissedCallMessage = useCallback(async (call: CallRecord) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: call.conversation_id,
+        sender_id: user.id,
+        content: call.call_type === "video" ? "📹 Verpasster Videoanruf" : "📞 Verpasster Anruf",
+        message_type: "system",
+      })
+      .select("id")
+      .single();
+
+    console.log("[CallContext] Missed call message insert result:", {
+      callId: call.id,
+      data,
+      error,
+    });
+  }, [user]);
+
+  const markCallAsMissed = useCallback(async (call: CallRecord, source: string) => {
+    const missedAt = new Date().toISOString();
+    console.log("[CallContext] update to missed attempted", { callId: call.id, source, missedAt });
+
+    const { data, error } = await supabase
+      .from("calls" as any)
+      .update({ status: "missed", missed_at: missedAt })
+      .eq("id", call.id)
+      .eq("status", "calling")
+      .select("*")
+      .maybeSingle();
+
+    console.log("[CallContext] update to missed result", { callId: call.id, data, error });
+
+    if (error || !data) return false;
+
+    const updatedCall = data as CallRecord;
+    setActiveCall((prev) => (prev?.id === updatedCall.id ? updatedCall : prev));
+    await insertMissedCallMessage(updatedCall);
+    return true;
+  }, [insertMissedCallMessage]);
+
+  const reconcileCalls = useCallback(async (reason: string) => {
+    if (!user) return;
+
+    const thresholdIso = new Date(Date.now() - CALL_TIMEOUT_MS).toISOString();
+    console.log("[CallContext] Reconciling calls", { reason, userId: user.id, thresholdIso });
+
+    const { data: pendingIncoming, error: pendingIncomingError } = await supabase
+      .from("calls" as any)
+      .select("*")
+      .eq("receiver_id", user.id)
+      .eq("status", "calling")
+      .gte("created_at", thresholdIso)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    console.log("[CallContext] Pending incoming query:", {
+      reason,
+      pendingIncoming,
+      pendingIncomingError,
+    });
+
+    if (pendingIncoming?.length) {
+      await showIncomingCall(pendingIncoming[0] as CallRecord, `reconcile:${reason}`);
+    }
+
+    const { data: staleOutgoing, error: staleOutgoingError } = await supabase
+      .from("calls" as any)
+      .select("*")
+      .eq("caller_id", user.id)
+      .eq("status", "calling")
+      .lt("created_at", thresholdIso);
+
+    console.log("[CallContext] Stale outgoing query:", {
+      reason,
+      staleOutgoing,
+      staleOutgoingError,
+    });
+
+    for (const staleCall of (staleOutgoing || []) as CallRecord[]) {
+      await markCallAsMissed(staleCall, `reconcile:${reason}`);
+    }
+  }, [user, showIncomingCall, markCallAsMissed]);
+
+  useEffect(() => {
+    console.log("[CallContext] mounted", { userId: user?.id ?? null });
+  }, [user?.id]);
+
   useEffect(() => {
     if (!user) return;
 
-    console.log("[CallContext] Setting up global call subscription for", user.id);
+    console.log("[CallContext] subscription created", { userId: user.id });
 
     const channel = supabase
-      .channel("global-calls")
+      .channel(`global-calls-${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -89,40 +226,9 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
           filter: `receiver_id=eq.${user.id}`,
         },
         async (payload) => {
+          console.log("[CallContext] INSERT payload received", payload);
           const call = payload.new as CallRecord;
-          if (call.status !== "calling") return;
-
-          console.log("[CallContext] Incoming call detected:", call.id);
-
-          // Look up caller name
-          let callerName = "Unbekannt";
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("display_name, phone_number")
-            .eq("id", call.caller_id)
-            .maybeSingle();
-
-          if (profile) {
-            // Check alias
-            const { data: alias } = await supabase
-              .from("contact_aliases")
-              .select("first_name, last_name")
-              .eq("user_id", user.id)
-              .eq("contact_user_id", call.caller_id)
-              .maybeSingle();
-
-            if (alias?.first_name) {
-              callerName = [alias.first_name, alias.last_name].filter(Boolean).join(" ");
-            } else {
-              callerName = profile.display_name || profile.phone_number;
-            }
-          }
-
-          setIncomingCall({ ...call, callerName });
-          // Start ringtone
-          startRingtone();
-          ringtoneActiveRef.current = true;
-          console.log("[CallContext] Ringtone started for call", call.id);
+          await showIncomingCall(call, "realtime-insert");
         }
       )
       .on(
@@ -133,194 +239,197 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
           table: "calls",
         },
         (payload) => {
+          console.log("[CallContext] UPDATE payload received", payload);
           const updated = payload.new as CallRecord;
-          // Only care about calls involving us
           if (updated.caller_id !== user.id && updated.receiver_id !== user.id) return;
 
-          console.log("[CallContext] Call updated:", updated.id, "→", updated.status);
-
-          // If this was the incoming call, handle status changes
           setIncomingCall((prev) => {
-            if (prev?.id === updated.id) {
-              if (["accepted", "declined", "missed", "ended", "failed"].includes(updated.status)) {
-                stopRinging();
-                clearCallTimeout();
-                return null;
-              }
+            if (prev?.id !== updated.id) return prev;
+            if (["accepted", "declined", "missed", "ended", "failed"].includes(updated.status)) {
+              stopRinging();
+              clearCallTimeout();
+              handledIncomingIdsRef.current.delete(updated.id);
+              console.log("[CallContext] overlay visible no", { currentIncomingCall: updated.id, status: updated.status });
+              return null;
             }
             return prev;
           });
 
-          // Update active call — keep terminal status so CallPage can react
           setActiveCall((prev) => {
-            if (prev?.id === updated.id) {
-              return updated; // Always pass through the latest status
-            }
-            // If we're the caller and call was accepted, set as active
-            if (updated.status === "accepted" && updated.caller_id === user.id) {
-              return updated;
-            }
+            if (prev?.id === updated.id) return updated;
+            if (updated.status === "accepted" && updated.caller_id === user.id) return updated;
             return prev;
           });
 
-          // If we're the caller and call was declined/missed → stop caller UI
-          if (updated.caller_id === user.id && ["declined", "missed"].includes(updated.status)) {
+          if (updated.caller_id === user.id && ["declined", "missed", "ended", "failed"].includes(updated.status)) {
             stopRinging();
             clearCallTimeout();
           }
         }
       )
       .subscribe((status) => {
-        console.log("[CallContext] Subscription status:", status);
+        console.log("[CallContext] subscription status", status);
+        if (status === "SUBSCRIBED") {
+          void reconcileCalls("subscribed");
+        }
       });
 
+    void reconcileCalls("effect-start");
+    const intervalId = window.setInterval(() => {
+      void reconcileCalls("interval");
+    }, RECONCILE_INTERVAL_MS);
+
     return () => {
+      window.clearInterval(intervalId);
       supabase.removeChannel(channel);
       stopRinging();
       clearCallTimeout();
     };
-  }, [user, stopRinging, clearCallTimeout]);
+  }, [user, clearCallTimeout, stopRinging, reconcileCalls, showIncomingCall]);
 
-  /* ── Start an outgoing call ── */
-  const startCallFn = useCallback(
-    async (conversationId: string, receiverId: string, isVideo: boolean): Promise<string | null> => {
-      if (!user) return null;
+  const startCallFn = useCallback(async (conversationId: string, receiverId: string, isVideo: boolean): Promise<string | null> => {
+    if (!user) {
+      console.error("[CallContext] startCall aborted: no user session");
+      return null;
+    }
 
-      console.log("[CallContext] Starting call to", receiverId, "in conv", conversationId);
+    const callType = isVideo ? "video" : "audio";
+    console.log("[CallContext] startCall invoked", {
+      callerId: user.id,
+      receiverId,
+      conversationId,
+      callType,
+    });
 
-      const { data, error } = await supabase
+    if (!conversationId || !receiverId || !user.id) {
+      console.error("[CallContext] startCall invalid payload", {
+        callerId: user.id,
+        receiverId,
+        conversationId,
+        callType,
+      });
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from("calls" as any)
+      .insert({
+        caller_id: user.id,
+        receiver_id: receiverId,
+        conversation_id: conversationId,
+        status: "calling",
+        call_type: callType,
+      })
+      .select("*")
+      .single();
+
+    console.log("[CallContext] calls insert response", { data, error });
+
+    if (error || !data) {
+      console.error("[CallContext] Failed to create call record:", error);
+      return null;
+    }
+
+    const call = data as CallRecord;
+    setActiveCall(call);
+
+    console.log("[CallContext] timeout started", { callId: call.id, timeoutMs: CALL_TIMEOUT_MS });
+    clearCallTimeout();
+    timeoutRef.current = setTimeout(async () => {
+      console.log("[CallContext] timeout fired", { callId: call.id });
+
+      const { data: current, error: currentError } = await supabase
         .from("calls" as any)
-        .insert({
-          caller_id: user.id,
-          receiver_id: receiverId,
-          conversation_id: conversationId,
-          status: "calling",
-          call_type: isVideo ? "video" : "audio",
-        })
-        .select()
-        .single();
+        .select("*")
+        .eq("id", call.id)
+        .maybeSingle();
 
-      if (error || !data) {
-        console.error("[CallContext] Failed to create call record:", error);
-        return null;
+      console.log("[CallContext] current call before timeout update", { callId: call.id, current, currentError });
+
+      if (!current || (current as CallRecord).status !== "calling") return;
+
+      const missedWritten = await markCallAsMissed(current as CallRecord, "timeout");
+      if (missedWritten) {
+        setActiveCall((prev) => (prev?.id === call.id ? { ...(current as CallRecord), status: "missed", missed_at: new Date().toISOString() } : prev));
       }
+    }, CALL_TIMEOUT_MS);
 
-      const call = data as unknown as CallRecord;
-      console.log("[CallContext] Call record created:", call.id);
-      setActiveCall(call);
+    const { data: notifyData, error: notifyError } = await supabase.functions.invoke("notify-incoming-call", {
+      body: { conversationId, isVideo },
+    });
 
-      // Send push notification to receiver
-      try {
-        await supabase.functions.invoke("notify-incoming-call", {
-          body: { conversationId, isVideo, callId: call.id },
-        });
-        console.log("[CallContext] Push notification sent");
-      } catch (e) {
-        console.warn("[CallContext] Push notification failed:", e);
-      }
+    console.log("[CallContext] notify-incoming-call response", { notifyData, notifyError });
 
-      // Set timeout for missed call
-      timeoutRef.current = setTimeout(async () => {
-        console.log("[CallContext] Call timeout reached for", call.id);
+    return call.id;
+  }, [user, clearCallTimeout, markCallAsMissed]);
 
-        // Check current status
-        const { data: current } = await supabase
-          .from("calls" as any)
-          .select("status")
-          .eq("id", call.id)
-          .single();
-
-        const currentStatus = (current as any)?.status;
-        if (currentStatus === "calling") {
-          // Mark as missed
-          await supabase
-            .from("calls" as any)
-            .update({ status: "missed", missed_at: new Date().toISOString() })
-            .eq("id", call.id);
-
-          // Insert missed call system message
-          await supabase.from("messages").insert({
-            conversation_id: conversationId,
-            sender_id: user.id,
-            content: isVideo ? "📹 Verpasster Videoanruf" : "📞 Verpasster Anruf",
-            message_type: "system",
-          });
-
-          console.log("[CallContext] Call marked as missed, system message inserted");
-          setActiveCall(null);
-        }
-      }, CALL_TIMEOUT_MS);
-
-      return call.id;
-    },
-    [user]
-  );
-
-  /* ── Accept an incoming call ── */
   const acceptCallFn = useCallback(async () => {
     if (!incomingCall || !user) return;
 
-    console.log("[CallContext] Accepting call", incomingCall.id);
+    console.log("[CallContext] acceptCall invoked", { callId: incomingCall.id, userId: user.id });
     stopRinging();
     clearCallTimeout();
 
-    const { error } = await supabase
+    const answeredAt = new Date().toISOString();
+    const { data, error } = await supabase
       .from("calls" as any)
-      .update({ status: "accepted", answered_at: new Date().toISOString() })
-      .eq("id", incomingCall.id);
+      .update({ status: "accepted", answered_at: answeredAt })
+      .eq("id", incomingCall.id)
+      .select("*")
+      .single();
 
-    if (error) {
-      console.error("[CallContext] Failed to accept call:", error);
-      return;
-    }
+    console.log("[CallContext] acceptCall response", { data, error });
 
-    const accepted = { ...incomingCall, status: "accepted", answered_at: new Date().toISOString() };
-    setActiveCall(accepted);
+    if (error || !data) return;
+
+    setActiveCall(data as CallRecord);
     setIncomingCall(null);
-    console.log("[CallContext] Call accepted:", accepted.id);
+    handledIncomingIdsRef.current.delete(incomingCall.id);
   }, [incomingCall, user, stopRinging, clearCallTimeout]);
 
-  /* ── Decline an incoming call ── */
   const declineCallFn = useCallback(async () => {
     if (!incomingCall || !user) return;
 
-    console.log("[CallContext] Declining call", incomingCall.id);
+    console.log("[CallContext] declineCall invoked", { callId: incomingCall.id, userId: user.id });
     stopRinging();
     clearCallTimeout();
 
-    await supabase
+    const declinedAt = new Date().toISOString();
+    const { data, error } = await supabase
       .from("calls" as any)
-      .update({ status: "declined", declined_at: new Date().toISOString() })
-      .eq("id", incomingCall.id);
+      .update({ status: "declined", declined_at: declinedAt })
+      .eq("id", incomingCall.id)
+      .select("*")
+      .single();
+
+    console.log("[CallContext] declineCall response", { data, error });
 
     setIncomingCall(null);
-    console.log("[CallContext] Call declined");
+    handledIncomingIdsRef.current.delete(incomingCall.id);
   }, [incomingCall, user, stopRinging, clearCallTimeout]);
 
-  /* ── End an active call ── */
   const endCallFn = useCallback(async () => {
-    if (!user) return;
-    const call = activeCall;
-    if (!call) return;
+    if (!user || !activeCall) return;
 
-    // Don't update if already in terminal status
-    if (["ended", "failed", "missed", "declined"].includes(call.status)) {
-      console.log("[CallContext] Call already in terminal status:", call.status);
+    console.log("[CallContext] endCall invoked", { callId: activeCall.id, status: activeCall.status, userId: user.id });
+    stopRinging();
+    clearCallTimeout();
+
+    if (["ended", "failed", "missed", "declined"].includes(activeCall.status)) {
       setActiveCall(null);
       return;
     }
 
-    console.log("[CallContext] Ending call", call.id);
-    stopRinging();
-    clearCallTimeout();
-
-    await supabase
+    const endedAt = new Date().toISOString();
+    const { data, error } = await supabase
       .from("calls" as any)
-      .update({ status: "ended", ended_at: new Date().toISOString() })
-      .eq("id", call.id);
+      .update({ status: "ended", ended_at: endedAt })
+      .eq("id", activeCall.id)
+      .select("*")
+      .single();
 
+    console.log("[CallContext] endCall response", { data, error });
     setActiveCall(null);
-    console.log("[CallContext] Call ended");
   }, [activeCall, user, stopRinging, clearCallTimeout]);
 
   return (
