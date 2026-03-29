@@ -33,13 +33,13 @@ const CallPage = () => {
   const [chatName, setChatName] = useState("...");
   const [listenOnlyMode, setListenOnlyMode] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [callError, setCallError] = useState<CallError | null>(null);
   const [callPhase, setCallPhase] = useState<"init" | "calling" | "accepted" | "ended" | "error">("init");
   const [endReason, setEndReason] = useState<string | null>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const initDoneRef = useRef(false);
   const cleanedUpRef = useRef(false);
@@ -57,6 +57,8 @@ const CallPage = () => {
     callState,
     isVideoEnabled,
     isAudioEnabled,
+    remoteStream,
+    localStream,
     startCall: startWebRTC,
     answerCall: answerWebRTC,
     endCall: endWebRTC,
@@ -65,7 +67,6 @@ const CallPage = () => {
   } = useWebRTC({
     conversationId: conversationId || "",
     userId: user?.id || "",
-    onRemoteStream: setRemoteStream,
     onCallError: handleCallError,
   });
 
@@ -109,10 +110,10 @@ const CallPage = () => {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("display_name, phone_number")
+          .select("display_name")
           .eq("id", member.user_id)
           .maybeSingle();
-        setChatName(profile?.display_name || profile?.phone_number || "Anruf");
+        setChatName(profile?.display_name || "Anruf");
       }
     };
     load();
@@ -125,11 +126,8 @@ const CallPage = () => {
 
     const init = async () => {
       if (isIncoming) {
-        // Incoming call from push notification or IncomingCallOverlay accept
-        // First: accept the call in the DB if not already accepted
         console.log("[CallPage] Incoming call – accepting and starting WebRTC");
 
-        // Check if there's a pending call for this conversation that needs accepting
         const { data: pendingCalls } = await supabase
           .from("calls" as any)
           .select("*")
@@ -140,7 +138,6 @@ const CallPage = () => {
           .limit(1);
 
         if (pendingCalls && pendingCalls.length > 0) {
-          // Accept the call via DB update
           console.log("[CallPage] Found pending call, accepting:", (pendingCalls[0] as any).id);
           await supabase
             .from("calls" as any)
@@ -149,12 +146,8 @@ const CallPage = () => {
         }
 
         setCallPhase("accepted");
-        const stream = await answerWebRTC(isVideoCall);
-        if (localVideoRef.current && stream) {
-          localVideoRef.current.srcObject = stream;
-        }
+        await answerWebRTC(isVideoCall);
       } else {
-        // Outgoing call
         console.log("[CallPage] Outgoing call – preparing DB call record");
         setCallPhase("calling");
 
@@ -192,20 +185,13 @@ const CallPage = () => {
     if (!activeCall) return;
 
     if (activeCall.status === "accepted" && callPhase === "calling") {
-      console.log("[CallPage] Call accepted by receiver – starting caller WebRTC now", {
-        activeCall,
-        callState,
-        alreadyStarted: webRtcStartedRef.current,
-      });
+      console.log("[CallPage] Call accepted by receiver – starting caller WebRTC now");
       setCallPhase("accepted");
 
       if (!isIncoming && !webRtcStartedRef.current) {
         webRtcStartedRef.current = true;
         void (async () => {
-          const stream = await startWebRTC(isVideoCall);
-          if (localVideoRef.current && stream) {
-            localVideoRef.current.srcObject = stream;
-          }
+          await startWebRTC(isVideoCall);
         })();
       }
     }
@@ -218,14 +204,60 @@ const CallPage = () => {
         endWebRTC();
       }
     }
-  }, [activeCall, callPhase, endWebRTC, callState, isIncoming, startWebRTC, isVideoCall]);
+  }, [activeCall, callPhase, endWebRTC, isIncoming, startWebRTC, isVideoCall]);
 
-  // Attach remote stream
+  // Bind local stream to local video element
+  // Re-runs whenever localStream or isVideoEnabled changes (camera toggle)
+  useEffect(() => {
+    if (localVideoRef.current) {
+      const stream = localStreamRef();
+      if (stream) {
+        localVideoRef.current.srcObject = stream;
+        console.log("[CallPage] Local video srcObject set", {
+          audioTracks: stream.getAudioTracks().length,
+          videoTracks: stream.getVideoTracks().length,
+        });
+      }
+    }
+  }, [isVideoEnabled, callState]);
+
+  // Helper to get current local stream from the hook
+  function localStreamRef() {
+    return localStream;
+  }
+
+  // Bind remote stream to video AND audio elements
+  useEffect(() => {
+    console.log("[CallPage] Remote stream effect:", {
+      hasStream: !!remoteStream,
+      audioTracks: remoteStream?.getAudioTracks().length,
+      videoTracks: remoteStream?.getVideoTracks().length,
+      hasVideoRef: !!remoteVideoRef.current,
+      hasAudioRef: !!remoteAudioRef.current,
+    });
+
+    if (remoteStream) {
+      // Always bind audio to a dedicated <audio> element for reliable playback
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = remoteStream;
+        remoteAudioRef.current.play().catch(e => {
+          console.warn("[CallPage] Remote audio play blocked:", e.message);
+        });
+      }
+
+      // Bind video if element exists
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
+    }
+  }, [remoteStream]);
+
+  // Also re-bind when the video element mounts (it's conditionally rendered)
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
     }
-  }, [remoteStream]);
+  });
 
   // Call timer
   useEffect(() => {
@@ -248,7 +280,6 @@ const CallPage = () => {
   // Also watch WebRTC callState for "ended" (remote hang-up via broadcast)
   useEffect(() => {
     if ((callState === "ended" || callState === "error") && callPhase === "accepted") {
-      // Remote side hung up via broadcast — also end in DB
       if (!cleanedUpRef.current) {
         cleanedUpRef.current = true;
         endCallContext();
@@ -308,7 +339,6 @@ const CallPage = () => {
       return "Beendet";
     }
     if (callPhase === "calling") return "Ruft an…";
-    // accepted phase — use WebRTC state
     switch (callState) {
       case "calling": return "Verbinde…";
       case "connecting": return "Verbinde…";
@@ -320,8 +350,13 @@ const CallPage = () => {
     }
   })();
 
+  const showRemoteVideo = remoteStream && remoteStream.getVideoTracks().length > 0 && callState === "connected";
+
   return (
     <div className="fixed inset-0 z-50 bg-foreground/95 flex flex-col">
+      {/* Hidden audio element for remote audio — always mounted */}
+      <audio ref={remoteAudioRef} autoPlay playsInline style={{ display: "none" }} />
+
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <button
@@ -346,7 +381,7 @@ const CallPage = () => {
 
       {/* Video area */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-        {remoteStream && callState === "connected" ? (
+        {showRemoteVideo ? (
           <video
             ref={remoteVideoRef}
             autoPlay
@@ -389,18 +424,19 @@ const CallPage = () => {
           </div>
         )}
 
-        {/* Local video (PiP) */}
-        {isVideoEnabled && (
-          <div className="absolute bottom-4 right-4 w-28 h-40 rounded-2xl overflow-hidden border-2 border-primary-foreground/20 shadow-lg">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover mirror"
-            />
-          </div>
-        )}
+        {/* Local video (PiP) — always render, hide with CSS when disabled */}
+        <div className={cn(
+          "absolute bottom-4 right-4 w-28 h-40 rounded-2xl overflow-hidden border-2 border-primary-foreground/20 shadow-lg transition-opacity",
+          isVideoEnabled ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}>
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover mirror"
+          />
+        </div>
 
         {headphonesConnected && (
           <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-primary-foreground/10 backdrop-blur-sm rounded-full px-3 py-1.5">
@@ -499,11 +535,8 @@ function ControlButton({
       onClick={onClick}
       className={cn(
         "w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95",
-        active
-          ? `${activeColor} text-primary-foreground`
-          : "bg-primary-foreground/10 text-primary-foreground/70 hover:bg-primary-foreground/20"
+        active ? activeColor + " text-primary-foreground" : "bg-primary-foreground/10 text-primary-foreground/70"
       )}
-      aria-label={label}
     >
       {icon}
     </button>
