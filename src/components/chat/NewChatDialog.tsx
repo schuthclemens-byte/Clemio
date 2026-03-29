@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, MessageCirclePlus, Users, UserPlus, Check } from "lucide-react";
+import { Search, X, MessageCirclePlus, Users, UserPlus, Check, ContactRound } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizePhone } from "@/lib/authPhone";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+/** Contact Picker API is only available on Android Chrome */
+const isContactPickerSupported = "contacts" in navigator && "ContactsManager" in window;
 
 interface FoundUser {
   id: string;
@@ -49,6 +52,47 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     reset();
     onClose();
   };
+
+  const handlePickContact = useCallback(async () => {
+    try {
+      const nav = navigator as any;
+      if (!nav.contacts?.select) return;
+
+      const contacts = await nav.contacts.select(["tel"], { multiple: false });
+      if (!contacts?.length || !contacts[0].tel?.length) return;
+
+      // Take the first phone number, clean it up
+      const rawPhone = contacts[0].tel[0] as string;
+      const cleaned = rawPhone.replace(/[\s()-]/g, "");
+      setSearchQuery(cleaned);
+
+      // Auto-search
+      setSearching(true);
+      setError("");
+      setResult(null);
+      setResults([]);
+
+      const digits = cleaned.replace(/\D/g, "");
+      const normalized = digits ? normalizePhone(cleaned) : "";
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, phone_number")
+        .or(`phone_number.ilike.%${digits}%,phone_number.ilike.%${normalized}%`)
+        .limit(10);
+
+      const found = (data ?? []).filter((c) => c.id !== user?.id);
+      setSearching(false);
+
+      if (found.length === 0) {
+        setError("Nutzer nicht gefunden – ist die Person bei Clemio registriert?");
+      } else {
+        setResults(found);
+      }
+    } catch (err) {
+      console.warn("[ContactPicker]", err);
+    }
+  }, [user]);
 
   const isPhoneQuery = (q: string) => /^[+0-9\s()-]+$/.test(q.trim());
 
@@ -296,6 +340,15 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                 autoFocus
               />
             </div>
+            {isContactPickerSupported && (
+              <button
+                onClick={handlePickContact}
+                className="h-10 w-10 shrink-0 rounded-xl bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 flex items-center justify-center transition-colors"
+                title="Kontakt auswählen"
+              >
+                <ContactRound className="w-4.5 h-4.5" />
+              </button>
+            )}
             <button
               onClick={handleSearch}
               disabled={searching || !searchQuery.trim()}
