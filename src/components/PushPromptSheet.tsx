@@ -54,7 +54,7 @@ const PushPromptSheet = () => {
 
     const timer = setTimeout(() => setVisible(true), 500);
     return () => clearTimeout(timer);
-  }, [user, location.pathname, status.savedToBackend, pushCap.canUsePush]);
+  }, [user, location.pathname, status.savedToBackend, status.initialCheckDone, pushCap.canUsePush]);
 
   const handleDismiss = useCallback(() => {
     if (pushCap.canUsePush) {
