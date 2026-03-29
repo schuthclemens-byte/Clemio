@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, Search, Plus, MessageSquare, X } from "lucide-react";
+import { Settings, Search, Plus, MessageSquare, Phone, X } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
 import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
@@ -8,6 +8,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 
 interface ConversationItem {
   id: string;
@@ -135,12 +136,9 @@ const ChatListPage = () => {
         }
       });
 
-      const profileMap = new Map<string, { display_name: string | null; phone_number: string }>();
+      const profileMap = new Map<string, { display_name: string | null }>();
       if (profileIds.size > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, display_name, phone_number")
-          .in("id", Array.from(profileIds));
+        const profiles = await fetchAccessibleProfiles(Array.from(profileIds));
         profiles?.forEach((p) => profileMap.set(p.id, p));
       }
 
@@ -168,7 +166,7 @@ const ChatListPage = () => {
               displayName = alias;
             } else {
               const profile = profileMap.get(otherId);
-              if (profile) displayName = profile.display_name || profile.phone_number;
+              if (profile) displayName = profile.display_name || "Chat";
             }
           }
         }
@@ -243,12 +241,9 @@ const ChatListPage = () => {
 
     // Batch-fetch sender profiles
     const senderIds = [...new Set(msgs.map((m) => m.sender_id))];
-    const { data: senderProfiles } = await supabase
-      .from("profiles")
-      .select("id, display_name, phone_number")
-      .in("id", senderIds);
+    const senderProfiles = await fetchAccessibleProfiles(senderIds);
 
-    const senderMap = new Map<string, { display_name: string | null; phone_number: string }>();
+    const senderMap = new Map<string, { display_name: string | null }>();
     senderProfiles?.forEach((p) => senderMap.set(p.id, p));
 
     const results: MessageSearchResult[] = msgs.map((msg) => {
@@ -260,7 +255,7 @@ const ChatListPage = () => {
         conversationName: conv?.name || "Chat",
         content: msg.content,
         time: new Date(msg.created_at!).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
-        senderName: profile?.display_name || profile?.phone_number || "Unbekannt",
+        senderName: profile?.display_name || "Unbekannt",
       };
     });
 
@@ -363,6 +358,13 @@ const ChatListPage = () => {
               aria-label="Neuer Chat"
             >
               <Plus className="w-5 h-5 text-primary-foreground" />
+            </button>
+            <button
+              onClick={() => navigate("/call-history")}
+              className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors active:scale-95"
+              aria-label="Anrufliste"
+            >
+              <Phone className="w-5 h-5 text-muted-foreground" />
             </button>
             <button
               onClick={() => navigate("/settings")}

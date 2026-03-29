@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, Re
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startRingtone, stopRingtone } from "@/lib/sounds";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 
 export interface CallRecord {
   id: string;
@@ -63,13 +64,9 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return "Unbekannt";
 
     let callerName = "Unbekannt";
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("display_name, phone_number")
-      .eq("id", call.caller_id)
-      .maybeSingle();
+    const profile = await fetchAccessibleProfile(call.caller_id);
 
-    console.log("[CallContext] Caller profile lookup:", { callId: call.id, profile, profileError });
+    console.log("[CallContext] Caller profile lookup:", { callId: call.id, profile });
 
     if (profile) {
       const { data: alias, error: aliasError } = await supabase
@@ -84,7 +81,7 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       if (alias?.first_name) {
         callerName = [alias.first_name, alias.last_name].filter(Boolean).join(" ");
       } else {
-        callerName = profile.display_name || profile.phone_number;
+        callerName = profile.display_name || "Unbekannt";
       }
     }
 
@@ -121,6 +118,14 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
   const insertMissedCallMessage = useCallback(async (call: CallRecord) => {
     if (!user) return;
 
+    console.log("[CallContext] Missed call message insert attempt:", {
+      callId: call.id,
+      conversationId: call.conversation_id,
+      senderId: user.id,
+      messageType: "system",
+      content: call.call_type === "video" ? "📹 Verpasster Videoanruf" : "📞 Verpasster Anruf",
+    });
+
     const { data, error } = await supabase
       .from("messages")
       .insert({
@@ -129,10 +134,35 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
         content: call.call_type === "video" ? "📹 Verpasster Videoanruf" : "📞 Verpasster Anruf",
         message_type: "system",
       })
-      .select("id")
+      .select("id, conversation_id, sender_id, message_type, content")
       .single();
 
     console.log("[CallContext] Missed call message insert result:", { callId: call.id, data, error });
+  }, [user]);
+
+  const insertCallSystemMessage = useCallback(async (call: CallRecord, content: string) => {
+    if (!user) return;
+
+    console.log("[CallContext] Call system message insert attempt:", {
+      callId: call.id,
+      conversationId: call.conversation_id,
+      senderId: user.id,
+      messageType: "system",
+      content,
+    });
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: call.conversation_id,
+        sender_id: user.id,
+        content,
+        message_type: "system",
+      })
+      .select("id, conversation_id, sender_id, message_type, content")
+      .single();
+
+    console.log("[CallContext] Call system message insert result:", { callId: call.id, data, error });
   }, [user]);
 
   const markCallAsMissed = useCallback(async (call: CallRecord, source: string) => {
@@ -361,9 +391,13 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
 
     console.log("[CallContext] declineCall response", { data, error });
 
+    if (data && !error) {
+      await insertCallSystemMessage(data as unknown as CallRecord, data.call_type === "video" ? "📹 Videoanruf abgelehnt" : "📞 Anruf abgelehnt");
+    }
+
     setIncomingCall(null);
     handledIncomingIdsRef.current.delete(incomingCall.id);
-  }, [incomingCall, user, stopRinging, clearCallTimeout]);
+  }, [incomingCall, user, stopRinging, clearCallTimeout, insertCallSystemMessage]);
 
   const endCallFn = useCallback(async () => {
     if (!user || !activeCall) return;
@@ -386,8 +420,13 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       .single();
 
     console.log("[CallContext] endCall response", { data, error });
+
+    if (data && !error) {
+      await insertCallSystemMessage(data as unknown as CallRecord, data.call_type === "video" ? "📹 Videoanruf beendet" : "📞 Anruf beendet");
+    }
+
     setActiveCall(null);
-  }, [activeCall, user, stopRinging, clearCallTimeout]);
+  }, [activeCall, user, stopRinging, clearCallTimeout, insertCallSystemMessage]);
 
   return (
     <CallContext.Provider value={{ incomingCall, activeCall, startCall: startCallFn, acceptCall: acceptCallFn, declineCall: declineCallFn, endCall: endCallFn }}>

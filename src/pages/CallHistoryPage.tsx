@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { cn } from "@/lib/utils";
+import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 
 interface CallEntry {
   id: string;
@@ -34,6 +35,10 @@ const CallHistoryPage = () => {
   const [calls, setCalls] = useState<CallEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    console.log("CallHistoryPage mounted", { userId: user?.id ?? null });
+  }, [user?.id]);
+
   // Mark missed calls as read when visiting this page
   useEffect(() => {
     if (!user) return;
@@ -50,6 +55,11 @@ const CallHistoryPage = () => {
     if (!user) return;
 
     const load = async () => {
+      console.log("[CallHistoryPage] calls query start", {
+        userId: user.id,
+        query: `.from(\"calls\").select(\"*\").or(\"caller_id.eq.${user.id},receiver_id.eq.${user.id}\").order(\"created_at\", { ascending: false }).limit(100)`,
+      });
+
       // Fetch all calls involving this user
       const { data, error } = await supabase
         .from("calls" as any)
@@ -57,6 +67,13 @@ const CallHistoryPage = () => {
         .or(`caller_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order("created_at", { ascending: false })
         .limit(100);
+
+      console.log("[CallHistoryPage] calls query result", {
+        userId: user.id,
+        data,
+        error,
+        count: data?.length ?? 0,
+      });
 
       if (error || !data) {
         console.error("[CallHistory] Error loading calls:", error);
@@ -69,10 +86,7 @@ const CallHistoryPage = () => {
         c.caller_id === user.id ? c.receiver_id : c.caller_id
       ))];
 
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, phone_number")
-        .in("id", otherIds);
+      const profiles = await fetchAccessibleProfiles(otherIds);
 
       const { data: aliases } = await supabase
         .from("contact_aliases")
@@ -80,9 +94,11 @@ const CallHistoryPage = () => {
         .eq("user_id", user.id)
         .in("contact_user_id", otherIds);
 
+      console.log("[CallHistoryPage] related data", { otherIds, profiles, aliases });
+
       const nameMap: Record<string, string> = {};
       for (const p of profiles || []) {
-        nameMap[p.id] = p.display_name || p.phone_number;
+        nameMap[p.id] = p.display_name || "Unbekannt";
       }
       for (const a of aliases || []) {
         if (a.first_name) {
@@ -105,6 +121,12 @@ const CallHistoryPage = () => {
           isOutgoing,
           duration,
         };
+      });
+
+      console.log("[CallHistoryPage] mapped entries", {
+        count: entries.length,
+        statuses: entries.map((entry) => entry.status),
+        entries,
       });
 
       setCalls(entries);
