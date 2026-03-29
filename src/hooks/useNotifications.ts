@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 
 export const useNotifications = () => {
   const { user } = useAuth();

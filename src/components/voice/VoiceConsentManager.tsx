@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ShieldCheck, ShieldX, Clock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";

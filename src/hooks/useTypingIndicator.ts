@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 
 export const useTypingIndicator = (conversationId: string | undefined) => {
   const { user } = useAuth();

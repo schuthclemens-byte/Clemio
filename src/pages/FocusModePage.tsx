@@ -4,6 +4,7 @@ import { ArrowLeft, Shield, UserPlus, Trash2, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
