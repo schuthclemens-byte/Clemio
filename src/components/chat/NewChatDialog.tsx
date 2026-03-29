@@ -5,6 +5,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizePhone } from "@/lib/authPhone";
+import { searchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -14,7 +15,7 @@ const isContactPickerSupported = "contacts" in navigator && "ContactsManager" in
 interface FoundUser {
   id: string;
   display_name: string | null;
-  phone_number: string;
+  avatar_url?: string | null;
 }
 
 interface NewChatDialogProps {
@@ -75,10 +76,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       const digits = cleaned.replace(/\D/g, "");
       const normalized = digits ? normalizePhone(cleaned) : "";
 
-      const { data } = await supabase
-        .rpc("search_profiles_by_query", { search_query: digits || normalized });
-
-      const found = (data ?? []).filter((c) => c.id !== user?.id);
+      const found = (await searchAccessibleProfiles(digits || normalized))
+        .filter((c) => c.id !== user?.id);
       setSearching(false);
 
       if (found.length === 0) {
@@ -109,21 +108,12 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     const shouldSearchByPhone = digitsQuery.length >= 3 || isPhoneQuery(query);
 
     const searchTerm = shouldSearchByName ? query : (digitsQuery || normalizedDigitsQuery);
-    const { data: rpcData } = await supabase
-      .rpc("search_profiles_by_query", { search_query: searchTerm });
-
-    const deduped = (rpcData ?? []) as FoundUser[];
+    const deduped = await searchAccessibleProfiles(searchTerm);
 
     const found = deduped.filter((candidate) => {
       const candidateName = (candidate.display_name || "").toLowerCase();
-      const candidateDigits = candidate.phone_number.replace(/\D/g, "");
-      const candidateNormalized = normalizePhone(candidate.phone_number);
-
       const nameMatches = candidateName.includes(lowerQuery);
-      const phoneMatches = digitsQuery.length > 0 && (
-        candidateDigits.includes(digitsQuery) ||
-        candidateNormalized.includes(normalizedDigitsQuery)
-      );
+      const phoneMatches = shouldSearchByPhone;
 
       return (
         candidate.id !== user.id &&
@@ -362,8 +352,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                     {(u.display_name || "?")[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{u.display_name || u.phone_number}</p>
-                    <p className="text-xs text-muted-foreground">{u.phone_number}</p>
+                    <p className="font-semibold text-sm truncate">{u.display_name || "Nutzer"}</p>
+                    <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
                   </div>
                   {isGroupMode ? (
                     <UserPlus className="w-4 h-4 text-primary shrink-0" />
@@ -388,7 +378,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                     onClick={() => removeUser(u.id)}
                     className="flex items-center gap-1.5 h-8 pl-3 pr-2 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
                   >
-                    {u.display_name || u.phone_number}
+                    {u.display_name || "Nutzer"}
                     <X className="w-3 h-3" />
                   </button>
                 ))}
@@ -407,8 +397,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                 {(result.display_name || "?")[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{result.display_name || result.phone_number}</p>
-                <p className="text-xs text-muted-foreground">{result.phone_number}</p>
+                <p className="font-semibold text-sm truncate">{result.display_name || "Nutzer"}</p>
+                <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
               </div>
               <MessageCirclePlus className="w-5 h-5 text-primary shrink-0" />
             </button>

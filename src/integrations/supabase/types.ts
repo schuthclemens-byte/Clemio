@@ -529,6 +529,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_accessible_profiles: {
+        Args: { target_ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+        }[]
+      }
+      get_accessible_voice_profile_states: {
+        Args: { target_ids: string[] }
+        Returns: {
+          has_voice: boolean
+          user_id: string
+        }[]
+      }
       is_conversation_member: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
@@ -539,7 +554,6 @@ export type Database = {
           avatar_url: string
           display_name: string
           id: string
-          phone_number: string
         }[]
       }
     }
