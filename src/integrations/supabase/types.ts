@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      calls: {
+        Row: {
+          answered_at: string | null
+          call_type: string
+          caller_id: string
+          conversation_id: string
+          created_at: string | null
+          declined_at: string | null
+          ended_at: string | null
+          id: string
+          missed_at: string | null
+          receiver_id: string
+          status: string
+        }
+        Insert: {
+          answered_at?: string | null
+          call_type?: string
+          caller_id: string
+          conversation_id: string
+          created_at?: string | null
+          declined_at?: string | null
+          ended_at?: string | null
+          id?: string
+          missed_at?: string | null
+          receiver_id: string
+          status?: string
+        }
+        Update: {
+          answered_at?: string | null
+          call_type?: string
+          caller_id?: string
+          conversation_id?: string
+          created_at?: string | null
+          declined_at?: string | null
+          ended_at?: string | null
+          id?: string
+          missed_at?: string | null
+          receiver_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       contact_aliases: {
         Row: {
           contact_user_id: string

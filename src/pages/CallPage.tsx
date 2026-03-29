@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useWebRTC, CallError } from "@/hooks/useWebRTC";
 import { useLiveCaptions } from "@/hooks/useLiveCaptions";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCallContext } from "@/contexts/CallContext";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +27,7 @@ const CallPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { activeCall, startCall, endCall: endCallContext } = useCallContext();
   const headphonesConnected = useHeadphoneDetection();
 
   const [chatName, setChatName] = useState("...");
@@ -33,44 +35,28 @@ const CallPage = () => {
   const [callDuration, setCallDuration] = useState(0);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [callError, setCallError] = useState<CallError | null>(null);
+  const [callPhase, setCallPhase] = useState<"init" | "calling" | "accepted" | "ended" | "error">("init");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const initDoneRef = useRef(false);
 
   const isVideoCall = searchParams.get("video") !== "false";
   const isIncoming = searchParams.get("incoming") === "true";
 
   const handleCallError = useCallback((error: CallError) => {
     setCallError(error);
+    setCallPhase("error");
   }, []);
-
-  const notifyIncomingCall = useCallback(async () => {
-    if (!conversationId || !user || isIncoming) return;
-
-    try {
-      const { error } = await supabase.functions.invoke("notify-incoming-call", {
-        body: {
-          conversationId,
-          isVideo: isVideoCall,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      console.warn("[CallPage] Incoming call push failed:", error);
-    }
-  }, [conversationId, user, isIncoming, isVideoCall]);
 
   const {
     callState,
     isVideoEnabled,
     isAudioEnabled,
-    startCall,
-    answerCall,
-    endCall,
+    startCall: startWebRTC,
+    answerCall: answerWebRTC,
+    endCall: endWebRTC,
     toggleVideo,
     toggleAudio,
   } = useWebRTC({
@@ -106,7 +92,6 @@ const CallPage = () => {
         .maybeSingle();
 
       if (member) {
-        // Check alias first
         const { data: alias } = await supabase
           .from("contact_aliases")
           .select("first_name, last_name")
@@ -130,34 +115,78 @@ const CallPage = () => {
     load();
   }, [conversationId, user]);
 
-  // Start or answer call on mount
+  // Initialize call: create call record (outgoing) or wait for WebRTC (incoming)
   useEffect(() => {
-    if (!user || !conversationId) return;
+    if (!user || !conversationId || initDoneRef.current) return;
+    initDoneRef.current = true;
 
     const init = async () => {
-      let stream: MediaStream | null = null;
-
       if (isIncoming) {
-        // Answering an incoming call
-        stream = await answerCall(isVideoCall);
+        // Incoming: call was already accepted via IncomingCallOverlay
+        // Start WebRTC as callee
+        console.log("[CallPage] Incoming call – starting WebRTC as callee");
+        setCallPhase("accepted");
+        const stream = await answerWebRTC(isVideoCall);
+        if (localVideoRef.current && stream) {
+          localVideoRef.current.srcObject = stream;
+        }
       } else {
-        // Starting an outgoing call
-        stream = await startCall(isVideoCall);
-        if (stream) {
-          await notifyIncomingCall();
+        // Outgoing: create call record via CallContext
+        console.log("[CallPage] Outgoing call – creating call record");
+        setCallPhase("calling");
+
+        // Find the other user in the conversation
+        const { data: members } = await supabase
+          .from("conversation_members")
+          .select("user_id")
+          .eq("conversation_id", conversationId)
+          .neq("user_id", user.id);
+
+        const receiverId = members?.[0]?.user_id;
+        if (!receiverId) {
+          console.error("[CallPage] No receiver found");
+          setCallPhase("error");
+          setCallError({ code: "unknown", message: "Empfänger nicht gefunden" });
+          return;
+        }
+
+        const callId = await startCall(conversationId, receiverId, isVideoCall);
+        if (!callId) {
+          setCallPhase("error");
+          setCallError({ code: "unknown", message: "Anruf konnte nicht gestartet werden" });
+          return;
+        }
+
+        // Start WebRTC as caller (send offer immediately so callee can pick up)
+        const stream = await startWebRTC(isVideoCall);
+        if (localVideoRef.current && stream) {
+          localVideoRef.current.srcObject = stream;
         }
       }
-
-      if (localVideoRef.current && stream) {
-        localVideoRef.current.srcObject = stream;
-      }
     };
+
     init();
 
     return () => {
-      endCall();
+      endWebRTC();
     };
   }, []);
+
+  // Watch activeCall for status changes (e.g., accepted by receiver → caller starts connecting)
+  useEffect(() => {
+    if (!activeCall) return;
+
+    if (activeCall.status === "accepted" && callPhase === "calling") {
+      console.log("[CallPage] Call accepted by receiver – WebRTC should connect");
+      setCallPhase("accepted");
+    }
+
+    if (["declined", "missed", "failed"].includes(activeCall.status)) {
+      console.log("[CallPage] Call ended with status:", activeCall.status);
+      setCallPhase("ended");
+      endWebRTC();
+    }
+  }, [activeCall, callPhase, endWebRTC]);
 
   // Attach remote stream
   useEffect(() => {
@@ -176,18 +205,26 @@ const CallPage = () => {
     };
   }, [callState]);
 
-  // Auto-navigate away on error/ended after delay
+  // Auto-navigate away on ended/error
   useEffect(() => {
-    if (callState === "ended" || callState === "error") {
+    if (callPhase === "ended" || callPhase === "error") {
       const t = setTimeout(() => navigate(-1), 3000);
       return () => clearTimeout(t);
     }
-  }, [callState, navigate]);
+  }, [callPhase, navigate]);
 
-  const handleEndCall = useCallback(() => {
-    endCall();
+  // Also watch WebRTC callState for "ended"
+  useEffect(() => {
+    if (callState === "ended" || callState === "error") {
+      setCallPhase((prev) => (prev === "accepted" ? "ended" : prev));
+    }
+  }, [callState]);
+
+  const handleEndCall = useCallback(async () => {
+    endWebRTC();
+    await endCallContext();
     navigate(-1);
-  }, [endCall, navigate]);
+  }, [endWebRTC, endCallContext, navigate]);
 
   const handleListenOnly = useCallback(() => {
     setListenOnlyMode((prev) => {
@@ -216,15 +253,22 @@ const CallPage = () => {
     .toUpperCase();
 
   const statusText = (() => {
+    if (callPhase === "error") return callError?.message || "Anruf fehlgeschlagen";
+    if (callPhase === "ended") {
+      if (activeCall?.status === "declined") return "Anruf abgelehnt";
+      if (activeCall?.status === "missed") return "Keine Antwort";
+      return "Beendet";
+    }
+    if (callPhase === "calling") return "Ruft an…";
+    // accepted phase — use WebRTC state
     switch (callState) {
-      case "calling": return "Ruft an…";
-      case "ringing": return "Klingelt…";
+      case "calling": return "Verbinde…";
       case "connecting": return "Verbinde…";
       case "connected": return formatDuration(callDuration);
       case "reconnecting": return "Verbindung wird wiederhergestellt…";
       case "ended": return "Beendet";
       case "error": return callError?.message || "Fehler";
-      default: return "";
+      default: return "Verbinde…";
     }
   })();
 
@@ -242,7 +286,9 @@ const CallPage = () => {
           <p className="text-primary-foreground font-medium text-sm">{chatName}</p>
           <p className={cn(
             "text-xs",
-            callState === "error" ? "text-destructive" : "text-primary-foreground/50"
+            callPhase === "error" || activeCall?.status === "declined"
+              ? "text-destructive"
+              : "text-primary-foreground/50"
           )}>
             {statusText}
           </p>
@@ -252,7 +298,6 @@ const CallPage = () => {
 
       {/* Video area */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-        {/* Remote video / avatar */}
         {remoteStream && callState === "connected" ? (
           <video
             ref={remoteVideoRef}
@@ -262,7 +307,7 @@ const CallPage = () => {
           />
         ) : (
           <div className="flex flex-col items-center gap-4">
-            {callState === "error" ? (
+            {callPhase === "error" ? (
               <div className="w-24 h-24 rounded-full bg-destructive/20 flex items-center justify-center">
                 <AlertTriangle className="w-10 h-10 text-destructive" />
               </div>
@@ -271,7 +316,7 @@ const CallPage = () => {
                 <span className="text-3xl font-bold text-primary">{initials}</span>
               </div>
             )}
-            {(callState === "calling" || callState === "connecting" || callState === "reconnecting") && (
+            {(callPhase === "calling" || (callPhase === "accepted" && callState !== "connected")) && (
               <div className="flex gap-1">
                 {[0, 1, 2].map((i) => (
                   <div
@@ -282,10 +327,16 @@ const CallPage = () => {
                 ))}
               </div>
             )}
-            {callState === "error" && (
+            {callPhase === "error" && (
               <p className="text-sm text-destructive/80 text-center max-w-xs px-4">
                 {callError?.message}
               </p>
+            )}
+            {callPhase === "ended" && activeCall?.status === "declined" && (
+              <p className="text-sm text-destructive/80 text-center">Anruf wurde abgelehnt</p>
+            )}
+            {callPhase === "ended" && activeCall?.status === "missed" && (
+              <p className="text-sm text-primary-foreground/50 text-center">Keine Antwort</p>
             )}
           </div>
         )}
@@ -303,7 +354,6 @@ const CallPage = () => {
           </div>
         )}
 
-        {/* Headphone indicator */}
         {headphonesConnected && (
           <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-primary-foreground/10 backdrop-blur-sm rounded-full px-3 py-1.5">
             <Headphones className="w-3.5 h-3.5 text-accent" />
@@ -311,7 +361,6 @@ const CallPage = () => {
           </div>
         )}
 
-        {/* Listen only badge */}
         {listenOnlyMode && (
           <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-accent/20 backdrop-blur-sm rounded-full px-3 py-1.5">
             <Ear className="w-3.5 h-3.5 text-accent" />
@@ -319,7 +368,6 @@ const CallPage = () => {
           </div>
         )}
 
-        {/* Live captions */}
         <AnimatePresence>
           {captionsEnabled && caption && (
             <motion.div

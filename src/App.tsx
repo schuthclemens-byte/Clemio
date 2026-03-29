@@ -11,6 +11,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ColorThemeProvider } from "@/contexts/ColorThemeContext";
 import { ChatBackgroundProvider } from "@/contexts/ChatBackgroundContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CallProvider } from "@/contexts/CallContext";
 import { useAutoPush } from "@/hooks/useAutoPush";
 import { usePresence } from "@/hooks/usePresence";
 import IncomingCallOverlay from "@/components/IncomingCallOverlay";
@@ -62,6 +63,7 @@ const App = () => (
       <ChatBackgroundProvider>
       <AccessibilityProvider>
         <AuthProvider>
+          <CallProvider>
           <PresenceTracker>
           <TooltipProvider>
             <Toaster />
@@ -95,6 +97,7 @@ const App = () => (
             </BrowserRouter>
           </TooltipProvider>
           </PresenceTracker>
+          </CallProvider>
         </AuthProvider>
       </AccessibilityProvider>
       </ChatBackgroundProvider>

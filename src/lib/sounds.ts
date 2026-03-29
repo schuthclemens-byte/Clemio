@@ -97,6 +97,55 @@ export function playVoiceStopClick() {
   }
 }
 
+/* ── Ringtone (repeating phone-like tone) ── */
+
+let ringtoneInterval: ReturnType<typeof setInterval> | null = null;
+let ringtoneOscillators: OscillatorNode[] = [];
+
+function playRingBurst() {
+  if (isMuted()) return;
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+
+    // Classic two-frequency phone ring (440 + 480 Hz)
+    [440, 480].forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.setValueAtTime(0.06, now + 0.8);
+      gain.gain.linearRampToValueAtTime(0, now + 1.0);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.0);
+      ringtoneOscillators.push(osc);
+    });
+  } catch {
+    // Silently fail
+  }
+}
+
+/** Start a repeating ringtone (ring 1s, pause 2s) */
+export function startRingtone() {
+  stopRingtone(); // ensure clean state
+  playRingBurst();
+  ringtoneInterval = setInterval(playRingBurst, 3000);
+}
+
+/** Stop the ringtone */
+export function stopRingtone() {
+  if (ringtoneInterval) {
+    clearInterval(ringtoneInterval);
+    ringtoneInterval = null;
+  }
+  ringtoneOscillators.forEach((osc) => {
+    try { osc.stop(); } catch {}
+  });
+  ringtoneOscillators = [];
+}
+
 /** Very subtle pop – played when speech playback starts */
 export function playStartListenPop() {
   if (isMuted()) return;
