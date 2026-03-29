@@ -1,6 +1,8 @@
 import { MessageCircle, Settings, User, Moon, Headphones, Shield, Mic, Phone } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { useMissedCallsCount } from "@/hooks/useMissedCallsCount";
 import {
   Sidebar,
   SidebarContent,
