@@ -104,9 +104,18 @@ export const usePushSubscription = () => {
             permissionGranted: permOk,
             subscriptionCreated: true,
           }));
-        } else {
-          console.log("[Push] Mismatch or no browser sub → deleting stale DB entry");
+        } else if (browserEndpoint && browserEndpoint !== dbEndpoint) {
+          // Only delete if we got a DIFFERENT subscription (not just missing/timeout)
+          console.log("[Push] Browser has different endpoint → deleting stale DB entry");
           await supabase.from("push_subscriptions").delete().eq("user_id", user.id);
+        } else {
+          // No browser subscription found (SW not ready / timeout) – trust the DB entry
+          console.log("[Push] No browser sub (SW not ready) → trusting DB entry");
+          setStatus((s) => ({
+            ...s,
+            savedToBackend: true,
+            permissionGranted: permOk,
+          }));
         }
       } catch (e) {
         console.warn("[Push] Mount check error:", e);
