@@ -392,7 +392,8 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     console.log("[CallContext] declineCall response", { data, error });
 
     if (data && !error) {
-      await insertCallSystemMessage(data as unknown as CallRecord, data.call_type === "video" ? "📹 Videoanruf abgelehnt" : "📞 Anruf abgelehnt");
+      const declinedCall = data as unknown as CallRecord;
+      await insertCallSystemMessage(declinedCall, declinedCall.call_type === "video" ? "📹 Videoanruf abgelehnt" : "📞 Anruf abgelehnt");
     }
 
     setIncomingCall(null);
@@ -422,7 +423,8 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     console.log("[CallContext] endCall response", { data, error });
 
     if (data && !error) {
-      await insertCallSystemMessage(data as unknown as CallRecord, data.call_type === "video" ? "📹 Videoanruf beendet" : "📞 Anruf beendet");
+      const endedCall = data as unknown as CallRecord;
+      await insertCallSystemMessage(endedCall, endedCall.call_type === "video" ? "📹 Videoanruf beendet" : "📞 Anruf beendet");
     }
 
     setActiveCall(null);

@@ -26,6 +26,7 @@ import { useMessageReactions } from "@/hooks/useMessageReactions";
 import { toast } from "sonner";
 import EditContactNameDialog from "@/components/chat/EditContactNameDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
+import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 
 interface Message {
   id: string;
@@ -382,12 +383,9 @@ const ChatPage = () => {
         if (members) {
           const otherIds = members.filter((m) => m.user_id !== user.id).map((m) => m.user_id);
           if (otherIds.length > 0) {
-            const { data: profiles } = await supabase
-              .from("profiles")
-              .select("id, display_name, phone_number")
-              .in("id", otherIds);
+            const profiles = await fetchAccessibleProfiles(otherIds);
             const names: Record<string, string> = {};
-            profiles?.forEach((p) => { names[p.id] = p.display_name || p.phone_number; });
+            profiles?.forEach((p) => { names[p.id] = p.display_name || "Chat"; });
             setMemberNames(names);
           }
         }
@@ -395,12 +393,11 @@ const ChatPage = () => {
         const otherMember = members?.find((m) => m.user_id !== user.id);
         if (otherMember) {
           setOtherUserId(otherMember.user_id);
-          const [profileRes, presenceRes, aliasRes] = await Promise.all([
-            supabase.from("profiles").select("display_name, phone_number").eq("id", otherMember.user_id).maybeSingle(),
+          const [profile, presenceRes, aliasRes] = await Promise.all([
+            fetchAccessibleProfile(otherMember.user_id),
             supabase.from("user_presence").select("is_online, last_seen").eq("user_id", otherMember.user_id).maybeSingle(),
             supabase.from("contact_aliases" as any).select("first_name, last_name").eq("user_id", user.id).eq("contact_user_id", otherMember.user_id).maybeSingle(),
           ]);
-          const profile = profileRes.data;
           const a = aliasRes.data as any;
           if (a?.first_name) {
             const fullName = [a.first_name, a.last_name].filter(Boolean).join(" ");
@@ -408,8 +405,8 @@ const ChatPage = () => {
             setMemberNames({ [otherMember.user_id]: fullName });
             setContactAlias({ firstName: a.first_name || "", lastName: a.last_name || "" });
           } else {
-            setChatName(profile?.display_name || profile?.phone_number || "Chat");
-            setMemberNames({ [otherMember.user_id]: profile?.display_name || profile?.phone_number || "" });
+            setChatName(profile?.display_name || "Chat");
+            setMemberNames({ [otherMember.user_id]: profile?.display_name || "" });
             setContactAlias(null);
           }
           const presence = presenceRes.data;
