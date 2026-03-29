@@ -397,8 +397,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                 {(result.display_name || "?")[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{result.display_name || result.phone_number}</p>
-                <p className="text-xs text-muted-foreground">{result.phone_number}</p>
+                <p className="font-semibold text-sm truncate">{result.display_name || "Nutzer"}</p>
+                <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
               </div>
               <MessageCirclePlus className="w-5 h-5 text-primary shrink-0" />
             </button>
