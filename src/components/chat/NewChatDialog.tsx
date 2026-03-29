@@ -112,10 +112,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     const { data: rpcData } = await supabase
       .rpc("search_profiles_by_query", { search_query: searchTerm });
 
-    const merged = (rpcData ?? []) as FoundUser[];
-
-    const merged = [...(nameResponse.data ?? []), ...(phoneResponse.data ?? [])];
-    const deduped = merged.filter((candidate, index, arr) => arr.findIndex((item) => item.id === candidate.id) === index);
+    const deduped = (rpcData ?? []) as FoundUser[];
 
     const found = deduped.filter((candidate) => {
       const candidateName = (candidate.display_name || "").toLowerCase();
