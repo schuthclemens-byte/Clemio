@@ -43,6 +43,7 @@ const CallPage = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const initDoneRef = useRef(false);
   const cleanedUpRef = useRef(false);
+  const webRtcStartedRef = useRef(false);
 
   const isVideoCall = searchParams.get("video") !== "false";
   const isIncoming = searchParams.get("incoming") === "true";
