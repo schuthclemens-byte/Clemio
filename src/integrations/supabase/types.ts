@@ -24,6 +24,7 @@ export type Database = {
           declined_at: string | null
           ended_at: string | null
           id: string
+          is_read: boolean
           missed_at: string | null
           receiver_id: string
           status: string
@@ -37,6 +38,7 @@ export type Database = {
           declined_at?: string | null
           ended_at?: string | null
           id?: string
+          is_read?: boolean
           missed_at?: string | null
           receiver_id: string
           status?: string
@@ -50,6 +52,7 @@ export type Database = {
           declined_at?: string | null
           ended_at?: string | null
           id?: string
+          is_read?: boolean
           missed_at?: string | null
           receiver_id?: string
           status?: string

@@ -1,6 +1,8 @@
 import { MessageCircle, Settings, User, Moon, Headphones, Shield, Mic, Phone } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { useMissedCallsCount } from "@/hooks/useMissedCallsCount";
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +32,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const missedCalls = useMissedCallsCount();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
@@ -54,11 +57,16 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/chats"}
-                      className="hover:bg-muted/50"
+                      className="hover:bg-muted/50 relative"
                       activeClassName="bg-primary/10 text-primary font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
+                      {item.url === "/call-history" && missedCalls > 0 && (
+                        <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1.5 text-[10px] flex items-center justify-center">
+                          {missedCalls > 99 ? "99+" : missedCalls}
+                        </Badge>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
