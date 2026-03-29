@@ -35,10 +35,7 @@ const FocusModePage = () => {
 
       if (data && (data as any[]).length > 0) {
         const contactIds = (data as any[]).map((d: any) => d.contact_user_id);
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url")
-          .in("id", contactIds);
+        const profiles = await fetchAccessibleProfiles(contactIds);
 
         const merged = (data as any[]).map((fc: any) => {
           const profile = profiles?.find((p) => p.id === fc.contact_user_id);
