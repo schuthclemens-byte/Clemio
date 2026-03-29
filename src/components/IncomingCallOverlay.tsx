@@ -141,7 +141,7 @@ const IncomingCallOverlay = () => {
     stopRingtone();
     const { conversationId, isVideo } = incomingCall;
     setIncomingCall(null);
-    navigate(`/call/${conversationId}?video=${isVideo}`);
+    navigate(`/call/${conversationId}?video=${isVideo}&incoming=true`);
   }, [incomingCall, navigate, stopRingtone]);
 
   const handleDecline = useCallback(() => {
