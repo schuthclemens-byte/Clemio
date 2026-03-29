@@ -42,6 +42,7 @@ export interface PushStatus {
   savedToBackend: boolean;
   loading: boolean;
   lastError: string | null;
+  initialCheckDone: boolean;
 }
 
 export const usePushSubscription = () => {
