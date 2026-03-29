@@ -108,21 +108,12 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     const shouldSearchByPhone = digitsQuery.length >= 3 || isPhoneQuery(query);
 
     const searchTerm = shouldSearchByName ? query : (digitsQuery || normalizedDigitsQuery);
-    const { data: rpcData } = await supabase
-      .rpc("search_profiles_by_query", { search_query: searchTerm });
-
-    const deduped = (rpcData ?? []) as FoundUser[];
+    const deduped = await searchAccessibleProfiles(searchTerm);
 
     const found = deduped.filter((candidate) => {
       const candidateName = (candidate.display_name || "").toLowerCase();
-      const candidateDigits = candidate.phone_number.replace(/\D/g, "");
-      const candidateNormalized = normalizePhone(candidate.phone_number);
-
       const nameMatches = candidateName.includes(lowerQuery);
-      const phoneMatches = digitsQuery.length > 0 && (
-        candidateDigits.includes(digitsQuery) ||
-        candidateNormalized.includes(normalizedDigitsQuery)
-      );
+      const phoneMatches = shouldSearchByPhone;
 
       return (
         candidate.id !== user.id &&
