@@ -27,7 +27,7 @@ const CallPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { activeCall, startCall, endCall: endCallContext } = useCallContext();
+  const { activeCall, startCall, acceptCall, endCall: endCallContext } = useCallContext();
   const headphonesConnected = useHeadphoneDetection();
 
   const [chatName, setChatName] = useState("...");
@@ -36,11 +36,13 @@ const CallPage = () => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [callError, setCallError] = useState<CallError | null>(null);
   const [callPhase, setCallPhase] = useState<"init" | "calling" | "accepted" | "ended" | "error">("init");
+  const [endReason, setEndReason] = useState<string | null>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const initDoneRef = useRef(false);
+  const cleanedUpRef = useRef(false);
 
   const isVideoCall = searchParams.get("video") !== "false";
   const isIncoming = searchParams.get("incoming") === "true";
@@ -115,27 +117,46 @@ const CallPage = () => {
     load();
   }, [conversationId, user]);
 
-  // Initialize call: create call record (outgoing) or wait for WebRTC (incoming)
+  // Initialize call
   useEffect(() => {
     if (!user || !conversationId || initDoneRef.current) return;
     initDoneRef.current = true;
 
     const init = async () => {
       if (isIncoming) {
-        // Incoming: call was already accepted via IncomingCallOverlay
-        // Start WebRTC as callee
-        console.log("[CallPage] Incoming call – starting WebRTC as callee");
+        // Incoming call from push notification or IncomingCallOverlay accept
+        // First: accept the call in the DB if not already accepted
+        console.log("[CallPage] Incoming call – accepting and starting WebRTC");
+
+        // Check if there's a pending call for this conversation that needs accepting
+        const { data: pendingCalls } = await supabase
+          .from("calls" as any)
+          .select("*")
+          .eq("conversation_id", conversationId)
+          .eq("receiver_id", user.id)
+          .eq("status", "calling")
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (pendingCalls && pendingCalls.length > 0) {
+          // Accept the call via DB update
+          console.log("[CallPage] Found pending call, accepting:", (pendingCalls[0] as any).id);
+          await supabase
+            .from("calls" as any)
+            .update({ status: "accepted", answered_at: new Date().toISOString() })
+            .eq("id", (pendingCalls[0] as any).id);
+        }
+
         setCallPhase("accepted");
         const stream = await answerWebRTC(isVideoCall);
         if (localVideoRef.current && stream) {
           localVideoRef.current.srcObject = stream;
         }
       } else {
-        // Outgoing: create call record via CallContext
+        // Outgoing call
         console.log("[CallPage] Outgoing call – creating call record");
         setCallPhase("calling");
 
-        // Find the other user in the conversation
         const { data: members } = await supabase
           .from("conversation_members")
           .select("user_id")
@@ -157,7 +178,7 @@ const CallPage = () => {
           return;
         }
 
-        // Start WebRTC as caller (send offer immediately so callee can pick up)
+        // Start WebRTC as caller
         const stream = await startWebRTC(isVideoCall);
         if (localVideoRef.current && stream) {
           localVideoRef.current.srcObject = stream;
@@ -166,13 +187,9 @@ const CallPage = () => {
     };
 
     init();
-
-    return () => {
-      endWebRTC();
-    };
   }, []);
 
-  // Watch activeCall for status changes (e.g., accepted by receiver → caller starts connecting)
+  // Watch activeCall for status changes
   useEffect(() => {
     if (!activeCall) return;
 
@@ -181,10 +198,13 @@ const CallPage = () => {
       setCallPhase("accepted");
     }
 
-    if (["declined", "missed", "failed"].includes(activeCall.status)) {
-      console.log("[CallPage] Call ended with status:", activeCall.status);
-      setCallPhase("ended");
-      endWebRTC();
+    if (["declined", "missed", "failed", "ended"].includes(activeCall.status)) {
+      if (callPhase !== "ended" && callPhase !== "error") {
+        console.log("[CallPage] Call ended with status:", activeCall.status);
+        setEndReason(activeCall.status);
+        setCallPhase("ended");
+        endWebRTC();
+      }
     }
   }, [activeCall, callPhase, endWebRTC]);
 
@@ -213,16 +233,32 @@ const CallPage = () => {
     }
   }, [callPhase, navigate]);
 
-  // Also watch WebRTC callState for "ended"
+  // Also watch WebRTC callState for "ended" (remote hang-up via broadcast)
   useEffect(() => {
-    if (callState === "ended" || callState === "error") {
-      setCallPhase((prev) => (prev === "accepted" ? "ended" : prev));
+    if ((callState === "ended" || callState === "error") && callPhase === "accepted") {
+      // Remote side hung up via broadcast — also end in DB
+      if (!cleanedUpRef.current) {
+        cleanedUpRef.current = true;
+        endCallContext();
+      }
+      setCallPhase("ended");
+      setEndReason("ended");
     }
-  }, [callState]);
+  }, [callState, callPhase, endCallContext]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      endWebRTC();
+    };
+  }, []);
 
   const handleEndCall = useCallback(async () => {
-    endWebRTC();
-    await endCallContext();
+    if (!cleanedUpRef.current) {
+      cleanedUpRef.current = true;
+      endWebRTC();
+      await endCallContext();
+    }
     navigate(-1);
   }, [endWebRTC, endCallContext, navigate]);
 
@@ -255,8 +291,8 @@ const CallPage = () => {
   const statusText = (() => {
     if (callPhase === "error") return callError?.message || "Anruf fehlgeschlagen";
     if (callPhase === "ended") {
-      if (activeCall?.status === "declined") return "Anruf abgelehnt";
-      if (activeCall?.status === "missed") return "Keine Antwort";
+      if (endReason === "declined") return "Anruf abgelehnt";
+      if (endReason === "missed") return "Keine Antwort";
       return "Beendet";
     }
     if (callPhase === "calling") return "Ruft an…";
@@ -286,7 +322,7 @@ const CallPage = () => {
           <p className="text-primary-foreground font-medium text-sm">{chatName}</p>
           <p className={cn(
             "text-xs",
-            callPhase === "error" || activeCall?.status === "declined"
+            (callPhase === "error" || endReason === "declined")
               ? "text-destructive"
               : "text-primary-foreground/50"
           )}>
@@ -332,10 +368,10 @@ const CallPage = () => {
                 {callError?.message}
               </p>
             )}
-            {callPhase === "ended" && activeCall?.status === "declined" && (
+            {callPhase === "ended" && endReason === "declined" && (
               <p className="text-sm text-destructive/80 text-center">Anruf wurde abgelehnt</p>
             )}
-            {callPhase === "ended" && activeCall?.status === "missed" && (
+            {callPhase === "ended" && endReason === "missed" && (
               <p className="text-sm text-primary-foreground/50 text-center">Keine Antwort</p>
             )}
           </div>

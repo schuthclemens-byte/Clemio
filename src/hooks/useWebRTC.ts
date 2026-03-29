@@ -401,9 +401,11 @@ export function useWebRTC({
           payload: { sdp: offer, from: userId },
         });
 
-        // Call timeout
+        // Call timeout — use ref-based check to avoid stale closure
         callTimeoutRef.current = setTimeout(() => {
-          if (callState === "calling") {
+          const pc = pcRef.current;
+          const isStillWaiting = pc && pc.connectionState !== "connected";
+          if (isStillWaiting) {
             console.warn("[WebRTC] Call timeout – no answer");
             reportError("timeout", "Keine Antwort. Versuche es später erneut.");
             endCall();
