@@ -41,10 +41,7 @@ const ContactAutoplayPage = () => {
 
       const uniqueIds = [...new Set(members.map((m) => m.user_id))];
 
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", uniqueIds);
+      const profiles = await fetchAccessibleProfiles(uniqueIds);
 
       const { data: autoplaySettings } = await supabase
         .from("contact_autoplay" as any)

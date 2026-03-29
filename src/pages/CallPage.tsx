@@ -108,11 +108,7 @@ const CallPage = () => {
           return;
         }
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("id", member.user_id)
-          .maybeSingle();
+        const profile = await fetchAccessibleProfile(member.user_id);
         setChatName(profile?.display_name || "Anruf");
       }
     };

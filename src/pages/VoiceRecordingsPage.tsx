@@ -59,10 +59,7 @@ const VoiceRecordingsPage = () => {
     if (contactRes.data && contactRes.data.length > 0) {
       // Load contact names
       const contactIds = contactRes.data.map((c) => c.contact_user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", contactIds);
+      const profiles = await fetchAccessibleProfiles(contactIds);
 
       const nameMap = new Map(profiles?.map((p) => [p.id, p.display_name]) || []);
 

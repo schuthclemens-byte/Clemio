@@ -77,10 +77,7 @@ const FocusModePage = () => {
         const alreadyAdded = contacts.map((c) => c.contact_user_id);
         const filteredIds = uniqueIds.filter((id) => !alreadyAdded.includes(id));
 
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url")
-          .in("id", filteredIds);
+        const profiles = await fetchAccessibleProfiles(filteredIds);
 
         const filtered = (profiles || []).filter((p) =>
           (p.display_name || "").toLowerCase().includes(searchQuery.toLowerCase())
