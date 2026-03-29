@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Phone, PhoneOff, Video } from "lucide-react";
 import { useCallContext } from "@/contexts/CallContext";
@@ -7,13 +7,31 @@ import { motion, AnimatePresence } from "framer-motion";
 const IncomingCallOverlay = () => {
   const navigate = useNavigate();
   const { incomingCall, acceptCall, declineCall } = useCallContext();
+  const [elapsed, setElapsed] = useState(0);
 
+  // Timer counting seconds since call appeared
   useEffect(() => {
-    console.log("[IncomingCallOverlay] render state", {
-      currentIncomingCall: incomingCall?.id ?? null,
-      visible: Boolean(incomingCall),
-    });
-  }, [incomingCall]);
+    if (!incomingCall) {
+      setElapsed(0);
+      return;
+    }
+    const interval = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [incomingCall?.id]);
+
+  // Wake screen: request wake lock while ringing
+  useEffect(() => {
+    if (!incomingCall) return;
+    let wakeLock: WakeLockSentinel | null = null;
+    (async () => {
+      try {
+        if ("wakeLock" in navigator) {
+          wakeLock = await navigator.wakeLock.request("screen");
+        }
+      } catch {}
+    })();
+    return () => { wakeLock?.release().catch(() => {}); };
+  }, [incomingCall?.id]);
 
   const handleAccept = useCallback(async () => {
     if (!incomingCall) return;
@@ -27,54 +45,118 @@ const IncomingCallOverlay = () => {
     await declineCall();
   }, [declineCall]);
 
+  const isVideo = incomingCall?.call_type === "video";
+  const initials = (incomingCall?.callerName || "?")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <AnimatePresence>
       {incomingCall && (
         <motion.div
-          initial={{ opacity: 0, y: -80 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -80 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-between"
+          style={{
+            background: "linear-gradient(180deg, hsl(var(--primary) / 0.95) 0%, hsl(0 0% 5% / 0.97) 100%)",
+          }}
         >
-          <div className="bg-card border border-border rounded-3xl shadow-elevated p-8 space-y-6 max-w-sm w-full mx-4">
-            <div className="flex flex-col items-center gap-4">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
-                  {incomingCall.call_type === "video" ? (
-                    <Video className="w-8 h-8 text-primary" />
-                  ) : (
-                    <Phone className="w-8 h-8 text-primary animate-pulse" />
-                  )}
-                </div>
-                <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
-              </div>
-
-              <div className="text-center">
-                <p className="font-bold text-xl text-foreground">{incomingCall.callerName}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {incomingCall.call_type === "video" ? "Eingehender Videoanruf" : "Eingehender Anruf"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={handleDecline}
-                className="flex-1 h-14 rounded-2xl bg-destructive text-destructive-foreground font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
-              >
-                <PhoneOff className="w-5 h-5" />
-                Ablehnen
-              </button>
-              <button
-                onClick={handleAccept}
-                className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
-              >
-                <Phone className="w-5 h-5" />
-                Annehmen
-              </button>
-            </div>
+          {/* Top section */}
+          <div className="flex flex-col items-center pt-[max(4rem,env(safe-area-inset-top,2rem))] gap-2">
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-white/60 text-sm font-medium tracking-wide uppercase"
+            >
+              {isVideo ? "Eingehender Videoanruf" : "Eingehender Anruf"}
+            </motion.p>
           </div>
+
+          {/* Center section: Avatar + Name */}
+          <div className="flex flex-col items-center gap-6 -mt-8">
+            {/* Animated pulsing rings */}
+            <div className="relative">
+              <motion.div
+                animate={{ scale: [1, 1.6, 1], opacity: [0.3, 0, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full bg-white/20"
+                style={{ width: 128, height: 128, top: -14, left: -14 }}
+              />
+              <motion.div
+                animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0, 0.2] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+                className="absolute inset-0 rounded-full bg-white/15"
+                style={{ width: 128, height: 128, top: -14, left: -14 }}
+              />
+              <div className="w-[100px] h-[100px] rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+                <span className="text-3xl font-bold text-white">{initials}</span>
+              </div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="text-center"
+            >
+              <h1 className="text-3xl font-bold text-white tracking-tight">
+                {incomingCall.callerName}
+              </h1>
+              <p className="text-white/50 text-sm mt-2">
+                {elapsed > 0 ? `Klingelt seit ${elapsed}s…` : "Klingelt…"}
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Bottom action buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, type: "spring", damping: 20 }}
+            className="flex items-center justify-center gap-16 pb-[max(3rem,env(safe-area-inset-bottom,2rem))]"
+          >
+            {/* Decline */}
+            <div className="flex flex-col items-center gap-2">
+              <motion.button
+                onClick={handleDecline}
+                whileTap={{ scale: 0.9 }}
+                className="w-[72px] h-[72px] rounded-full bg-red-500 shadow-lg shadow-red-500/40 flex items-center justify-center active:bg-red-600 transition-colors"
+              >
+                <PhoneOff className="w-7 h-7 text-white" />
+              </motion.button>
+              <span className="text-white/60 text-xs font-medium">Ablehnen</span>
+            </div>
+
+            {/* Accept */}
+            <div className="flex flex-col items-center gap-2">
+              <motion.button
+                onClick={handleAccept}
+                whileTap={{ scale: 0.9 }}
+                animate={{
+                  boxShadow: [
+                    "0 0 0 0px rgba(34,197,94,0.4)",
+                    "0 0 0 12px rgba(34,197,94,0)",
+                    "0 0 0 0px rgba(34,197,94,0.4)",
+                  ],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-[72px] h-[72px] rounded-full bg-green-500 shadow-lg shadow-green-500/40 flex items-center justify-center active:bg-green-600 transition-colors"
+              >
+                {isVideo ? (
+                  <Video className="w-7 h-7 text-white" />
+                ) : (
+                  <Phone className="w-7 h-7 text-white" />
+                )}
+              </motion.button>
+              <span className="text-white/60 text-xs font-medium">Annehmen</span>
+            </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
