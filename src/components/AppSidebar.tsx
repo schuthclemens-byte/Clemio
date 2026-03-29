@@ -1,4 +1,4 @@
-import { MessageCircle, Settings, User, Moon, Headphones, Shield, Mic } from "lucide-react";
+import { MessageCircle, Settings, User, Moon, Headphones, Shield, Mic, Phone } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
