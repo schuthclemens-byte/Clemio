@@ -41,4 +41,23 @@ if (!localStorage.getItem(PUSH_RESET_KEY) && "serviceWorker" in navigator) {
   })();
 }
 
+// Handle chunk loading failures from stale caches after deployments
+window.addEventListener("error", (event) => {
+  if (
+    event.message?.includes("Importing a module script failed") ||
+    event.message?.includes("Failed to fetch dynamically imported module") ||
+    event.message?.includes("Loading chunk") ||
+    event.message?.includes("Loading CSS chunk")
+  ) {
+    const reloadKey = "clemio_chunk_reload";
+    const lastReload = sessionStorage.getItem(reloadKey);
+    // Only auto-reload once per session to avoid infinite loops
+    if (!lastReload) {
+      sessionStorage.setItem(reloadKey, Date.now().toString());
+      window.location.reload();
+      return;
+    }
+  }
+});
+
 createRoot(document.getElementById("root")!).render(<App />);
