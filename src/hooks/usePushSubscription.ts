@@ -62,7 +62,10 @@ export const usePushSubscription = () => {
 
   // Check on mount if user already has a valid push subscription
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setStatus((s) => ({ ...s, initialCheckDone: true }));
+      return;
+    }
     let cancelled = false;
 
     (async () => {
