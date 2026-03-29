@@ -62,7 +62,7 @@ const VoiceRecordingsPage = () => {
       const contactIds = contactRes.data.map((c) => c.contact_user_id);
       const profiles = await fetchAccessibleProfiles(contactIds);
 
-      const nameMap = new Map(profiles?.map((p) => [p.id, p.display_name]) || []);
+      const nameMap = new Map<string, string>(profiles?.map((p) => [p.id, p.display_name || "Unbekannt"]) || []);
 
       setContactVoices(
         contactRes.data.map((c) => ({
