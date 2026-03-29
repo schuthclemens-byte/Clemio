@@ -359,20 +359,6 @@ const ChatListPage = () => {
             >
               <Plus className="w-5 h-5 text-primary-foreground" />
             </button>
-            <button
-              onClick={() => navigate("/call-history")}
-              className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors active:scale-95"
-              aria-label="Anrufliste"
-            >
-              <Phone className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <button
-              onClick={() => navigate("/settings")}
-              className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors active:scale-95"
-              aria-label={t("a11y.settings")}
-            >
-              <Settings className="w-5 h-5 text-muted-foreground" />
-            </button>
           </div>
         </div>
         <div className="px-5 pb-3.5">

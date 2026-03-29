@@ -1,12 +1,14 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import BottomTabBar from "@/components/BottomTabBar";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -18,9 +20,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // Mobile: no sidebar, just render children
+  // Hide bottom tab bar on individual chat / call pages
+  const hideTabBar = /^\/(chat|call)\//.test(location.pathname);
+
+  // Mobile: bottom tab bar
   if (isMobile) {
-    return <>{children}</>;
+    return (
+      <>
+        <div className={hideTabBar ? "" : "pb-16"}>{children}</div>
+        {!hideTabBar && <BottomTabBar />}
+      </>
+    );
   }
 
   // Desktop: sidebar layout
