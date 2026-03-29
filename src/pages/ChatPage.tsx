@@ -1120,6 +1120,17 @@ const ChatPage = () => {
           </div>
         ) : (
           messages.map((msg) => {
+            // System messages (missed calls etc.)
+            if (msg.messageType === "system") {
+              return (
+                <div key={msg.id} className="flex justify-center py-2">
+                  <span className="text-xs text-muted-foreground bg-muted/50 rounded-full px-3 py-1">
+                    {msg.text}
+                  </span>
+                </div>
+              );
+            }
+
             const replyMsg = msg.replyTo ? messages.find(m => m.id === msg.replyTo) : undefined;
             const senderName = msg.isMine ? "Du" : (memberNames[msg.senderId] || chatName);
             return (
