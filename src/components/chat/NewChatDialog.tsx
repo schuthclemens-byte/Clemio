@@ -76,10 +76,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       const digits = cleaned.replace(/\D/g, "");
       const normalized = digits ? normalizePhone(cleaned) : "";
 
-      const { data } = await supabase
-        .rpc("search_profiles_by_query", { search_query: digits || normalized });
-
-      const found = (data ?? []).filter((c) => c.id !== user?.id);
+      const found = (await searchAccessibleProfiles(digits || normalized))
+        .filter((c) => c.id !== user?.id);
       setSearching(false);
 
       if (found.length === 0) {
