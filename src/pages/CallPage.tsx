@@ -11,9 +11,10 @@ import {
   Subtitles,
   ArrowLeft,
   Ear,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useWebRTC } from "@/hooks/useWebRTC";
+import { useWebRTC, CallError } from "@/hooks/useWebRTC";
 import { useLiveCaptions } from "@/hooks/useLiveCaptions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
@@ -31,18 +32,25 @@ const CallPage = () => {
   const [listenOnlyMode, setListenOnlyMode] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [callError, setCallError] = useState<CallError | null>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const isVideoCall = searchParams.get("video") !== "false";
+  const isIncoming = searchParams.get("incoming") === "true";
+
+  const handleCallError = useCallback((error: CallError) => {
+    setCallError(error);
+  }, []);
 
   const {
     callState,
     isVideoEnabled,
     isAudioEnabled,
     startCall,
+    answerCall,
     endCall,
     toggleVideo,
     toggleAudio,
@@ -50,6 +58,7 @@ const CallPage = () => {
     conversationId: conversationId || "",
     userId: user?.id || "",
     onRemoteStream: setRemoteStream,
+    onCallError: handleCallError,
   });
 
   const { isEnabled: captionsEnabled, caption, toggleCaptions } = useLiveCaptions();
@@ -78,6 +87,19 @@ const CallPage = () => {
         .maybeSingle();
 
       if (member) {
+        // Check alias first
+        const { data: alias } = await supabase
+          .from("contact_aliases")
+          .select("first_name, last_name")
+          .eq("user_id", user.id)
+          .eq("contact_user_id", member.user_id)
+          .maybeSingle();
+
+        if (alias?.first_name) {
+          setChatName([alias.first_name, alias.last_name].filter(Boolean).join(" "));
+          return;
+        }
+
         const { data: profile } = await supabase
           .from("profiles")
           .select("display_name, phone_number")
@@ -89,11 +111,21 @@ const CallPage = () => {
     load();
   }, [conversationId, user]);
 
-  // Start call on mount
+  // Start or answer call on mount
   useEffect(() => {
     if (!user || !conversationId) return;
+
     const init = async () => {
-      const stream = await startCall(isVideoCall);
+      let stream: MediaStream | null = null;
+
+      if (isIncoming) {
+        // Answering an incoming call
+        stream = await answerCall(isVideoCall);
+      } else {
+        // Starting an outgoing call
+        stream = await startCall(isVideoCall);
+      }
+
       if (localVideoRef.current && stream) {
         localVideoRef.current.srcObject = stream;
       }
@@ -122,6 +154,14 @@ const CallPage = () => {
     };
   }, [callState]);
 
+  // Auto-navigate away on error/ended after delay
+  useEffect(() => {
+    if (callState === "ended" || callState === "error") {
+      const t = setTimeout(() => navigate(-1), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [callState, navigate]);
+
   const handleEndCall = useCallback(() => {
     endCall();
     navigate(-1);
@@ -131,11 +171,9 @@ const CallPage = () => {
     setListenOnlyMode((prev) => {
       const next = !prev;
       if (next) {
-        // Disable video + audio
         if (isVideoEnabled) toggleVideo();
         if (isAudioEnabled) toggleAudio();
       } else {
-        // Re-enable audio
         if (!isAudioEnabled) toggleAudio();
       }
       return next;
@@ -155,6 +193,19 @@ const CallPage = () => {
     .slice(0, 2)
     .toUpperCase();
 
+  const statusText = (() => {
+    switch (callState) {
+      case "calling": return "Ruft an…";
+      case "ringing": return "Klingelt…";
+      case "connecting": return "Verbinde…";
+      case "connected": return formatDuration(callDuration);
+      case "reconnecting": return "Verbindung wird wiederhergestellt…";
+      case "ended": return "Beendet";
+      case "error": return callError?.message || "Fehler";
+      default: return "";
+    }
+  })();
+
   return (
     <div className="fixed inset-0 z-50 bg-foreground/95 flex flex-col">
       {/* Top bar */}
@@ -167,11 +218,11 @@ const CallPage = () => {
         </button>
         <div className="text-center">
           <p className="text-primary-foreground font-medium text-sm">{chatName}</p>
-          <p className="text-primary-foreground/50 text-xs">
-            {callState === "calling" && "Verbinde..."}
-            {callState === "ringing" && "Klingelt..."}
-            {callState === "connected" && formatDuration(callDuration)}
-            {callState === "ended" && "Beendet"}
+          <p className={cn(
+            "text-xs",
+            callState === "error" ? "text-destructive" : "text-primary-foreground/50"
+          )}>
+            {statusText}
           </p>
         </div>
         <div className="w-10" />
@@ -189,10 +240,16 @@ const CallPage = () => {
           />
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-3xl font-bold text-primary">{initials}</span>
-            </div>
-            {callState === "calling" && (
+            {callState === "error" ? (
+              <div className="w-24 h-24 rounded-full bg-destructive/20 flex items-center justify-center">
+                <AlertTriangle className="w-10 h-10 text-destructive" />
+              </div>
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-3xl font-bold text-primary">{initials}</span>
+              </div>
+            )}
+            {(callState === "calling" || callState === "connecting" || callState === "reconnecting") && (
               <div className="flex gap-1">
                 {[0, 1, 2].map((i) => (
                   <div
@@ -202,6 +259,11 @@ const CallPage = () => {
                   />
                 ))}
               </div>
+            )}
+            {callState === "error" && (
+              <p className="text-sm text-destructive/80 text-center max-w-xs px-4">
+                {callError?.message}
+              </p>
             )}
           </div>
         )}
@@ -255,7 +317,6 @@ const CallPage = () => {
       {/* Control buttons */}
       <div className="pb-10 pt-4 px-4">
         <div className="flex items-center justify-center gap-4">
-          {/* Listen only */}
           <ControlButton
             onClick={handleListenOnly}
             active={listenOnlyMode}
@@ -263,32 +324,24 @@ const CallPage = () => {
             icon={<Ear className="w-5 h-5" />}
             label="Nur hören"
           />
-
-          {/* Video toggle */}
           <ControlButton
             onClick={toggleVideo}
             active={!isVideoEnabled}
             icon={isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
             label={isVideoEnabled ? "Kamera aus" : "Kamera an"}
           />
-
-          {/* End call */}
           <button
             onClick={handleEndCall}
             className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center text-destructive-foreground shadow-lg active:scale-95 transition-transform"
           >
             <PhoneOff className="w-6 h-6" />
           </button>
-
-          {/* Mic toggle */}
           <ControlButton
             onClick={toggleAudio}
             active={!isAudioEnabled}
             icon={isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
             label={isAudioEnabled ? "Stumm" : "Laut"}
           />
-
-          {/* Captions */}
           <ControlButton
             onClick={toggleCaptions}
             active={captionsEnabled}
@@ -298,7 +351,6 @@ const CallPage = () => {
           />
         </div>
 
-        {/* Labels */}
         <div className="flex items-center justify-center gap-4 mt-2">
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Hören</span>
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Video</span>
