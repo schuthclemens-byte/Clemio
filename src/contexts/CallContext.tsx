@@ -3,8 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startRingtone, stopRingtone } from "@/lib/sounds";
 
-/* ── Types ── */
-
 export interface CallRecord {
   id: string;
   caller_id: string;
@@ -102,8 +100,8 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     }
 
     handledIncomingIdsRef.current.add(call.id);
-
     const callerName = await resolveCallerName(call);
+
     console.log("[CallContext] Showing incoming call overlay:", {
       source,
       callId: call.id,
@@ -134,11 +132,7 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       .select("id")
       .single();
 
-    console.log("[CallContext] Missed call message insert result:", {
-      callId: call.id,
-      data,
-      error,
-    });
+    console.log("[CallContext] Missed call message insert result:", { callId: call.id, data, error });
   }, [user]);
 
   const markCallAsMissed = useCallback(async (call: CallRecord, source: string) => {
@@ -157,7 +151,7 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
 
     if (error || !data) return false;
 
-    const updatedCall = data as CallRecord;
+    const updatedCall = data as unknown as CallRecord;
     setActiveCall((prev) => (prev?.id === updatedCall.id ? updatedCall : prev));
     await insertMissedCallMessage(updatedCall);
     return true;
@@ -178,14 +172,10 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       .order("created_at", { ascending: false })
       .limit(1);
 
-    console.log("[CallContext] Pending incoming query:", {
-      reason,
-      pendingIncoming,
-      pendingIncomingError,
-    });
+    console.log("[CallContext] Pending incoming query:", { reason, pendingIncoming, pendingIncomingError });
 
     if (pendingIncoming?.length) {
-      await showIncomingCall(pendingIncoming[0] as CallRecord, `reconcile:${reason}`);
+      await showIncomingCall(pendingIncoming[0] as unknown as CallRecord, `reconcile:${reason}`);
     }
 
     const { data: staleOutgoing, error: staleOutgoingError } = await supabase
@@ -195,13 +185,9 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       .eq("status", "calling")
       .lt("created_at", thresholdIso);
 
-    console.log("[CallContext] Stale outgoing query:", {
-      reason,
-      staleOutgoing,
-      staleOutgoingError,
-    });
+    console.log("[CallContext] Stale outgoing query:", { reason, staleOutgoing, staleOutgoingError });
 
-    for (const staleCall of (staleOutgoing || []) as CallRecord[]) {
+    for (const staleCall of (staleOutgoing || []) as unknown as CallRecord[]) {
       await markCallAsMissed(staleCall, `reconcile:${reason}`);
     }
   }, [user, showIncomingCall, markCallAsMissed]);
@@ -219,25 +205,15 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       .channel(`global-calls-${user.id}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "calls",
-          filter: `receiver_id=eq.${user.id}`,
-        },
+        { event: "INSERT", schema: "public", table: "calls", filter: `receiver_id=eq.${user.id}` },
         async (payload) => {
           console.log("[CallContext] INSERT payload received", payload);
-          const call = payload.new as CallRecord;
-          await showIncomingCall(call, "realtime-insert");
+          await showIncomingCall(payload.new as CallRecord, "realtime-insert");
         }
       )
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "calls",
-        },
+        { event: "UPDATE", schema: "public", table: "calls" },
         (payload) => {
           console.log("[CallContext] UPDATE payload received", payload);
           const updated = payload.new as CallRecord;
@@ -269,15 +245,11 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       )
       .subscribe((status) => {
         console.log("[CallContext] subscription status", status);
-        if (status === "SUBSCRIBED") {
-          void reconcileCalls("subscribed");
-        }
+        if (status === "SUBSCRIBED") void reconcileCalls("subscribed");
       });
 
     void reconcileCalls("effect-start");
-    const intervalId = window.setInterval(() => {
-      void reconcileCalls("interval");
-    }, RECONCILE_INTERVAL_MS);
+    const intervalId = window.setInterval(() => void reconcileCalls("interval"), RECONCILE_INTERVAL_MS);
 
     return () => {
       window.clearInterval(intervalId);
@@ -294,20 +266,10 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const callType = isVideo ? "video" : "audio";
-    console.log("[CallContext] startCall invoked", {
-      callerId: user.id,
-      receiverId,
-      conversationId,
-      callType,
-    });
+    console.log("[CallContext] startCall invoked", { callerId: user.id, receiverId, conversationId, callType });
 
     if (!conversationId || !receiverId || !user.id) {
-      console.error("[CallContext] startCall invalid payload", {
-        callerId: user.id,
-        receiverId,
-        conversationId,
-        callType,
-      });
+      console.error("[CallContext] startCall invalid payload", { callerId: user.id, receiverId, conversationId, callType });
       return null;
     }
 
@@ -330,7 +292,7 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
 
-    const call = data as CallRecord;
+    const call = data as unknown as CallRecord;
     setActiveCall(call);
 
     console.log("[CallContext] timeout started", { callId: call.id, timeoutMs: CALL_TIMEOUT_MS });
@@ -346,12 +308,8 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
 
       console.log("[CallContext] current call before timeout update", { callId: call.id, current, currentError });
 
-      if (!current || (current as CallRecord).status !== "calling") return;
-
-      const missedWritten = await markCallAsMissed(current as CallRecord, "timeout");
-      if (missedWritten) {
-        setActiveCall((prev) => (prev?.id === call.id ? { ...(current as CallRecord), status: "missed", missed_at: new Date().toISOString() } : prev));
-      }
+      if (!current || (current as unknown as CallRecord).status !== "calling") return;
+      await markCallAsMissed(current as unknown as CallRecord, "timeout");
     }, CALL_TIMEOUT_MS);
 
     const { data: notifyData, error: notifyError } = await supabase.functions.invoke("notify-incoming-call", {
@@ -379,10 +337,9 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
       .single();
 
     console.log("[CallContext] acceptCall response", { data, error });
-
     if (error || !data) return;
 
-    setActiveCall(data as CallRecord);
+    setActiveCall(data as unknown as CallRecord);
     setIncomingCall(null);
     handledIncomingIdsRef.current.delete(incomingCall.id);
   }, [incomingCall, user, stopRinging, clearCallTimeout]);
@@ -433,16 +390,7 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
   }, [activeCall, user, stopRinging, clearCallTimeout]);
 
   return (
-    <CallContext.Provider
-      value={{
-        incomingCall,
-        activeCall,
-        startCall: startCallFn,
-        acceptCall: acceptCallFn,
-        declineCall: declineCallFn,
-        endCall: endCallFn,
-      }}
-    >
+    <CallContext.Provider value={{ incomingCall, activeCall, startCall: startCallFn, acceptCall: acceptCallFn, declineCall: declineCallFn, endCall: endCallFn }}>
       {children}
     </CallContext.Provider>
   );

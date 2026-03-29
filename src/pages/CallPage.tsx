@@ -192,8 +192,22 @@ const CallPage = () => {
     if (!activeCall) return;
 
     if (activeCall.status === "accepted" && callPhase === "calling") {
-      console.log("[CallPage] Call accepted by receiver – WebRTC should connect");
+      console.log("[CallPage] Call accepted by receiver – starting caller WebRTC now", {
+        activeCall,
+        callState,
+        alreadyStarted: webRtcStartedRef.current,
+      });
       setCallPhase("accepted");
+
+      if (!isIncoming && !webRtcStartedRef.current) {
+        webRtcStartedRef.current = true;
+        void (async () => {
+          const stream = await startWebRTC(isVideoCall);
+          if (localVideoRef.current && stream) {
+            localVideoRef.current.srcObject = stream;
+          }
+        })();
+      }
     }
 
     if (["declined", "missed", "failed", "ended"].includes(activeCall.status)) {
@@ -204,7 +218,7 @@ const CallPage = () => {
         endWebRTC();
       }
     }
-  }, [activeCall, callPhase, endWebRTC]);
+  }, [activeCall, callPhase, endWebRTC, callState, isIncoming, startWebRTC, isVideoCall]);
 
   // Attach remote stream
   useEffect(() => {
