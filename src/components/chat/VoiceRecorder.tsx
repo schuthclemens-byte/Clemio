@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Mic, Square, Send, Loader2, MicOff } from "lucide-react";
+import { Mic, Square, Send, Loader2, MicOff, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import PermissionDialog from "@/components/PermissionDialog";
+import { usePermissionGate } from "@/hooks/usePermissionGate";
 
 interface VoiceRecorderProps {
   onSend: (file: File) => Promise<boolean | void> | boolean | void;
@@ -20,7 +22,6 @@ const getSupportedAudioMimeType = () => {
   if (typeof MediaRecorder === "undefined" || typeof MediaRecorder.isTypeSupported !== "function") {
     return "";
   }
-
   return AUDIO_MIME_CANDIDATES.find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) || "";
 };
 
@@ -41,6 +42,8 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   const [micBlocked, setMicBlocked] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
+  const { showDialog, gate, handleAllow, handleCancel } = usePermissionGate("microphone");
+
   const requestWakeLock = async () => {
     try {
       if ("wakeLock" in navigator) {
@@ -54,7 +57,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
     wakeLockRef.current = null;
   };
 
-  const startRecording = async () => {
+  const doStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setMicBlocked(false);
@@ -102,13 +105,16 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
       const name = err?.name || "";
       if (name === "NotAllowedError" || name === "PermissionDeniedError") {
         setMicBlocked(true);
-        toast.error("Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff in deinen Geräteeinstellungen.");
       } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
         toast.error("Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.");
       } else {
         toast.error("Mikrofon konnte nicht aktiviert werden.");
       }
     }
+  };
+
+  const startRecording = () => {
+    gate(doStartRecording);
   };
 
   // Auto-start recording when autoStart prop is true
@@ -176,13 +182,21 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   }
 
   return (
-    <button
-      onClick={startRecording}
-      className="flex items-center justify-center w-11 h-11 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors active:scale-90"
-      aria-label="Sprachnachricht aufnehmen"
-    >
-      <Mic className="w-5 h-5" />
-    </button>
+    <>
+      <PermissionDialog
+        open={showDialog}
+        type="microphone"
+        onAllow={handleAllow}
+        onCancel={handleCancel}
+      />
+      <button
+        onClick={startRecording}
+        className="flex items-center justify-center w-11 h-11 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors active:scale-90"
+        aria-label="Sprachnachricht aufnehmen"
+      >
+        <Mic className="w-5 h-5" />
+      </button>
+    </>
   );
 };
 

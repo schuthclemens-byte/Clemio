@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Camera, X, RotateCcw, Circle, Video, Image, Square } from "lucide-react";
+import { Camera, X, RotateCcw, Circle, Video, Image, Square, CameraOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PermissionDialog from "@/components/PermissionDialog";
+import { usePermissionGate } from "@/hooks/usePermissionGate";
 
 type CameraMode = "photo" | "video";
 
@@ -21,10 +23,14 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
+  const [cameraBlocked, setCameraBlocked] = useState(false);
+  const [permissionChecked, setPermissionChecked] = useState(false);
+
+  const { showDialog, gate, handleAllow, handleCancel } = usePermissionGate("camera");
 
   const startCamera = useCallback(async () => {
     setCameraReady(false);
-    // Stop existing stream
+    setCameraBlocked(false);
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
     }
@@ -43,16 +49,32 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
         await videoRef.current.play();
       }
       setCameraReady(true);
-    } catch (err) {
-      console.error("Camera error:", err);
+    } catch (err: any) {
+      const name = err?.name || "";
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        setCameraBlocked(true);
+      } else {
+        console.error("Camera error:", err);
+      }
     }
   }, [facingMode, mode]);
 
+  // Gate camera access behind pre-permission dialog
   useEffect(() => {
-    if (open) {
-      startCamera();
+    if (!open) {
+      setPermissionChecked(false);
+      return;
     }
-    return () => {
+    if (permissionChecked) return;
+
+    gate(() => {
+      setPermissionChecked(true);
+      startCamera();
+    });
+  }, [open, permissionChecked, gate, startCamera]);
+
+  useEffect(() => {
+    if (!open) {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
@@ -60,8 +82,8 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
       if (mediaRecorderRef.current && isRecording) {
         mediaRecorderRef.current.stop();
       }
-    };
-  }, [open, startCamera]);
+    }
+  }, [open]);
 
   // Recording timer
   useEffect(() => {
@@ -77,6 +99,13 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
   const flipCamera = () => {
     setFacingMode((f) => (f === "user" ? "environment" : "user"));
   };
+
+  // Re-start camera when facing mode changes
+  useEffect(() => {
+    if (open && permissionChecked && !cameraBlocked) {
+      startCamera();
+    }
+  }, [facingMode]);
 
   const takePhoto = () => {
     if (!videoRef.current) return;
@@ -100,7 +129,6 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
 
   const startRecording = () => {
     if (!streamRef.current) return;
-
     chunksRef.current = [];
     const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
       ? "video/webm;codecs=vp9"
@@ -139,6 +167,52 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
 
   if (!open) return null;
 
+  // Show pre-permission dialog
+  if (showDialog) {
+    return (
+      <PermissionDialog
+        open={true}
+        type="camera"
+        onAllow={handleAllow}
+        onCancel={() => { handleCancel(); onClose(); }}
+      />
+    );
+  }
+
+  // Camera denied fallback
+  if (cameraBlocked) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
+        <div className="max-w-sm mx-auto p-6 space-y-5 text-center">
+          <div className="w-20 h-20 rounded-full bg-destructive/20 flex items-center justify-center mx-auto">
+            <CameraOff className="w-10 h-10 text-destructive" />
+          </div>
+          <h2 className="text-lg font-bold text-white">Kamera blockiert</h2>
+          <p className="text-sm text-white/60 leading-relaxed">
+            Der Kamera-Zugriff wurde verweigert. Bitte erlaube den Zugriff in deinen Browser- oder Geräteeinstellungen und versuche es erneut.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 rounded-2xl bg-white/10 text-white font-medium text-sm active:scale-95 transition-transform"
+            >
+              Schließen
+            </button>
+            <button
+              onClick={() => {
+                setCameraBlocked(false);
+                startCamera();
+              }}
+              className="flex-1 py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm active:scale-95 transition-transform"
+            >
+              Erneut versuchen
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       {/* Top bar */}
@@ -150,7 +224,7 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
           <X className="w-5 h-5" />
         </button>
         {isRecording && (
-          <div className="flex items-center gap-2 bg-red-500/80 px-3 py-1.5 rounded-full">
+          <div className="flex items-center gap-2 bg-destructive/80 px-3 py-1.5 rounded-full">
             <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
             <span className="text-white text-sm font-medium">{formatTime(recordingTime)}</span>
           </div>
@@ -185,7 +259,6 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
 
       {/* Bottom controls */}
       <div className="bg-black/90 px-6 py-5 pb-8 space-y-4">
-        {/* Mode selector */}
         <div className="flex items-center justify-center gap-8">
           <button
             onClick={() => { if (!isRecording) setMode("photo"); }}
@@ -209,7 +282,6 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
           </button>
         </div>
 
-        {/* Capture button */}
         <div className="flex items-center justify-center">
           {mode === "photo" ? (
             <button
@@ -222,17 +294,17 @@ const CameraCapture = ({ open, onClose, onCapture }: CameraCaptureProps) => {
           ) : isRecording ? (
             <button
               onClick={stopRecording}
-              className="w-18 h-18 rounded-full border-4 border-red-500 flex items-center justify-center active:scale-95 transition-transform"
+              className="w-18 h-18 rounded-full border-4 border-destructive flex items-center justify-center active:scale-95 transition-transform"
             >
-              <Square className="w-8 h-8 text-red-500 fill-red-500 rounded-sm" />
+              <Square className="w-8 h-8 text-destructive fill-destructive rounded-sm" />
             </button>
           ) : (
             <button
               onClick={startRecording}
               disabled={!cameraReady}
-              className="w-18 h-18 rounded-full border-4 border-red-500 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
+              className="w-18 h-18 rounded-full border-4 border-destructive flex items-center justify-center active:scale-95 transition-transform disabled:opacity-50"
             >
-              <Circle className="w-14 h-14 text-red-500 fill-red-500" />
+              <Circle className="w-14 h-14 text-destructive fill-destructive" />
             </button>
           )}
         </div>
