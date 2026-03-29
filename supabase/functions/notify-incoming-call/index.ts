@@ -97,14 +97,11 @@ Deno.serve(async (req) => {
 
     const { data: callerProfile } = await admin
       .from("profiles")
-      .select("display_name, phone_number")
+      .select("display_name")
       .eq("id", user.id)
       .maybeSingle();
 
-    const callerName =
-      callerProfile?.display_name ||
-      callerProfile?.phone_number ||
-      "Jemand";
+    const callerName = callerProfile?.display_name || "Jemand";
 
     const pushBody = isVideo
       ? `${callerName} ruft dich per Video an. Tippe zum Annehmen.`

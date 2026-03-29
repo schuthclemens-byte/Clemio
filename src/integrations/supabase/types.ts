@@ -59,6 +59,44 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_invitations: {
+        Row: {
+          conversation_id: string
+          created_at: string | null
+          id: string
+          invited_by: string
+          invited_user_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          invited_by: string
+          invited_user_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          invited_by?: string
+          invited_user_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_invitations_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_aliases: {
         Row: {
           contact_user_id: string

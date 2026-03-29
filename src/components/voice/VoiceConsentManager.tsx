@@ -56,6 +56,7 @@ const VoiceConsentManager = () => {
       .eq("id", id);
 
     if (error) {
+      console.error("[VoiceConsentManager] update error", error);
       toast.error("Fehler beim Aktualisieren");
       return;
     }

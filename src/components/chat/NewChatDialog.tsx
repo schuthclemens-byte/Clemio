@@ -228,23 +228,37 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     if (selectedUsers.length < 2 || !user || !groupName.trim()) return;
     setCreating(true);
 
-    const { data: conv, error: convErr } = await supabase
-      .from("conversations")
-      .insert({ created_by: user.id, name: groupName.trim(), is_group: true })
-      .select()
-      .single();
+    try {
+      const { data: conv, error: convErr } = await supabase
+        .from("conversations")
+        .insert({ created_by: user.id, name: groupName.trim(), is_group: true })
+        .select()
+        .single();
 
-    if (convErr || !conv) { setCreating(false); return; }
+      if (convErr || !conv) { setCreating(false); return; }
 
-    const members = [
-      { conversation_id: conv.id, user_id: user.id },
-      ...selectedUsers.map((u) => ({ conversation_id: conv.id, user_id: u.id })),
-    ];
+      // Add creator as member
+      await supabase.from("conversation_members").insert({ conversation_id: conv.id, user_id: user.id });
 
-    await supabase.from("conversation_members").insert(members);
+      // Send invitations to selected users instead of adding them directly
+      const invitations = selectedUsers.map((u) => ({
+        conversation_id: conv.id,
+        invited_by: user.id,
+        invited_user_id: u.id,
+        status: "pending",
+      }));
 
-    handleClose();
-    navigate(`/chat/${conv.id}`);
+      await supabase.from("chat_invitations" as any).insert(invitations as any);
+
+      toast.success("Gruppeneinladungen gesendet");
+      handleClose();
+      navigate(`/chat/${conv.id}`);
+    } catch (err) {
+      console.error("[NewChatDialog] Group creation failed", err);
+      toast.error("Gruppe konnte nicht erstellt werden");
+    } finally {
+      setCreating(false);
+    }
   };
 
   if (!open) return null;
