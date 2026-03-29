@@ -5,6 +5,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizePhone } from "@/lib/authPhone";
+import { searchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -14,7 +15,7 @@ const isContactPickerSupported = "contacts" in navigator && "ContactsManager" in
 interface FoundUser {
   id: string;
   display_name: string | null;
-  phone_number: string;
+  avatar_url?: string | null;
 }
 
 interface NewChatDialogProps {
