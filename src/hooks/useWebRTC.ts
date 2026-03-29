@@ -297,10 +297,25 @@ export function useWebRTC({
           if (payload.from === userId) return;
           console.log("[WebRTC] Received offer");
 
-          if (mode === "callee") {
-            // Store the offer for when user accepts
-            pendingOfferRef.current = payload.sdp;
-            setCallState("ringing");
+          if (mode === "callee" && pcRef.current) {
+            // Set remote description and create answer
+            try {
+              await pcRef.current.setRemoteDescription(
+                new RTCSessionDescription(payload.sdp)
+              );
+              const answer = await pcRef.current.createAnswer();
+              await pcRef.current.setLocalDescription(answer);
+
+              channel.send({
+                type: "broadcast",
+                event: "answer",
+                payload: { sdp: answer, from: userId },
+              });
+              setCallState("connecting");
+              await flushIceCandidates();
+            } catch (e) {
+              console.error("[WebRTC] Error handling offer:", e);
+            }
           }
         })
         .on("broadcast", { event: "answer" }, async ({ payload }) => {
@@ -317,11 +332,23 @@ export function useWebRTC({
             console.error("[WebRTC] Error setting remote description:", e);
           }
         })
+        .on("broadcast", { event: "ready" }, async ({ payload }) => {
+          // Callee joined the channel and is ready – re-send the offer
+          if (payload.from === userId || mode !== "caller") return;
+          console.log("[WebRTC] Callee ready – re-sending offer");
+
+          if (pcRef.current?.localDescription) {
+            channel.send({
+              type: "broadcast",
+              event: "offer",
+              payload: { sdp: pcRef.current.localDescription, from: userId },
+            });
+          }
+        })
         .on("broadcast", { event: "ice-candidate" }, async ({ payload }) => {
           if (payload.from === userId) return;
 
           if (!pcRef.current?.remoteDescription) {
-            // Queue until remote description is set
             iceCandidateQueue.current.push(payload.candidate);
             return;
           }
