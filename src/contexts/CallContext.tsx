@@ -151,13 +151,10 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
             return prev;
           });
 
-          // Update active call
+          // Update active call — keep terminal status so CallPage can react
           setActiveCall((prev) => {
             if (prev?.id === updated.id) {
-              if (["ended", "failed", "missed", "declined"].includes(updated.status)) {
-                return null;
-              }
-              return updated;
+              return updated; // Always pass through the latest status
             }
             // If we're the caller and call was accepted, set as active
             if (updated.status === "accepted" && updated.caller_id === user.id) {
