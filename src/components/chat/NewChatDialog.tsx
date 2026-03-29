@@ -358,6 +358,13 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
             </button>
           </div>
 
+          {/* iOS hint – only show when no results and no error */}
+          {!isContactPickerSupported && results.length === 0 && !error && !result && (
+            <p className="text-xs text-muted-foreground text-center px-2">
+              Gib die Telefonnummer deines Kontakts ein, um ihn auf Clemio zu finden.
+            </p>
+          )}
+
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
           {/* Search results list */}
