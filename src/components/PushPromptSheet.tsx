@@ -41,6 +41,8 @@ const PushPromptSheet = () => {
     const onAllowedRoute = ALLOWED_ROUTES.some(r => location.pathname.startsWith(r));
     if (!onAllowedRoute) return;
 
+    // Wait for initial check to complete before deciding
+    if (!status.initialCheckDone) return;
     // Already saved → don't show
     if (status.savedToBackend) return;
 

@@ -124,6 +124,10 @@ export const usePushSubscription = () => {
         }
       } catch (e) {
         console.warn("[Push] Mount check error:", e);
+      } finally {
+        if (!cancelled) {
+          setStatus((s) => ({ ...s, initialCheckDone: true }));
+        }
       }
     })();
 
