@@ -63,6 +63,7 @@ const App = () => (
       <ChatBackgroundProvider>
       <AccessibilityProvider>
         <AuthProvider>
+          <CallProvider>
           <PresenceTracker>
           <TooltipProvider>
             <Toaster />
