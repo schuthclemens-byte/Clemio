@@ -15,6 +15,7 @@ import {
 
 const mainItems = [
   { title: "Chats", url: "/chats", icon: MessageCircle },
+  { title: "Anrufe", url: "/call-history", icon: Phone },
   { title: "Profil", url: "/profile", icon: User },
   { title: "Einstellungen", url: "/settings", icon: Settings },
 ];
