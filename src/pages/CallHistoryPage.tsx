@@ -244,10 +244,22 @@ const CallHistoryPage = () => {
                     </div>
                   </div>
 
-                  {/* Time */}
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {formatTime(call.created_at)}
-                  </span>
+                  {/* Time + callback button */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-muted-foreground">
+                      {formatTime(call.created_at)}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/call/${call.conversation_id}?receiver=${call.isOutgoing ? call.receiver_id : call.caller_id}&type=${call.call_type}`);
+                      }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-primary/10 transition-colors"
+                      title="Rückruf"
+                    >
+                      <Phone className="w-4 h-4 text-primary" />
+                    </button>
+                  </div>
                 </button>
               );
             })}
