@@ -34,6 +34,18 @@ const CallHistoryPage = () => {
   const [calls, setCalls] = useState<CallEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Mark missed calls as read when visiting this page
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any)
+      .from("calls")
+      .update({ is_read: true })
+      .eq("receiver_id", user.id)
+      .eq("status", "missed")
+      .eq("is_read", false)
+      .then(() => {});
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
 
