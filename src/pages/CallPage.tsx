@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCallContext } from "@/contexts/CallContext";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 import { motion, AnimatePresence } from "framer-motion";
 
 const CallPage = () => {
