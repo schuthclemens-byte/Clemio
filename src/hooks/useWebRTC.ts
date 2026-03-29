@@ -30,7 +30,6 @@ interface UseWebRTCOptions {
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
-  // Free public TURN servers (metered.ca open relay)
   {
     urls: "turn:a.relay.metered.ca:80",
     username: "e8dd65b92fdd354742c3b807",
@@ -53,8 +52,8 @@ const ICE_SERVERS: RTCIceServer[] = [
   },
 ];
 
-const CALL_TIMEOUT_MS = 45_000; // 45s without answer → end
-const RECONNECT_TIMEOUT_MS = 15_000; // 15s to reconnect
+const CALL_TIMEOUT_MS = 45_000;
+const RECONNECT_TIMEOUT_MS = 15_000;
 
 /* ───────── Hook ───────── */
 
@@ -68,6 +67,7 @@ export function useWebRTC({
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -78,6 +78,12 @@ export function useWebRTC({
   const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
   const isAnsweringRef = useRef(false);
   const cleanedUpRef = useRef(false);
+
+  // Keep callbacks in refs to avoid stale closures
+  const onRemoteStreamRef = useRef(onRemoteStream);
+  onRemoteStreamRef.current = onRemoteStream;
+  const onCallErrorRef = useRef(onCallError);
+  onCallErrorRef.current = onCallError;
 
   /* ── Helpers ── */
 
@@ -96,9 +102,9 @@ export function useWebRTC({
     (code: CallError["code"], message: string) => {
       console.error(`[WebRTC] Error (${code}):`, message);
       setCallState("error");
-      onCallError?.({ code, message });
+      onCallErrorRef.current?.({ code, message });
     },
-    [onCallError]
+    []
   );
 
   /* ── Media ── */
@@ -120,10 +126,19 @@ export function useWebRTC({
               }
             : false,
         });
+
+        console.log("[WebRTC] getUserMedia success:", {
+          audioTracks: stream.getAudioTracks().length,
+          videoTracks: stream.getVideoTracks().length,
+          audioEnabled: stream.getAudioTracks()[0]?.enabled,
+          audioState: stream.getAudioTracks()[0]?.readyState,
+          videoEnabled: stream.getVideoTracks()[0]?.enabled,
+          videoState: stream.getVideoTracks()[0]?.readyState,
+        });
+
         localStreamRef.current = stream;
         return stream;
       } catch (err: any) {
-        // Try audio-only fallback
         if (video) {
           console.warn("[WebRTC] Video failed, trying audio only:", err.message);
           try {
@@ -185,16 +200,37 @@ export function useWebRTC({
       }
     };
 
+    // Use a single persistent MediaStream for remote tracks
+    const persistentRemoteStream = new MediaStream();
+
     pc.ontrack = (event) => {
-      if (event.streams[0]) {
-        console.log("[WebRTC] Remote track received");
-        onRemoteStream?.(event.streams[0]);
-      }
+      console.log("[WebRTC] ontrack fired:", {
+        kind: event.track.kind,
+        trackId: event.track.id,
+        trackEnabled: event.track.enabled,
+        trackState: event.track.readyState,
+        streamCount: event.streams.length,
+        streamId: event.streams[0]?.id,
+        audioTracksInStream: event.streams[0]?.getAudioTracks().length,
+        videoTracksInStream: event.streams[0]?.getVideoTracks().length,
+      });
+
+      // Add each track to our persistent stream
+      persistentRemoteStream.addTrack(event.track);
+
+      console.log("[WebRTC] persistentRemoteStream now has:", {
+        audio: persistentRemoteStream.getAudioTracks().length,
+        video: persistentRemoteStream.getVideoTracks().length,
+      });
+
+      // Update state — always set the same stream object reference
+      setRemoteStream(persistentRemoteStream);
+      onRemoteStreamRef.current?.(persistentRemoteStream);
     };
 
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
-      console.log("[WebRTC] Connection state:", state);
+      console.log("[WebRTC] connectionState:", state);
 
       switch (state) {
         case "connected":
@@ -202,21 +238,17 @@ export function useWebRTC({
           setCallState("connected");
           clearTimers();
           break;
-
         case "disconnected":
-          // Try to reconnect
           setCallState("reconnecting");
           reconnectTimeoutRef.current = setTimeout(() => {
             console.warn("[WebRTC] Reconnect timeout – ending call");
             endCallInternal();
           }, RECONNECT_TIMEOUT_MS);
           break;
-
         case "failed":
           reportError("network", "Verbindung fehlgeschlagen. Überprüfe deine Internetverbindung.");
           endCallInternal();
           break;
-
         case "closed":
           setIsConnected(false);
           break;
@@ -224,9 +256,8 @@ export function useWebRTC({
     };
 
     pc.oniceconnectionstatechange = () => {
-      console.log("[WebRTC] ICE state:", pc.iceConnectionState);
+      console.log("[WebRTC] iceConnectionState:", pc.iceConnectionState);
       if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
-        // Clear reconnect timer if ICE reconnects
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
           reconnectTimeoutRef.current = null;
@@ -238,7 +269,7 @@ export function useWebRTC({
 
     pcRef.current = pc;
     return pc;
-  }, [userId, onRemoteStream, clearTimers, reportError]);
+  }, [userId, clearTimers, reportError]);
 
   /* ── Flush queued ICE candidates ── */
 
@@ -275,6 +306,7 @@ export function useWebRTC({
 
     setIsConnected(false);
     setCallState("ended");
+    setRemoteStream(null);
     setIsVideoEnabled(true);
     setIsAudioEnabled(true);
   }, [clearTimers]);
@@ -283,7 +315,6 @@ export function useWebRTC({
 
   const setupSignaling = useCallback(
     (mode: "caller" | "callee") => {
-      // Remove existing channel
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
@@ -298,7 +329,6 @@ export function useWebRTC({
           console.log("[WebRTC] Received offer");
 
           if (mode === "callee" && pcRef.current) {
-            // Set remote description and create answer
             try {
               await pcRef.current.setRemoteDescription(
                 new RTCSessionDescription(payload.sdp)
@@ -333,7 +363,6 @@ export function useWebRTC({
           }
         })
         .on("broadcast", { event: "ready" }, async ({ payload }) => {
-          // Callee joined the channel and is ready – re-send the offer
           if (payload.from === userId || mode !== "caller") return;
           console.log("[WebRTC] Callee ready – re-sending offer");
 
@@ -401,7 +430,6 @@ export function useWebRTC({
           payload: { sdp: offer, from: userId },
         });
 
-        // Call timeout — use ref-based check to avoid stale closure
         callTimeoutRef.current = setTimeout(() => {
           const pc = pcRef.current;
           const isStillWaiting = pc && pc.connectionState !== "connected";
@@ -414,7 +442,6 @@ export function useWebRTC({
 
         return stream;
       } catch (err) {
-        // Media errors are already handled in getLocalStream
         return null;
       }
     },
@@ -437,9 +464,6 @@ export function useWebRTC({
 
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-        // Wait briefly so the channel is fully subscribed before asking the
-        // caller to re-send the offer. This is important when the app is opened
-        // from an incoming push notification on iPhone/Android.
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         const readyPayload = {
@@ -450,7 +474,7 @@ export function useWebRTC({
 
         channel.send(readyPayload);
 
-        // Retry once in case the first ready signal races the subscription.
+        // Retry once in case the first ready signal races the subscription
         setTimeout(() => {
           if (!pcRef.current?.remoteDescription) {
             channel.send(readyPayload);
@@ -474,7 +498,6 @@ export function useWebRTC({
         event: "hang-up",
         payload: { from: userId },
       });
-      // Give broadcast time to send
       setTimeout(() => {
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
@@ -487,11 +510,54 @@ export function useWebRTC({
 
   /* ── Toggles ── */
 
-  const toggleVideo = useCallback(() => {
-    const track = localStreamRef.current?.getVideoTracks()[0];
-    if (track) {
-      track.enabled = !track.enabled;
-      setIsVideoEnabled(track.enabled);
+  const toggleVideo = useCallback(async () => {
+    const stream = localStreamRef.current;
+    const pc = pcRef.current;
+    if (!stream) return;
+
+    const currentTrack = stream.getVideoTracks()[0];
+
+    if (currentTrack && currentTrack.readyState === "live" && currentTrack.enabled) {
+      // Disable: stop the track and remove from stream
+      currentTrack.enabled = false;
+      currentTrack.stop();
+      stream.removeTrack(currentTrack);
+      setIsVideoEnabled(false);
+      console.log("[WebRTC] Video disabled — track stopped");
+    } else {
+      // Enable: get a new video track
+      try {
+        const newVideoStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            facingMode: "user",
+          },
+        });
+        const newTrack = newVideoStream.getVideoTracks()[0];
+
+        // Add to local stream
+        stream.addTrack(newTrack);
+
+        // Replace in peer connection sender
+        if (pc) {
+          const videoSender = pc.getSenders().find(s => s.track?.kind === "video" || (!s.track && s.replaceTrack));
+          if (videoSender) {
+            await videoSender.replaceTrack(newTrack);
+            console.log("[WebRTC] Video re-enabled via replaceTrack");
+          } else {
+            pc.addTrack(newTrack, stream);
+            console.log("[WebRTC] Video re-enabled via addTrack");
+          }
+        }
+
+        // Update the ref so localVideoRef gets correct srcObject
+        localStreamRef.current = stream;
+        setIsVideoEnabled(true);
+        console.log("[WebRTC] Video enabled — new track acquired");
+      } catch (err) {
+        console.warn("[WebRTC] Failed to re-enable video:", err);
+      }
     }
   }, []);
 
@@ -500,6 +566,7 @@ export function useWebRTC({
     if (track) {
       track.enabled = !track.enabled;
       setIsAudioEnabled(track.enabled);
+      console.log("[WebRTC] Audio toggled:", track.enabled);
     }
   }, []);
 
@@ -520,6 +587,7 @@ export function useWebRTC({
     isVideoEnabled,
     isAudioEnabled,
     localStream: localStreamRef.current,
+    remoteStream,
     startCall,
     answerCall,
     endCall,
