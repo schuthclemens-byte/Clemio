@@ -43,6 +43,7 @@ const CallPage = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const initDoneRef = useRef(false);
   const cleanedUpRef = useRef(false);
+  const webRtcStartedRef = useRef(false);
 
   const isVideoCall = searchParams.get("video") !== "false";
   const isIncoming = searchParams.get("incoming") === "true";
@@ -154,14 +155,16 @@ const CallPage = () => {
         }
       } else {
         // Outgoing call
-        console.log("[CallPage] Outgoing call – creating call record");
+        console.log("[CallPage] Outgoing call – preparing DB call record");
         setCallPhase("calling");
 
-        const { data: members } = await supabase
+        const { data: members, error: membersError } = await supabase
           .from("conversation_members")
           .select("user_id")
           .eq("conversation_id", conversationId)
           .neq("user_id", user.id);
+
+        console.log("[CallPage] Receiver lookup:", { conversationId, userId: user.id, members, membersError });
 
         const receiverId = members?.[0]?.user_id;
         if (!receiverId) {
@@ -172,16 +175,11 @@ const CallPage = () => {
         }
 
         const callId = await startCall(conversationId, receiverId, isVideoCall);
+        console.log("[CallPage] startCall result", { callId, receiverId, conversationId, isVideoCall });
         if (!callId) {
           setCallPhase("error");
           setCallError({ code: "unknown", message: "Anruf konnte nicht gestartet werden" });
           return;
-        }
-
-        // Start WebRTC as caller
-        const stream = await startWebRTC(isVideoCall);
-        if (localVideoRef.current && stream) {
-          localVideoRef.current.srcObject = stream;
         }
       }
     };
@@ -194,8 +192,22 @@ const CallPage = () => {
     if (!activeCall) return;
 
     if (activeCall.status === "accepted" && callPhase === "calling") {
-      console.log("[CallPage] Call accepted by receiver – WebRTC should connect");
+      console.log("[CallPage] Call accepted by receiver – starting caller WebRTC now", {
+        activeCall,
+        callState,
+        alreadyStarted: webRtcStartedRef.current,
+      });
       setCallPhase("accepted");
+
+      if (!isIncoming && !webRtcStartedRef.current) {
+        webRtcStartedRef.current = true;
+        void (async () => {
+          const stream = await startWebRTC(isVideoCall);
+          if (localVideoRef.current && stream) {
+            localVideoRef.current.srcObject = stream;
+          }
+        })();
+      }
     }
 
     if (["declined", "missed", "failed", "ended"].includes(activeCall.status)) {
@@ -206,7 +218,7 @@ const CallPage = () => {
         endWebRTC();
       }
     }
-  }, [activeCall, callPhase, endWebRTC]);
+  }, [activeCall, callPhase, endWebRTC, callState, isIncoming, startWebRTC, isVideoCall]);
 
   // Attach remote stream
   useEffect(() => {
