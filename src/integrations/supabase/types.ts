@@ -533,6 +533,15 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      search_profiles_by_query: {
+        Args: { search_query: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          id: string
+          phone_number: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
