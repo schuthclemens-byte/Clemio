@@ -44,15 +44,20 @@ self.addEventListener("push", (event) => {
     }
 
     const normalizedTitle = typeof data.title === "string" && data.title.trim().length === 0 ? "\u00A0" : data.title;
+    const notificationData = data.data || {};
+    const isIncomingCall = notificationData.type === "incoming_call";
 
     const options = {
       body: data.body,
       icon: data.icon || "/icon-192.png",
       badge: data.badge || "/icon-192.png",
-      tag: data.data?.conversation_id || "clemio-push",
-      data: data.data || {},
-      vibrate: [200, 100, 200],
+      tag: isIncomingCall
+        ? `incoming-call-${notificationData.conversation_id || "clemio"}`
+        : notificationData.conversation_id || "clemio-push",
+      data: notificationData,
+      vibrate: isIncomingCall ? [300, 150, 300, 150, 300] : [200, 100, 200],
       renotify: true,
+      requireInteraction: isIncomingCall,
     };
 
     await notifyClients({
