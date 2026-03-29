@@ -186,16 +186,12 @@ const ChatPage = () => {
     if (!conversationId || !user) return;
 
     if (messageId) {
-      await supabase.from("messages").update({ is_read: true }).eq("id", messageId);
+      // Single message: sender can mark own, otherwise use RPC
+      await supabase.rpc("mark_messages_read", { _conversation_id: conversationId });
       return;
     }
 
-    await supabase
-      .from("messages")
-      .update({ is_read: true })
-      .eq("conversation_id", conversationId)
-      .neq("sender_id", user.id)
-      .eq("is_read", false);
+    await supabase.rpc("mark_messages_read", { _conversation_id: conversationId });
   }, [conversationId, user]);
 
   // Offline queue: swap temp IDs when messages are sent
