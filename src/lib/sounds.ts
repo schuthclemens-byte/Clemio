@@ -106,44 +106,54 @@ export function playVoiceStopClick() {
   })();
 }
 
-/* ── Ringtone (repeating phone-like tone) ── */
+/* ── Ringtone (repeating melodic phone ring) ── */
 
 let ringtoneInterval: ReturnType<typeof setInterval> | null = null;
 let ringtoneOscillators: OscillatorNode[] = [];
+let ringtoneGains: GainNode[] = [];
 
-async function playRingBurst() {
+async function playRingMelody() {
   if (isMuted()) return;
   try {
     const ctx = await getCtx();
     const now = ctx.currentTime;
 
-    // Classic two-frequency phone ring (440 + 480 Hz) — louder volume
-    [440, 480].forEach((freq) => {
+    // Melodic ring pattern: ascending two-note pattern, repeated twice
+    // Similar to iPhone/modern phone ringtone feel
+    const pattern: [number, number, number][] = [
+      // [frequency, startOffset, duration]
+      [587.33, 0, 0.15],     // D5
+      [880, 0.16, 0.15],     // A5
+      [587.33, 0.4, 0.15],   // D5
+      [880, 0.56, 0.15],     // A5
+    ];
+
+    for (const [freq, offset, dur] of pattern) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.value = freq;
-      // Louder: 0.15 instead of 0.06
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.setValueAtTime(0.15, now + 0.8);
-      gain.gain.linearRampToValueAtTime(0, now + 1.0);
+      gain.gain.setValueAtTime(0, now + offset);
+      gain.gain.linearRampToValueAtTime(0.18, now + offset + 0.02);
+      gain.gain.setValueAtTime(0.18, now + offset + dur - 0.03);
+      gain.gain.linearRampToValueAtTime(0, now + offset + dur);
       osc.connect(gain).connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 1.0);
+      osc.start(now + offset);
+      osc.stop(now + offset + dur + 0.01);
       ringtoneOscillators.push(osc);
-    });
-    console.log("[Sounds] Ring burst played at", now);
+      ringtoneGains.push(gain);
+    }
   } catch (e) {
-    console.warn("[Sounds] Ring burst failed:", e);
+    console.warn("[Sounds] Ring melody failed:", e);
   }
 }
 
-/** Start a repeating ringtone (ring 1s, pause 2s) */
+/** Start a repeating ringtone (ring ~0.7s, pause ~1.5s) */
 export function startRingtone() {
-  stopRingtone(); // ensure clean state
+  stopRingtone();
   console.log("[Sounds] Starting ringtone");
-  void playRingBurst();
-  ringtoneInterval = setInterval(() => void playRingBurst(), 3000);
+  void playRingMelody();
+  ringtoneInterval = setInterval(() => void playRingMelody(), 2200);
 }
 
 /** Stop the ringtone */
@@ -156,6 +166,7 @@ export function stopRingtone() {
     try { osc.stop(); } catch {}
   });
   ringtoneOscillators = [];
+  ringtoneGains = [];
 }
 
 /** Very subtle pop – played when speech playback starts */

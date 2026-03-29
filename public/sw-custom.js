@@ -55,9 +55,18 @@ self.addEventListener("push", (event) => {
         ? `incoming-call-${notificationData.conversation_id || "clemio"}`
         : notificationData.conversation_id || "clemio-push",
       data: notificationData,
-      vibrate: isIncomingCall ? [300, 150, 300, 150, 300] : [200, 100, 200],
+      vibrate: isIncomingCall
+        ? [300, 200, 300, 200, 300, 200, 300, 200, 300, 200, 300]
+        : [200, 100, 200],
       renotify: true,
       requireInteraction: isIncomingCall,
+      silent: false,
+      actions: isIncomingCall
+        ? [
+            { action: "accept", title: "✅ Annehmen" },
+            { action: "decline", title: "❌ Ablehnen" },
+          ]
+        : [],
     };
 
     await notifyClients({
@@ -78,19 +87,29 @@ self.addEventListener("push", (event) => {
   })());
 });
 
-// Handle notification click
+// Handle notification click (including action buttons)
 self.addEventListener("notificationclick", (event) => {
-  console.log("[SW-Custom] Notification clicked");
+  console.log("[SW-Custom] Notification clicked, action:", event.action);
   event.notification.close();
   const notificationData = event.notification.data || {};
   const conversationId = notificationData.conversation_id;
-  const url = notificationData.type === "incoming_call"
-    ? notificationData.path || (conversationId
+  const isIncomingCall = notificationData.type === "incoming_call";
+
+  let url;
+
+  if (isIncomingCall) {
+    if (event.action === "decline") {
+      // Just close the notification — the app's CallContext timeout will mark it missed
+      // We can't easily decline from SW without auth token, so we just dismiss
+      return;
+    }
+    // "accept" action or default click → open call page
+    url = notificationData.path || (conversationId
       ? `/call/${conversationId}?incoming=true&video=${notificationData.is_video !== false}`
-      : "/chats")
-    : conversationId
-      ? `/chat/${conversationId}`
-      : "/chats";
+      : "/chats");
+  } else {
+    url = conversationId ? `/chat/${conversationId}` : "/chats";
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
