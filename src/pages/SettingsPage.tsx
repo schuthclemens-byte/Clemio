@@ -254,8 +254,8 @@ const SettingsPage = () => {
             />
             <ToggleRow
               icon={Volume2}
-              label="Sprachnachrichten automatisch transkribieren"
-              description="Sprachnachrichten werden als Text unter der Nachricht angezeigt."
+              label="Nachrichten automatisch vorlesen"
+              description="Neue Nachrichten werden automatisch mit der geklonten Stimme vorgelesen."
               checked={a11y.autoRead}
               onChange={() => a11y.toggle("autoRead")}
               borderBottom={false}
