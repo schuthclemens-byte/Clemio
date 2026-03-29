@@ -299,16 +299,25 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
 
   /* ── End an active call ── */
   const endCallFn = useCallback(async () => {
-    if (!activeCall || !user) return;
+    if (!user) return;
+    const call = activeCall;
+    if (!call) return;
 
-    console.log("[CallContext] Ending call", activeCall.id);
+    // Don't update if already in terminal status
+    if (["ended", "failed", "missed", "declined"].includes(call.status)) {
+      console.log("[CallContext] Call already in terminal status:", call.status);
+      setActiveCall(null);
+      return;
+    }
+
+    console.log("[CallContext] Ending call", call.id);
     stopRinging();
     clearCallTimeout();
 
     await supabase
       .from("calls" as any)
       .update({ status: "ended", ended_at: new Date().toISOString() })
-      .eq("id", activeCall.id);
+      .eq("id", call.id);
 
     setActiveCall(null);
     console.log("[CallContext] Call ended");
