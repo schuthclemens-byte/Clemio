@@ -55,9 +55,18 @@ self.addEventListener("push", (event) => {
         ? `incoming-call-${notificationData.conversation_id || "clemio"}`
         : notificationData.conversation_id || "clemio-push",
       data: notificationData,
-      vibrate: isIncomingCall ? [300, 150, 300, 150, 300] : [200, 100, 200],
+      vibrate: isIncomingCall
+        ? [300, 200, 300, 200, 300, 200, 300, 200, 300, 200, 300]
+        : [200, 100, 200],
       renotify: true,
       requireInteraction: isIncomingCall,
+      silent: false,
+      actions: isIncomingCall
+        ? [
+            { action: "accept", title: "✅ Annehmen" },
+            { action: "decline", title: "❌ Ablehnen" },
+          ]
+        : [],
     };
 
     await notifyClients({
