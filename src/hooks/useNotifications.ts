@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 
 export const useNotifications = () => {
   const { user } = useAuth();
@@ -55,13 +56,8 @@ export const useNotifications = () => {
           if (msg.sender_id === user.id) return;
 
           // Get sender name
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("display_name, phone_number")
-            .eq("id", msg.sender_id)
-            .maybeSingle();
-
-          const senderName = profile?.display_name || profile?.phone_number || "Neue Nachricht";
+          const profile = await fetchAccessibleProfile(msg.sender_id);
+          const senderName = profile?.display_name || "Neue Nachricht";
 
           showNotification(senderName, msg.content, msg.conversation_id);
         }

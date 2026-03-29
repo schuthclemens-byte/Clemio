@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Mic, Trash2, Play, Square, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
@@ -59,12 +60,9 @@ const VoiceRecordingsPage = () => {
     if (contactRes.data && contactRes.data.length > 0) {
       // Load contact names
       const contactIds = contactRes.data.map((c) => c.contact_user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", contactIds);
+      const profiles = await fetchAccessibleProfiles(contactIds);
 
-      const nameMap = new Map(profiles?.map((p) => [p.id, p.display_name]) || []);
+      const nameMap = new Map<string, string>(profiles?.map((p) => [p.id, p.display_name || "Unbekannt"]) || []);
 
       setContactVoices(
         contactRes.data.map((c) => ({

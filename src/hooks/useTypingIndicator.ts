@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 
 export const useTypingIndicator = (conversationId: string | undefined) => {
   const { user } = useAuth();
@@ -50,11 +51,7 @@ export const useTypingIndicator = (conversationId: string | undefined) => {
             if (record.user_id === user.id) return;
             
             // Fetch name
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("display_name")
-              .eq("id", record.user_id)
-              .maybeSingle();
+            const profile = await fetchAccessibleProfile(record.user_id);
 
             setTypingUsers((prev) => ({
               ...prev,

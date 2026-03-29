@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCallContext } from "@/contexts/CallContext";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 import { motion, AnimatePresence } from "framer-motion";
 
 const CallPage = () => {
@@ -108,11 +109,7 @@ const CallPage = () => {
           return;
         }
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("id", member.user_id)
-          .maybeSingle();
+        const profile = await fetchAccessibleProfile(member.user_id);
         setChatName(profile?.display_name || "Anruf");
       }
     };

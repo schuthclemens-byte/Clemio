@@ -4,6 +4,7 @@ import { ArrowLeft, Shield, UserPlus, Trash2, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -35,10 +36,7 @@ const FocusModePage = () => {
 
       if (data && (data as any[]).length > 0) {
         const contactIds = (data as any[]).map((d: any) => d.contact_user_id);
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url")
-          .in("id", contactIds);
+        const profiles = await fetchAccessibleProfiles(contactIds);
 
         const merged = (data as any[]).map((fc: any) => {
           const profile = profiles?.find((p) => p.id === fc.contact_user_id);
@@ -80,10 +78,7 @@ const FocusModePage = () => {
         const alreadyAdded = contacts.map((c) => c.contact_user_id);
         const filteredIds = uniqueIds.filter((id) => !alreadyAdded.includes(id));
 
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url")
-          .in("id", filteredIds);
+        const profiles = await fetchAccessibleProfiles(filteredIds);
 
         const filtered = (profiles || []).filter((p) =>
           (p.display_name || "").toLowerCase().includes(searchQuery.toLowerCase())

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ShieldCheck, ShieldX, Clock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -29,17 +30,13 @@ const VoiceConsentManager = () => {
     if (data) {
       const enriched = await Promise.all(
         (data as any[]).map(async (r: any) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("display_name, phone_number")
-            .eq("id", r.granted_to_user_id)
-            .maybeSingle();
+          const profile = await fetchAccessibleProfile(r.granted_to_user_id);
           return {
             id: r.id,
             granted_to_user_id: r.granted_to_user_id,
             status: r.status,
             created_at: r.created_at,
-            requester_name: profile?.display_name || profile?.phone_number || "Unbekannt",
+            requester_name: profile?.display_name || "Unbekannt",
           } as ConsentRequest;
         })
       );

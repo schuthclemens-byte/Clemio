@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -41,10 +42,7 @@ const ContactAutoplayPage = () => {
 
       const uniqueIds = [...new Set(members.map((m) => m.user_id))];
 
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", uniqueIds);
+      const profiles = await fetchAccessibleProfiles(uniqueIds);
 
       const { data: autoplaySettings } = await supabase
         .from("contact_autoplay" as any)
