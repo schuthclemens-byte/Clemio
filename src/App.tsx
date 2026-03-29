@@ -16,7 +16,6 @@ import { useAutoPush } from "@/hooks/useAutoPush";
 import { usePresence } from "@/hooks/usePresence";
 import IncomingCallOverlay from "@/components/IncomingCallOverlay";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import PushPromptSheet from "@/components/PushPromptSheet";
 
 // Eagerly loaded (critical path)
