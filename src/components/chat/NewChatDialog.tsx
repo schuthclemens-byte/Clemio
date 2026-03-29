@@ -340,6 +340,15 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                 autoFocus
               />
             </div>
+            {isContactPickerSupported && (
+              <button
+                onClick={handlePickContact}
+                className="h-10 w-10 shrink-0 rounded-xl bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80 flex items-center justify-center transition-colors"
+                title="Kontakt auswählen"
+              >
+                <ContactRound className="w-4.5 h-4.5" />
+              </button>
+            )}
             <button
               onClick={handleSearch}
               disabled={searching || !searchQuery.trim()}
