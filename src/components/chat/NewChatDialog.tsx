@@ -378,7 +378,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                     onClick={() => removeUser(u.id)}
                     className="flex items-center gap-1.5 h-8 pl-3 pr-2 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
                   >
-                    {u.display_name || u.phone_number}
+                    {u.display_name || "Nutzer"}
                     <X className="w-3 h-3" />
                   </button>
                 ))}
