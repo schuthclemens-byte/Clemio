@@ -97,6 +97,7 @@ const App = () => (
             </BrowserRouter>
           </TooltipProvider>
           </PresenceTracker>
+          </CallProvider>
         </AuthProvider>
       </AccessibilityProvider>
       </ChatBackgroundProvider>
