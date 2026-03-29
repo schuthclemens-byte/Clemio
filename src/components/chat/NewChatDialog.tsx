@@ -53,6 +53,47 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     onClose();
   };
 
+  const handlePickContact = useCallback(async () => {
+    try {
+      const nav = navigator as any;
+      if (!nav.contacts?.select) return;
+
+      const contacts = await nav.contacts.select(["tel"], { multiple: false });
+      if (!contacts?.length || !contacts[0].tel?.length) return;
+
+      // Take the first phone number, clean it up
+      const rawPhone = contacts[0].tel[0] as string;
+      const cleaned = rawPhone.replace(/[\s()-]/g, "");
+      setSearchQuery(cleaned);
+
+      // Auto-search
+      setSearching(true);
+      setError("");
+      setResult(null);
+      setResults([]);
+
+      const digits = cleaned.replace(/\D/g, "");
+      const normalized = digits ? normalizePhone(cleaned) : "";
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, phone_number")
+        .or(`phone_number.ilike.%${digits}%,phone_number.ilike.%${normalized}%`)
+        .limit(10);
+
+      const found = (data ?? []).filter((c) => c.id !== user?.id);
+      setSearching(false);
+
+      if (found.length === 0) {
+        setError("Nutzer nicht gefunden – ist die Person bei Clemio registriert?");
+      } else {
+        setResults(found);
+      }
+    } catch (err) {
+      console.warn("[ContactPicker]", err);
+    }
+  }, [user]);
+
   const isPhoneQuery = (q: string) => /^[+0-9\s()-]+$/.test(q.trim());
 
   const handleSearch = async () => {
