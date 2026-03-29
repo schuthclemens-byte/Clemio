@@ -42,6 +42,7 @@ export interface PushStatus {
   savedToBackend: boolean;
   loading: boolean;
   lastError: string | null;
+  initialCheckDone: boolean;
 }
 
 export const usePushSubscription = () => {
@@ -56,11 +57,15 @@ export const usePushSubscription = () => {
     savedToBackend: false,
     loading: false,
     lastError: null,
+    initialCheckDone: false,
   });
 
   // Check on mount if user already has a valid push subscription
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setStatus((s) => ({ ...s, initialCheckDone: true }));
+      return;
+    }
     let cancelled = false;
 
     (async () => {
@@ -119,6 +124,10 @@ export const usePushSubscription = () => {
         }
       } catch (e) {
         console.warn("[Push] Mount check error:", e);
+      } finally {
+        if (!cancelled) {
+          setStatus((s) => ({ ...s, initialCheckDone: true }));
+        }
       }
     })();
 
