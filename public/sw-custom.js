@@ -82,8 +82,15 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   console.log("[SW-Custom] Notification clicked");
   event.notification.close();
-  const conversationId = event.notification.data?.conversation_id;
-  const url = conversationId ? `/chat/${conversationId}` : "/chats";
+  const notificationData = event.notification.data || {};
+  const conversationId = notificationData.conversation_id;
+  const url = notificationData.type === "incoming_call"
+    ? notificationData.path || (conversationId
+      ? `/call/${conversationId}?incoming=true&video=${notificationData.is_video !== false}`
+      : "/chats")
+    : conversationId
+      ? `/chat/${conversationId}`
+      : "/chats";
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {

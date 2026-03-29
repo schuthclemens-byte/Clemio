@@ -430,20 +430,30 @@ export function useWebRTC({
 
       try {
         const stream = await getLocalStream(video);
-        setupSignaling("callee");
+        const channel = setupSignaling("callee");
         const pc = createPeerConnection();
 
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-        // If we already have a pending offer (from IncomingCallOverlay's channel)
-        // we need to wait for it via our own channel. The overlay detected it on
-        // a different channel instance, so we request it again.
-        // Send a "ready" signal so the caller re-sends the offer
-        channelRef.current?.send({
-          type: "broadcast",
+        // Wait briefly so the channel is fully subscribed before asking the
+        // caller to re-send the offer. This is important when the app is opened
+        // from an incoming push notification on iPhone/Android.
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const readyPayload = {
+          type: "broadcast" as const,
           event: "ready",
           payload: { from: userId },
-        });
+        };
+
+        channel.send(readyPayload);
+
+        // Retry once in case the first ready signal races the subscription.
+        setTimeout(() => {
+          if (!pcRef.current?.remoteDescription) {
+            channel.send(readyPayload);
+          }
+        }, 1500);
 
         return stream;
       } catch (err) {
