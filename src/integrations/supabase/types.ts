@@ -590,6 +590,10 @@ export type Database = {
         Args: { _conversation_id: string }
         Returns: undefined
       }
+      request_voice_consent: {
+        Args: { _voice_owner_id: string }
+        Returns: string
+      }
       search_profiles_by_query: {
         Args: { search_query: string }
         Returns: {
