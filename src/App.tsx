@@ -30,6 +30,7 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const FocusModePage = lazy(() => import("./pages/FocusModePage"));
 const ContactAutoplayPage = lazy(() => import("./pages/ContactAutoplayPage"));
 const CallPage = lazy(() => import("./pages/CallPage"));
+const CallHistoryPage = lazy(() => import("./pages/CallHistoryPage"));
 const InstallPage = lazy(() => import("./pages/InstallPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
@@ -86,6 +87,7 @@ const App = () => (
                   <Route path="/focus-mode" element={<ProtectedRoute><FocusModePage /></ProtectedRoute>} />
                   <Route path="/contact-autoplay" element={<ProtectedRoute><ContactAutoplayPage /></ProtectedRoute>} />
                   <Route path="/voice-recordings" element={<ProtectedRoute><VoiceRecordingsPage /></ProtectedRoute>} />
+                  <Route path="/call-history" element={<ProtectedRoute><CallHistoryPage /></ProtectedRoute>} />
                   <Route path="/call/:id" element={<ProtectedRoute><CallPage /></ProtectedRoute>} />
                   <Route path="/install" element={<InstallPage />} />
                   <Route path="/privacy" element={<PrivacyPolicyPage />} />
