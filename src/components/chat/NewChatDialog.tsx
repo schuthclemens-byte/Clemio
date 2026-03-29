@@ -352,8 +352,8 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                     {(u.display_name || "?")[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{u.display_name || u.phone_number}</p>
-                    <p className="text-xs text-muted-foreground">{u.phone_number}</p>
+                    <p className="font-semibold text-sm truncate">{u.display_name || "Nutzer"}</p>
+                    <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
                   </div>
                   {isGroupMode ? (
                     <UserPlus className="w-4 h-4 text-primary shrink-0" />
