@@ -10,21 +10,35 @@ export function useMissedCallsCount() {
     if (!user) return;
 
     const fetchCount = async () => {
-      const { count: c } = await supabase
+      const { data, error } = await (supabase as any)
+        .from("calls")
+        .select("id", { count: "exact", head: true })
+        .eq("receiver_id", user.id)
+        .eq("status", "missed")
+        .eq("is_read", false);
+      if (!error) {
+        // When head: true, count is in the response
+        setCount((data as any)?.length ?? 0);
+      }
+    };
+
+    // Use raw count approach
+    const fetchCountRaw = async () => {
+      const { count: c, error } = await (supabase as any)
         .from("calls")
         .select("*", { count: "exact", head: true })
         .eq("receiver_id", user.id)
         .eq("status", "missed")
-        .eq("is_read" as any, false);
-      setCount(c ?? 0);
+        .eq("is_read", false);
+      if (!error) setCount(c ?? 0);
     };
 
-    fetchCount();
+    fetchCountRaw();
 
     const channel = supabase
       .channel("missed-calls-badge")
       .on("postgres_changes", { event: "*", schema: "public", table: "calls" }, () => {
-        fetchCount();
+        fetchCountRaw();
       })
       .subscribe();
 
