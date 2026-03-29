@@ -155,14 +155,16 @@ const CallPage = () => {
         }
       } else {
         // Outgoing call
-        console.log("[CallPage] Outgoing call – creating call record");
+        console.log("[CallPage] Outgoing call – preparing DB call record");
         setCallPhase("calling");
 
-        const { data: members } = await supabase
+        const { data: members, error: membersError } = await supabase
           .from("conversation_members")
           .select("user_id")
           .eq("conversation_id", conversationId)
           .neq("user_id", user.id);
+
+        console.log("[CallPage] Receiver lookup:", { conversationId, userId: user.id, members, membersError });
 
         const receiverId = members?.[0]?.user_id;
         if (!receiverId) {
@@ -173,16 +175,11 @@ const CallPage = () => {
         }
 
         const callId = await startCall(conversationId, receiverId, isVideoCall);
+        console.log("[CallPage] startCall result", { callId, receiverId, conversationId, isVideoCall });
         if (!callId) {
           setCallPhase("error");
           setCallError({ code: "unknown", message: "Anruf konnte nicht gestartet werden" });
           return;
-        }
-
-        // Start WebRTC as caller
-        const stream = await startWebRTC(isVideoCall);
-        if (localVideoRef.current && stream) {
-          localVideoRef.current.srcObject = stream;
         }
       }
     };
