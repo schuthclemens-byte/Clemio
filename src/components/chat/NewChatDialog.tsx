@@ -76,10 +76,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       const normalized = digits ? normalizePhone(cleaned) : "";
 
       const { data } = await supabase
-        .from("profiles")
-        .select("id, display_name, phone_number")
-        .or(`phone_number.ilike.%${digits}%,phone_number.ilike.%${normalized}%`)
-        .limit(10);
+        .rpc("search_profiles_by_query", { search_query: digits || normalized });
 
       const found = (data ?? []).filter((c) => c.id !== user?.id);
       setSearching(false);
