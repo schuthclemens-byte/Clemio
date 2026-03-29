@@ -57,6 +57,7 @@ export const usePushSubscription = () => {
     savedToBackend: false,
     loading: false,
     lastError: null,
+    initialCheckDone: false,
   });
 
   // Check on mount if user already has a valid push subscription
