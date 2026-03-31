@@ -175,13 +175,16 @@ export function useWebRTC({
 
   /* ── PeerConnection ── */
 
-  const createPeerConnection = useCallback(() => {
+  const createPeerConnection = useCallback(async () => {
     if (pcRef.current) {
       pcRef.current.close();
     }
 
+    // Fetch TURN credentials on demand
+    iceServersRef.current = await fetchIceServers();
+
     const pc = new RTCPeerConnection({
-      iceServers: ICE_SERVERS,
+      iceServers: iceServersRef.current,
       iceCandidatePoolSize: 2,
     });
 
