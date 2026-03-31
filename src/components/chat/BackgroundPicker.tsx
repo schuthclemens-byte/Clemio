@@ -42,8 +42,8 @@ const BackgroundPicker = ({ open, onClose, current, onSelect, onReset, showReset
       const { error } = await supabase.storage.from("chat-media").upload(path, file);
       if (error) throw error;
 
-      const { data } = supabase.storage.from("chat-media").getPublicUrl(path);
-      onSelect({ type: "image", value: data.publicUrl });
+      const { data } = await supabase.storage.from("chat-media").createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year for backgrounds
+      onSelect({ type: "image", value: data?.signedUrl || "" });
       toast.success("Hintergrund gesetzt!");
       onClose();
     } catch {
