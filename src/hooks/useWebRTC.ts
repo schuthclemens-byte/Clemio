@@ -458,7 +458,7 @@ export function useWebRTC({
       try {
         const stream = await getLocalStream(video);
         const channel = setupSignaling("callee");
-        const pc = createPeerConnection();
+        const pc = await createPeerConnection();
 
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
