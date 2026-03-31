@@ -290,11 +290,11 @@ const ChatPage = () => {
       prev.map((m) => m.id === tempId ? { ...m, uploadProgress: 100 } : m)
     );
 
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = await supabase.storage
       .from("chat-media")
-      .getPublicUrl(filePath);
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7); // 7 days
 
-    const audioUrl = urlData.publicUrl;
+    const audioUrl = urlData?.signedUrl || "";
 
     const { data: inserted, error: insertError } = await supabase
       .from("messages")
