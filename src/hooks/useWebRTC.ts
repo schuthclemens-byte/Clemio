@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type CallState =
   | "idle"
-  | "calling"    // outgoing, waiting for answer
-  | "ringing"    // incoming, waiting for user decision
-  | "connecting" // SDP exchanged, waiting for ICE
+  | "calling"
+  | "ringing"
+  | "connecting"
   | "connected"
   | "reconnecting"
   | "ended"
@@ -25,8 +25,9 @@ interface UseWebRTCOptions {
   onCallError?: (error: CallError) => void;
 }
 
-/* ───────── ICE Servers – fetched from edge function ───────── */
+/* ───────── ICE Servers ───────── */
 
+// STUN-only fallback — zero cost
 const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
@@ -36,13 +37,73 @@ async function fetchIceServers(): Promise<RTCIceServer[]> {
   try {
     const { data, error } = await supabase.functions.invoke("turn-credentials");
     if (error || !data?.iceServers) {
-      console.warn("Failed to fetch TURN credentials, using STUN only:", error);
+      console.warn("[WebRTC] Failed to fetch TURN credentials, using STUN only:", error);
       return FALLBACK_ICE_SERVERS;
     }
     return data.iceServers as RTCIceServer[];
   } catch (e) {
-    console.warn("Failed to fetch TURN credentials, using STUN only:", e);
+    console.warn("[WebRTC] Failed to fetch TURN credentials, using STUN only:", e);
     return FALLBACK_ICE_SERVERS;
+  }
+}
+
+/* ───────── Video constraints (low bandwidth) ───────── */
+
+const LOW_VIDEO_CONSTRAINTS: MediaTrackConstraints = {
+  width: { ideal: 640, max: 640 },
+  height: { ideal: 360, max: 360 },
+  frameRate: { ideal: 15, max: 15 },
+  facingMode: "user",
+};
+
+/* ───────── Connection logging helpers ───────── */
+
+function logSelectedCandidatePair(pc: RTCPeerConnection) {
+  try {
+    pc.getStats().then((stats) => {
+      let activePairId: string | null = null;
+
+      stats.forEach((report) => {
+        if (report.type === "transport" && report.selectedCandidatePairId) {
+          activePairId = report.selectedCandidatePairId;
+        }
+      });
+
+      stats.forEach((report) => {
+        if (report.type === "candidate-pair" && (report.nominated || report.id === activePairId)) {
+          const localId = report.localCandidateId;
+          const remoteId = report.remoteCandidateId;
+          let localType = "unknown";
+          let remoteType = "unknown";
+          let localProtocol = "";
+          let remoteProtocol = "";
+
+          stats.forEach((r: any) => {
+            if (r.id === localId) {
+              localType = r.candidateType;
+              localProtocol = r.protocol || "";
+            }
+            if (r.id === remoteId) {
+              remoteType = r.candidateType;
+              remoteProtocol = r.protocol || "";
+            }
+          });
+
+          const useTurn = localType === "relay" || remoteType === "relay";
+          console.log(
+            `[WebRTC] 🔗 Connection: ${useTurn ? "⚠️ TURN (relay)" : "✅ DIRECT (p2p)"}`,
+            {
+              local: `${localType} (${localProtocol})`,
+              remote: `${remoteType} (${remoteProtocol})`,
+              bytesSent: report.bytesSent,
+              bytesReceived: report.bytesReceived,
+            }
+          );
+        }
+      });
+    });
+  } catch (e) {
+    console.warn("[WebRTC] Could not log candidate pair:", e);
   }
 }
 
@@ -73,8 +134,8 @@ export function useWebRTC({
   const isAnsweringRef = useRef(false);
   const cleanedUpRef = useRef(false);
   const iceServersRef = useRef<RTCIceServer[]>(FALLBACK_ICE_SERVERS);
+  const candidatePairLoggedRef = useRef(false);
 
-  // Keep callbacks in refs to avoid stale closures
   const onRemoteStreamRef = useRef(onRemoteStream);
   onRemoteStreamRef.current = onRemoteStream;
   const onCallErrorRef = useRef(onCallError);
@@ -113,22 +174,13 @@ export function useWebRTC({
             noiseSuppression: true,
             autoGainControl: true,
           },
-          video: video
-            ? {
-                width: { ideal: 1280, max: 1920 },
-                height: { ideal: 720, max: 1080 },
-                facingMode: "user",
-              }
-            : false,
+          video: video ? LOW_VIDEO_CONSTRAINTS : false,
         });
 
         console.log("[WebRTC] getUserMedia success:", {
           audioTracks: stream.getAudioTracks().length,
           videoTracks: stream.getVideoTracks().length,
-          audioEnabled: stream.getAudioTracks()[0]?.enabled,
-          audioState: stream.getAudioTracks()[0]?.readyState,
-          videoEnabled: stream.getVideoTracks()[0]?.enabled,
-          videoState: stream.getVideoTracks()[0]?.readyState,
+          videoSettings: stream.getVideoTracks()[0]?.getSettings(),
         });
 
         localStreamRef.current = stream;
@@ -182,19 +234,32 @@ export function useWebRTC({
 
     // Fetch TURN credentials on demand
     iceServersRef.current = await fetchIceServers();
+    candidatePairLoggedRef.current = false;
 
     const pc = new RTCPeerConnection({
       iceServers: iceServersRef.current,
+      // CRITICAL: "all" means STUN is tried first; TURN is only used as fallback
+      iceTransportPolicy: "all",
       iceCandidatePoolSize: 2,
     });
 
     pc.onicecandidate = (event) => {
-      if (event.candidate && channelRef.current) {
-        channelRef.current.send({
-          type: "broadcast",
-          event: "ice-candidate",
-          payload: { candidate: event.candidate.toJSON(), from: userId },
+      if (event.candidate) {
+        const c = event.candidate;
+        console.log("[WebRTC] ICE candidate:", {
+          type: c.type,
+          protocol: c.protocol,
+          address: c.address ? `${c.address.substring(0, 8)}…` : "n/a",
+          relatedAddress: c.relatedAddress ? "yes" : "no",
         });
+
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: "broadcast",
+            event: "ice-candidate",
+            payload: { candidate: event.candidate.toJSON(), from: userId },
+          });
+        }
       }
     };
 
@@ -207,21 +272,9 @@ export function useWebRTC({
         trackId: event.track.id,
         trackEnabled: event.track.enabled,
         trackState: event.track.readyState,
-        streamCount: event.streams.length,
-        streamId: event.streams[0]?.id,
-        audioTracksInStream: event.streams[0]?.getAudioTracks().length,
-        videoTracksInStream: event.streams[0]?.getVideoTracks().length,
       });
 
-      // Add each track to our persistent stream
       persistentRemoteStream.addTrack(event.track);
-
-      console.log("[WebRTC] persistentRemoteStream now has:", {
-        audio: persistentRemoteStream.getAudioTracks().length,
-        video: persistentRemoteStream.getVideoTracks().length,
-      });
-
-      // Update state — always set the same stream object reference
       setRemoteStream(persistentRemoteStream);
       onRemoteStreamRef.current?.(persistentRemoteStream);
     };
@@ -235,6 +288,11 @@ export function useWebRTC({
           setIsConnected(true);
           setCallState("connected");
           clearTimers();
+          // Log which candidate pair won (TURN vs direct)
+          if (!candidatePairLoggedRef.current) {
+            candidatePairLoggedRef.current = true;
+            logSelectedCandidatePair(pc);
+          }
           break;
         case "disconnected":
           setCallState("reconnecting");
@@ -419,7 +477,6 @@ export function useWebRTC({
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
-        // Small delay to ensure channel is subscribed before sending
         await new Promise((r) => setTimeout(r, 500));
 
         channel.send({
@@ -472,7 +529,6 @@ export function useWebRTC({
 
         channel.send(readyPayload);
 
-        // Retry once in case the first ready signal races the subscription
         setTimeout(() => {
           if (!pcRef.current?.remoteDescription) {
             channel.send(readyPayload);
@@ -516,28 +572,20 @@ export function useWebRTC({
     const currentTrack = stream.getVideoTracks()[0];
 
     if (currentTrack && currentTrack.readyState === "live" && currentTrack.enabled) {
-      // Disable: stop the track and remove from stream
       currentTrack.enabled = false;
       currentTrack.stop();
       stream.removeTrack(currentTrack);
       setIsVideoEnabled(false);
       console.log("[WebRTC] Video disabled — track stopped");
     } else {
-      // Enable: get a new video track
       try {
         const newVideoStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 },
-            facingMode: "user",
-          },
+          video: LOW_VIDEO_CONSTRAINTS,
         });
         const newTrack = newVideoStream.getVideoTracks()[0];
 
-        // Add to local stream
         stream.addTrack(newTrack);
 
-        // Replace in peer connection sender
         if (pc) {
           const videoSender = pc.getSenders().find(s => s.track?.kind === "video" || (!s.track && s.replaceTrack));
           if (videoSender) {
@@ -549,7 +597,6 @@ export function useWebRTC({
           }
         }
 
-        // Update the ref so localVideoRef gets correct srcObject
         localStreamRef.current = stream;
         setIsVideoEnabled(true);
         console.log("[WebRTC] Video enabled — new track acquired");
