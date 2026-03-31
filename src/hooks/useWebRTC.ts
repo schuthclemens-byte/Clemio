@@ -72,6 +72,7 @@ export function useWebRTC({
   const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
   const isAnsweringRef = useRef(false);
   const cleanedUpRef = useRef(false);
+  const iceServersRef = useRef<RTCIceServer[]>(FALLBACK_ICE_SERVERS);
 
   // Keep callbacks in refs to avoid stale closures
   const onRemoteStreamRef = useRef(onRemoteStream);
