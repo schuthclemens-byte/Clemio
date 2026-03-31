@@ -25,32 +25,26 @@ interface UseWebRTCOptions {
   onCallError?: (error: CallError) => void;
 }
 
-/* ───────── ICE Servers (STUN + public TURN) ───────── */
+/* ───────── ICE Servers – fetched from edge function ───────── */
 
-const ICE_SERVERS: RTCIceServer[] = [
+const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
-  {
-    urls: "turn:a.relay.metered.ca:80",
-    username: "e8dd65b92fdd354742c3b807",
-    credential: "3jq+CSwVBOkTz06a",
-  },
-  {
-    urls: "turn:a.relay.metered.ca:80?transport=tcp",
-    username: "e8dd65b92fdd354742c3b807",
-    credential: "3jq+CSwVBOkTz06a",
-  },
-  {
-    urls: "turn:a.relay.metered.ca:443",
-    username: "e8dd65b92fdd354742c3b807",
-    credential: "3jq+CSwVBOkTz06a",
-  },
-  {
-    urls: "turns:a.relay.metered.ca:443?transport=tcp",
-    username: "e8dd65b92fdd354742c3b807",
-    credential: "3jq+CSwVBOkTz06a",
-  },
 ];
+
+async function fetchIceServers(): Promise<RTCIceServer[]> {
+  try {
+    const { data, error } = await supabase.functions.invoke("turn-credentials");
+    if (error || !data?.iceServers) {
+      console.warn("Failed to fetch TURN credentials, using STUN only:", error);
+      return FALLBACK_ICE_SERVERS;
+    }
+    return data.iceServers as RTCIceServer[];
+  } catch (e) {
+    console.warn("Failed to fetch TURN credentials, using STUN only:", e);
+    return FALLBACK_ICE_SERVERS;
+  }
+}
 
 const CALL_TIMEOUT_MS = 45_000;
 const RECONNECT_TIMEOUT_MS = 15_000;
@@ -78,6 +72,7 @@ export function useWebRTC({
   const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
   const isAnsweringRef = useRef(false);
   const cleanedUpRef = useRef(false);
+  const iceServersRef = useRef<RTCIceServer[]>(FALLBACK_ICE_SERVERS);
 
   // Keep callbacks in refs to avoid stale closures
   const onRemoteStreamRef = useRef(onRemoteStream);
@@ -180,13 +175,16 @@ export function useWebRTC({
 
   /* ── PeerConnection ── */
 
-  const createPeerConnection = useCallback(() => {
+  const createPeerConnection = useCallback(async () => {
     if (pcRef.current) {
       pcRef.current.close();
     }
 
+    // Fetch TURN credentials on demand
+    iceServersRef.current = await fetchIceServers();
+
     const pc = new RTCPeerConnection({
-      iceServers: ICE_SERVERS,
+      iceServers: iceServersRef.current,
       iceCandidatePoolSize: 2,
     });
 
@@ -414,7 +412,7 @@ export function useWebRTC({
       try {
         const stream = await getLocalStream(video);
         const channel = setupSignaling("caller");
-        const pc = createPeerConnection();
+        const pc = await createPeerConnection();
 
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
@@ -460,7 +458,7 @@ export function useWebRTC({
       try {
         const stream = await getLocalStream(video);
         const channel = setupSignaling("callee");
-        const pc = createPeerConnection();
+        const pc = await createPeerConnection();
 
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
