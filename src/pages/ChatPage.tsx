@@ -889,11 +889,11 @@ const ChatPage = () => {
       return;
     }
 
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = await supabase.storage
       .from("chat-media")
-      .getPublicUrl(filePath);
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7); // 7 days
 
-    const mediaUrl = urlData.publicUrl;
+    const mediaUrl = urlData?.signedUrl || "";
 
     // Optimistic update
     setMessages((prev) => [...prev, {
