@@ -17,7 +17,7 @@ const ImpressumPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">{t("legal.impTitle")}</h1>
+          <h1 className="text-xl font-bold">Impressum</h1>
         </div>
       </header>
 
@@ -28,14 +28,14 @@ const ImpressumPage = () => {
               <Building2 className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">{t("legal.impTitle")}</h2>
-              <p className="text-xs text-muted-foreground">{t("legal.impSubtitle")}</p>
+              <h2 className="text-lg font-bold">Impressum</h2>
+              <p className="text-xs text-muted-foreground">Angaben gemäß § 5 DDG</p>
             </div>
           </div>
         </section>
 
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up">
-          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.impResponsible")}</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">Verantwortlich</h3>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-1">
             <p className="font-medium text-foreground">Clemens Schuth</p>
             <p>Ludwig-Erhard-Allee 3</p>
@@ -45,10 +45,10 @@ const ImpressumPage = () => {
         </section>
 
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "60ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.impContact")}</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">Kontakt</h3>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-1">
             <p>
-              {t("legal.impEmail")}:{" "}
+              E-Mail:{" "}
               <a href="mailto:clemensschuth@outlook.de" className="text-primary font-medium hover:underline">
                 clemensschuth@outlook.de
               </a>
@@ -57,18 +57,37 @@ const ImpressumPage = () => {
         </section>
 
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "120ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.impDisclaimer")}</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">Haftungsausschluss</h3>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
-            <p>{t("legal.impDisclaimerContent")}</p>
-            <p>{t("legal.impDisclaimerLinks")}</p>
+            <p>
+              <strong>Haftung für Inhalte:</strong> Die Inhalte dieser App wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte übernehmen wir jedoch keine Gewähr. Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte in dieser App nach den allgemeinen Gesetzen verantwortlich.
+            </p>
+            <p>
+              <strong>Haftung für Links:</strong> Unsere App enthält ggf. Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft.
+            </p>
           </div>
         </section>
 
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "180ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.impCopyright")}</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">Urheberrecht</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {t("legal.impCopyrightText")}
+            Die durch den Betreiber erstellten Inhalte und Werke in dieser App unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors.
           </p>
+        </section>
+
+        <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "240ms" }}>
+          <h3 className="font-semibold text-[0.938rem] mb-3">Streitschlichtung</h3>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
+            <p>
+              Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:{" "}
+              <a href="https://ec.europa.eu/consumers/odr/" className="text-primary hover:underline" target="_blank" rel="noopener">
+                ec.europa.eu/consumers/odr
+              </a>
+            </p>
+            <p>
+              Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
+            </p>
+          </div>
         </section>
 
         <div className="h-8" />
