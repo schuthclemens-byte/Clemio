@@ -39,6 +39,7 @@ interface Message {
   mediaUrl?: string;
   replyTo?: string;
   uploadProgress?: number;
+  createdAt: string;
 }
 
 interface ReplyTarget {
@@ -160,6 +161,7 @@ const ChatPage = () => {
           : undefined
         : undefined,
     replyTo: m.reply_to || undefined,
+    createdAt: m.created_at,
   }), [user?.id]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -211,13 +213,23 @@ const ChatPage = () => {
   const messageIds = messages.map((m) => m.id);
   const { reactions, toggleReaction } = useMessageReactions(messageIds);
 
-  // Delete message
+  // Delete message (only within 15 min and unread)
   const handleDeleteMessage = async (msgId: string) => {
     const { error } = await supabase.from("messages").delete().eq("id", msgId);
     if (error) {
-      toast.error("Nachricht konnte nicht gelöscht werden");
+      toast.error("Nachricht kann nicht mehr gelöscht werden");
     } else {
       setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    }
+  };
+
+  // Edit message (only within 15 min and unread)
+  const handleEditMessage = async (msgId: string, newContent: string) => {
+    const { error } = await supabase.from("messages").update({ content: newContent }).eq("id", msgId);
+    if (error) {
+      toast.error("Nachricht kann nicht mehr bearbeitet werden");
+    } else {
+      setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, text: newContent } : m));
     }
   };
 
@@ -1148,6 +1160,7 @@ const ChatPage = () => {
                   mediaUrl={msg.mediaUrl}
                   senderId={msg.senderId}
                   msgId={msg.id}
+                  createdAt={msg.createdAt}
                   hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
                   onPlayClonedVoice={playClonedVoice}
                   isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
@@ -1155,6 +1168,7 @@ const ChatPage = () => {
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
+                  onEdit={msg.isMine ? handleEditMessage : undefined}
                   onSaveAsVoiceSample={!msg.isMine ? handleSaveAsVoiceSample : undefined}
                   replyToText={replyMsg?.text}
                   replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
