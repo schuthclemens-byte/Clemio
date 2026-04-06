@@ -329,6 +329,7 @@ export type Database = {
           conversation_id: string
           created_at: string | null
           id: string
+          is_edited: boolean
           is_read: boolean | null
           message_type: string | null
           reply_to: string | null
@@ -339,6 +340,7 @@ export type Database = {
           conversation_id: string
           created_at?: string | null
           id?: string
+          is_edited?: boolean
           is_read?: boolean | null
           message_type?: string | null
           reply_to?: string | null
@@ -349,6 +351,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string | null
           id?: string
+          is_edited?: boolean
           is_read?: boolean | null
           message_type?: string | null
           reply_to?: string | null
