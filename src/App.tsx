@@ -74,6 +74,7 @@ const App = () => (
             <BrowserRouter>
               <IncomingCallOverlay />
               <PushPromptSheet />
+              <AppUpdateBanner />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
