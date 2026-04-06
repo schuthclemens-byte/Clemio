@@ -325,7 +325,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       )}
                     </button>
                   )}
-                  {isMine && msgId && onDelete && (
+                  {canModify && msgId && onEdit && messageType !== "audio" && messageType !== "image" && messageType !== "video" && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setIsEditing(true); setEditText(message); }}
+                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
+                      aria-label="Nachricht bearbeiten"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
+                  {canModify && msgId && onDelete && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onDelete(msgId); }}
                       className="p-1.5 rounded-full bg-destructive/10 text-destructive transition-colors active:scale-90"
