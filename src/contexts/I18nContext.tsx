@@ -95,9 +95,9 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     [strings]
   );
 
-  if (!ready) return null;
-
   const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
+
+  if (!ready) return null;
 
   return (
     <I18nContext.Provider value={value}>
