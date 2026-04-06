@@ -14,6 +14,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CallProvider } from "@/contexts/CallContext";
 import { useAutoPush } from "@/hooks/useAutoPush";
 import { usePresence } from "@/hooks/usePresence";
+import { useCapacitorInit } from "@/hooks/useCapacitorInit";
+import { useNativePush } from "@/hooks/useNativePush";
 import IncomingCallOverlay from "@/components/IncomingCallOverlay";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PushPromptSheet from "@/components/PushPromptSheet";
@@ -50,10 +52,12 @@ const PageLoader = () => (
   </div>
 );
 
-/** Runs presence tracking globally inside AuthProvider context */
+/** Runs presence tracking and native init globally inside AuthProvider context */
 const PresenceTracker = ({ children }: { children: React.ReactNode }) => {
   usePresence();
   useAutoPush();
+  useCapacitorInit();
+  useNativePush();
   return <>{children}</>;
 };
 
