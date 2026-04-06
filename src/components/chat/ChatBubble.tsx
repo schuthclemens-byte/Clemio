@@ -250,8 +250,42 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             </div>
           )}
 
+          {/* Editing mode */}
+          {isEditing && !isMedia && !isAudio && (
+            <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                className={cn(
+                  "text-[0.938rem] leading-relaxed break-words bg-transparent border-none outline-none resize-none w-full min-h-[2.5rem]",
+                  isMine ? "text-chat-mine-foreground" : "text-chat-theirs-foreground"
+                )}
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="text-xs px-2.5 py-1 rounded-full bg-secondary text-muted-foreground"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={() => {
+                    if (editText.trim() && editText !== message && msgId && onEdit) {
+                      onEdit(msgId, editText.trim());
+                    }
+                    setIsEditing(false);
+                  }}
+                  className="text-xs px-2.5 py-1 rounded-full bg-primary text-primary-foreground"
+                >
+                  Speichern
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Text */}
-          {message && !isMedia && !isAudio && (() => {
+          {message && !isMedia && !isAudio && !isEditing && (() => {
             const isLong = compactMode && displayText.length > 120 && !expanded;
             const truncated = isLong ? displayText.slice(0, 120) + "…" : displayText;
             return (
