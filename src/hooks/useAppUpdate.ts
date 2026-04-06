@@ -33,7 +33,6 @@ function compareSemver(a: string, b: string): number {
 }
 
 function getPlatform(): string {
-  // Detect Capacitor native platform
   const w = window as any;
   if (w.Capacitor?.getPlatform) {
     const p = w.Capacitor.getPlatform();
@@ -42,8 +41,24 @@ function getPlatform(): string {
   return "web";
 }
 
+/** Try to read the native app version via Capacitor App plugin */
+async function getNativeVersion(): Promise<string> {
+  try {
+    const w = window as any;
+    if (w.Capacitor?.getPlatform && w.Capacitor.getPlatform() !== "web") {
+      const { App } = await import("@capacitor/app");
+      const info = await App.getInfo();
+      return info.version; // e.g. "1.0.0"
+    }
+  } catch {
+    // Not running in native context
+  }
+  return APP_VERSION;
+}
+
 export const useAppUpdate = () => {
   const { user } = useAuth();
+  const [currentVersion, setCurrentVersion] = useState(APP_VERSION);
   const [update, setUpdate] = useState<UpdateInfo>({
     available: false,
     forceUpdate: false,
@@ -52,6 +67,11 @@ export const useAppUpdate = () => {
     storeUrl: null,
   });
   const [dismissed, setDismissed] = useState(false);
+
+  // Read native version on mount
+  useEffect(() => {
+    getNativeVersion().then(setCurrentVersion);
+  }, []);
 
   const checkForUpdate = useCallback(async () => {
     if (!user) return;
@@ -68,7 +88,7 @@ export const useAppUpdate = () => {
 
     if (error || !data) return;
 
-    const isNewer = compareSemver(data.version, APP_VERSION) > 0;
+    const isNewer = compareSemver(data.version, currentVersion) > 0;
 
     setUpdate({
       available: isNewer,
@@ -78,20 +98,17 @@ export const useAppUpdate = () => {
       storeUrl: data.store_url ?? null,
     });
 
-    // If force update, never allow dismissal
     if (isNewer && data.force_update) {
       setDismissed(false);
     }
-  }, [user]);
+  }, [user, currentVersion]);
 
-  // Check on mount and every 30 minutes
   useEffect(() => {
     checkForUpdate();
     const interval = setInterval(checkForUpdate, 30 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkForUpdate]);
 
-  // Restore dismissed state (with 24h cooldown)
   useEffect(() => {
     const raw = localStorage.getItem(DISMISSED_KEY);
     if (raw) {
@@ -105,7 +122,7 @@ export const useAppUpdate = () => {
   }, []);
 
   const dismiss = useCallback(() => {
-    if (update.forceUpdate) return; // Cannot dismiss force updates
+    if (update.forceUpdate) return;
     setDismissed(true);
     localStorage.setItem(DISMISSED_KEY, Date.now().toString());
   }, [update.forceUpdate]);
@@ -120,6 +137,7 @@ export const useAppUpdate = () => {
 
   return {
     ...update,
+    currentVersion,
     showBanner,
     dismiss,
     openStore,
