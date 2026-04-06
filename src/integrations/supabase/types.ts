@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_versions: {
+        Row: {
+          changelog: string | null
+          created_at: string
+          force_update: boolean
+          id: string
+          platform: string
+          store_url: string | null
+          version: string
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string
+          force_update?: boolean
+          id?: string
+          platform?: string
+          store_url?: string | null
+          version: string
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string
+          force_update?: boolean
+          id?: string
+          platform?: string
+          store_url?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           answered_at: string | null
