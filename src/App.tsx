@@ -17,6 +17,7 @@ import { usePresence } from "@/hooks/usePresence";
 import IncomingCallOverlay from "@/components/IncomingCallOverlay";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PushPromptSheet from "@/components/PushPromptSheet";
+import AppUpdateBanner from "@/components/AppUpdateBanner";
 
 // Eagerly loaded (critical path)
 import Index from "./pages/Index";
