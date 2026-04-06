@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startRingtone, stopRingtone } from "@/lib/sounds";
@@ -430,8 +430,12 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     setActiveCall(null);
   }, [activeCall, user, stopRinging, clearCallTimeout, insertCallSystemMessage]);
 
+  const value = useMemo(() => ({
+    incomingCall, activeCall, startCall: startCallFn, acceptCall: acceptCallFn, declineCall: declineCallFn, endCall: endCallFn
+  }), [incomingCall, activeCall, startCallFn, acceptCallFn, declineCallFn, endCallFn]);
+
   return (
-    <CallContext.Provider value={{ incomingCall, activeCall, startCall: startCallFn, acceptCall: acceptCallFn, declineCall: declineCallFn, endCall: endCallFn }}>
+    <CallContext.Provider value={value}>
       {children}
     </CallContext.Provider>
   );
