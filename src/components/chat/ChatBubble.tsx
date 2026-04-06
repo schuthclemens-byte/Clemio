@@ -1,4 +1,4 @@
-import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2 } from "lucide-react";
+import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -27,10 +27,12 @@ interface ChatBubbleProps {
   isPlayingCloned?: boolean;
   isLoadingCloned?: boolean;
   msgId?: string;
+  createdAt?: string;
   hasClonedVoice?: boolean;
   reactions?: Reaction[];
   onToggleReaction?: (msgId: string, emoji: string) => void;
   onDelete?: (msgId: string) => void;
+  onEdit?: (msgId: string, newContent: string) => void;
   onSaveAsVoiceSample?: (audioUrl: string, senderId: string) => void;
   replyToText?: string;
   replyToSender?: string;
