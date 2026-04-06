@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo, ReactNode } from "react";
 import de from "@/i18n/de";
 
 export type Locale = "de" | "en" | "es" | "fr" | "tr" | "ar";
@@ -97,8 +97,10 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
 
   if (!ready) return null;
 
+  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
+
   return (
-    <I18nContext.Provider value={{ locale, setLocale, t }}>
+    <I18nContext.Provider value={value}>
       {children}
     </I18nContext.Provider>
   );
