@@ -256,6 +256,7 @@ const ChatPage = () => {
         messageType: "audio",
         uploadProgress: 0,
         createdAt: now.toISOString(),
+        isEdited: false,
       },
     ]);
 
@@ -821,7 +822,7 @@ const ChatPage = () => {
     // Optimistic update
     const tempId = crypto.randomUUID();
     const ts = formatMessageTimestamp(new Date());
-    const optimisticMsg: Message = { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id, createdAt: new Date().toISOString() };
+    const optimisticMsg: Message = { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id, createdAt: new Date().toISOString(), isEdited: false };
     setMessages((prev) => [...prev, optimisticMsg]);
 
     // Insert into DB
@@ -921,6 +922,7 @@ const ChatPage = () => {
       messageType: type,
       mediaUrl,
       createdAt: new Date().toISOString(),
+      isEdited: false,
     }]);
 
     // Insert message with media URL as content
