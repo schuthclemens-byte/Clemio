@@ -40,6 +40,7 @@ interface Message {
   replyTo?: string;
   uploadProgress?: number;
   createdAt: string;
+  isEdited: boolean;
 }
 
 interface ReplyTarget {
@@ -162,6 +163,7 @@ const ChatPage = () => {
         : undefined,
     replyTo: m.reply_to || undefined,
     createdAt: m.created_at,
+    isEdited: m.is_edited ?? false,
   }), [user?.id]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -225,11 +227,11 @@ const ChatPage = () => {
 
   // Edit message (only within 15 min and unread)
   const handleEditMessage = async (msgId: string, newContent: string) => {
-    const { error } = await supabase.from("messages").update({ content: newContent }).eq("id", msgId);
+    const { error } = await supabase.from("messages").update({ content: newContent, is_edited: true }).eq("id", msgId);
     if (error) {
       toast.error("Nachricht kann nicht mehr bearbeitet werden");
     } else {
-      setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, text: newContent } : m));
+      setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, text: newContent, isEdited: true } : m));
     }
   };
 
@@ -1163,6 +1165,7 @@ const ChatPage = () => {
                   senderId={msg.senderId}
                   msgId={msg.id}
                   createdAt={msg.createdAt}
+                  isEdited={msg.isEdited}
                   hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
                   onPlayClonedVoice={playClonedVoice}
                   isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
