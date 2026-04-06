@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from "react";
 
 interface AccessibilitySettings {
   dyslexiaFont: boolean;
@@ -110,8 +110,12 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
     return currentMinutes >= startMinutes || currentMinutes < endMinutes;
   }, [settings.smartSilence, settings.quietHoursStart, settings.quietHoursEnd]);
 
+  const value = useMemo(() => ({
+    ...settings, toggle, setSpeechRate, setQuietHours, isQuietTime
+  }), [settings, toggle, setSpeechRate, setQuietHours, isQuietTime]);
+
   return (
-    <AccessibilityContext.Provider value={{ ...settings, toggle, setSpeechRate, setQuietHours, isQuietTime }}>
+    <AccessibilityContext.Provider value={value}>
       {children}
     </AccessibilityContext.Provider>
   );

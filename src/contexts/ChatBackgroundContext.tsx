@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback, useMemo } from "react";
 
 export interface ChatBackground {
   type: "none" | "gradient" | "color" | "image" | "animated";
@@ -90,8 +90,12 @@ export const ChatBackgroundProvider = ({ children }: { children: ReactNode }) =>
     localStorage.removeItem(PER_CHAT_KEY + chatId);
   }, []);
 
+  const value = useMemo(() => ({
+    globalBackground, setGlobalBackground, getChatBackground, setChatBackground, clearChatBackground
+  }), [globalBackground, setGlobalBackground, getChatBackground, setChatBackground, clearChatBackground]);
+
   return (
-    <ChatBackgroundContext.Provider value={{ globalBackground, setGlobalBackground, getChatBackground, setChatBackground, clearChatBackground }}>
+    <ChatBackgroundContext.Provider value={value}>
       {children}
     </ChatBackgroundContext.Provider>
   );

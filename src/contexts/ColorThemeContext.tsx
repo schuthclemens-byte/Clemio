@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from "react";
 
 export type ColorTheme = "sunset" | "ocean" | "forest" | "lavender" | "neon" | "rose" | "midnight";
 
@@ -157,10 +157,10 @@ export const ColorThemeProvider = ({ children }: { children: ReactNode }) => {
     return (localStorage.getItem("clemio-color-theme") as ColorTheme) || "sunset";
   });
 
-  const setColorTheme = (t: ColorTheme) => {
+  const setColorTheme = useCallback((t: ColorTheme) => {
     setColorThemeState(t);
     localStorage.setItem("clemio-color-theme", t);
-  };
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -192,8 +192,10 @@ export const ColorThemeProvider = ({ children }: { children: ReactNode }) => {
     return () => observer.disconnect();
   }, [colorTheme]);
 
+  const value = useMemo(() => ({ colorTheme, setColorTheme }), [colorTheme, setColorTheme]);
+
   return (
-    <ColorThemeContext.Provider value={{ colorTheme, setColorTheme }}>
+    <ColorThemeContext.Provider value={value}>
       {children}
     </ColorThemeContext.Provider>
   );

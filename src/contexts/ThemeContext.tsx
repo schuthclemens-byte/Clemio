@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -26,10 +26,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
 
-  const setTheme = (t: Theme) => {
+  const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
     localStorage.setItem("clemio-theme", t);
-  };
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -46,8 +46,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     return () => mq.removeEventListener("change", handler);
   }, [theme]);
 
+  const value = useMemo(() => ({ theme, setTheme, resolvedTheme }), [theme, setTheme, resolvedTheme]);
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
