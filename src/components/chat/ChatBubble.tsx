@@ -37,6 +37,7 @@ interface ChatBubbleProps {
   replyToText?: string;
   replyToSender?: string;
   uploadProgress?: number;
+  isEdited?: boolean;
 }
 
 /** Animated wave bars shown during playback */
@@ -52,7 +53,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress, isEdited }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -398,6 +399,9 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                 isMine ? "text-chat-mine-foreground/60" : "text-muted-foreground"
               )}
             >
+              {isEdited && (
+                <span className="italic mr-1">{t("chat.edited") || "bearbeitet"}</span>
+              )}
               {timestamp}
               {isMine && (
                 isRead ? (

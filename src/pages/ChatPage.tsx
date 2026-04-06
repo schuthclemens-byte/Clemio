@@ -40,6 +40,7 @@ interface Message {
   replyTo?: string;
   uploadProgress?: number;
   createdAt: string;
+  isEdited: boolean;
 }
 
 interface ReplyTarget {
@@ -162,6 +163,7 @@ const ChatPage = () => {
         : undefined,
     replyTo: m.reply_to || undefined,
     createdAt: m.created_at,
+    isEdited: m.is_edited ?? false,
   }), [user?.id]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -225,11 +227,11 @@ const ChatPage = () => {
 
   // Edit message (only within 15 min and unread)
   const handleEditMessage = async (msgId: string, newContent: string) => {
-    const { error } = await supabase.from("messages").update({ content: newContent }).eq("id", msgId);
+    const { error } = await supabase.from("messages").update({ content: newContent, is_edited: true }).eq("id", msgId);
     if (error) {
       toast.error("Nachricht kann nicht mehr bearbeitet werden");
     } else {
-      setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, text: newContent } : m));
+      setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, text: newContent, isEdited: true } : m));
     }
   };
 
@@ -254,6 +256,7 @@ const ChatPage = () => {
         messageType: "audio",
         uploadProgress: 0,
         createdAt: now.toISOString(),
+        isEdited: false,
       },
     ]);
 
@@ -819,7 +822,7 @@ const ChatPage = () => {
     // Optimistic update
     const tempId = crypto.randomUUID();
     const ts = formatMessageTimestamp(new Date());
-    const optimisticMsg: Message = { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id, createdAt: new Date().toISOString() };
+    const optimisticMsg: Message = { id: tempId, text, timestamp: ts, isMine: true, isRead: false, senderId: user.id, messageType: "text", replyTo: replyTarget?.id, createdAt: new Date().toISOString(), isEdited: false };
     setMessages((prev) => [...prev, optimisticMsg]);
 
     // Insert into DB
@@ -919,6 +922,7 @@ const ChatPage = () => {
       messageType: type,
       mediaUrl,
       createdAt: new Date().toISOString(),
+      isEdited: false,
     }]);
 
     // Insert message with media URL as content
@@ -1163,6 +1167,7 @@ const ChatPage = () => {
                   senderId={msg.senderId}
                   msgId={msg.id}
                   createdAt={msg.createdAt}
+                  isEdited={msg.isEdited}
                   hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
                   onPlayClonedVoice={playClonedVoice}
                   isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
