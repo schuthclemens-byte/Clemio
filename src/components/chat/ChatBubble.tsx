@@ -1,4 +1,4 @@
-import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2 } from "lucide-react";
+import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -27,10 +27,12 @@ interface ChatBubbleProps {
   isPlayingCloned?: boolean;
   isLoadingCloned?: boolean;
   msgId?: string;
+  createdAt?: string;
   hasClonedVoice?: boolean;
   reactions?: Reaction[];
   onToggleReaction?: (msgId: string, emoji: string) => void;
   onDelete?: (msgId: string) => void;
+  onEdit?: (msgId: string, newContent: string) => void;
   onSaveAsVoiceSample?: (audioUrl: string, senderId: string) => void;
   replyToText?: string;
   replyToSender?: string;
@@ -50,7 +52,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -61,9 +63,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const [showActions, setShowActions] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showVoiceSaveConfirm, setShowVoiceSaveConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message);
   const prevSpeaking = useRef(false);
 
   const isUploading = typeof uploadProgress === "number";
+
+  // Check if message can still be edited/deleted (within 15 min and unread)
+  const canModify = isMine && !isRead && createdAt
+    ? (Date.now() - new Date(createdAt).getTime()) < 15 * 60 * 1000
+    : false;
 
   const isMedia = messageType === "image" || messageType === "video";
   const isAudio = messageType === "audio";
@@ -241,8 +250,42 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             </div>
           )}
 
+          {/* Editing mode */}
+          {isEditing && !isMedia && !isAudio && (
+            <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                className={cn(
+                  "text-[0.938rem] leading-relaxed break-words bg-transparent border-none outline-none resize-none w-full min-h-[2.5rem]",
+                  isMine ? "text-chat-mine-foreground" : "text-chat-theirs-foreground"
+                )}
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="text-xs px-2.5 py-1 rounded-full bg-secondary text-muted-foreground"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={() => {
+                    if (editText.trim() && editText !== message && msgId && onEdit) {
+                      onEdit(msgId, editText.trim());
+                    }
+                    setIsEditing(false);
+                  }}
+                  className="text-xs px-2.5 py-1 rounded-full bg-primary text-primary-foreground"
+                >
+                  Speichern
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Text */}
-          {message && !isMedia && !isAudio && (() => {
+          {message && !isMedia && !isAudio && !isEditing && (() => {
             const isLong = compactMode && displayText.length > 120 && !expanded;
             const truncated = isLong ? displayText.slice(0, 120) + "…" : displayText;
             return (
@@ -316,7 +359,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       )}
                     </button>
                   )}
-                  {isMine && msgId && onDelete && (
+                  {canModify && msgId && onEdit && messageType !== "audio" && messageType !== "image" && messageType !== "video" && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setIsEditing(true); setEditText(message); }}
+                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
+                      aria-label="Nachricht bearbeiten"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
+                  {canModify && msgId && onDelete && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onDelete(msgId); }}
                       className="p-1.5 rounded-full bg-destructive/10 text-destructive transition-colors active:scale-90"
