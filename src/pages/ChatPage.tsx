@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2 } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -25,6 +25,9 @@ import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useMessageReactions } from "@/hooks/useMessageReactions";
 import { toast } from "sonner";
 import EditContactNameDialog from "@/components/chat/EditContactNameDialog";
+import GroupMembersSheet from "@/components/chat/GroupMembersSheet";
+import MediaGallerySheet from "@/components/chat/MediaGallerySheet";
+import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 
@@ -146,6 +149,11 @@ const ChatPage = () => {
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [showEditName, setShowEditName] = useState(false);
   const [contactAlias, setContactAlias] = useState<{ firstName: string; lastName: string } | null>(null);
+  const [creatorId, setCreatorId] = useState<string>("");
+  const [showGroupMembers, setShowGroupMembers] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
+  const [showChatMenu, setShowChatMenu] = useState(false);
 
   const mapDbMessage = useCallback((m: any): Message => ({
     id: m.id,
@@ -380,6 +388,7 @@ const ChatPage = () => {
       if (!conv) { navigate("/chats"); return; }
 
       setIsGroup(conv.is_group ?? false);
+      setCreatorId(conv.created_by || "");
       const members = membersRes.data;
 
       // Process messages immediately so UI renders fast
@@ -1003,7 +1012,7 @@ const ChatPage = () => {
           <div className="flex-1 min-w-0">
             <h2
               className="font-semibold text-base truncate cursor-pointer hover:text-primary transition-colors"
-              onClick={() => !isGroup && setShowEditName(true)}
+              onClick={() => isGroup ? setShowGroupMembers(true) : setShowEditName(true)}
               title={!isGroup ? "Name bearbeiten" : undefined}
             >
               {chatName}
@@ -1047,6 +1056,33 @@ const ChatPage = () => {
           >
             <Video className="w-5 h-5 text-muted-foreground" />
           </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowChatMenu(!showChatMenu)}
+              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
+              aria-label="Menü"
+            >
+              <MoreVertical className="w-5 h-5 text-muted-foreground" />
+            </button>
+            {showChatMenu && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-1 animate-fade-in">
+                {isGroup && (
+                  <button
+                    onClick={() => { setShowChatMenu(false); setShowGroupMembers(true); }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2"
+                  >
+                    <Users className="w-4 h-4" /> Mitglieder
+                  </button>
+                )}
+                <button
+                  onClick={() => { setShowChatMenu(false); setShowMediaGallery(true); }}
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2"
+                >
+                  <ImageIcon className="w-4 h-4" /> Medien
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1174,6 +1210,7 @@ const ChatPage = () => {
                   isLoadingCloned={playingMsgId === msg.id && isLoadingCloned}
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
+                  onForward={(content, type) => setForwardMsg({ content, type })}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
                   onEdit={msg.isMine ? handleEditMessage : undefined}
                   onSaveAsVoiceSample={!msg.isMine ? handleSaveAsVoiceSample : undefined}
@@ -1252,6 +1289,34 @@ const ChatPage = () => {
           onSave={handleSaveContactName}
         />
       )}
+
+      {/* Group members sheet */}
+      {isGroup && conversationId && (
+        <GroupMembersSheet
+          open={showGroupMembers}
+          onClose={() => setShowGroupMembers(false)}
+          conversationId={conversationId}
+          creatorId={creatorId}
+          onLeft={() => { setShowGroupMembers(false); navigate("/chats"); }}
+        />
+      )}
+
+      {/* Media gallery */}
+      {conversationId && (
+        <MediaGallerySheet
+          open={showMediaGallery}
+          onClose={() => setShowMediaGallery(false)}
+          conversationId={conversationId}
+        />
+      )}
+
+      {/* Forward message dialog */}
+      <ForwardMessageDialog
+        open={!!forwardMsg}
+        onClose={() => setForwardMsg(null)}
+        messageContent={forwardMsg?.content || ""}
+        messageType={forwardMsg?.type}
+      />
     </div>
   );
 };

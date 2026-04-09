@@ -1,4 +1,4 @@
-import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2, Pencil } from "lucide-react";
+import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2, Pencil, Forward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -38,6 +38,7 @@ interface ChatBubbleProps {
   replyToSender?: string;
   uploadProgress?: number;
   isEdited?: boolean;
+  onForward?: (content: string, messageType: string) => void;
 }
 
 /** Animated wave bars shown during playback */
@@ -53,7 +54,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress, isEdited }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress, isEdited, onForward }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -376,6 +377,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       aria-label="Nachricht löschen"
                     >
                       <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  {/* Forward button */}
+                  {onForward && message && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onForward(message, messageType || "text"); }}
+                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
+                      aria-label="Weiterleiten"
+                    >
+                      <Forward className="w-4 h-4" />
                     </button>
                   )}
                   {/* Save voice message as voice sample for this contact */}
