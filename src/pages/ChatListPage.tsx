@@ -9,7 +9,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
+import { fetchAccessibleProfiles, searchAccessibleProfiles } from "@/lib/accessibleProfiles";
 
 interface ConversationItem {
   id: string;
