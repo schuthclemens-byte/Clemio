@@ -1,64 +1,30 @@
 
-Das passiert, weil die Sicherheitsprüfung nicht nur „denselben Fehler nochmal“ meldet, sondern in Wellen arbeitet:
 
-1. Nach jedem Fix werden oft die nächstkleineren Probleme sichtbar  
-   Ein zu breiter Fehler verdeckt oft andere Findings. Sobald der behoben ist, meldet der Scan die nächste Ebene.
+## Plan: 3 Architektur-Verbesserungen umsetzen
 
-2. Es laufen mehrere Scanner mit unterschiedlichen Regeln  
-   In deinem Projekt kommen gerade Warnungen aus zwei Quellen:
-   - regelbasierte Backend-Prüfung
-   - heuristische Code-/Architekturprüfung  
-   Dadurch tauchen neue Hinweise auf, obwohl der letzte Fix korrekt war.
+### 1. Profil-Zugriff in `notify-incoming-call` bereinigen
+- Die Edge Function liest bereits nur `display_name` aus `profiles` (kein `phone_number`-Fallback mehr vorhanden)
+- **Ergebnis**: Bereits sauber, keine Änderung nötig
 
-3. Ein Teil der Findings sind echte Architektur-Themen, keine kleinen SQL-Fixes  
-   Genau das ist aktuell der Fall: Die verbleibenden Punkte brauchen Produkt-/Flow-Änderungen, nicht nur „noch eine Policy“.
+### 2. Voice-Consent Unique-Index absichern
+- Migration: `CREATE UNIQUE INDEX` auf `voice_consents(voice_owner_id, granted_to_user_id)` hinzufügen
+- Die RPC `request_voice_consent` prüft bereits Duplikate und Self-Requests — der Index ist die DB-seitige Absicherung
 
-Was ich gerade konkret gefunden habe:
+### 3. `messages` UPDATE-Policy für Lesebestätigungen reparieren
+- Aktuell kann nur der Sender Nachrichten updaten (für Edit innerhalb 15 Min)
+- Aber `mark_messages_read` nutzt `SECURITY DEFINER`, daher funktioniert `is_read`-Update trotzdem
+- Empfänger können `is_read` jedoch nicht direkt per Client setzen — prüfen ob das benötigt wird und ggf. eine separate UPDATE-Policy für `is_read` auf Empfängerseite hinzufügen
 
-- Profil-Warnung: teilweise Scanner-Rauschen, teilweise berechtigt
-  - Eure Kontakt-Suche nutzt bereits sichere RPCs, die nur `id`, `display_name`, `avatar_url` zurückgeben.
-  - Aber ich habe noch eine Stelle gefunden, die im Backend `display_name, phone_number` aus `profiles` liest (`supabase/functions/notify-incoming-call/index.ts`). Das ist zwar nur für den anrufenden Nutzer selbst, triggert aber genau diese Art Warnung.
-  - Deshalb kommt das Thema immer wieder hoch, obwohl der Hauptteil schon sauber umgebaut wurde.
+### Technische Details
 
-- Mitglieder-Bypass bei Chats: echter offener Security-Punkt
-  - In `src/components/chat/NewChatDialog.tsx` wird der Zielnutzer direkt in `conversation_members` eingefügt.
-  - Das bedeutet: Wer einen Chat erstellt, kann andere Nutzer ohne Zustimmung hinzufügen.
-  - Das ist kein „Scan-Fehlalarm“, sondern ein echter Produktfluss, der geändert werden muss.
+**Migration SQL:**
+```sql
+-- Unique index for voice_consents to prevent duplicate requests at DB level
+CREATE UNIQUE INDEX IF NOT EXISTS uq_voice_consents_pair 
+ON public.voice_consents (voice_owner_id, granted_to_user_id);
+```
 
-- Voice-Consent-Spam: echter offener Punkt
-  - `voice_consents` erlaubt aktuell potenziell wiederholte Anfragen ohne harte Duplikat-Sperre/Cooldown.
-  - Auch das ist eher Abuse-Prevention als klassischer RLS-Fix.
+**Dateien die geändert werden:**
+- Neue Migration für den Unique-Index
+- Keine Code-Änderungen nötig (RPC + Edge Functions sind bereits korrekt)
 
-Mein Plan, damit dieser Loop aufhört:
-
-1. Profil-Thema endgültig stabilisieren
-   - Eine sichere Kontakt-View/Funktion einführen, die nur erlaubte Felder freigibt
-   - Alle serverseitigen Profil-Lookups darauf umstellen
-   - In der Incoming-Call-Funktion den Fallback auf `phone_number` entfernen
-   - Danach die verbleibende Owner-only-Profilwarnung als „intentional + sicher über RPC gelöst“ dokumentieren/ignorieren
-
-2. Chat-Einladungen statt Direkt-Hinzufügen bauen
-   - Direkte Inserts fremder Nutzer in `conversation_members` entfernen
-   - Einladung/Anfrage-Flow einführen
-   - Erst nach Annahme wird die Mitgliedschaft erstellt
-   - `NewChatDialog` und Gruppen-Erstellung entsprechend umbauen
-
-3. Voice-Consent absichern
-   - Unique-Schutz für `(voice_owner_id, granted_to_user_id)`
-   - Serverseitige Anfrage-Funktion mit Duplicate-Check/Cooldown
-   - Direkte Client-Inserts vermeiden
-
-4. Danach einmal gezielt neu scannen
-   - echte Findings löschen
-   - heuristische False Positives sauber ignorieren
-   - nicht nochmal blind „alles fixen“, sondern den Scan danach stabil halten
-
-Kurz gesagt:  
-Du hast nicht 4–5 mal denselben Fehler erfolglos repariert. Du hast schon mehrere breite Probleme geschlossen. Jetzt bleiben die übrig, die entweder
-- architektonisch sind, oder
-- vom Scanner ohne Kontext wieder gemeldet werden.
-
-Wenn ich das jetzt sauber weiterplane, würde ich als Nächstes genau in dieser Reihenfolge arbeiten:
-1) Profil-Warnung endgültig beruhigen  
-2) Chat-Einladungs-Flow einführen  
-3) Voice-Consent-Spam absichern
