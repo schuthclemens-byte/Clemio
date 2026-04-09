@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, Search, Plus, MessageSquare, Phone, X } from "lucide-react";
+import { Settings, Search, Plus, MessageSquare, Phone, X, UserPlus } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
 import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
@@ -9,7 +9,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
+import { fetchAccessibleProfiles, searchAccessibleProfiles } from "@/lib/accessibleProfiles";
 
 interface ConversationItem {
   id: string;
@@ -38,6 +38,9 @@ const ChatListPage = () => {
   const [showNewChat, setShowNewChat] = useState(false);
   const [messageResults, setMessageResults] = useState<MessageSearchResult[]>([]);
   const [searchingMessages, setSearchingMessages] = useState(false);
+  const [contactResults, setContactResults] = useState<{ id: string; display_name: string | null; avatar_url?: string | null }[]>([]);
+  const [searchingContacts, setSearchingContacts] = useState(false);
+  const [startingChatWith, setStartingChatWith] = useState<string | null>(null);
   const fetchingRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
 
@@ -264,6 +267,68 @@ const ChatListPage = () => {
     setSearchingMessages(false);
   }, [user, conversations]);
 
+  // Search contacts (profiles not yet in a chat with me)
+  const searchContacts = useCallback(async (query: string) => {
+    if (!user || query.length < 2) {
+      setContactResults([]);
+      return;
+    }
+    setSearchingContacts(true);
+    const results = await searchAccessibleProfiles(query.trim());
+    // Exclude self and people who already appear in filtered chat list
+    const existingNames = new Set(conversations.map((c) => c.name.toLowerCase()));
+    const filtered = results.filter(
+      (r) => r.id !== user.id && !existingNames.has((r.display_name || "").toLowerCase())
+    );
+    setContactResults(filtered);
+    setSearchingContacts(false);
+  }, [user, conversations]);
+
+  // Start or find existing 1:1 chat with a contact
+  const handleStartChatFromSearch = async (target: { id: string; display_name: string | null }) => {
+    if (!user || startingChatWith) return;
+    setStartingChatWith(target.id);
+
+    try {
+      // Check for existing 1:1 conversation
+      const [myRes, theirRes] = await Promise.all([
+        supabase.from("conversation_members").select("conversation_id").eq("user_id", user.id),
+        supabase.from("conversation_members").select("conversation_id").eq("user_id", target.id),
+      ]);
+
+      const myIds = new Set((myRes.data ?? []).map((m) => m.conversation_id));
+      const sharedIds = (theirRes.data ?? []).map((m) => m.conversation_id).filter((id) => myIds.has(id));
+
+      if (sharedIds.length > 0) {
+        const { data: existing } = await supabase
+          .from("conversations")
+          .select("id")
+          .in("id", sharedIds)
+          .eq("is_group", false)
+          .limit(1)
+          .maybeSingle();
+        if (existing?.id) {
+          setSearch("");
+          navigate(`/chat/${existing.id}`);
+          return;
+        }
+      }
+
+      // Create new conversation
+      const convId = crypto.randomUUID();
+      await supabase.from("conversations").insert({ id: convId, created_by: user.id, is_group: false });
+      await supabase.from("conversation_members").insert({ conversation_id: convId, user_id: user.id });
+      await supabase.from("conversation_members").insert({ conversation_id: convId, user_id: target.id });
+      setSearch("");
+      navigate(`/chat/${convId}`);
+    } catch (err) {
+      console.error("[ChatListPage] start chat failed", err);
+      toast.error("Chat konnte nicht gestartet werden");
+    } finally {
+      setStartingChatWith(null);
+    }
+  };
+
   useEffect(() => {
     if (!user || lastUserIdRef.current === user.id) return;
     lastUserIdRef.current = user.id;
@@ -306,17 +371,19 @@ const ChatListPage = () => {
     };
   }, [user]);
 
-  // Debounced message search
+  // Debounced message + contact search
   useEffect(() => {
     const timer = setTimeout(() => {
       if (search.length >= 2) {
         searchMessages(search);
+        searchContacts(search);
       } else {
         setMessageResults([]);
+        setContactResults([]);
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, searchMessages]);
+  }, [search, searchMessages, searchContacts]);
 
   const filtered = conversations.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -460,7 +527,44 @@ const ChatListPage = () => {
               </>
             )}
 
-            {filtered.length === 0 && messageResults.length === 0 && !searchingMessages && (
+            {/* Contact search results - people not yet in a chat */}
+            {search.length >= 2 && (
+              <>
+                <div className="px-5 pt-4 pb-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Kontakte
+                    {searchingContacts && (
+                      <span className="ml-2 inline-block w-3 h-3 border border-primary/30 border-t-primary rounded-full animate-spin align-middle" />
+                    )}
+                  </p>
+                </div>
+                {contactResults.length > 0 ? (
+                  contactResults.map((contact) => (
+                    <button
+                      key={contact.id}
+                      onClick={() => handleStartChatFromSearch(contact)}
+                      disabled={startingChatWith === contact.id}
+                      className="w-full flex items-center gap-3 px-5 py-3 hover:bg-secondary/50 active:bg-secondary/70 transition-colors text-left disabled:opacity-50"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <UserPlus className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{contact.display_name || "Nutzer"}</p>
+                        <p className="text-xs text-muted-foreground">Tippen zum Chatten</p>
+                      </div>
+                      {startingChatWith === contact.id && (
+                        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0" />
+                      )}
+                    </button>
+                  ))
+                ) : !searchingContacts ? (
+                  <p className="px-5 py-4 text-sm text-muted-foreground">Keine weiteren Kontakte gefunden</p>
+                ) : null}
+              </>
+            )}
+
+            {filtered.length === 0 && messageResults.length === 0 && contactResults.length === 0 && !searchingMessages && !searchingContacts && (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <p className="text-sm">{search ? "Keine Ergebnisse" : t("chat.noChats")}</p>
                 {!search && (
