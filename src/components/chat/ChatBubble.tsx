@@ -56,7 +56,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, uploadProgress, isEdited, onForward }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -149,7 +149,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     <>
     <PaywallGate />
     <div className={cn("flex w-full mb-3", isMine ? "justify-end" : "justify-start")}>
-      <div className={cn("max-w-[80%] animate-reveal-up")}>
+      <div data-msg-id={msgId} className={cn("max-w-[80%] animate-reveal-up")}>
         {!isMine && senderName && (
           <span className="text-xs font-medium text-muted-foreground ml-3 mb-0.5 block">
             {senderName}
@@ -182,10 +182,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
 
           {/* Reply quote */}
           {replyToText && replyToSender && (
-            <div className={cn(
-              "flex gap-2 mb-2 rounded-lg px-2.5 py-1.5 text-xs",
-              isMine ? "bg-chat-mine-foreground/10" : "bg-primary/10"
-            )}>
+            <div
+              className={cn(
+                "flex gap-2 mb-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer active:opacity-70 transition-opacity",
+                isMine ? "bg-chat-mine-foreground/10" : "bg-primary/10"
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (replyToId && onScrollToMessage) onScrollToMessage(replyToId);
+              }}
+            >
               <div className={cn("w-0.5 rounded-full shrink-0", isMine ? "bg-chat-mine-foreground/40" : "bg-primary")} />
               <div className="min-w-0">
                 <p className={cn("font-semibold", isMine ? "text-chat-mine-foreground/80" : "text-primary")}>{replyToSender}</p>
