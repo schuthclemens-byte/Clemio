@@ -1219,6 +1219,8 @@ const ChatPage = () => {
                   onSaveAsVoiceSample={!msg.isMine ? handleSaveAsVoiceSample : undefined}
                   replyToText={replyMsg?.text}
                   replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
+                  replyToId={msg.replyTo || undefined}
+                  onScrollToMessage={scrollToMessage}
                 />
               </SwipeableBubble>
             );
