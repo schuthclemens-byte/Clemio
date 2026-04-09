@@ -527,6 +527,43 @@ const ChatListPage = () => {
               </>
             )}
 
+            {/* Contact search results - people not yet in a chat */}
+            {search.length >= 2 && (
+              <>
+                <div className="px-5 pt-4 pb-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Kontakte
+                    {searchingContacts && (
+                      <span className="ml-2 inline-block w-3 h-3 border border-primary/30 border-t-primary rounded-full animate-spin align-middle" />
+                    )}
+                  </p>
+                </div>
+                {contactResults.length > 0 ? (
+                  contactResults.map((contact) => (
+                    <button
+                      key={contact.id}
+                      onClick={() => handleStartChatFromSearch(contact)}
+                      disabled={startingChatWith === contact.id}
+                      className="w-full flex items-center gap-3 px-5 py-3 hover:bg-secondary/50 active:bg-secondary/70 transition-colors text-left disabled:opacity-50"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <UserPlus className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{contact.display_name || "Nutzer"}</p>
+                        <p className="text-xs text-muted-foreground">Tippen zum Chatten</p>
+                      </div>
+                      {startingChatWith === contact.id && (
+                        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0" />
+                      )}
+                    </button>
+                  ))
+                ) : !searchingContacts ? (
+                  <p className="px-5 py-4 text-sm text-muted-foreground">Keine weiteren Kontakte gefunden</p>
+                ) : null}
+              </>
+            )}
+
             {filtered.length === 0 && messageResults.length === 0 && !searchingMessages && (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <p className="text-sm">{search ? "Keine Ergebnisse" : t("chat.noChats")}</p>
