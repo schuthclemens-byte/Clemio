@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Users can upload to own downloads folder" ON storage.objects;
