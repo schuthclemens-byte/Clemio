@@ -1012,7 +1012,7 @@ const ChatPage = () => {
           <div className="flex-1 min-w-0">
             <h2
               className="font-semibold text-base truncate cursor-pointer hover:text-primary transition-colors"
-              onClick={() => !isGroup && setShowEditName(true)}
+              onClick={() => isGroup ? setShowGroupMembers(true) : setShowEditName(true)}
               title={!isGroup ? "Name bearbeiten" : undefined}
             >
               {chatName}
