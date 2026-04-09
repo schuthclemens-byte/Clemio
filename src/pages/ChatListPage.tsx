@@ -392,6 +392,7 @@ const ChatListPage = () => {
           </div>
         ) : (
           <>
+            <PendingInvitations />
             {filtered.length > 0 && (
               <>
                 {search.length >= 2 && (
