@@ -123,7 +123,7 @@ const MediaGallerySheet = ({ open, onClose, conversationId }: MediaGallerySheetP
               <div className="space-y-2">
                 {filtered.map((item) => (
                   <div key={item.id} className="p-3 rounded-xl bg-secondary/50">
-                    <AudioPlayer src={item.mediaUrl || item.content} />
+                    <AudioPlayer url={item.mediaUrl || item.content} isMine={false} />
                     <p className="text-[10px] text-muted-foreground mt-1">
                       {new Date(item.createdAt).toLocaleDateString("de-DE", {
                         day: "2-digit",
