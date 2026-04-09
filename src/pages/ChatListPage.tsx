@@ -4,6 +4,7 @@ import { Settings, Search, Plus, MessageSquare, Phone, X } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
 import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
+import PendingInvitations from "@/components/chat/PendingInvitations";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
