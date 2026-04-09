@@ -36,6 +36,8 @@ interface ChatBubbleProps {
   onSaveAsVoiceSample?: (audioUrl: string, senderId: string) => void;
   replyToText?: string;
   replyToSender?: string;
+  replyToId?: string;
+  onScrollToMessage?: (msgId: string) => void;
   uploadProgress?: number;
   isEdited?: boolean;
   onForward?: (content: string, messageType: string) => void;
