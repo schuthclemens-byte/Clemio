@@ -371,17 +371,19 @@ const ChatListPage = () => {
     };
   }, [user]);
 
-  // Debounced message search
+  // Debounced message + contact search
   useEffect(() => {
     const timer = setTimeout(() => {
       if (search.length >= 2) {
         searchMessages(search);
+        searchContacts(search);
       } else {
         setMessageResults([]);
+        setContactResults([]);
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, searchMessages]);
+  }, [search, searchMessages, searchContacts]);
 
   const filtered = conversations.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
