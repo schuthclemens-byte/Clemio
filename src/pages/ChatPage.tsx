@@ -1065,22 +1065,25 @@ const ChatPage = () => {
               <MoreVertical className="w-5 h-5 text-muted-foreground" />
             </button>
             {showChatMenu && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-1 animate-fade-in">
-                {isGroup && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowChatMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-1 animate-fade-in">
+                  {isGroup && (
+                    <button
+                      onClick={() => { setShowChatMenu(false); setShowGroupMembers(true); }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2"
+                    >
+                      <Users className="w-4 h-4" /> Mitglieder
+                    </button>
+                  )}
                   <button
-                    onClick={() => { setShowChatMenu(false); setShowGroupMembers(true); }}
+                    onClick={() => { setShowChatMenu(false); setShowMediaGallery(true); }}
                     className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2"
                   >
-                    <Users className="w-4 h-4" /> Mitglieder
+                    <ImageIcon className="w-4 h-4" /> Medien
                   </button>
-                )}
-                <button
-                  onClick={() => { setShowChatMenu(false); setShowMediaGallery(true); }}
-                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2"
-                >
-                  <ImageIcon className="w-4 h-4" /> Medien
-                </button>
-              </div>
+                </div>
+              </>
             )}
           </div>
         </div>
