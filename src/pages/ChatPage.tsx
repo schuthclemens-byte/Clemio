@@ -824,6 +824,15 @@ const ChatPage = () => {
     }
   };
 
+  const scrollToMessage = useCallback((msgId: string) => {
+    const el = scrollRef.current?.querySelector(`[data-msg-id="${msgId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary/40", "rounded-2xl");
+      setTimeout(() => el.classList.remove("ring-2", "ring-primary/40", "rounded-2xl"), 1500);
+    }
+  }, []);
+
   const handleSend = async (text: string) => {
     if (isListening) stop();
     if (!user || !conversationId) return;
