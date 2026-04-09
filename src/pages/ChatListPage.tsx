@@ -38,6 +38,9 @@ const ChatListPage = () => {
   const [showNewChat, setShowNewChat] = useState(false);
   const [messageResults, setMessageResults] = useState<MessageSearchResult[]>([]);
   const [searchingMessages, setSearchingMessages] = useState(false);
+  const [contactResults, setContactResults] = useState<{ id: string; display_name: string | null; avatar_url?: string | null }[]>([]);
+  const [searchingContacts, setSearchingContacts] = useState(false);
+  const [startingChatWith, setStartingChatWith] = useState<string | null>(null);
   const fetchingRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
 
