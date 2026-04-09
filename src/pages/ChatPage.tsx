@@ -1210,6 +1210,7 @@ const ChatPage = () => {
                   isLoadingCloned={playingMsgId === msg.id && isLoadingCloned}
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
+                  onForward={(content, type) => setForwardMsg({ content, type })}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
                   onEdit={msg.isMine ? handleEditMessage : undefined}
                   onSaveAsVoiceSample={!msg.isMine ? handleSaveAsVoiceSample : undefined}
