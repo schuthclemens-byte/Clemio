@@ -388,6 +388,7 @@ const ChatPage = () => {
       if (!conv) { navigate("/chats"); return; }
 
       setIsGroup(conv.is_group ?? false);
+      setCreatorId(conv.created_by || "");
       const members = membersRes.data;
 
       // Process messages immediately so UI renders fast
