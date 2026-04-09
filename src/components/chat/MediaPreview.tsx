@@ -91,6 +91,12 @@ export const MediaMessage = ({ url, type, isMine }: MediaMessageProps) => {
           >
             <X className="w-5 h-5 text-white" />
           </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); downloadImage(url); }}
+            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
+          >
+            <Download className="w-5 h-5 text-white" />
+          </button>
           <img
             src={url}
             alt="Full size"

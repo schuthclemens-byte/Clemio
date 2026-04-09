@@ -193,6 +193,12 @@ const MediaGallerySheet = ({ open, onClose, conversationId }: MediaGallerySheetP
           >
             <X className="w-5 h-5 text-white" />
           </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); downloadMedia(fullscreenUrl); }}
+            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center z-10"
+          >
+            <Download className="w-5 h-5 text-white" />
+          </button>
           <img
             src={fullscreenUrl}
             alt=""
