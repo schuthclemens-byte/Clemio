@@ -267,6 +267,68 @@ const ChatListPage = () => {
     setSearchingMessages(false);
   }, [user, conversations]);
 
+  // Search contacts (profiles not yet in a chat with me)
+  const searchContacts = useCallback(async (query: string) => {
+    if (!user || query.length < 2) {
+      setContactResults([]);
+      return;
+    }
+    setSearchingContacts(true);
+    const results = await searchAccessibleProfiles(query.trim());
+    // Exclude self and people who already appear in filtered chat list
+    const existingNames = new Set(conversations.map((c) => c.name.toLowerCase()));
+    const filtered = results.filter(
+      (r) => r.id !== user.id && !existingNames.has((r.display_name || "").toLowerCase())
+    );
+    setContactResults(filtered);
+    setSearchingContacts(false);
+  }, [user, conversations]);
+
+  // Start or find existing 1:1 chat with a contact
+  const handleStartChatFromSearch = async (target: { id: string; display_name: string | null }) => {
+    if (!user || startingChatWith) return;
+    setStartingChatWith(target.id);
+
+    try {
+      // Check for existing 1:1 conversation
+      const [myRes, theirRes] = await Promise.all([
+        supabase.from("conversation_members").select("conversation_id").eq("user_id", user.id),
+        supabase.from("conversation_members").select("conversation_id").eq("user_id", target.id),
+      ]);
+
+      const myIds = new Set((myRes.data ?? []).map((m) => m.conversation_id));
+      const sharedIds = (theirRes.data ?? []).map((m) => m.conversation_id).filter((id) => myIds.has(id));
+
+      if (sharedIds.length > 0) {
+        const { data: existing } = await supabase
+          .from("conversations")
+          .select("id")
+          .in("id", sharedIds)
+          .eq("is_group", false)
+          .limit(1)
+          .maybeSingle();
+        if (existing?.id) {
+          setSearch("");
+          navigate(`/chat/${existing.id}`);
+          return;
+        }
+      }
+
+      // Create new conversation
+      const convId = crypto.randomUUID();
+      await supabase.from("conversations").insert({ id: convId, created_by: user.id, is_group: false });
+      await supabase.from("conversation_members").insert({ conversation_id: convId, user_id: user.id });
+      await supabase.from("conversation_members").insert({ conversation_id: convId, user_id: target.id });
+      setSearch("");
+      navigate(`/chat/${convId}`);
+    } catch (err) {
+      console.error("[ChatListPage] start chat failed", err);
+      toast.error("Chat konnte nicht gestartet werden");
+    } finally {
+      setStartingChatWith(null);
+    }
+  };
+
   useEffect(() => {
     if (!user || lastUserIdRef.current === user.id) return;
     lastUserIdRef.current = user.id;
