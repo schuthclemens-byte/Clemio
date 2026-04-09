@@ -1,4 +1,4 @@
-import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2, Pencil } from "lucide-react";
+import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2, Pencil, Forward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -38,6 +38,7 @@ interface ChatBubbleProps {
   replyToSender?: string;
   uploadProgress?: number;
   isEdited?: boolean;
+  onForward?: (content: string, messageType: string) => void;
 }
 
 /** Animated wave bars shown during playback */
