@@ -379,6 +379,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
+                  {/* Forward button */}
+                  {onForward && message && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onForward(message, messageType || "text"); }}
+                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
+                      aria-label="Weiterleiten"
+                    >
+                      <Forward className="w-4 h-4" />
+                    </button>
+                  )}
                   {/* Save voice message as voice sample for this contact */}
                   {!isMine && isAudio && senderId && onSaveAsVoiceSample && message && (
                     <button
