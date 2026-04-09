@@ -149,6 +149,11 @@ const ChatPage = () => {
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [showEditName, setShowEditName] = useState(false);
   const [contactAlias, setContactAlias] = useState<{ firstName: string; lastName: string } | null>(null);
+  const [creatorId, setCreatorId] = useState<string>("");
+  const [showGroupMembers, setShowGroupMembers] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
+  const [showChatMenu, setShowChatMenu] = useState(false);
 
   const mapDbMessage = useCallback((m: any): Message => ({
     id: m.id,
