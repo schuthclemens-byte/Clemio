@@ -564,7 +564,7 @@ const ChatListPage = () => {
               </>
             )}
 
-            {filtered.length === 0 && messageResults.length === 0 && !searchingMessages && (
+            {filtered.length === 0 && messageResults.length === 0 && contactResults.length === 0 && !searchingMessages && !searchingContacts && (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <p className="text-sm">{search ? "Keine Ergebnisse" : t("chat.noChats")}</p>
                 {!search && (
