@@ -1289,6 +1289,34 @@ const ChatPage = () => {
           onSave={handleSaveContactName}
         />
       )}
+
+      {/* Group members sheet */}
+      {isGroup && conversationId && (
+        <GroupMembersSheet
+          open={showGroupMembers}
+          onClose={() => setShowGroupMembers(false)}
+          conversationId={conversationId}
+          creatorId={creatorId}
+          onLeft={() => { setShowGroupMembers(false); navigate("/chats"); }}
+        />
+      )}
+
+      {/* Media gallery */}
+      {conversationId && (
+        <MediaGallerySheet
+          open={showMediaGallery}
+          onClose={() => setShowMediaGallery(false)}
+          conversationId={conversationId}
+        />
+      )}
+
+      {/* Forward message dialog */}
+      <ForwardMessageDialog
+        open={!!forwardMsg}
+        onClose={() => setForwardMsg(null)}
+        messageContent={forwardMsg?.content || ""}
+        messageType={forwardMsg?.type}
+      />
     </div>
   );
 };
