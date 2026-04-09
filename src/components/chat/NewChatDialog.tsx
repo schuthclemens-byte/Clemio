@@ -245,10 +245,10 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
         conversation_id: conv.id,
         invited_by: user.id,
         invited_user_id: u.id,
-        status: "pending",
+        status: "pending" as const,
       }));
 
-      await supabase.from("chat_invitations" as any).insert(invitations as any);
+      await supabase.from("chat_invitations").insert(invitations);
 
       toast.success("Gruppeneinladungen gesendet");
       handleClose();
