@@ -1,5 +1,22 @@
 import { useState, useEffect } from "react";
-import { X, Image as ImageIcon, Film, Mic2 } from "lucide-react";
+import { X, Image as ImageIcon, Film, Mic2, Download } from "lucide-react";
+
+const downloadMedia = async (url: string) => {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `clemio-${Date.now()}.${blob.type.includes("png") ? "png" : blob.type.includes("video") ? "mp4" : "jpg"}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(url, "_blank");
+  }
+};
 import { supabase } from "@/integrations/supabase/client";
 import AudioPlayer from "./AudioPlayer";
 

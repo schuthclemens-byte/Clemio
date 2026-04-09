@@ -1,6 +1,24 @@
-import { X, Play } from "lucide-react";
+import { X, Play, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+
+const downloadImage = async (url: string) => {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `clemio-${Date.now()}.${blob.type.includes("png") ? "png" : blob.type.includes("video") ? "mp4" : "jpg"}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    // Fallback: open in new tab
+    window.open(url, "_blank");
+  }
+};
 
 interface MediaPreviewProps {
   file: File;
