@@ -96,6 +96,7 @@ self.addEventListener("notificationclick", (event) => {
   const isIncomingCall = notificationData.type === "incoming_call";
 
   let url;
+  const isGroupInvitation = notificationData.type === "group_invitation";
 
   if (isIncomingCall) {
     if (event.action === "decline") {
@@ -107,6 +108,9 @@ self.addEventListener("notificationclick", (event) => {
     url = notificationData.path || (conversationId
       ? `/call/${conversationId}?incoming=true&video=${notificationData.is_video !== false}`
       : "/chats");
+  } else if (isGroupInvitation) {
+    // Navigate to chat list where PendingInvitations are shown
+    url = "/chats";
   } else {
     url = conversationId ? `/chat/${conversationId}` : "/chats";
   }
