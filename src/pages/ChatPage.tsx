@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2 } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -25,6 +25,9 @@ import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useMessageReactions } from "@/hooks/useMessageReactions";
 import { toast } from "sonner";
 import EditContactNameDialog from "@/components/chat/EditContactNameDialog";
+import GroupMembersSheet from "@/components/chat/GroupMembersSheet";
+import MediaGallerySheet from "@/components/chat/MediaGallerySheet";
+import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 
