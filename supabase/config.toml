@@ -1,1 +1,4 @@
 project_id = "zvvjgkxtgtpniashvqsl"
+
+[functions.onboarding-tts]
+verify_jwt = false
