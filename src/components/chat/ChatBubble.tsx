@@ -20,6 +20,7 @@ interface ChatBubbleProps {
   onSpeak?: (text: string) => void;
   isSpeaking?: boolean;
   isRead?: boolean;
+  readAt?: string;
   messageType?: string;
   mediaUrl?: string;
   senderId?: string;
