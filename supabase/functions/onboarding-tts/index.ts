@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, cache-control, pragma",
 };
 
 // Cloned landing voice – same voice character in every language
@@ -38,7 +38,10 @@ serve(async (req) => {
   }
 
   try {
-    const { lang } = await req.json();
+    const requestUrl = new URL(req.url);
+    const queryLang = requestUrl.searchParams.get("lang");
+    const bodyLang = req.method === "POST" ? (await req.json()).lang : null;
+    const lang = queryLang ?? bodyLang;
 
     // Determine language with fallback
     const resolvedLang = supportedLangs.includes(lang) ? lang : "en";
