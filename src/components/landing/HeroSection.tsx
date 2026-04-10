@@ -52,11 +52,15 @@ const HeroSection = () => {
 
     const url = `${SUPABASE_URL}/functions/v1/onboarding-tts?lang=${locale}&v=${Date.now()}`;
     fetch(url)
-      .then((res) => {
+      .then(async (res) => {
+        const contentType = res.headers.get("Content-Type") || "";
+        // If response is JSON (fallback/error), skip – use local MP3
+        if (contentType.includes("application/json")) {
+          ttsAudioRef.current = null;
+          return;
+        }
         if (!res.ok) throw new Error("TTS fetch failed");
-        return res.blob();
-      })
-      .then((blob) => {
+        const blob = await res.blob();
         const objUrl = URL.createObjectURL(blob);
         const audio = new Audio(objUrl);
         audio.preload = "auto";
