@@ -38,8 +38,6 @@ const HeroSection = () => {
     };
   }, []);
 
-  const { locale } = useI18n();
-
   /** Fetch TTS audio from edge function in the user's language */
   const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/onboarding-tts`, {
