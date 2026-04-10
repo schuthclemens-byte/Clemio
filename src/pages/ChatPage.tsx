@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAutoPlayQueue } from "@/hooks/useAutoPlayQueue";
-import { playMessageTone } from "@/lib/sounds";
+import { playMessageTone, playSendTone } from "@/lib/sounds";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useMessageReactions } from "@/hooks/useMessageReactions";
 import { toast } from "sonner";
@@ -833,9 +833,21 @@ const ChatPage = () => {
     }
   }, []);
 
+  const lastSendTimeRef = useRef(0);
+
   const handleSend = async (text: string) => {
     if (isListening) stop();
     if (!user || !conversationId) return;
+
+    // Message rate limiting: max 1 per second
+    const now = Date.now();
+    if (now - lastSendTimeRef.current < 1000) {
+      toast.warning("Bitte warte kurz zwischen Nachrichten");
+      return;
+    }
+    lastSendTimeRef.current = now;
+
+    playSendTone();
 
     // Optimistic update
     const tempId = crypto.randomUUID();
