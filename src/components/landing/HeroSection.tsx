@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
 
 const LANDING_AUDIO_SRC = "/landing-voice-original.mp3";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 // Preload audio globally so it's ready instantly
 const preloadedAudio = new Audio(`${LANDING_AUDIO_SRC}?v=1`);
@@ -24,7 +25,7 @@ const fadeUp = {
 
 const HeroSection = () => {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [activated, setActivated] = useState(false);
   const [playError, setPlayError] = useState(false);
@@ -33,7 +34,8 @@ const HeroSection = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
   const retryCountRef = useRef(0);
-  
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsFetchedLangRef = useRef<string | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -43,10 +45,35 @@ const HeroSection = () => {
     };
   }, []);
 
+  // Background-fetch TTS audio in current language
+  useEffect(() => {
+    if (ttsFetchedLangRef.current === locale) return;
+    ttsFetchedLangRef.current = locale;
+
+    const url = `${SUPABASE_URL}/functions/v1/onboarding-tts?lang=${locale}&v=${Date.now()}`;
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error("TTS fetch failed");
+        return res.blob();
+      })
+      .then((blob) => {
+        const objUrl = URL.createObjectURL(blob);
+        const audio = new Audio(objUrl);
+        audio.preload = "auto";
+        audio.volume = 0.18;
+        ttsAudioRef.current = audio;
+      })
+      .catch(() => {
+        // TTS failed – fallback MP3 will be used
+        ttsAudioRef.current = null;
+      });
+  }, [locale]);
+
   /** Fetch TTS audio from edge function in the user's language */
   const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
-    // Clone from preloaded audio for instant playback
-    const audio = preloadedAudio.cloneNode(true) as HTMLAudioElement;
+    // Use TTS version if available, otherwise instant fallback
+    const source = ttsAudioRef.current ?? preloadedAudio;
+    const audio = source.cloneNode(true) as HTMLAudioElement;
     audio.volume = 0.18;
     return audio;
   }, []);
