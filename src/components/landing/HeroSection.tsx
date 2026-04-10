@@ -6,6 +6,12 @@ import { useI18n } from "@/contexts/I18nContext";
 
 const LANDING_AUDIO_SRC = "/landing-voice-original.mp3";
 
+// Preload audio globally so it's ready instantly
+const preloadedAudio = new Audio(`${LANDING_AUDIO_SRC}?v=1`);
+preloadedAudio.preload = "auto";
+preloadedAudio.volume = 0.18;
+preloadedAudio.load();
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({
@@ -39,8 +45,8 @@ const HeroSection = () => {
 
   /** Fetch TTS audio from edge function in the user's language */
   const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
-    const audio = new Audio(`${LANDING_AUDIO_SRC}?v=2026-03-27-12-40-44-2`);
-    audio.preload = "auto";
+    // Clone from preloaded audio for instant playback
+    const audio = preloadedAudio.cloneNode(true) as HTMLAudioElement;
     audio.volume = 0.18;
     return audio;
   }, []);
