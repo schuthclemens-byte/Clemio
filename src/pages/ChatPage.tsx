@@ -549,7 +549,7 @@ const ChatPage = () => {
           const m = payload.new as any;
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === m.id ? { ...msg, isRead: m.is_read ?? false } : msg
+              msg.id === m.id ? { ...msg, isRead: m.is_read ?? false, readAt: m.read_at || undefined } : msg
             )
           );
         }
@@ -1221,6 +1221,7 @@ const ChatPage = () => {
                   timestamp={msg.timestamp}
                   isMine={msg.isMine}
                   isRead={msg.isRead}
+                  readAt={msg.readAt}
                   senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
                   uploadProgress={msg.uploadProgress}
                   isSpeaking={false}
