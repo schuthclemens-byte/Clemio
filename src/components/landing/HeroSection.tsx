@@ -13,12 +13,6 @@ const fadeUp = {
   }),
 };
 
-/** Detect device language and map to supported onboarding languages */
-const getOnboardingLang = (): string => {
-  const deviceLang = (navigator.language || "").split("-")[0].toLowerCase();
-  const supported = ["de", "en", "fr"];
-  return supported.includes(deviceLang) ? deviceLang : "en";
-};
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -31,17 +25,13 @@ const HeroSection = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
   const retryCountRef = useRef(0);
-  const audioBlobUrlRef = useRef<string | null>(null);
+  
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       audioRef.current?.pause();
       audioRef.current = null;
-      if (audioBlobUrlRef.current) {
-        URL.revokeObjectURL(audioBlobUrlRef.current);
-        audioBlobUrlRef.current = null;
-      }
     };
   }, []);
 
