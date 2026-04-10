@@ -41,7 +41,13 @@ serve(async (req) => {
       body: formData,
     });
 
-    const result = await elResponse.json();
+    const raw = await elResponse.text();
+    let result;
+    try {
+      result = JSON.parse(raw);
+    } catch {
+      result = raw;
+    }
 
     return new Response(JSON.stringify({ status: elResponse.status, result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
