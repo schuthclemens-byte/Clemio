@@ -6,8 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Fixed voice ID for onboarding – same character in every language
-const ONBOARDING_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"; // George
+// Cloned landing voice – same voice character in every language
+const ONBOARDING_VOICE_ID = "8CYuycxIONSFhKXKhsfw";
 
 const onboardingTexts: Record<string, string> = {
   de: "Willkommen bei Clemio. Hier kannst du Nachrichten nicht nur lesen, sondern auch hören – in der echten Stimme deiner Kontakte. Probier es aus!",
