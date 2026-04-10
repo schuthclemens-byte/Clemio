@@ -44,15 +44,7 @@ const HeroSection = () => {
     requestUrl.searchParams.set("lang", locale);
     requestUrl.searchParams.set("v", `${Date.now()}`);
 
-    const res = await fetch(requestUrl.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-      },
-      body: JSON.stringify({ lang: locale }),
-    });
+    const res = await fetch(requestUrl.toString());
 
     if (!res.ok) throw new Error("TTS fetch failed");
 

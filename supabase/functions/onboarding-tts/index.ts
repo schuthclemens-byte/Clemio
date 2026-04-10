@@ -38,7 +38,10 @@ serve(async (req) => {
   }
 
   try {
-    const { lang } = await req.json();
+    const requestUrl = new URL(req.url);
+    const queryLang = requestUrl.searchParams.get("lang");
+    const bodyLang = req.method === "POST" ? (await req.json()).lang : null;
+    const lang = queryLang ?? bodyLang;
 
     // Determine language with fallback
     const resolvedLang = supportedLangs.includes(lang) ? lang : "en";
