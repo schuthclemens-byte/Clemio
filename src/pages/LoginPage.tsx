@@ -351,16 +351,26 @@ const LoginPage = () => {
               </div>
             )}
 
+            {/* Lockout warning */}
+            {lockoutCountdown > 0 && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 animate-reveal-up">
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+                <span className="text-sm text-destructive">
+                  Gesperrt für {lockoutCountdown}s – zu viele Fehlversuche
+                </span>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={localNumber.replace(/\D/g, "").length < 4 || (mode === "signup" ? !isPasswordStrong(password) : password.length < 6) || loading || (mode === "signup" && !ageConfirmed)}
+              disabled={localNumber.replace(/\D/g, "").length < 4 || (mode === "signup" ? !isPasswordStrong(password) : password.length < 6) || loading || (mode === "signup" && !ageConfirmed) || (mode === "login" && lockoutCountdown > 0)}
               className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2.5 shadow-soft hover:shadow-elevated transition-all duration-300 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none mt-1"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               ) : mode === "login" ? (
                 <>
-                  {t("app.login") || "Anmelden"}
+                  {lockoutCountdown > 0 ? `Gesperrt (${lockoutCountdown}s)` : (t("app.login") || "Anmelden")}
                   <ArrowRight className="w-4.5 h-4.5" />
                 </>
               ) : (
