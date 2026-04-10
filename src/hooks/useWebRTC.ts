@@ -128,6 +128,7 @@ export function useWebRTC({
   const localStreamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([]);
+  const facingModeRef = useRef<"user" | "environment">("user");
   const callTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
@@ -174,7 +175,7 @@ export function useWebRTC({
             noiseSuppression: true,
             autoGainControl: true,
           },
-          video: video ? LOW_VIDEO_CONSTRAINTS : false,
+          video: video ? getVideoConstraints(facingModeRef.current) : false,
         });
 
         console.log("[WebRTC] getUserMedia success:", {
