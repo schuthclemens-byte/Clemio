@@ -4,8 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const LANDING_AUDIO_SRC = "/landing-voice-original.mp3";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -19,7 +18,7 @@ const fadeUp = {
 
 const HeroSection = () => {
   const navigate = useNavigate();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [activated, setActivated] = useState(false);
   const [playError, setPlayError] = useState(false);
@@ -40,23 +39,19 @@ const HeroSection = () => {
 
   /** Fetch TTS audio from edge function in the user's language */
   const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
-    const requestUrl = new URL(`${SUPABASE_URL}/functions/v1/onboarding-tts`);
-    requestUrl.searchParams.set("lang", locale);
-    requestUrl.searchParams.set("v", `${Date.now()}`);
-
-    const res = await fetch(requestUrl.toString());
-
-    if (!res.ok) throw new Error("TTS fetch failed");
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
+    const audio = new Audio(`${LANDING_AUDIO_SRC}?v=2026-03-27-12-40-44-2`);
+    audio.preload = "auto";
     audio.volume = 0.18;
     return audio;
-  }, [locale]);
+  }, []);
 
   /** Play the onboarding audio */
   const playAudio = useCallback(async (audio: HTMLAudioElement) => {
+    audioRef.current?.pause();
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+    }
+
     audioRef.current = audio;
 
     audio.onended = () => {
