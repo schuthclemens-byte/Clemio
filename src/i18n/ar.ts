@@ -283,6 +283,11 @@ const ar: Record<string, string> = {
     "legal.priv8Title": "8. الاتصال",
     "legal.priv8Text": "للأسئلة حول الخصوصية يمكنك التواصل معنا على:",
     "legal.privTrust": "🔐 تُستخدم الأصوات فقط بموافقتك ويمكن حذفها في أي وقت.",
+    "password.minLength": "٨ أحرف على الأقل",
+    "password.uppercase": "حرف كبير واحد (A–Z)",
+    "password.lowercase": "حرف صغير واحد (a–z)",
+    "password.number": "رقم واحد (0–9)",
+    "password.special": "رمز خاص واحد (!@#$...)",
 };
 
 export default ar;

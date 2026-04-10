@@ -283,6 +283,11 @@ const fr: Record<string, string> = {
     "legal.priv8Title": "8. Contact",
     "legal.priv8Text": "Pour toute question sur la confidentialité, tu peux nous contacter à :",
     "legal.privTrust": "🔐 Les voix ne sont utilisées qu'avec ton consentement et peuvent être supprimées à tout moment.",
+    "password.minLength": "Au moins 8 caractères",
+    "password.uppercase": "Une majuscule (A–Z)",
+    "password.lowercase": "Une minuscule (a–z)",
+    "password.number": "Un chiffre (0–9)",
+    "password.special": "Un caractère spécial (!@#$...)",
 };
 
 export default fr;
