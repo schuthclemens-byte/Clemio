@@ -318,6 +318,15 @@ const ChatListPage = () => {
       const convId = crypto.randomUUID();
       await supabase.from("conversations").insert({ id: convId, created_by: user.id, is_group: false });
       await supabase.from("conversation_members").insert({ conversation_id: convId, user_id: user.id });
+
+      // Create and auto-accept invitation so RLS allows adding the member
+      const { data: inv } = await supabase.from("chat_invitations").insert({
+        conversation_id: convId,
+        invited_by: user.id,
+        invited_user_id: target.id,
+        status: "accepted",
+      }).select("id").single();
+
       await supabase.from("conversation_members").insert({ conversation_id: convId, user_id: target.id });
       setSearch("");
       navigate(`/chat/${convId}`);
