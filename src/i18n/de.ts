@@ -36,6 +36,7 @@ const de: Record<string, string> = {
     "chat.send": "Nachricht senden",
     "chat.voiceStart": "Sprachnachricht starten",
     "chat.voiceStop": "Aufnahme stoppen",
+    "chat.read": "Gelesen",
     "chat.readAloud": "Vorlesen",
     "chat.translate": "Übersetzen",
     "chat.translated": "Übersetzt",
