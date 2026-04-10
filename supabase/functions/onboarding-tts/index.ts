@@ -15,7 +15,7 @@ const onboardingTexts: Record<string, string> = {
   fr: "Bienvenue sur Clemio. Ici, tu peux non seulement lire tes messages, mais aussi les écouter – avec la vraie voix de tes contacts. Essaie !",
 };
 
-const supportedLangs = ["de", "en", "fr"];
+const supportedLangs = ["de", "en", "fr", "tr", "ar", "es"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
