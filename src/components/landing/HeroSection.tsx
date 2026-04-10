@@ -3,7 +3,6 @@ import { Play, Pause, ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
-import demoVoice from "@/assets/demo-voice.mp3";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -14,72 +13,117 @@ const fadeUp = {
   }),
 };
 
+/** Detect device language and map to supported onboarding languages */
+const getOnboardingLang = (): string => {
+  const deviceLang = (navigator.language || "").split("-")[0].toLowerCase();
+  const supported = ["de", "en", "fr"];
+  return supported.includes(deviceLang) ? deviceLang : "en";
+};
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [activated, setActivated] = useState(false);
   const [playError, setPlayError] = useState(false);
-  const [audio] = useState(() => {
-    const nextAudio = new Audio(demoVoice);
-    nextAudio.preload = "auto";
-    nextAudio.volume = 0.18;
-    return nextAudio;
-  });
-  const audioRef = useRef<HTMLAudioElement>(audio);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
   const retryCountRef = useRef(0);
+  const audioBlobUrlRef = useRef<string | null>(null);
 
+  // Cleanup on unmount
   useEffect(() => {
-    const currentAudio = audioRef.current;
-
-    const handleEnded = () => setIsPlaying(false);
-    const handleError = () => {
-      setIsPlaying(false);
-      triggeredRef.current = false;
-    };
-
-    currentAudio.load();
-    currentAudio.addEventListener("ended", handleEnded);
-    currentAudio.addEventListener("error", handleError);
-
     return () => {
-      currentAudio.pause();
-      currentAudio.removeEventListener("ended", handleEnded);
-      currentAudio.removeEventListener("error", handleError);
-      currentAudio.src = "";
+      audioRef.current?.pause();
+      audioRef.current = null;
+      if (audioBlobUrlRef.current) {
+        URL.revokeObjectURL(audioBlobUrlRef.current);
+        audioBlobUrlRef.current = null;
+      }
     };
   }, []);
 
-  const startDemo = useCallback(async () => {
-    const currentAudio = audioRef.current;
-    if (!currentAudio || triggeredRef.current) return;
-
-    triggeredRef.current = true;
-
-    // Haptic feedback if available
-    if (navigator.vibrate) {
-      navigator.vibrate(15);
+  /** Fetch TTS audio from the onboarding-tts edge function */
+  const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
+    // If already fetched, reuse
+    if (audioBlobUrlRef.current) {
+      const audio = new Audio(audioBlobUrlRef.current);
+      audio.volume = 0.18;
+      return audio;
     }
 
+    const lang = getOnboardingLang();
+
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onboarding-tts`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ lang }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`TTS request failed: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    audioBlobUrlRef.current = url;
+
+    const audio = new Audio(url);
+    audio.volume = 0.18;
+    return audio;
+  }, []);
+
+  /** Play the onboarding audio */
+  const playAudio = useCallback(async (audio: HTMLAudioElement) => {
+    audioRef.current = audio;
+
+    audio.onended = () => {
+      setIsPlaying(false);
+    };
+    audio.onerror = () => {
+      setIsPlaying(false);
+    };
+
+    setIsPlaying(true);
+    await audio.play();
+  }, []);
+
+  const startDemo = useCallback(async () => {
+    if (triggeredRef.current) return;
+    triggeredRef.current = true;
+
+    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate(15);
+
+    setIsLoadingAudio(true);
+
     try {
-      currentAudio.currentTime = 0;
-      await currentAudio.play();
-      setIsPlaying(true);
+      const audio = await fetchOnboardingAudio();
+      setIsLoadingAudio(false);
       setActivated(true);
       setPlayError(false);
+      await playAudio(audio);
     } catch {
       retryCountRef.current += 1;
       triggeredRef.current = false;
+      setIsLoadingAudio(false);
 
-      // After 3 failed attempts, show fallback error
       if (retryCountRef.current >= 3) {
         setPlayError(true);
         setActivated(true);
       }
     }
-  }, []);
+  }, [fetchOnboardingAudio, playAudio]);
 
+  // Auto-trigger on first interaction
   useEffect(() => {
     if (activated) return;
 
@@ -100,31 +144,32 @@ const HeroSection = () => {
     };
   }, [activated, startDemo]);
 
-  const togglePlay = useCallback(() => {
+  const togglePlay = useCallback(async () => {
     const currentAudio = audioRef.current;
-    if (!currentAudio) return;
 
-    if (isPlaying) {
+    if (isPlaying && currentAudio) {
       currentAudio.pause();
       currentAudio.currentTime = 0;
       setIsPlaying(false);
       return;
     }
 
-    triggeredRef.current = true;
-    void currentAudio.play()
-      .then(() => {
-        setIsPlaying(true);
-        setActivated(true);
-      })
-      .catch(() => {
-        triggeredRef.current = false;
-      });
-  }, [isPlaying]);
+    setIsLoadingAudio(true);
+    try {
+      const audio = await fetchOnboardingAudio();
+      audio.currentTime = 0;
+      setIsLoadingAudio(false);
+      setActivated(true);
+      await playAudio(audio);
+    } catch {
+      setIsLoadingAudio(false);
+      triggeredRef.current = false;
+    }
+  }, [isPlaying, fetchOnboardingAudio, playAudio]);
 
   return (
     <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
-      {/* Fullscreen tap layer – acts as a real button for maximum compatibility */}
+      {/* Fullscreen tap layer */}
       <AnimatePresence>
         {!activated && (
           <motion.button
@@ -160,7 +205,11 @@ const HeroSection = () => {
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
                 />
                 <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shadow-soft z-10">
-                  <Volume2 className="w-7 h-7 text-primary-foreground" />
+                  {isLoadingAudio ? (
+                    <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  ) : (
+                    <Volume2 className="w-7 h-7 text-primary-foreground" />
+                  )}
                 </div>
               </div>
 
@@ -228,13 +277,15 @@ const HeroSection = () => {
         {/* Voice demo card */}
         <motion.div variants={fadeUp} custom={2} className="mb-5">
           <motion.button
-            onClick={togglePlay}
+            onClick={() => void togglePlay()}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="group relative inline-flex items-center gap-4 px-5 py-4 rounded-2xl bg-card border border-border shadow-elevated hover:shadow-soft transition-all duration-300 w-full"
           >
             <span className={`relative w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-all duration-300 ${isPlaying ? "animate-voice-pulse" : "group-hover:scale-105"}`}>
-              {isPlaying ? (
+              {isLoadingAudio ? (
+                <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              ) : isPlaying ? (
                 <Pause className="w-5 h-5 text-primary-foreground" />
               ) : (
                 <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
