@@ -18,8 +18,6 @@ serve(async (req) => {
     });
   }
 
-  console.log("ELEVENLABS_API_KEY length:", ELEVENLABS_API_KEY.length, "starts:", ELEVENLABS_API_KEY.slice(0, 4), "ends:", ELEVENLABS_API_KEY.slice(-4));
-
   try {
     const { sample_url } = await req.json();
 
@@ -43,7 +41,13 @@ serve(async (req) => {
       body: formData,
     });
 
-    const result = await elResponse.json();
+    const raw = await elResponse.text();
+    let result;
+    try {
+      result = JSON.parse(raw);
+    } catch {
+      result = raw;
+    }
 
     return new Response(JSON.stringify({ status: elResponse.status, result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
