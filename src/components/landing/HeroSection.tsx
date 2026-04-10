@@ -4,6 +4,9 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({
@@ -35,12 +38,28 @@ const HeroSection = () => {
     };
   }, []);
 
-  /** Use the static intro voice recording */
+  const { locale } = useI18n();
+
+  /** Fetch TTS audio from edge function in the user's language */
   const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
-    const audio = new Audio("/intro-voice.mp3");
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/onboarding-tts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      body: JSON.stringify({ lang: locale }),
+    });
+
+    if (!res.ok) throw new Error("TTS fetch failed");
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
     audio.volume = 0.18;
     return audio;
-  }, []);
+  }, [locale]);
 
   /** Play the onboarding audio */
   const playAudio = useCallback(async (audio: HTMLAudioElement) => {
