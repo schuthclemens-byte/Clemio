@@ -50,11 +50,8 @@ const HeroSection = () => {
         "Content-Type": "application/json",
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Cache-Control": "no-cache",
-        Pragma: "no-cache",
       },
       body: JSON.stringify({ lang: locale }),
-      cache: "no-store",
     });
 
     if (!res.ok) throw new Error("TTS fetch failed");
