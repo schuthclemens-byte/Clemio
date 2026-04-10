@@ -1,30 +1,35 @@
 
 
-## Plan: 3 Architektur-Verbesserungen umsetzen
+## Plan: Verbesserungen ohne Domain/E-Mail
 
-### 1. Profil-Zugriff in `notify-incoming-call` bereinigen
-- Die Edge Function liest bereits nur `display_name` aus `profiles` (kein `phone_number`-Fallback mehr vorhanden)
-- **Ergebnis**: Bereits sauber, keine Änderung nötig
+Die App ist bereits sehr vollständig. Die Sicherheits-Scans zeigen keine offenen Probleme. Folgende Verbesserungen kann ich ohne Domain umsetzen:
 
-### 2. Voice-Consent Unique-Index absichern
-- Migration: `CREATE UNIQUE INDEX` auf `voice_consents(voice_owner_id, granted_to_user_id)` hinzufügen
-- Die RPC `request_voice_consent` prüft bereits Duplikate und Self-Requests — der Index ist die DB-seitige Absicherung
+### 1. Client-seitiges Rate Limiting für Login/Registrierung
+Aktuell gibt es kein Rate Limiting — ein Angreifer könnte unbegrenzt Login-Versuche starten.
 
-### 3. `messages` UPDATE-Policy für Lesebestätigungen reparieren
-- Aktuell kann nur der Sender Nachrichten updaten (für Edit innerhalb 15 Min)
-- Aber `mark_messages_read` nutzt `SECURITY DEFINER`, daher funktioniert `is_read`-Update trotzdem
-- Empfänger können `is_read` jedoch nicht direkt per Client setzen — prüfen ob das benötigt wird und ggf. eine separate UPDATE-Policy für `is_read` auf Empfängerseite hinzufügen
+- **LoginPage.tsx**: Login-Versuche zählen und nach 5 Fehlversuchen den Button für 30 Sekunden sperren (mit Countdown-Anzeige)
+- Verhindert Brute-Force-Angriffe auf der Client-Seite
+
+### 2. Sende-Sound für ausgehende Nachrichten
+Eingehende Nachrichten haben bereits einen Ton (`playMessageTone`), aber beim Senden gibt es keinen Sound.
+
+- **sounds.ts**: Neue Funktion `playSendTone()` — kurzer "Whoosh"-Sound
+- **ChatPage.tsx**: `playSendTone()` in `handleSend` aufrufen
+
+### 3. Nachrichten-Sende-Rate-Limiting
+Kein Schutz gegen Spam — ein Nutzer könnte hunderte Nachrichten pro Sekunde senden.
+
+- **ChatPage.tsx**: Nachrichten auf max. 1 pro Sekunde begrenzen, bei zu schnellem Senden Toast-Warnung anzeigen
+
+---
 
 ### Technische Details
 
-**Migration SQL:**
-```sql
--- Unique index for voice_consents to prevent duplicate requests at DB level
-CREATE UNIQUE INDEX IF NOT EXISTS uq_voice_consents_pair 
-ON public.voice_consents (voice_owner_id, granted_to_user_id);
-```
+| Datei | Änderung |
+|---|---|
+| `src/pages/LoginPage.tsx` | Login-Attempt-Counter + 30s Cooldown nach 5 Fehlversuchen |
+| `src/lib/sounds.ts` | `playSendTone()` Funktion hinzufügen |
+| `src/pages/ChatPage.tsx` | Send-Sound + Message-Throttle (1/Sek) |
 
-**Dateien die geändert werden:**
-- Neue Migration für den Unique-Index
-- Keine Code-Änderungen nötig (RPC + Edge Functions sind bereits korrekt)
+Keine Datenbank-Änderungen nötig.
 
