@@ -162,6 +162,7 @@ const ChatPage = () => {
     timestamp: formatMessageTimestamp(new Date(m.created_at)),
     isMine: m.sender_id === user?.id,
     isRead: m.is_read ?? false,
+    readAt: m.read_at || undefined,
     senderId: m.sender_id,
     messageType: m.message_type || "text",
     mediaUrl:
