@@ -7,7 +7,7 @@ const de: Record<string, string> = {
     "app.otherNumber": "Andere Nummer verwenden",
     "app.terms": "Mit der Anmeldung akzeptierst du unsere Nutzungsbedingungen",
     "app.phonePlaceholder": "+49 123 456 7890",
-    "app.passwordPlaceholder": "Passwort (min. 6 Zeichen)",
+    "app.passwordPlaceholder": "Passwort (min. 8 Zeichen)",
     "app.noAccount": "Noch kein Konto? Registrieren",
     "app.hasAccount": "Schon ein Konto? Anmelden",
     "app.signup": "Registrieren",
