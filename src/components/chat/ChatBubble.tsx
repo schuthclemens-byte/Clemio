@@ -20,6 +20,7 @@ interface ChatBubbleProps {
   onSpeak?: (text: string) => void;
   isSpeaking?: boolean;
   isRead?: boolean;
+  readAt?: string;
   messageType?: string;
   mediaUrl?: string;
   senderId?: string;
@@ -56,7 +57,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -422,16 +423,22 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                 <span className="italic mr-1">{t("chat.edited") || "bearbeitet"}</span>
               )}
               {timestamp}
-              {isMine && (
-                isRead ? (
-                  <>
-                    <span className="text-accent font-medium ml-1">{t("chat.read") || "Gelesen"}</span>
-                    <CheckCheck className="w-3.5 h-3.5 text-accent" />
-                  </>
-                ) : (
-                  <CheckCheck className="w-3.5 h-3.5" />
-                )
-              )}
+              {isMine && (() => {
+                const showReceipts = localStorage.getItem("clemio_read_receipts") !== "false";
+                if (!showReceipts) return null;
+                if (isRead) {
+                  const readTime = readAt ? new Date(readAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : null;
+                  return (
+                    <>
+                      <span className="text-accent font-medium ml-1">
+                        {readTime ? `${t("chat.read") || "Gelesen"} ${readTime}` : (t("chat.read") || "Gelesen")}
+                      </span>
+                      <CheckCheck className="w-3.5 h-3.5 text-accent" />
+                    </>
+                  );
+                }
+                return <CheckCheck className="w-3.5 h-3.5" />;
+              })()}
             </span>
           </div>
 

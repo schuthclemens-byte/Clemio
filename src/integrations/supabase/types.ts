@@ -332,6 +332,7 @@ export type Database = {
           is_edited: boolean
           is_read: boolean | null
           message_type: string | null
+          read_at: string | null
           reply_to: string | null
           sender_id: string
         }
@@ -343,6 +344,7 @@ export type Database = {
           is_edited?: boolean
           is_read?: boolean | null
           message_type?: string | null
+          read_at?: string | null
           reply_to?: string | null
           sender_id: string
         }
@@ -354,6 +356,7 @@ export type Database = {
           is_edited?: boolean
           is_read?: boolean | null
           message_type?: string | null
+          read_at?: string | null
           reply_to?: string | null
           sender_id?: string
         }

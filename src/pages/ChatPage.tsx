@@ -37,6 +37,7 @@ interface Message {
   timestamp: string;
   isMine: boolean;
   isRead: boolean;
+  readAt?: string;
   senderId: string;
   messageType: string;
   mediaUrl?: string;
@@ -161,6 +162,7 @@ const ChatPage = () => {
     timestamp: formatMessageTimestamp(new Date(m.created_at)),
     isMine: m.sender_id === user?.id,
     isRead: m.is_read ?? false,
+    readAt: m.read_at || undefined,
     senderId: m.sender_id,
     messageType: m.message_type || "text",
     mediaUrl:
@@ -547,7 +549,7 @@ const ChatPage = () => {
           const m = payload.new as any;
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === m.id ? { ...msg, isRead: m.is_read ?? false } : msg
+              msg.id === m.id ? { ...msg, isRead: m.is_read ?? false, readAt: m.read_at || undefined } : msg
             )
           );
         }
@@ -1219,6 +1221,7 @@ const ChatPage = () => {
                   timestamp={msg.timestamp}
                   isMine={msg.isMine}
                   isRead={msg.isRead}
+                  readAt={msg.readAt}
                   senderName={isGroup && !msg.isMine ? memberNames[msg.senderId] : undefined}
                   uploadProgress={msg.uploadProgress}
                   isSpeaking={false}
