@@ -40,14 +40,21 @@ const HeroSection = () => {
 
   /** Fetch TTS audio from edge function in the user's language */
   const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/onboarding-tts`, {
+    const requestUrl = new URL(`${SUPABASE_URL}/functions/v1/onboarding-tts`);
+    requestUrl.searchParams.set("lang", locale);
+    requestUrl.searchParams.set("v", `${Date.now()}`);
+
+    const res = await fetch(requestUrl.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
       },
       body: JSON.stringify({ lang: locale }),
+      cache: "no-store",
     });
 
     if (!res.ok) throw new Error("TTS fetch failed");
