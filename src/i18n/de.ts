@@ -7,7 +7,7 @@ const de: Record<string, string> = {
     "app.otherNumber": "Andere Nummer verwenden",
     "app.terms": "Mit der Anmeldung akzeptierst du unsere Nutzungsbedingungen",
     "app.phonePlaceholder": "+49 123 456 7890",
-    "app.passwordPlaceholder": "Passwort (min. 6 Zeichen)",
+    "app.passwordPlaceholder": "Passwort (min. 8 Zeichen)",
     "app.noAccount": "Noch kein Konto? Registrieren",
     "app.hasAccount": "Schon ein Konto? Anmelden",
     "app.signup": "Registrieren",
@@ -312,6 +312,11 @@ const de: Record<string, string> = {
     "legal.priv9Text": "Wir treffen technische und organisatorische Maßnahmen zum Schutz der Daten. Trotzdem kann keine vollständige Sicherheit garantiert werden.",
     "legal.privDeletion": "Wenn Inhalte gelöscht werden, werden sie vollständig und dauerhaft entfernt. Eine Wiederherstellung ist nicht möglich. Backups werden regelmäßig überschrieben.",
     "legal.privTrust": "🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.",
+    "password.minLength": "Mindestens 8 Zeichen",
+    "password.uppercase": "Ein Großbuchstabe (A–Z)",
+    "password.lowercase": "Ein Kleinbuchstabe (a–z)",
+    "password.number": "Eine Zahl (0–9)",
+    "password.special": "Ein Sonderzeichen (!@#$...)",
 };
 
 export default de;

@@ -283,6 +283,11 @@ const tr: Record<string, string> = {
     "legal.priv8Title": "8. İletişim",
     "legal.priv8Text": "Gizlilik hakkında sorularınız için bize ulaşabilirsiniz:",
     "legal.privTrust": "🔐 Sesler yalnızca onayınla kullanılır ve istediğin zaman silinebilir.",
+    "password.minLength": "En az 8 karakter",
+    "password.uppercase": "Bir büyük harf (A–Z)",
+    "password.lowercase": "Bir küçük harf (a–z)",
+    "password.number": "Bir rakam (0–9)",
+    "password.special": "Bir özel karakter (!@#$...)",
 };
 
 export default tr;
