@@ -48,6 +48,27 @@ const LoginPage = () => {
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [lockoutCountdown, setLockoutCountdown] = useState(0);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (!lockoutUntil) return;
+    const tick = () => {
+      const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setLockoutUntil(null);
+        setLockoutCountdown(0);
+        setLoginAttempts(0);
+      } else {
+        setLockoutCountdown(remaining);
+      }
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [lockoutUntil]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -104,6 +125,12 @@ const LoginPage = () => {
       return;
     }
 
+    // Rate limiting check
+    if (mode === "login" && lockoutUntil && Date.now() < lockoutUntil) {
+      toast.error(`Zu viele Versuche. Bitte warte ${lockoutCountdown} Sekunden.`);
+      return;
+    }
+
     setLoading(true);
     const cleanPhone = fullPhone;
     localStorage.setItem("clemio_last_phone", cleanPhone);
@@ -119,17 +146,26 @@ const LoginPage = () => {
 
         const { error } = await signIn(cleanPhone, password);
         if (error) {
-          if (/invalid.?login.?credentials/i.test(error)) {
+          const newAttempts = loginAttempts + 1;
+          setLoginAttempts(newAttempts);
+          if (newAttempts >= 5) {
+            const until = Date.now() + 30_000;
+            setLockoutUntil(until);
+            toast.error("Zu viele Fehlversuche. 30 Sekunden gesperrt.");
+          } else if (/invalid.?login.?credentials/i.test(error)) {
             if (!profileMatches || profileMatches.length === 0) {
               toast.error("Diese Nummer ist nicht registriert. Bitte erstelle zuerst ein Konto.");
             } else {
-              toast.error("Falsches Passwort. Bitte versuche es erneut.");
+              toast.error(`Falsches Passwort. Noch ${5 - newAttempts} Versuche.`);
             }
           } else {
             toast.error(error);
           }
           return;
         }
+        // Reset attempts on success
+        setLoginAttempts(0);
+        setLockoutUntil(null);
 
         if (biometric.isAvailable) {
           if (!biometric.isEnabled) {

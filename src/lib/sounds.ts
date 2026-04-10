@@ -169,6 +169,31 @@ export function stopRingtone() {
   ringtoneGains = [];
 }
 
+/** Short whoosh – played when sending a message */
+export function playSendTone() {
+  if (isMuted()) return;
+  void (async () => {
+    try {
+      const ctx = await getCtx();
+      const now = ctx.currentTime;
+
+      // Quick ascending sweep ("whoosh")
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+      gain.gain.setValueAtTime(0.07, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } catch {
+      // Silently fail
+    }
+  })();
+}
+
 /** Very subtle pop – played when speech playback starts */
 export function playStartListenPop() {
   if (isMuted()) return;
