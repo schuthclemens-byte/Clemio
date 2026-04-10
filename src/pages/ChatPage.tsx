@@ -37,6 +37,7 @@ interface Message {
   timestamp: string;
   isMine: boolean;
   isRead: boolean;
+  readAt?: string;
   senderId: string;
   messageType: string;
   mediaUrl?: string;
