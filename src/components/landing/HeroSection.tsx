@@ -13,12 +13,6 @@ const fadeUp = {
   }),
 };
 
-/** Detect device language and map to supported onboarding languages */
-const getOnboardingLang = (): string => {
-  const deviceLang = (navigator.language || "").split("-")[0].toLowerCase();
-  const supported = ["de", "en", "fr"];
-  return supported.includes(deviceLang) ? deviceLang : "en";
-};
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -31,52 +25,19 @@ const HeroSection = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
   const retryCountRef = useRef(0);
-  const audioBlobUrlRef = useRef<string | null>(null);
+  
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       audioRef.current?.pause();
       audioRef.current = null;
-      if (audioBlobUrlRef.current) {
-        URL.revokeObjectURL(audioBlobUrlRef.current);
-        audioBlobUrlRef.current = null;
-      }
     };
   }, []);
 
-  /** Fetch TTS audio from the onboarding-tts edge function */
+  /** Use the static intro voice recording */
   const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
-    // If already fetched, reuse
-    if (audioBlobUrlRef.current) {
-      const audio = new Audio(audioBlobUrlRef.current);
-      audio.volume = 0.18;
-      return audio;
-    }
-
-    const lang = getOnboardingLang();
-
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onboarding-tts`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ lang }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`TTS request failed: ${response.status}`);
-    }
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    audioBlobUrlRef.current = url;
-
-    const audio = new Audio(url);
+    const audio = new Audio("/intro-voice.mp3");
     audio.volume = 0.18;
     return audio;
   }, []);
