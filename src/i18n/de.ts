@@ -312,6 +312,11 @@ const de: Record<string, string> = {
     "legal.priv9Text": "Wir treffen technische und organisatorische Maßnahmen zum Schutz der Daten. Trotzdem kann keine vollständige Sicherheit garantiert werden.",
     "legal.privDeletion": "Wenn Inhalte gelöscht werden, werden sie vollständig und dauerhaft entfernt. Eine Wiederherstellung ist nicht möglich. Backups werden regelmäßig überschrieben.",
     "legal.privTrust": "🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.",
+    "password.minLength": "Mindestens 8 Zeichen",
+    "password.uppercase": "Ein Großbuchstabe (A–Z)",
+    "password.lowercase": "Ein Kleinbuchstabe (a–z)",
+    "password.number": "Eine Zahl (0–9)",
+    "password.special": "Ein Sonderzeichen (!@#$...)",
 };
 
 export default de;
