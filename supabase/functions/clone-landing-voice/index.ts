@@ -18,6 +18,8 @@ serve(async (req) => {
     });
   }
 
+  console.log("ELEVENLABS_API_KEY length:", ELEVENLABS_API_KEY.length, "starts:", ELEVENLABS_API_KEY.slice(0, 4), "ends:", ELEVENLABS_API_KEY.slice(-4));
+
   try {
     const { sample_url } = await req.json();
 
