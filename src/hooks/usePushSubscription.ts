@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const VAPID_PUBLIC_KEY =
-  "BL2_0Ki93BHS5ty1Blv8Rxxw0FTgAJEBPq7TN6xk09czbSWSpnINsCBe46uv6LaiKbtkHlwmiiRSDifoFt5ZDVM";
+  "BGk1EVN_jDsso8AQXZFHnRMLyD-MedHpcQUHshpw79JlPgiEID4HBP-wswrWkt6fstTDta_ax7kW50U0SsqfXZM";
 
 /** localStorage key: set to "true" once push is fully saved */
 const PUSH_SAVED_KEY = "clemio_push_saved";
