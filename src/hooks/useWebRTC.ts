@@ -49,12 +49,12 @@ async function fetchIceServers(): Promise<RTCIceServer[]> {
 
 /* ───────── Video constraints (low bandwidth) ───────── */
 
-const LOW_VIDEO_CONSTRAINTS: MediaTrackConstraints = {
+const getVideoConstraints = (facingMode: "user" | "environment"): MediaTrackConstraints => ({
   width: { ideal: 640, max: 640 },
   height: { ideal: 360, max: 360 },
   frameRate: { ideal: 15, max: 15 },
-  facingMode: "user",
-};
+  facingMode,
+});
 
 /* ───────── Connection logging helpers ───────── */
 
@@ -580,7 +580,7 @@ export function useWebRTC({
     } else {
       try {
         const newVideoStream = await navigator.mediaDevices.getUserMedia({
-          video: LOW_VIDEO_CONSTRAINTS,
+          video: getVideoConstraints(facingModeRef.current),
         });
         const newTrack = newVideoStream.getVideoTracks()[0];
 
@@ -615,6 +615,44 @@ export function useWebRTC({
     }
   }, []);
 
+  const flipCamera = useCallback(async () => {
+    const stream = localStreamRef.current;
+    const pc = pcRef.current;
+    if (!stream || !isVideoEnabled) return;
+
+    const newMode = facingModeRef.current === "user" ? "environment" : "user";
+    try {
+      const newVideoStream = await navigator.mediaDevices.getUserMedia({
+        video: getVideoConstraints(newMode),
+      });
+      const newTrack = newVideoStream.getVideoTracks()[0];
+
+      // Stop and replace old video track
+      const oldTrack = stream.getVideoTracks()[0];
+      if (oldTrack) {
+        oldTrack.stop();
+        stream.removeTrack(oldTrack);
+      }
+      stream.addTrack(newTrack);
+
+      if (pc) {
+        const videoSender = pc.getSenders().find(s => s.track?.kind === "video");
+        if (videoSender) {
+          await videoSender.replaceTrack(newTrack);
+        }
+      }
+
+      facingModeRef.current = newMode;
+      localStreamRef.current = stream;
+      // Force re-render so local video updates
+      setIsVideoEnabled(false);
+      requestAnimationFrame(() => setIsVideoEnabled(true));
+      console.log("[WebRTC] Camera flipped to:", newMode);
+    } catch (err) {
+      console.warn("[WebRTC] Failed to flip camera:", err);
+    }
+  }, [isVideoEnabled]);
+
   /* ── Cleanup on unmount ── */
 
   useEffect(() => {
@@ -638,5 +676,6 @@ export function useWebRTC({
     endCall,
     toggleVideo,
     toggleAudio,
+    flipCamera,
   };
 }
