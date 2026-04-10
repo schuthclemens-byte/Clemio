@@ -80,7 +80,10 @@ serve(async (req) => {
       headers: {
         ...corsHeaders,
         "Content-Type": "audio/mpeg",
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "X-Voice-Id": ONBOARDING_VOICE_ID,
       },
     });
   } catch (error) {
