@@ -424,7 +424,10 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               {timestamp}
               {isMine && (
                 isRead ? (
-                  <CheckCheck className="w-3.5 h-3.5 text-accent" />
+                  <>
+                    <span className="text-accent font-medium ml-1">{t("chat.read") || "Gelesen"}</span>
+                    <CheckCheck className="w-3.5 h-3.5 text-accent" />
+                  </>
                 ) : (
                   <CheckCheck className="w-3.5 h-3.5" />
                 )
