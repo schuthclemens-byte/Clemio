@@ -14,8 +14,15 @@ const onboardingTexts: Record<string, string> = {
   en: "Welcome to Clemio. Here you can not only read messages, but also listen to them – in the real voice of your contacts. Try it out!",
   fr: "Bienvenue sur Clemio. Ici, tu peux non seulement lire tes messages, mais aussi les écouter – avec la vraie voix de tes contacts. Essaie !",
 };
+const onboardingTextsExtra: Record<string, string> = {
+  tr: "Clemio'ya hoş geldin. Burada mesajları sadece okumakla kalmaz, aynı zamanda kişilerinin gerçek sesiyle dinleyebilirsin. Hemen dene!",
+  ar: "مرحبًا بك في كليميو. هنا يمكنك ليس فقط قراءة الرسائل، بل أيضًا الاستماع إليها بصوت جهات اتصالك الحقيقي. جرّبها الآن!",
+  es: "Bienvenido a Clemio. Aquí no solo puedes leer mensajes, sino también escucharlos con la voz real de tus contactos. ¡Pruébalo!",
+};
 
-const supportedLangs = ["de", "en", "fr"];
+const allTexts: Record<string, string> = { ...onboardingTexts, ...onboardingTextsExtra };
+
+const supportedLangs = ["de", "en", "fr", "tr", "ar", "es"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -35,7 +42,7 @@ serve(async (req) => {
 
     // Determine language with fallback
     const resolvedLang = supportedLangs.includes(lang) ? lang : "en";
-    const text = onboardingTexts[resolvedLang];
+    const text = allTexts[resolvedLang];
 
     const ttsResponse = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${ONBOARDING_VOICE_ID}?output_format=mp3_44100_128`,
