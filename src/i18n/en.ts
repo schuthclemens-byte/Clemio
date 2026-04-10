@@ -318,6 +318,11 @@ const en: Record<string, string> = {
     "legal.priv9Text": "We take technical and organizational measures to protect data. However, complete security cannot be guaranteed.",
     "legal.privDeletion": "When content is deleted, it is completely and permanently removed. Recovery is not possible. Backups are regularly overwritten.",
     "legal.privTrust": "🔐 Voices are only used with your consent and can be deleted at any time.",
+    "password.minLength": "At least 8 characters",
+    "password.uppercase": "One uppercase letter (A–Z)",
+    "password.lowercase": "One lowercase letter (a–z)",
+    "password.number": "One number (0–9)",
+    "password.special": "One special character (!@#$...)",
 };
 
 export default en;
