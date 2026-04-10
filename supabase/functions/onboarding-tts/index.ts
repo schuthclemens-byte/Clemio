@@ -71,8 +71,9 @@ serve(async (req) => {
     if (!ttsResponse.ok) {
       const errBody = await ttsResponse.text();
       console.error("Onboarding TTS error:", errBody);
-      return new Response(JSON.stringify({ error: "TTS generation failed" }), {
-        status: 500,
+      // Return 200 with fallback flag so client uses local MP3 instead of crashing
+      return new Response(JSON.stringify({ error: "TTS_GENERATION_FAILED", fallback: true }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -91,8 +92,8 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Onboarding TTS error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+    return new Response(JSON.stringify({ error: "SERVICE_FAILED", fallback: true }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
