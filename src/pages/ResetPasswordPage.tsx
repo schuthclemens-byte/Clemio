@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import PasswordRequirements, { isPasswordStrong } from "@/components/auth/PasswordRequirements";
 import { toast } from "sonner";
 
 const ResetPasswordPage = () => {
@@ -23,8 +24,8 @@ const ResetPasswordPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) {
-      toast.error("Passwort muss mindestens 6 Zeichen haben");
+    if (!isPasswordStrong(password)) {
+      toast.error("Das Passwort erfüllt nicht alle Anforderungen");
       return;
     }
     if (password !== confirmPassword) {
@@ -116,6 +117,7 @@ const ResetPasswordPage = () => {
               className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
               autoFocus
             />
+            <PasswordRequirements password={password} visible={password.length > 0} />
             <input
               type="password"
               value={confirmPassword}
@@ -125,7 +127,7 @@ const ResetPasswordPage = () => {
             />
             <button
               type="submit"
-              disabled={password.length < 6 || confirmPassword.length < 6 || loading}
+              disabled={!isPasswordStrong(password) || confirmPassword.length < 8 || loading}
               className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2 shadow-soft disabled:opacity-40 disabled:pointer-events-none mt-1"
             >
               {loading ? (

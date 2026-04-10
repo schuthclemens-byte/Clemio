@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, UserPlus, LogIn, Sparkles, Fingerprint, ChevronDown, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import PasswordRequirements, { isPasswordStrong } from "@/components/auth/PasswordRequirements";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -94,7 +95,11 @@ const LoginPage = () => {
       return;
     }
 
-    if (password.length < 6) {
+    if (mode === "signup" && !isPasswordStrong(password)) {
+      toast.error("Das Passwort erfüllt nicht alle Anforderungen");
+      return;
+    }
+    if (mode === "login" && password.length < 6) {
       toast.error("Das Passwort muss mindestens 6 Zeichen lang sein");
       return;
     }
@@ -289,6 +294,11 @@ const LoginPage = () => {
               </button>
             </div>
 
+            {/* Password requirements (signup only) */}
+            {mode === "signup" && (
+              <PasswordRequirements password={password} visible={password.length > 0} />
+            )}
+
             {/* Age verification for signup */}
             {mode === "signup" && (
               <div className="flex items-start gap-3 p-3 rounded-xl bg-card border border-border animate-reveal-up">
@@ -307,7 +317,7 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              disabled={localNumber.replace(/\D/g, "").length < 4 || password.length < 6 || loading || (mode === "signup" && !ageConfirmed)}
+              disabled={localNumber.replace(/\D/g, "").length < 4 || (mode === "signup" ? !isPasswordStrong(password) : password.length < 6) || loading || (mode === "signup" && !ageConfirmed)}
               className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-semibold text-base flex items-center justify-center gap-2.5 shadow-soft hover:shadow-elevated transition-all duration-300 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none mt-1"
             >
               {loading ? (
