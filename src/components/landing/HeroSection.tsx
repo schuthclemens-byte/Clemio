@@ -19,7 +19,7 @@ const fadeUp = {
 
 const HeroSection = () => {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [activated, setActivated] = useState(false);
   const [playError, setPlayError] = useState(false);
