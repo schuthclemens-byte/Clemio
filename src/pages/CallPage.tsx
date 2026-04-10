@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Ear,
   AlertTriangle,
+  SwitchCamera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWebRTC, CallError } from "@/hooks/useWebRTC";
@@ -65,6 +66,7 @@ const CallPage = () => {
     endCall: endWebRTC,
     toggleVideo,
     toggleAudio,
+    flipCamera,
   } = useWebRTC({
     conversationId: conversationId || "",
     userId: user?.id || "",
@@ -433,6 +435,13 @@ const CallPage = () => {
             muted
             className="w-full h-full object-cover mirror"
           />
+          {/* Flip camera button on local preview */}
+          <button
+            onClick={flipCamera}
+            className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-foreground/50 backdrop-blur-sm flex items-center justify-center text-primary-foreground active:scale-90 transition-transform"
+          >
+            <SwitchCamera className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {headphonesConnected && (
