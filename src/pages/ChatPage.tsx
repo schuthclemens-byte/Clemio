@@ -1091,8 +1091,8 @@ const ChatPage = () => {
             </button>
             {showChatMenu && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowChatMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-1 animate-fade-in">
+                <div className="fixed inset-0 z-[60]" onClick={() => setShowChatMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-[70] py-1 animate-fade-in">
                   {isGroup && (
                     <button
                       onClick={() => { setShowChatMenu(false); setShowGroupMembers(true); }}
