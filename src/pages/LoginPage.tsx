@@ -142,8 +142,6 @@ const LoginPage = () => {
         const normalizedWith49 = normalizedDigits.startsWith("0") ? `49${normalizedDigits.slice(1)}` : normalizedDigits;
         // Profile lookup removed — RLS owner-only policy blocks cross-user reads.
         // Login error handling uses auth response directly.
-        const profileMatches: any[] | null = null;
-
         const { error } = await signIn(cleanPhone, password);
         if (error) {
           const newAttempts = loginAttempts + 1;
@@ -153,11 +151,7 @@ const LoginPage = () => {
             setLockoutUntil(until);
             toast.error("Zu viele Fehlversuche. 30 Sekunden gesperrt.");
           } else if (/invalid.?login.?credentials/i.test(error)) {
-            if (!profileMatches || profileMatches.length === 0) {
-              toast.error("Diese Nummer ist nicht registriert. Bitte erstelle zuerst ein Konto.");
-            } else {
-              toast.error(`Falsches Passwort. Noch ${5 - newAttempts} Versuche.`);
-            }
+            toast.error(`Nummer oder Passwort falsch. Noch ${5 - newAttempts} Versuche.`);
           } else {
             toast.error(error);
           }
