@@ -73,8 +73,6 @@ const HeroSection = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
   const retryCountRef = useRef(0);
-  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
-  const ttsFetchedLangRef = useRef<string | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
