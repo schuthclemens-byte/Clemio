@@ -283,9 +283,18 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       toast.success("Gruppeneinladungen gesendet");
       handleClose();
       navigate(`/chat/${conv.id}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("[NewChatDialog] Group creation failed", err);
-      toast.error("Gruppe konnte nicht erstellt werden");
+      const msg = err?.message || "";
+      if (msg.includes("conversations")) {
+        toast.error("Gruppe konnte nicht erstellt werden");
+      } else if (msg.includes("chat_invitations")) {
+        toast.error("Gruppeneinladungen konnten nicht gesendet werden");
+      } else if (msg.includes("conversation_members")) {
+        toast.error("Ersteller konnte nicht als Mitglied hinzugefügt werden");
+      } else {
+        toast.error("Gruppe konnte nicht erstellt werden");
+      }
     } finally {
       setCreating(false);
     }
