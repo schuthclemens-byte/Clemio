@@ -1258,7 +1258,7 @@ const ChatPage = () => {
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
                   onEdit={msg.isMine ? handleEditMessage : undefined}
                   onSaveAsVoiceSample={!msg.isMine ? handleSaveAsVoiceSample : undefined}
-                  replyToText={replyMsg?.text}
+                  replyToText={replyMsg ? (replyMsg.messageType === "image" ? "📷 Bild" : replyMsg.messageType === "audio" || replyMsg.messageType === "voice" ? "🎤 Sprachnachricht" : replyMsg.text) : undefined}
                   replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
                   replyToId={msg.replyTo || undefined}
                   onScrollToMessage={scrollToMessage}
