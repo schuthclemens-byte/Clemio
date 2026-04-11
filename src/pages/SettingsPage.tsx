@@ -473,9 +473,11 @@ const SettingsPage = () => {
             </button>
           </div>
         </CollapsibleSection>
+        </>}
 
+        {show("language") && <>
         {/* ──────────── SPRACHE ──────────── */}
-        <CollapsibleSection icon={Globe} title={t("settings.language")} delay="70ms">
+        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen={isSearching} delay="70ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {languages.map(([code, name]) => (
               <button
