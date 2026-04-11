@@ -1377,12 +1377,7 @@ const ChatPage = () => {
         chatHistory={messages.slice(-10).map(m => ({ text: m.text, isMine: m.isMine }))}
         isPremium={isPremium}
         onUseSuggestion={(text) => {
-          if (clemioKIDraft.trim()) {
-            // Refine mode: replace the input text, don't send
-            handleSend(text);
-          } else {
-            handleSend(text);
-          }
+          setPendingSuggestion(text);
         }}
       />
     </div>

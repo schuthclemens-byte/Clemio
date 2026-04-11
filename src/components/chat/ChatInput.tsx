@@ -25,6 +25,7 @@ interface ChatInputProps {
   onStopTyping?: () => void;
   onOpenClemioKI?: (draftText: string) => void;
   hasReceivedMessages?: boolean;
+  externalText?: string;
 }
 
 const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages }: ChatInputProps) => {
