@@ -35,6 +35,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<FoundUser[]>([]);
   const [groupName, setGroupName] = useState("");
+  const searchRequestIdRef = useRef(0);
   const navigate = useNavigate();
   const { t } = useI18n();
   const { user } = useAuth();
