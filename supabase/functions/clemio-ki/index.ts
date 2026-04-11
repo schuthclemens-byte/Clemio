@@ -7,6 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const FREE_DAILY_LIMIT = 3;
+
 const SYSTEM_PROMPT = `Du bist Clemio-KI – eine KI, die direkt in Nachrichten integriert ist.
 Du hilfst Nutzern, genau die richtigen Worte zu finden – schnell, natürlich und menschlich.
 
@@ -76,7 +78,54 @@ serve(async (req) => {
       });
     }
 
-    const { receivedMessage, chatHistory, mode } = await req.json();
+    const { receivedMessage, chatHistory, mode, checkOnly } = await req.json();
+
+    // Check subscription status
+    const { data: sub } = await supabaseClient
+      .from("subscriptions")
+      .select("plan, is_founding_user, premium_until")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    let isPremium = false;
+    if (sub) {
+      if (sub.plan === "founding" || sub.plan === "premium") isPremium = true;
+      if (sub.premium_until && new Date(sub.premium_until) > new Date()) isPremium = true;
+    }
+
+    // Check daily usage for free users
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const { count: todayCount } = await supabaseClient
+      .from("clemio_ki_usage")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("used_at", todayStart.toISOString());
+
+    const usedToday = todayCount ?? 0;
+    const remaining = isPremium ? -1 : Math.max(0, FREE_DAILY_LIMIT - usedToday);
+
+    // If just checking usage status
+    if (checkOnly) {
+      return new Response(
+        JSON.stringify({ remaining, limit: FREE_DAILY_LIMIT, isPremium }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Enforce limit for free users
+    if (!isPremium && usedToday >= FREE_DAILY_LIMIT) {
+      return new Response(
+        JSON.stringify({
+          error: "LIMIT_REACHED",
+          message: "Du hast dein Limit erreicht. Hol dir Premium für unbegrenzte Antworten.",
+          remaining: 0,
+          limit: FREE_DAILY_LIMIT,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!receivedMessage) {
       return new Response(
@@ -93,7 +142,6 @@ serve(async (req) => {
     const isStrategy = mode === "strategy";
     const formatPrompt = isStrategy ? STRATEGY_FORMAT : STANDARD_FORMAT;
 
-    // Build context from chat history
     let contextStr = "";
     if (chatHistory && chatHistory.length > 0) {
       const last5 = chatHistory.slice(-5);
@@ -140,10 +188,11 @@ Generiere passende Antworten.`;
       throw new Error("AI generation failed");
     }
 
+    // Track usage AFTER successful generation
+    await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
+
     const data = await response.json();
     let raw = data.choices?.[0]?.message?.content?.trim() || "";
-
-    // Strip markdown code fences if present
     raw = raw.replace(/^```json\s*/i, "").replace(/\s*```$/, "").trim();
 
     let parsed;
@@ -151,9 +200,13 @@ Generiere passende Antworten.`;
       parsed = JSON.parse(raw);
     } catch {
       console.error("Failed to parse AI response as JSON:", raw);
-      // Fallback: return raw text as single answer
       parsed = { answers: [{ text: raw }] };
     }
+
+    const newRemaining = isPremium ? -1 : Math.max(0, FREE_DAILY_LIMIT - usedToday - 1);
+    parsed.remaining = newRemaining;
+    parsed.limit = FREE_DAILY_LIMIT;
+    parsed.isPremium = isPremium;
 
     return new Response(
       JSON.stringify(parsed),

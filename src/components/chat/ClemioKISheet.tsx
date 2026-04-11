@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Sparkles, Copy, Send, ChevronUp, Loader2, Lock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles, Copy, Send, ChevronUp, Loader2, Lock, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,6 +13,9 @@ interface Answer {
 interface KIResponse {
   assessment?: string;
   answers: Answer[];
+  remaining?: number;
+  limit?: number;
+  isPremium?: boolean;
 }
 
 interface ClemioKISheetProps {
@@ -35,9 +38,33 @@ const ClemioKISheet = ({
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<KIResponse | null>(null);
   const [mode, setMode] = useState<"standard" | "strategy">("standard");
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [limit, setLimit] = useState(3);
+
+  // Check usage when sheet opens
+  useEffect(() => {
+    if (!open) return;
+    const checkUsage = async () => {
+      try {
+        const { data } = await supabase.functions.invoke("clemio-ki", {
+          body: { checkOnly: true },
+        });
+        if (data) {
+          setRemaining(data.isPremium ? -1 : data.remaining);
+          setLimit(data.limit);
+        }
+      } catch {}
+    };
+    checkUsage();
+  }, [open]);
 
   const generate = async (selectedMode: "standard" | "strategy") => {
     if (selectedMode === "strategy" && !isPremium) {
+      toast("Strategie-Modus ist nur für Premium verfügbar.");
+      return;
+    }
+
+    if (!isPremium && remaining !== null && remaining <= 0) {
       toast("Du hast dein Limit erreicht. Hol dir Premium für unbegrenzte Antworten.");
       return;
     }
@@ -47,12 +74,6 @@ const ClemioKISheet = ({
     setMode(selectedMode);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        toast.error("Bitte melde dich an");
-        return;
-      }
-
       const { data, error } = await supabase.functions.invoke("clemio-ki", {
         body: {
           receivedMessage,
@@ -62,12 +83,29 @@ const ClemioKISheet = ({
       });
 
       if (error) {
-        console.error("Clemio-KI error:", error);
+        // Check if it's a limit error
+        try {
+          const errBody = JSON.parse(error.message || "{}");
+          if (errBody.error === "LIMIT_REACHED") {
+            setRemaining(0);
+            toast(errBody.message || "Limit erreicht");
+            return;
+          }
+        } catch {}
         toast.error("Clemio-KI konnte keine Antworten generieren");
         return;
       }
 
+      if (data?.error === "LIMIT_REACHED") {
+        setRemaining(0);
+        toast(data.message || "Limit erreicht");
+        return;
+      }
+
       setResponse(data as KIResponse);
+      if (data?.remaining !== undefined) {
+        setRemaining(data.isPremium ? -1 : data.remaining);
+      }
     } catch (err) {
       console.error("Clemio-KI error:", err);
       toast.error("Fehler bei der Verbindung");
@@ -86,13 +124,28 @@ const ClemioKISheet = ({
     onClose();
   };
 
+  const limitReached = !isPremium && remaining !== null && remaining <= 0;
+
   return (
-    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+    <Sheet open={open} onOpenChange={(o) => { if (!o) { onClose(); setResponse(null); } }}>
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[75vh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
         <SheetHeader className="pb-2">
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="w-5 h-5 text-primary" />
-            Clemio-KI
+          <SheetTitle className="flex items-center justify-between text-base">
+            <span className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Clemio-KI
+            </span>
+            {remaining !== null && remaining >= 0 && (
+              <span className={cn(
+                "text-xs font-normal px-2.5 py-1 rounded-full",
+                remaining === 0
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-secondary text-muted-foreground"
+              )}>
+                <Zap className="w-3 h-3 inline mr-1" />
+                {remaining}/{limit} heute
+              </span>
+            )}
           </SheetTitle>
         </SheetHeader>
 
@@ -104,8 +157,18 @@ const ClemioKISheet = ({
           </p>
         </div>
 
+        {/* Limit reached banner */}
+        {limitReached && !response && !loading && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 mb-4 text-center">
+            <p className="text-sm font-medium text-destructive mb-1">Tageslimit erreicht</p>
+            <p className="text-xs text-muted-foreground">
+              Du hast dein Limit erreicht. Hol dir Premium für unbegrenzte Antworten.
+            </p>
+          </div>
+        )}
+
         {/* Mode buttons */}
-        {!response && !loading && (
+        {!response && !loading && !limitReached && (
           <div className="flex gap-2 mb-4">
             <button
               onClick={() => generate("standard")}
@@ -119,7 +182,7 @@ const ClemioKISheet = ({
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm active:scale-95 transition-transform",
                 isPremium
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                  ? "bg-gradient-to-r from-primary/80 to-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground"
               )}
             >
@@ -145,8 +208,8 @@ const ClemioKISheet = ({
         {response && (
           <div className="space-y-3">
             {response.assessment && (
-              <div className="bg-amber-50 dark:bg-amber-950/30 rounded-xl px-3 py-2 mb-3">
-                <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-0.5">Einschätzung</p>
+              <div className="bg-primary/5 rounded-xl px-3 py-2 mb-3">
+                <p className="text-xs font-semibold text-primary mb-0.5">Einschätzung</p>
                 <p className="text-sm">{response.assessment}</p>
               </div>
             )}
@@ -178,11 +241,15 @@ const ClemioKISheet = ({
               </div>
             ))}
 
-            {/* Retry */}
+            {/* Remaining indicator after generation */}
+            {remaining !== null && remaining >= 0 && (
+              <p className="text-xs text-center text-muted-foreground pt-1">
+                Noch {remaining} Anfrage{remaining !== 1 ? "n" : ""} heute übrig
+              </p>
+            )}
+
             <button
-              onClick={() => {
-                setResponse(null);
-              }}
+              onClick={() => setResponse(null)}
               className="w-full py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Nochmal versuchen
