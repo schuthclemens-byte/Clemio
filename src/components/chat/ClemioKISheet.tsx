@@ -80,6 +80,7 @@ const ClemioKISheet = ({
           receivedMessage,
           chatHistory: chatHistory.slice(-5),
           mode: selectedMode,
+          locale,
         },
       });
 
