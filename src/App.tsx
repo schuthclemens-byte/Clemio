@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -82,6 +83,7 @@ const App = () => (
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/index" element={<Navigate to="/" replace />} />
                   <Route path="/landing" element={<LandingPage />} />
                   <Route path="/onboarding" element={<OnboardingPage />} />
                   <Route path="/login" element={<LoginPage />} />
