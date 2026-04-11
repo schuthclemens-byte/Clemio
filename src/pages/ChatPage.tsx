@@ -1094,13 +1094,28 @@ const ChatPage = () => {
             {showChatMenu && createPortal(
               <>
                 <div className="fixed inset-0 z-[9998]" onClick={() => setShowChatMenu(false)} />
-                <ChatMenuDropdown
-                  btnRef={chatMenuBtnRef}
-                  isGroup={isGroup}
-                  onClose={() => setShowChatMenu(false)}
-                  onShowMembers={() => { setShowChatMenu(false); setShowGroupMembers(true); }}
-                  onShowMedia={() => { setShowChatMenu(false); setShowMediaGallery(true); }}
-                />
+                <div
+                  className="fixed w-48 bg-card border border-border rounded-xl shadow-xl z-[9999] py-1 animate-fade-in"
+                  style={{
+                    top: (chatMenuBtnRef.current?.getBoundingClientRect().bottom ?? 0) + 4,
+                    right: window.innerWidth - (chatMenuBtnRef.current?.getBoundingClientRect().right ?? 0),
+                  }}
+                >
+                  {isGroup && (
+                    <button
+                      onClick={() => { setShowChatMenu(false); setShowGroupMembers(true); }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2"
+                    >
+                      <Users className="w-4 h-4" /> Mitglieder
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setShowChatMenu(false); setShowMediaGallery(true); }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2"
+                  >
+                    <ImageIcon className="w-4 h-4" /> Medien
+                  </button>
+                </div>
               </>,
               document.body
             )}
