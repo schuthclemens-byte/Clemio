@@ -352,8 +352,8 @@ E-Mail: privacy@clemio.app`}
           <p><strong>Rechtsgrundlage:</strong> Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO) – die Funktion ist Bestandteil des Dienstes und wird nur auf aktive Nutzeranfrage ausgeführt.</p>
         </Section>
 
-        {/* 14. Privatsphäre-Einstellungen */}
-        <Section title="14. Privatsphäre-Einstellungen" delay={580}>
+        {/* 15. Privatsphäre-Einstellungen */}
+        <Section title="15. Privatsphäre-Einstellungen" delay={600}>
           <p>
             Du kannst in den App-Einstellungen verschiedene Privatsphäre-Optionen konfigurieren:
           </p>
@@ -370,8 +370,8 @@ E-Mail: privacy@clemio.app`}
           <p><strong>Rechtsgrundlage:</strong> Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO).</p>
         </Section>
 
-        {/* 15. Offline-Funktionalität */}
-        <Section title="15. Offline-Funktionalität & Service Worker" delay={620}>
+        {/* 16. Offline-Funktionalität */}
+        <Section title="16. Offline-Funktionalität & Service Worker" delay={640}>
           <p>
             Clemio kann als Progressive Web App (PWA) installiert werden. Dabei wird ein Service Worker eingesetzt, der folgende Funktionen bietet:
           </p>
@@ -386,8 +386,8 @@ E-Mail: privacy@clemio.app`}
           <p><strong>Rechtsgrundlage:</strong> Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO).</p>
         </Section>
 
-        {/* 16. Drittstaaten */}
-        <Section title="16. Datenübertragung in Drittländer" delay={660}>
+        {/* 17. Drittstaaten */}
+        <Section title="17. Datenübertragung in Drittländer" delay={680}>
           <p>
             Einige der von uns genutzten Dienste verarbeiten Daten außerhalb der EU/des EWR. Es gilt:
           </p>
@@ -416,18 +416,18 @@ E-Mail: privacy@clemio.app`}
           </p>
         </Section>
 
-        {/* 17. Rechtsgrundlagen */}
-        <Section title="17. Rechtsgrundlagen im Überblick" delay={700}>
+        {/* 18. Rechtsgrundlagen */}
+        <Section title="18. Rechtsgrundlagen im Überblick" delay={720}>
           <ul className="space-y-2">
             <Bullet accent><strong>Art. 6 Abs. 1 lit. a DSGVO (Einwilligung):</strong> Voice-Cloning, Push-Benachrichtigungen</Bullet>
-            <Bullet accent><strong>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung):</strong> Registrierung, Messaging, Anrufe, Kontaktverwaltung, Zahlungen, Privatsphäre-Einstellungen</Bullet>
+            <Bullet accent><strong>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung):</strong> Registrierung, Messaging, Anrufe, Kontaktverwaltung, Zahlungen, Privatsphäre-Einstellungen, Clemio-KI Assistent</Bullet>
             <Bullet accent><strong>Art. 6 Abs. 1 lit. f DSGVO (Berechtigtes Interesse):</strong> Hosting, technischer Betrieb, STUN/TURN-Server, KI-Übersetzung</Bullet>
             <Bullet accent><strong>Art. 9 Abs. 2 lit. a DSGVO (Einwilligung bei besonderen Kategorien):</strong> Biometrische Stimmdaten</Bullet>
           </ul>
         </Section>
 
-        {/* 18. Speicherdauer */}
-        <Section title="18. Speicherdauer" delay={740}>
+        {/* 19. Speicherdauer */}
+        <Section title="19. Speicherdauer" delay={760}>
           <ul className="space-y-2">
             <Bullet><strong>Kontodaten:</strong> Bis zur Löschung deines Kontos.</Bullet>
             <Bullet><strong>Nachrichten & Medien:</strong> Bis zur Löschung durch den Nutzer oder Kontolöschung.</Bullet>
