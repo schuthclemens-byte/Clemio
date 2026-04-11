@@ -251,19 +251,20 @@ const SettingsPage = () => {
             <p className="text-sm text-muted-foreground">Keine Einstellung gefunden für „{searchQuery}"</p>
           </div>
         )}
-        {show("profile") && /* Profile link */
-        <button
-          onClick={() => navigate("/profile")}
-          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
-        >
-          <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center text-primary-foreground">
-            <User className="w-6 h-6" />
-          </div>
-          <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">{t("settings.profile")}</p>
-            <p className="text-xs text-muted-foreground">{t("settings.profileDesc")}</p>
-          </div>
-        </button>
+        {show("profile") && (
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+          >
+            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center text-primary-foreground">
+              <User className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-[0.938rem]">{t("settings.profile")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.profileDesc")}</p>
+            </div>
+          </button>
+        )}
 
         {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
         <CollapsibleSection icon={Shield} title="Privatsphäre & Nachrichten" defaultOpen={true} delay="30ms">
