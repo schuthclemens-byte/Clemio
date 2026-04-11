@@ -1092,8 +1092,11 @@ const ChatPage = () => {
             </button>
             {showChatMenu && (
               <>
-                <div className="fixed inset-0 z-[60]" onClick={() => setShowChatMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-[70] py-1 animate-fade-in">
+                {createPortal(
+                  <div className="fixed inset-0 z-[9998]" onClick={() => setShowChatMenu(false)} />,
+                  document.body
+                )}
+                <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-[9999] py-1 animate-fade-in">
                   {isGroup && (
                     <button
                       onClick={() => { setShowChatMenu(false); setShowGroupMembers(true); }}
