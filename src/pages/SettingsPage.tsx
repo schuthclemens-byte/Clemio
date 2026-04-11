@@ -269,14 +269,12 @@ const SettingsPage = () => {
         {show("privacy") && <>
         {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
         <CollapsibleSection icon={Shield} title={t("settings.privacyMessages")} defaultOpen={!isSearching} delay="30ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <ToggleRow
               icon={MessageSquareText}
               label={t("settings.messagePreview")}
               description={t("settings.messagePreviewDesc")}
               checked={previewEnabled}
-              onChange={togglePreview}
-            />
               onChange={togglePreview}
             />
             <ToggleRow
@@ -290,14 +288,11 @@ const SettingsPage = () => {
                 toast.success(next ? t("settings.readReceiptsOn") : t("settings.readReceiptsOff"));
               }}
             />
-            />
             <ToggleRow
               icon={Radio}
               label={t("settings.onlineStatus")}
               description={t("settings.onlineStatusDesc")}
               checked={a11y.showOnlineStatus}
-              onChange={() => a11y.toggle("showOnlineStatus")}
-            />
               onChange={() => a11y.toggle("showOnlineStatus")}
             />
             <ToggleRow
@@ -307,16 +302,10 @@ const SettingsPage = () => {
               checked={a11y.showTypingIndicator}
               onChange={() => a11y.toggle("showTypingIndicator")}
             />
-              onChange={() => a11y.toggle("showTypingIndicator")}
-            />
             <ToggleRow
               icon={Volume2}
               label={t("settings.autoReadMessages")}
               description={t("settings.autoReadMessagesDesc")}
-              checked={a11y.autoRead}
-              onChange={() => a11y.toggle("autoRead")}
-              borderBottom={false}
-            />
               checked={a11y.autoRead}
               onChange={() => a11y.toggle("autoRead")}
               borderBottom={false}
