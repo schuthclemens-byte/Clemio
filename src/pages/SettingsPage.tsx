@@ -313,9 +313,11 @@ const SettingsPage = () => {
           </div>
 
         </CollapsibleSection>
+        </>}
 
+        {show("push") && <>
         {/* ──────────── PUSH-BENACHRICHTIGUNGEN ──────────── */}
-        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" defaultOpen={true} delay="45ms">
+        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" defaultOpen={!isSearching} delay="45ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {pushCap.canUsePush ? (
               <>
