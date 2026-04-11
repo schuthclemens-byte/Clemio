@@ -1,35 +1,24 @@
 
 
-## Plan: Verbesserungen ohne Domain/E-Mail
+## Fix: TTS-Audio sofort bereit beim Seitenaufruf
 
-Die App ist bereits sehr vollständig. Die Sicherheits-Scans zeigen keine offenen Probleme. Folgende Verbesserungen kann ich ohne Domain umsetzen:
+### Problem
+Die TTS-Version wird zwar im Hintergrund geladen, aber wenn der Nutzer tippt bevor sie fertig ist, wird die deutsche Fallback-MP3 abgespielt — auch wenn das Handy auf Englisch steht.
 
-### 1. Client-seitiges Rate Limiting für Login/Registrierung
-Aktuell gibt es kein Rate Limiting — ein Angreifer könnte unbegrenzt Login-Versuche starten.
+### Lösung: Globaler TTS-Cache auf Modulebene
 
-- **LoginPage.tsx**: Login-Versuche zählen und nach 5 Fehlversuchen den Button für 30 Sekunden sperren (mit Countdown-Anzeige)
-- Verhindert Brute-Force-Angriffe auf der Client-Seite
+Die TTS-Audiodatei wird **sofort beim Laden der Seite** (Modulebene, nicht erst beim Mount) gefetcht. Da die Edge Function ~1-2 Sekunden braucht und der Nutzer die Seite erst sehen, lesen und den Tap-Overlay verarbeiten muss, ist das Audio in 99% der Fälle bereits fertig wenn der Nutzer interagiert.
 
-### 2. Sende-Sound für ausgehende Nachrichten
-Eingehende Nachrichten haben bereits einen Ton (`playMessageTone`), aber beim Senden gibt es keinen Sound.
+**Ablauf:**
+1. Beim Modulimport: Sprache aus `navigator.language` lesen und TTS sofort fetchen (globaler Cache)
+2. Wenn Komponente mountet: Prüfen ob Cache für aktuelle Sprache schon gefüllt ist
+3. Beim Abspielen: Cache nutzen wenn vorhanden, sonst deutsche MP3 als Fallback
 
-- **sounds.ts**: Neue Funktion `playSendTone()` — kurzer "Whoosh"-Sound
-- **ChatPage.tsx**: `playSendTone()` in `handleSend` aufrufen
-
-### 3. Nachrichten-Sende-Rate-Limiting
-Kein Schutz gegen Spam — ein Nutzer könnte hunderte Nachrichten pro Sekunde senden.
-
-- **ChatPage.tsx**: Nachrichten auf max. 1 pro Sekunde begrenzen, bei zu schnellem Senden Toast-Warnung anzeigen
-
----
-
-### Technische Details
+### Technische Änderungen
 
 | Datei | Änderung |
 |---|---|
-| `src/pages/LoginPage.tsx` | Login-Attempt-Counter + 30s Cooldown nach 5 Fehlversuchen |
-| `src/lib/sounds.ts` | `playSendTone()` Funktion hinzufügen |
-| `src/pages/ChatPage.tsx` | Send-Sound + Message-Throttle (1/Sek) |
+| `src/components/landing/HeroSection.tsx` | Globalen `Map<string, HTMLAudioElement>` Cache anlegen. TTS-Fetch **sofort auf Modulebene** starten (liest `navigator.language`). `fetchOnboardingAudio()` prüft Cache zuerst. Kein Warten, kein Spinner — was da ist wird gespielt. Wenn TTS rechtzeitig fertig → richtige Sprache. Wenn nicht → deutscher Fallback (besser als nichts). Bei Sprachwechsel im I18n-Context: neuen Fetch starten falls nicht im Cache. |
 
-Keine Datenbank-Änderungen nötig.
+Kein Warten, kein Loading-State, keine Verzögerung. Die TTS wird einfach so früh wie möglich im Hintergrund vorbereitet.
 
