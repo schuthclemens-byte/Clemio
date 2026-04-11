@@ -171,15 +171,12 @@ const HeroSection = () => {
       return;
     }
 
-    setIsLoadingAudio(true);
     try {
-      const audio = await fetchOnboardingAudio();
+      const audio = fetchOnboardingAudio();
       audio.currentTime = 0;
-      setIsLoadingAudio(false);
       setActivated(true);
       await playAudio(audio);
     } catch {
-      setIsLoadingAudio(false);
       triggeredRef.current = false;
     }
   }, [isPlaying, fetchOnboardingAudio, playAudio]);
