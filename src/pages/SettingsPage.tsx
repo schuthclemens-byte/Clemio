@@ -223,9 +223,26 @@ const SettingsPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">{t("settings.title")}</h1>
+          <h1 className="text-xl font-bold flex-1">{t("settings.title")}</h1>
         </div>
-      </header>
+        {/* Search bar */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("settings.searchPlaceholder") !== "settings.searchPlaceholder" ? t("settings.searchPlaceholder") : "Einstellung suchen…"}
+              className="w-full h-10 pl-9 pr-9 rounded-xl bg-secondary text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/60"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
 
       <div className="flex-1 p-4 space-y-6">
         {/* Profile link */}
