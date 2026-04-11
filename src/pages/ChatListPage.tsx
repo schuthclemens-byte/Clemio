@@ -274,15 +274,13 @@ const ChatListPage = () => {
       return;
     }
     setSearchingContacts(true);
-    const results = await searchAccessibleProfiles(query.trim());
-    // Exclude self and people who already appear in filtered chat list
-    const existingNames = new Set(conversations.map((c) => c.name.toLowerCase()));
-    const filtered = results.filter(
-      (r) => r.id !== user.id && !existingNames.has((r.display_name || "").toLowerCase())
-    );
-    setContactResults(filtered);
-    setSearchingContacts(false);
-  }, [user, conversations]);
+    try {
+      const results = await searchAccessibleProfiles(query.trim());
+      setContactResults(results.filter((result) => result.id !== user.id));
+    } finally {
+      setSearchingContacts(false);
+    }
+  }, [user]);
 
   // Start or find existing 1:1 chat with a contact
   const handleStartChatFromSearch = async (target: { id: string; display_name: string | null }) => {

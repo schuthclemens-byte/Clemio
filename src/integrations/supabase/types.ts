@@ -621,6 +621,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_current_profile: {
+        Args: { profile_display_name?: string; profile_phone_number?: string }
+        Returns: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          first_name: string | null
+          id: string
+          language: string | null
+          last_name: string | null
+          phone_number: string
+          push_preview_enabled: boolean
+          updated_at: string | null
+          voice_enabled: boolean | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_accessible_profiles: {
         Args: { target_ids: string[] }
         Returns: {
