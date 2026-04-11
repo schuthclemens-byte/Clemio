@@ -1,24 +1,34 @@
 
 
-## Fix: TTS-Audio sofort bereit beim Seitenaufruf
+## Fehlende Übersetzungen für die Landingpage
 
 ### Problem
-Die TTS-Version wird zwar im Hintergrund geladen, aber wenn der Nutzer tippt bevor sie fertig ist, wird die deutsche Fallback-MP3 abgespielt — auch wenn das Handy auf Englisch steht.
+Die Landing-Seiten-Texte (Hero, Promo, Positioning, Trust, Voice Rules, Premium, Age) sind nur in **Deutsch** und **Englisch** vorhanden. Für **Französisch, Türkisch, Arabisch und Spanisch** fehlen ~30 Keys — der Fallback zeigt dann die deutschen Texte an, obwohl das Handy z.B. auf Französisch oder Türkisch steht.
 
-### Lösung: Globaler TTS-Cache auf Modulebene
+### Lösung
+Die fehlenden Landing-Keys in allen 4 Sprachdateien ergänzen.
 
-Die TTS-Audiodatei wird **sofort beim Laden der Seite** (Modulebene, nicht erst beim Mount) gefetcht. Da die Edge Function ~1-2 Sekunden braucht und der Nutzer die Seite erst sehen, lesen und den Tap-Overlay verarbeiten muss, ist das Audio in 99% der Fälle bereits fertig wenn der Nutzer interagiert.
+### Fehlende Keys (pro Sprache ~30 Einträge)
 
-**Ablauf:**
-1. Beim Modulimport: Sprache aus `navigator.language` lesen und TTS sofort fetchen (globaler Cache)
-2. Wenn Komponente mountet: Prüfen ob Cache für aktuelle Sprache schon gefüllt ist
-3. Beim Abspielen: Cache nutzen wenn vorhanden, sonst deutsche MP3 als Fallback
+```
+heroListenTitle, heroDemoText, heroAutoPlay, tapToStart, heroSubtitleNew, heroCTA,
+promoHeadline, promoDesc, promoFeat1-4, promoCTA,
+posLine1, posLine2,
+trustTitle, trustPoint1-4,
+voiceRulesTitle, voiceRule1-4,
+premTitle, premFeat1-4, premPrice, premExtra,
+ageText, ageCheckbox,
+startTitle, startDemoText, startSubtitle, startCTA
+```
 
-### Technische Änderungen
+### Änderungen
 
 | Datei | Änderung |
 |---|---|
-| `src/components/landing/HeroSection.tsx` | Globalen `Map<string, HTMLAudioElement>` Cache anlegen. TTS-Fetch **sofort auf Modulebene** starten (liest `navigator.language`). `fetchOnboardingAudio()` prüft Cache zuerst. Kein Warten, kein Spinner — was da ist wird gespielt. Wenn TTS rechtzeitig fertig → richtige Sprache. Wenn nicht → deutscher Fallback (besser als nichts). Bei Sprachwechsel im I18n-Context: neuen Fetch starten falls nicht im Cache. |
+| `src/i18n/fr.ts` | ~30 fehlende `landing.*` Keys auf Französisch ergänzen |
+| `src/i18n/tr.ts` | ~30 fehlende `landing.*` Keys auf Türkisch ergänzen |
+| `src/i18n/ar.ts` | ~30 fehlende `landing.*` Keys auf Arabisch ergänzen |
+| `src/i18n/es.ts` | ~30 fehlende `landing.*` Keys auf Spanisch ergänzen |
 
-Kein Warten, kein Loading-State, keine Verzögerung. Die TTS wird einfach so früh wie möglich im Hintergrund vorbereitet.
+Keine DB-Änderungen. Keine Edge-Function-Änderungen.
 
