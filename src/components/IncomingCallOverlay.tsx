@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Phone, PhoneOff, Video } from "lucide-react";
 import { useCallContext } from "@/contexts/CallContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 const IncomingCallOverlay = () => {
   const navigate = useNavigate();
   const { incomingCall, acceptCall, declineCall } = useCallContext();
   const [elapsed, setElapsed] = useState(0);
+  const { locale } = useI18n();
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   // Timer counting seconds since call appeared
   useEffect(() => {
@@ -74,7 +77,7 @@ const IncomingCallOverlay = () => {
               transition={{ delay: 0.2 }}
               className="text-white/60 text-sm font-medium tracking-wide uppercase"
             >
-              {isVideo ? "Eingehender Videoanruf" : "Eingehender Anruf"}
+              {isVideo ? tr("Eingehender Videoanruf", "Incoming video call") : tr("Eingehender Anruf", "Incoming call")}
             </motion.p>
           </div>
 
@@ -109,7 +112,7 @@ const IncomingCallOverlay = () => {
                 {incomingCall.callerName}
               </h1>
               <p className="text-white/50 text-sm mt-2">
-                {elapsed > 0 ? `Klingelt seit ${elapsed}s…` : "Klingelt…"}
+                {elapsed > 0 ? tr(`Klingelt seit ${elapsed}s…`, `Ringing for ${elapsed}s…`) : tr("Klingelt…", "Ringing…")}
               </p>
             </motion.div>
           </div>
@@ -130,7 +133,7 @@ const IncomingCallOverlay = () => {
               >
                 <PhoneOff className="w-7 h-7 text-white" />
               </motion.button>
-              <span className="text-white/60 text-xs font-medium">Ablehnen</span>
+              <span className="text-white/60 text-xs font-medium">{tr("Ablehnen", "Decline")}</span>
             </div>
 
             {/* Accept */}
@@ -154,7 +157,7 @@ const IncomingCallOverlay = () => {
                   <Phone className="w-7 h-7 text-white" />
                 )}
               </motion.button>
-              <span className="text-white/60 text-xs font-medium">Annehmen</span>
+              <span className="text-white/60 text-xs font-medium">{tr("Annehmen", "Accept")}</span>
             </div>
           </motion.div>
         </motion.div>

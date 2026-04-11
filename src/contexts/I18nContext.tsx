@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo, ReactNode } from "react";
 import de from "@/i18n/de";
+import en from "@/i18n/en";
 
 export type Locale = "de" | "en" | "es" | "fr" | "tr" | "ar";
 
@@ -91,7 +92,7 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const t = useCallback(
-    (key: string) => strings[key] || de[key] || key,
+    (key: string) => strings[key] || en[key] || de[key] || key,
     [strings]
   );
 

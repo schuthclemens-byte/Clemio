@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
+import { useI18n } from "@/contexts/I18nContext";
 
 export interface Country {
   code: string;
@@ -105,6 +106,8 @@ const CountryCodePicker = ({ selected, onSelect }: CountryCodePickerProps) => {
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const { locale } = useI18n();
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -149,7 +152,7 @@ const CountryCodePicker = ({ selected, onSelect }: CountryCodePickerProps) => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Land suchen..."
+              placeholder={tr("Land suchen...", "Search country...")}
               className="w-full px-3 py-2 text-sm rounded-lg bg-background border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
@@ -174,7 +177,7 @@ const CountryCodePicker = ({ selected, onSelect }: CountryCodePickerProps) => {
               </button>
             ))}
             {filtered.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">Kein Land gefunden</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{tr("Kein Land gefunden", "No country found")}</p>
             )}
           </div>
         </div>

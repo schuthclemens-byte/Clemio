@@ -1,6 +1,7 @@
 import { Mic, Camera, Bell, ShieldCheck, X, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallback } from "react";
+import { useI18n } from "@/contexts/I18nContext";
 
 export type PermissionType = "microphone" | "camera" | "push";
 
@@ -11,41 +12,42 @@ interface PermissionDialogProps {
   onCancel: () => void;
 }
 
-const CONTENT: Record<PermissionType, {
-  icon: typeof Mic;
-  title: string;
-  description: string;
-  benefit: string;
-  warning: string;
-  allowLabel: string;
-}> = {
-  microphone: {
-    icon: Mic,
-    title: "Mikrofon-Zugriff erlauben",
-    description: "Um Sprachnachrichten aufzunehmen oder Anrufe zu tätigen, braucht Clemio Zugriff auf dein Mikrofon.",
-    benefit: "Du kannst dann Sprachnachrichten aufnehmen und an Audio- und Videoanrufen teilnehmen.",
-    warning: "Ohne Mikrofon-Zugriff kannst du nur Text- und Bildnachrichten senden.",
-    allowLabel: "Mikrofon erlauben",
-  },
-  camera: {
-    icon: Camera,
-    title: "Kamera-Zugriff erlauben",
-    description: "Um Fotos und Videos aufzunehmen oder Videoanrufe zu starten, braucht Clemio Zugriff auf deine Kamera.",
-    benefit: "Du kannst dann Fotos direkt aus dem Chat aufnehmen und per Video telefonieren.",
-    warning: "Ohne Kamera-Zugriff kannst du nur Bilder aus deiner Galerie senden.",
-    allowLabel: "Kamera erlauben",
-  },
-  push: {
-    icon: Bell,
-    title: "Benachrichtigungen erlauben",
-    description: "Damit du keine Nachricht verpasst, möchte Clemio dir Push-Benachrichtigungen senden.",
-    benefit: "Du wirst über neue Nachrichten und Anrufe informiert – auch wenn die App geschlossen ist.",
-    warning: "Ohne Benachrichtigungen siehst du neue Nachrichten erst beim nächsten Öffnen der App.",
-    allowLabel: "Benachrichtigungen erlauben",
-  },
-};
-
 const PermissionDialog = ({ open, type, onAllow, onCancel }: PermissionDialogProps) => {
+  const { locale } = useI18n();
+  const tr = useCallback((de: string, en: string) => (locale === "de" ? de : en), [locale]);
+  const CONTENT: Record<PermissionType, {
+    icon: typeof Mic;
+    title: string;
+    description: string;
+    benefit: string;
+    warning: string;
+    allowLabel: string;
+  }> = {
+    microphone: {
+      icon: Mic,
+      title: tr("Mikrofon-Zugriff erlauben", "Allow microphone access"),
+      description: tr("Um Sprachnachrichten aufzunehmen oder Anrufe zu tätigen, braucht Clemio Zugriff auf dein Mikrofon.", "Clemio needs access to your microphone to record voice messages or make calls."),
+      benefit: tr("Du kannst dann Sprachnachrichten aufnehmen und an Audio- und Videoanrufen teilnehmen.", "You can record voice messages and join audio and video calls."),
+      warning: tr("Ohne Mikrofon-Zugriff kannst du nur Text- und Bildnachrichten senden.", "Without microphone access, you can only send text and image messages."),
+      allowLabel: tr("Mikrofon erlauben", "Allow microphone"),
+    },
+    camera: {
+      icon: Camera,
+      title: tr("Kamera-Zugriff erlauben", "Allow camera access"),
+      description: tr("Um Fotos und Videos aufzunehmen oder Videoanrufe zu starten, braucht Clemio Zugriff auf deine Kamera.", "Clemio needs access to your camera to take photos, record videos, or start video calls."),
+      benefit: tr("Du kannst dann Fotos direkt aus dem Chat aufnehmen und per Video telefonieren.", "You can take photos directly from the chat and make video calls."),
+      warning: tr("Ohne Kamera-Zugriff kannst du nur Bilder aus deiner Galerie senden.", "Without camera access, you can only send images from your gallery."),
+      allowLabel: tr("Kamera erlauben", "Allow camera"),
+    },
+    push: {
+      icon: Bell,
+      title: tr("Benachrichtigungen erlauben", "Allow notifications"),
+      description: tr("Damit du keine Nachricht verpasst, möchte Clemio dir Push-Benachrichtigungen senden.", "Clemio would like to send push notifications so you don't miss any messages."),
+      benefit: tr("Du wirst über neue Nachrichten und Anrufe informiert – auch wenn die App geschlossen ist.", "You'll be notified about new messages and calls even when the app is closed."),
+      warning: tr("Ohne Benachrichtigungen siehst du neue Nachrichten erst beim nächsten Öffnen der App.", "Without notifications, you'll only see new messages the next time you open the app."),
+      allowLabel: tr("Benachrichtigungen erlauben", "Allow notifications"),
+    },
+  };
   const content = CONTENT[type];
   const Icon = content.icon;
 
@@ -70,7 +72,7 @@ const PermissionDialog = ({ open, type, onAllow, onCancel }: PermissionDialogPro
             <button
               onClick={onCancel}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
-              aria-label="Schließen"
+              aria-label={tr("Schließen", "Close")}
             >
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -110,7 +112,7 @@ const PermissionDialog = ({ open, type, onAllow, onCancel }: PermissionDialogPro
               onClick={onCancel}
               className="w-full py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Später
+              {tr("Später", "Later")}
             </button>
           </motion.div>
         </motion.div>

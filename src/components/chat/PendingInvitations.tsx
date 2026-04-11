@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { UserPlus, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { toast } from "sonner";
 
@@ -16,10 +17,12 @@ interface Invitation {
 
 const PendingInvitations = () => {
   const { user } = useAuth();
+  const { locale } = useI18n();
   const navigate = useNavigate();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   const loadInvitations = async () => {
     if (!user) return;
@@ -42,14 +45,14 @@ const PendingInvitations = () => {
 
     const inviterIds = [...new Set(data.map((d) => d.invited_by))];
     const profiles = await fetchAccessibleProfiles(inviterIds);
-    const profileMap = new Map(profiles.map((p) => [p.id, p.display_name || "Nutzer"]));
+    const profileMap = new Map(profiles.map((p) => [p.id, p.display_name || tr("Nutzer", "User")]));
 
     const mapped: Invitation[] = data.map((d) => ({
       id: d.id,
       conversation_id: d.conversation_id,
       invited_by: d.invited_by,
-      inviterName: profileMap.get(d.invited_by) || "Nutzer",
-      conversationName: (d.conversations as any)?.name || "Gruppe",
+      inviterName: profileMap.get(d.invited_by) || tr("Nutzer", "User"),
+      conversationName: (d.conversations as any)?.name || tr("Gruppe", "Group"),
     }));
 
     setInvitations(mapped);
@@ -90,12 +93,12 @@ const PendingInvitations = () => {
         .insert({ conversation_id: inv.conversation_id, user_id: user!.id });
       if (memberErr) throw memberErr;
 
-      toast.success("Einladung angenommen");
+      toast.success(tr("Einladung angenommen", "Invitation accepted"));
       setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
       navigate(`/chat/${inv.conversation_id}`);
     } catch (err) {
       console.error("Accept invitation failed", err);
-      toast.error("Fehler beim Annehmen");
+      toast.error(tr("Fehler beim Annehmen", "Failed to accept"));
     } finally {
       setActing(null);
     }
@@ -110,11 +113,11 @@ const PendingInvitations = () => {
         .eq("id", inv.id);
       if (error) throw error;
 
-      toast.success("Einladung abgelehnt");
+      toast.success(tr("Einladung abgelehnt", "Invitation declined"));
       setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
     } catch (err) {
       console.error("Decline invitation failed", err);
-      toast.error("Fehler beim Ablehnen");
+      toast.error(tr("Fehler beim Ablehnen", "Failed to decline"));
     } finally {
       setActing(null);
     }
@@ -126,7 +129,7 @@ const PendingInvitations = () => {
     <div className="px-5 py-3 space-y-2">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
         <UserPlus className="w-3.5 h-3.5" />
-        Einladungen ({invitations.length})
+        {tr("Einladungen", "Invitations")} ({invitations.length})
       </p>
       {invitations.map((inv) => (
         <div
@@ -139,7 +142,7 @@ const PendingInvitations = () => {
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{inv.conversationName}</p>
             <p className="text-xs text-muted-foreground">
-              Einladung von {inv.inviterName}
+              {tr("Einladung von", "Invitation from")} {inv.inviterName}
             </p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
