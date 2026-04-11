@@ -245,10 +245,11 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
           {onOpenClemioKI && hasReceivedMessages && (
             <button
               onClick={() => onOpenClemioKI(currentText)}
-              className="flex items-center justify-center w-11 h-11 rounded-full bg-secondary text-primary hover:bg-primary/10 transition-all duration-200 active:scale-90"
+              className="flex items-center justify-center w-11 h-11 rounded-full gradient-primary text-primary-foreground shadow-soft hover:shadow-elevated transition-all duration-200 active:scale-90 relative overflow-hidden"
               aria-label={t("ki.aiSuggestions")}
             >
-              <Sparkles className="w-5 h-5" />
+              <div className="absolute inset-0 shimmer" />
+              <Sparkles className="w-5 h-5 relative z-10" />
             </button>
           )}
 

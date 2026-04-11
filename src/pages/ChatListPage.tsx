@@ -396,9 +396,9 @@ const ChatListPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
+      <header className="sticky top-0 z-10 glass-strong border-b border-border/30" style={{ background: 'linear-gradient(135deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.8))' }}>
         <div className="flex items-center justify-between px-5 py-4">
-          <h1 className="text-2xl font-extrabold tracking-tight">{t("chat.chats")}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">{t("chat.chats")}</h1>
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleNewChat}

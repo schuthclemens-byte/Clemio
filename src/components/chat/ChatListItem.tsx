@@ -19,6 +19,7 @@ const ChatListItem = ({ name, lastMessage, time, unread, avatar, onClick }: Chat
 
   // Generate a consistent color from name
   const hue = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+  const hasUnread = unread && unread > 0;
 
   return (
     <button
@@ -26,37 +27,43 @@ const ChatListItem = ({ name, lastMessage, time, unread, avatar, onClick }: Chat
       className={cn(
         "flex items-center gap-3.5 w-full px-5 py-4 text-left",
         "transition-all duration-200 hover:bg-secondary/50 active:scale-[0.98]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+        hasUnread && "unread-bar"
       )}
     >
+      {/* Square avatar with rounded corners */}
       <div
-        className="w-13 h-13 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 text-primary-foreground"
+        className="rounded-xl flex items-center justify-center font-bold text-sm shrink-0 text-primary-foreground overflow-hidden"
         style={{
           width: "3.25rem",
           height: "3.25rem",
+          borderRadius: "0.875rem",
           background: avatar ? undefined : `linear-gradient(135deg, hsl(${hue} 60% 55%), hsl(${(hue + 40) % 360} 50% 60%))`,
         }}
       >
         {avatar ? (
-          <img src={avatar} alt={name} className="w-full h-full rounded-2xl object-cover" />
+          <img src={avatar} alt={name} className="w-full h-full object-cover" />
         ) : (
           initials
         )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="font-semibold text-[0.938rem] truncate">{name}</h3>
+          <h3 className={cn(
+            "text-[0.938rem] truncate",
+            hasUnread ? "font-bold" : "font-semibold"
+          )}>{name}</h3>
           <span className={cn(
             "text-xs shrink-0",
-            unread && unread > 0 ? "text-primary font-medium" : "text-muted-foreground"
+            hasUnread ? "text-primary font-semibold" : "text-muted-foreground"
           )}>{time}</span>
         </div>
         <p className={cn(
           "text-sm truncate mt-0.5",
-          unread && unread > 0 ? "text-foreground/70 font-medium" : "text-muted-foreground"
+          hasUnread ? "text-foreground font-medium" : "text-muted-foreground"
         )}>{lastMessage}</p>
       </div>
-      {unread && unread > 0 ? (
+      {hasUnread ? (
         <span className="min-w-[1.375rem] h-[1.375rem] px-1.5 rounded-full gradient-primary text-primary-foreground text-[0.688rem] font-bold flex items-center justify-center shrink-0 shadow-soft">
           {unread}
         </span>
