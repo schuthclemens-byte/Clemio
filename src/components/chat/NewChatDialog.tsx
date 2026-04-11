@@ -18,6 +18,16 @@ interface FoundUser {
   avatar_url?: string | null;
 }
 
+interface ContactPickerEntry {
+  tel?: string[];
+}
+
+interface ContactPickerNavigator extends Navigator {
+  contacts?: {
+    select?: (properties: string[], options: { multiple: boolean }) => Promise<ContactPickerEntry[]>;
+  };
+}
+
 interface NewChatDialogProps {
   open: boolean;
   onClose: () => void;
@@ -56,7 +66,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
   const handlePickContact = useCallback(async () => {
     try {
-      const nav = navigator as any;
+      const nav = navigator as ContactPickerNavigator;
       if (!nav.contacts?.select) return;
 
       const contacts = await nav.contacts.select(["tel"], { multiple: false });
