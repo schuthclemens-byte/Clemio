@@ -30,6 +30,7 @@ import MediaGallerySheet from "@/components/chat/MediaGallerySheet";
 import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
+import ClemioKISheet from "@/components/chat/ClemioKISheet";
 
 interface Message {
   id: string;
@@ -155,6 +156,7 @@ const ChatPage = () => {
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
+  const [showClemioKI, setShowClemioKI] = useState(false);
 
   const mapDbMessage = useCallback((m: any): Message => ({
     id: m.id,
@@ -1294,6 +1296,8 @@ const ChatPage = () => {
           transcript={transcript}
           onTyping={showTypingIndicator ? sendTyping : undefined}
           onStopTyping={showTypingIndicator ? clearTyping : undefined}
+          onOpenClemioKI={() => setShowClemioKI(true)}
+          hasReceivedMessages={messages.some(m => !m.isMine)}
         />
       </div>
 
@@ -1345,6 +1349,20 @@ const ChatPage = () => {
         onClose={() => setForwardMsg(null)}
         messageContent={forwardMsg?.content || ""}
         messageType={forwardMsg?.type}
+      />
+
+      {/* Clemio-KI Sheet */}
+      <ClemioKISheet
+        open={showClemioKI}
+        onClose={() => setShowClemioKI(false)}
+        receivedMessage={
+          messages.filter(m => !m.isMine).slice(-1)[0]?.text || ""
+        }
+        chatHistory={messages.slice(-10).map(m => ({ text: m.text, isMine: m.isMine }))}
+        isPremium={isPremium}
+        onUseSuggestion={(text) => {
+          handleSend(text);
+        }}
       />
     </div>
   );
