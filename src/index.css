@@ -136,12 +136,79 @@
     -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
 
+  .glass-strong {
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+  }
+
   .shadow-soft {
     box-shadow: 0 2px 16px -2px hsl(18 90% 55% / 0.15), 0 1px 4px -1px hsl(18 90% 55% / 0.1);
   }
 
   .shadow-elevated {
     box-shadow: 0 8px 32px -4px hsl(20 30% 10% / 0.12), 0 2px 8px -2px hsl(20 30% 10% / 0.08);
+  }
+
+  /* Glassmorphe bubble styles */
+  .bubble-glass-mine {
+    background: linear-gradient(135deg, hsl(18 90% 55% / 0.95), hsl(350 80% 55% / 0.9));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 24px -4px hsl(18 90% 55% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.15);
+  }
+
+  .bubble-glass-theirs {
+    background: hsl(var(--chat-theirs) / 0.7);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: 0 2px 16px -2px hsl(20 30% 10% / 0.06), inset 0 1px 0 hsl(0 0% 100% / 0.5);
+    border: 1px solid hsl(var(--border) / 0.4);
+  }
+
+  .dark .bubble-glass-theirs {
+    background: hsl(var(--chat-theirs) / 0.5);
+    box-shadow: 0 2px 16px -2px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  /* Floating nav pill */
+  .floating-nav {
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: 0 4px 32px -8px hsl(20 30% 10% / 0.15), 0 0 0 1px hsl(var(--border) / 0.3);
+  }
+
+  .dark .floating-nav {
+    box-shadow: 0 4px 32px -8px hsl(0 0% 0% / 0.4), 0 0 0 1px hsl(var(--border) / 0.2);
+  }
+
+  /* Shimmer effect for AI elements */
+  .shimmer {
+    background: linear-gradient(
+      110deg,
+      transparent 20%,
+      hsl(18 90% 55% / 0.1) 40%,
+      hsl(340 75% 55% / 0.15) 60%,
+      transparent 80%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2.5s ease-in-out infinite;
+  }
+
+  /* Unread accent bar */
+  .unread-bar {
+    position: relative;
+  }
+  .unread-bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, hsl(45 95% 58%), hsl(18 90% 55%), hsl(350 80% 55%));
   }
 }
 
@@ -159,6 +226,22 @@
 
 .animate-reveal-up {
   animation: reveal-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Bubble entrance: scale + fade */
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-bubble-in {
+  animation: bubble-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* Fade in animation */
@@ -208,6 +291,12 @@
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* Shimmer keyframe */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Accessibility: Dyslexia-friendly font */
