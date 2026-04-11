@@ -152,6 +152,29 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     setSelectedUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
+  useEffect(() => {
+    if (!open) return;
+
+    const trimmedQuery = searchQuery.trim();
+    const normalizedQuery = trimmedQuery.replace(/\D/g, "");
+    const canAutosuggest = trimmedQuery.length >= MIN_AUTOSUGGEST_CHARS || normalizedQuery.length >= MIN_AUTOSUGGEST_CHARS;
+
+    if (!canAutosuggest) {
+      searchRequestIdRef.current += 1;
+      setSearching(false);
+      setError("");
+      setResults([]);
+      setResult(null);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void runSearch(trimmedQuery);
+    }, AUTOSUGGEST_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [open, runSearch, searchQuery]);
+
   const handleStartChatWith = async (target: FoundUser) => {
     if (!target || !user || creating) return;
     setCreating(true);
