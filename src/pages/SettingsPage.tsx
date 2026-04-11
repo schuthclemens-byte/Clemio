@@ -266,8 +266,9 @@ const SettingsPage = () => {
           </button>
         )}
 
+        {show("privacy") && <>
         {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
-        <CollapsibleSection icon={Shield} title="Privatsphäre & Nachrichten" defaultOpen={true} delay="30ms">
+        <CollapsibleSection icon={Shield} title="Privatsphäre & Nachrichten" defaultOpen={!isSearching} delay="30ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <ToggleRow
               icon={MessageSquareText}
