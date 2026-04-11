@@ -1350,6 +1350,20 @@ const ChatPage = () => {
         messageContent={forwardMsg?.content || ""}
         messageType={forwardMsg?.type}
       />
+
+      {/* Clemio-KI Sheet */}
+      <ClemioKISheet
+        open={showClemioKI}
+        onClose={() => setShowClemioKI(false)}
+        receivedMessage={
+          messages.filter(m => !m.isMine).slice(-1)[0]?.text || ""
+        }
+        chatHistory={messages.slice(-10).map(m => ({ text: m.text, isMine: m.isMine }))}
+        isPremium={isPremium}
+        onUseSuggestion={(text) => {
+          handleSend(text);
+        }}
+      />
     </div>
   );
 };
