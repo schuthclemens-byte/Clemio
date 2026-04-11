@@ -36,7 +36,7 @@ const ClemioKISheet = ({
   isPremium,
   onUseSuggestion,
 }: ClemioKISheetProps) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<KIResponse | null>(null);
   const [mode, setMode] = useState<"standard" | "strategy">("standard");
@@ -80,6 +80,7 @@ const ClemioKISheet = ({
           receivedMessage,
           chatHistory: chatHistory.slice(-5),
           mode: selectedMode,
+          locale,
         },
       });
 
