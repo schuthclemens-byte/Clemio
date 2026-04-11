@@ -122,21 +122,16 @@ const HeroSection = () => {
     if (triggeredRef.current) return;
     triggeredRef.current = true;
 
-    // Haptic feedback
     if (navigator.vibrate) navigator.vibrate(15);
 
-    setIsLoadingAudio(true);
-
     try {
-      const audio = await fetchOnboardingAudio();
-      setIsLoadingAudio(false);
+      const audio = fetchOnboardingAudio();
       setActivated(true);
       setPlayError(false);
       await playAudio(audio);
     } catch {
       retryCountRef.current += 1;
       triggeredRef.current = false;
-      setIsLoadingAudio(false);
 
       if (retryCountRef.current >= 3) {
         setPlayError(true);
