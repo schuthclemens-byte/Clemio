@@ -68,7 +68,7 @@ const HeroSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activated, setActivated] = useState(false);
   const [playError, setPlayError] = useState(false);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
