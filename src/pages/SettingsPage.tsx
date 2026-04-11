@@ -397,9 +397,11 @@ const SettingsPage = () => {
             )}
           </div>
         </CollapsibleSection>
+        </>}
 
+        {show("appearance") && <>
         {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
-        <CollapsibleSection icon={Palette} title="Erscheinungsbild" delay="60ms">
+        <CollapsibleSection icon={Palette} title="Erscheinungsbild" defaultOpen={isSearching} delay="60ms">
           <div className="space-y-4">
             {/* Theme */}
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
