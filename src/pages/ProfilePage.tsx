@@ -11,6 +11,18 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { usePremiumGate } from "@/hooks/usePremiumGate";
 import { Badge } from "@/components/ui/badge";
 
+const splitDisplayName = (value: string) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return { firstName: "", lastName: "" };
+
+  const [derivedFirstName = "", ...rest] = trimmedValue.split(/\s+/);
+
+  return {
+    firstName: derivedFirstName,
+    lastName: rest.join(" "),
+  };
+};
+
 const ProfilePage = () => {
   const navigate = useNavigate();
   const swipeBackProps = useSwipeBack({ fallbackPath: "/chats" });
@@ -40,9 +52,16 @@ const ProfilePage = () => {
         .maybeSingle();
 
       if (data) {
-        setDisplayName(data.display_name || "");
-        setFirstName((data as any).first_name || "");
-        setLastName((data as any).last_name || "");
+        const storedDisplayName = data.display_name?.trim() || "";
+        const storedFirstName = (data as any).first_name?.trim() || "";
+        const storedLastName = (data as any).last_name?.trim() || "";
+        const derivedName = !storedFirstName && !storedLastName
+          ? splitDisplayName(storedDisplayName)
+          : { firstName: storedFirstName, lastName: storedLastName };
+
+        setDisplayName(storedDisplayName);
+        setFirstName(derivedName.firstName);
+        setLastName(derivedName.lastName);
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
         
@@ -84,12 +103,16 @@ const ProfilePage = () => {
     if (!user) return;
     setSaving(true);
 
+    const nextFirstName = firstName.trim();
+    const nextLastName = lastName.trim();
+    const nextDisplayName = [nextFirstName, nextLastName].filter(Boolean).join(" ") || displayName.trim() || "Nutzer";
+
     const { error } = await supabase
       .from("profiles")
       .update({
-        display_name: [firstName.trim(), lastName.trim()].filter(Boolean).join(" ") || "Nutzer",
-        first_name: firstName.trim() || null,
-        last_name: lastName.trim() || null,
+        display_name: nextDisplayName,
+        first_name: nextFirstName || null,
+        last_name: nextLastName || null,
         language: locale,
       })
       .eq("id", user.id);
@@ -98,6 +121,7 @@ const ProfilePage = () => {
     if (error) {
       toast.error(t("profile.saveFailed"));
     } else {
+      setDisplayName(nextDisplayName);
       toast.success(t("profile.saved"));
     }
   };
