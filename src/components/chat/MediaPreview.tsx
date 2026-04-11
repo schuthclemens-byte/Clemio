@@ -1,6 +1,6 @@
 import { X, Play, Download } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const downloadImage = async (url: string) => {
   try {
@@ -15,7 +15,6 @@ const downloadImage = async (url: string) => {
     document.body.removeChild(a);
     URL.revokeObjectURL(blobUrl);
   } catch {
-    // Fallback: open in new tab
     window.open(url, "_blank");
   }
 };
@@ -34,20 +33,85 @@ const MediaPreview = ({ file, type, onRemove }: MediaPreviewProps) => {
       {type === "image" ? (
         <img src={url} alt="Preview" className="w-full h-full object-cover" />
       ) : (
-        <div className="relative w-full h-full bg-black">
+        <div className="relative w-full h-full bg-foreground">
           <video src={url} className="w-full h-full object-cover" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Play className="w-6 h-6 text-white fill-white/80" />
+            <Play className="w-6 h-6 text-background fill-background/80" />
           </div>
         </div>
       )}
       <button
         onClick={onRemove}
-        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center"
+        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-foreground/60 flex items-center justify-center"
       >
-        <X className="w-3 h-3 text-white" />
+        <X className="w-3 h-3 text-background" />
       </button>
     </div>
+  );
+};
+
+interface FullscreenImageViewerProps {
+  url: string;
+  onClose: () => void;
+}
+
+const FullscreenImageViewer = ({ url, onClose }: FullscreenImageViewerProps) => {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/90 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Bildvorschau"
+    >
+      <button
+        onClick={(event) => {
+          event.stopPropagation();
+          onClose();
+        }}
+        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-background/10 flex items-center justify-center"
+        aria-label="Schließen"
+      >
+        <X className="w-5 h-5 text-background" />
+      </button>
+
+      <button
+        onClick={(event) => {
+          event.stopPropagation();
+          downloadImage(url);
+        }}
+        className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-background/10 flex items-center justify-center"
+        aria-label="Herunterladen"
+      >
+        <Download className="w-5 h-5 text-background" />
+      </button>
+
+      <img
+        src={url}
+        alt="Vollbildansicht"
+        className="max-w-full max-h-full object-contain"
+        onClick={(event) => event.stopPropagation()}
+      />
+    </div>,
+    document.body
   );
 };
 
@@ -57,7 +121,7 @@ interface MediaMessageProps {
   isMine: boolean;
 }
 
-export const MediaMessage = ({ url, type, isMine }: MediaMessageProps) => {
+export const MediaMessage = ({ url, type }: MediaMessageProps) => {
   const [fullscreen, setFullscreen] = useState(false);
 
   return (
@@ -65,8 +129,8 @@ export const MediaMessage = ({ url, type, isMine }: MediaMessageProps) => {
       {type === "image" ? (
         <img
           src={url}
-          alt="Shared image"
-          className="rounded-xl max-w-full max-h-64 cursor-pointer object-cover"
+          alt="Geteiltes Bild"
+          className="rounded-xl max-w-full max-h-64 cursor-zoom-in object-cover"
           onClick={() => setFullscreen(true)}
           loading="lazy"
         />
@@ -79,30 +143,8 @@ export const MediaMessage = ({ url, type, isMine }: MediaMessageProps) => {
         />
       )}
 
-      {/* Fullscreen image viewer */}
       {fullscreen && type === "image" && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-          onClick={() => setFullscreen(false)}
-        >
-          <button
-            onClick={() => setFullscreen(false)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
-          >
-            <X className="w-5 h-5 text-white" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); downloadImage(url); }}
-            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
-          >
-            <Download className="w-5 h-5 text-white" />
-          </button>
-          <img
-            src={url}
-            alt="Full size"
-            className="max-w-full max-h-full object-contain"
-          />
-        </div>
+        <FullscreenImageViewer url={url} onClose={() => setFullscreen(false)} />
       )}
     </>
   );
