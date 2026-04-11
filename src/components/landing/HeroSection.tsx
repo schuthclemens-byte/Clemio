@@ -7,11 +7,50 @@ import { useI18n } from "@/contexts/I18nContext";
 const LANDING_AUDIO_SRC = "/landing-voice-original.mp3";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-// Preload audio globally so it's ready instantly
+// Preload German fallback audio globally
 const preloadedAudio = new Audio(`${LANDING_AUDIO_SRC}?v=1`);
 preloadedAudio.preload = "auto";
 preloadedAudio.volume = 0.18;
 preloadedAudio.load();
+
+// ── Global TTS cache: fetch localized audio at module load ──
+const ttsCache = new Map<string, HTMLAudioElement>();
+const ttsPending = new Map<string, Promise<HTMLAudioElement | null>>();
+
+function detectLang(): string {
+  const saved = localStorage.getItem("app-locale");
+  if (saved && ["de", "en", "es", "fr", "tr", "ar"].includes(saved)) return saved;
+  const prefix = (navigator.language || "").split("-")[0].toLowerCase();
+  return ["de", "en", "es", "fr", "tr", "ar"].includes(prefix) ? prefix : "de";
+}
+
+function prefetchTTS(lang: string): Promise<HTMLAudioElement | null> {
+  if (ttsCache.has(lang)) return Promise.resolve(ttsCache.get(lang)!);
+  if (ttsPending.has(lang)) return ttsPending.get(lang)!;
+
+  const promise = fetch(`${SUPABASE_URL}/functions/v1/onboarding-tts?lang=${lang}&v=${Date.now()}`)
+    .then(async (res) => {
+      const ct = res.headers.get("Content-Type") || "";
+      if (ct.includes("application/json") || !res.ok) return null;
+      const blob = await res.blob();
+      const audio = new Audio(URL.createObjectURL(blob));
+      audio.preload = "auto";
+      audio.volume = 0.18;
+      ttsCache.set(lang, audio);
+      return audio;
+    })
+    .catch(() => null)
+    .finally(() => ttsPending.delete(lang));
+
+  ttsPending.set(lang, promise);
+  return promise;
+}
+
+// Start fetching immediately on module load
+const initialLang = detectLang();
+if (initialLang !== "de") {
+  prefetchTTS(initialLang);
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -29,13 +68,11 @@ const HeroSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activated, setActivated] = useState(false);
   const [playError, setPlayError] = useState(false);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
   const retryCountRef = useRef(0);
-  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
-  const ttsFetchedLangRef = useRef<string | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -45,42 +82,21 @@ const HeroSection = () => {
     };
   }, []);
 
-  // Background-fetch TTS audio in current language
+  // Ensure TTS is prefetched for the current locale (handles language switches)
   useEffect(() => {
-    if (ttsFetchedLangRef.current === locale) return;
-    ttsFetchedLangRef.current = locale;
-
-    const url = `${SUPABASE_URL}/functions/v1/onboarding-tts?lang=${locale}&v=${Date.now()}`;
-    fetch(url)
-      .then(async (res) => {
-        const contentType = res.headers.get("Content-Type") || "";
-        // If response is JSON (fallback/error), skip – use local MP3
-        if (contentType.includes("application/json")) {
-          ttsAudioRef.current = null;
-          return;
-        }
-        if (!res.ok) throw new Error("TTS fetch failed");
-        const blob = await res.blob();
-        const objUrl = URL.createObjectURL(blob);
-        const audio = new Audio(objUrl);
-        audio.preload = "auto";
-        audio.volume = 0.18;
-        ttsAudioRef.current = audio;
-      })
-      .catch(() => {
-        // TTS failed – fallback MP3 will be used
-        ttsAudioRef.current = null;
-      });
+    if (locale !== "de") {
+      prefetchTTS(locale);
+    }
   }, [locale]);
 
-  /** Fetch TTS audio from edge function in the user's language */
-  const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
-    // Use TTS version if available, otherwise instant fallback
-    const source = ttsAudioRef.current ?? preloadedAudio;
+  /** Get the best available audio: cached TTS or German fallback */
+  const fetchOnboardingAudio = useCallback((): HTMLAudioElement => {
+    const cached = ttsCache.get(locale);
+    const source = cached ?? preloadedAudio;
     const audio = source.cloneNode(true) as HTMLAudioElement;
     audio.volume = 0.18;
     return audio;
-  }, []);
+  }, [locale]);
 
   /** Play the onboarding audio */
   const playAudio = useCallback(async (audio: HTMLAudioElement) => {
@@ -106,21 +122,16 @@ const HeroSection = () => {
     if (triggeredRef.current) return;
     triggeredRef.current = true;
 
-    // Haptic feedback
     if (navigator.vibrate) navigator.vibrate(15);
 
-    setIsLoadingAudio(true);
-
     try {
-      const audio = await fetchOnboardingAudio();
-      setIsLoadingAudio(false);
+      const audio = fetchOnboardingAudio();
       setActivated(true);
       setPlayError(false);
       await playAudio(audio);
     } catch {
       retryCountRef.current += 1;
       triggeredRef.current = false;
-      setIsLoadingAudio(false);
 
       if (retryCountRef.current >= 3) {
         setPlayError(true);
@@ -160,15 +171,12 @@ const HeroSection = () => {
       return;
     }
 
-    setIsLoadingAudio(true);
     try {
-      const audio = await fetchOnboardingAudio();
+      const audio = fetchOnboardingAudio();
       audio.currentTime = 0;
-      setIsLoadingAudio(false);
       setActivated(true);
       await playAudio(audio);
     } catch {
-      setIsLoadingAudio(false);
       triggeredRef.current = false;
     }
   }, [isPlaying, fetchOnboardingAudio, playAudio]);
@@ -211,11 +219,7 @@ const HeroSection = () => {
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
                 />
                 <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shadow-soft z-10">
-                  {isLoadingAudio ? (
-                    <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  ) : (
-                    <Volume2 className="w-7 h-7 text-primary-foreground" />
-                  )}
+                  <Volume2 className="w-7 h-7 text-primary-foreground" />
                 </div>
               </div>
 
@@ -289,9 +293,7 @@ const HeroSection = () => {
             className="group relative inline-flex items-center gap-4 px-5 py-4 rounded-2xl bg-card border border-border shadow-elevated hover:shadow-soft transition-all duration-300 w-full"
           >
             <span className={`relative w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-all duration-300 ${isPlaying ? "animate-voice-pulse" : "group-hover:scale-105"}`}>
-              {isLoadingAudio ? (
-                <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              ) : isPlaying ? (
+              {isPlaying ? (
                 <Pause className="w-5 h-5 text-primary-foreground" />
               ) : (
                 <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
