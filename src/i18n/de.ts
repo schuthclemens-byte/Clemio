@@ -336,7 +336,7 @@ const de: Record<string, string> = {
     "ki.strategyLocked": "Strategie-Modus ist nur für Premium verfügbar.",
     "ki.aiSuggestions": "Clemio-KI Antworten",
     "settings.searchPlaceholder": "Einstellung suchen…",
-    "settings.noResults": "Keine Einstellung gefunden für „{q}"",
+    "settings.noResults": "Keine Einstellung gefunden",
     "settings.privacyMessages": "Privatsphäre & Nachrichten",
     "settings.messagePreview": "Nachrichtenvorschau anzeigen",
     "settings.messagePreviewDesc": "Zeigt eine kurze Vorschau der Nachricht in Push-Benachrichtigungen.",
