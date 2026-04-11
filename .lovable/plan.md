@@ -1,27 +1,27 @@
 
 
-# KI-Vorschläge ins Eingabefeld einfügen statt direkt senden
+# Clemio-KI auf kostenlosen Google Gemini API-Key umstellen
 
-## Kosten-Info
-Die Clemio-KI nutzt das Lovable AI Gateway. Dein Workspace hat ein monatliches AI-Guthaben ($1 kostenlos). Jede KI-Anfrage verbraucht einen kleinen Betrag davon. Solange du im Rahmen dieses Guthabens bleibst, entstehen keine zusätzlichen Kosten.
+## Schritte
 
-## Problem
-Aktuell ruft `onUseSuggestion` in `ChatPage.tsx` direkt `handleSend(text)` auf — die KI-Antwort wird also sofort als Nachricht gesendet, ohne dass der Nutzer sie vorher bearbeiten kann.
+### 1. API-Key als Secret speichern
+- `GEMINI_API_KEY` über das Secret-Tool hinzufügen
+- Der User gibt seinen Key ein
 
-## Lösung
+### 2. Edge Function `clemio-ki/index.ts` anpassen
+Nur der API-Aufruf ändert sich:
 
-### Änderung 1: ChatInput um `externalText`-Prop erweitern
-- Neues Prop `externalText?: string` an `ChatInput` hinzufügen
-- Per `useEffect` den internen `text`-State setzen, wenn `externalText` sich ändert
-- So wird der KI-Vorschlag ins Textfeld eingefügt und der Nutzer kann ihn bearbeiten
+- **Alt:** `https://ai.gateway.lovable.dev/v1/chat/completions` mit `LOVABLE_API_KEY`
+- **Neu:** `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=GEMINI_API_KEY`
+- Request-Body an Google-Format anpassen (`contents` statt `messages`, `systemInstruction` statt `system`-Role)
+- Response-Parsing anpassen (`candidates[0].content.parts[0].text` statt `choices[0].message.content`)
 
-### Änderung 2: ChatPage — KI-Vorschlag ins Feld leiten statt senden
-- Neuer State `pendingSuggestion` in `ChatPage`
-- `onUseSuggestion` setzt `pendingSuggestion` statt `handleSend` aufzurufen
-- `pendingSuggestion` wird als `externalText` an `ChatInput` übergeben
-- Nach dem Setzen wird `pendingSuggestion` zurückgesetzt
+### Was gleich bleibt
+- Alle Prompts, Modi (Standard/Strategie/Refine)
+- Usage-Tracking und Tageslimits
+- Auth-Check und Premium-Logik
+- Frontend — keine Änderung nötig
 
-### Betroffene Dateien
-1. `src/components/chat/ChatInput.tsx` — neues `externalText`-Prop + useEffect
-2. `src/pages/ChatPage.tsx` — `pendingSuggestion`-State, `onUseSuggestion`-Logik ändern
+### Betroffene Datei
+- `supabase/functions/clemio-ki/index.ts`
 
