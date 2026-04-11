@@ -325,9 +325,9 @@ const SettingsPage = () => {
                   <span className="flex items-start gap-3 flex-1 min-w-0">
                     <Bell className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                     <div className="min-w-0">
-                      <span className="text-[0.938rem] block font-medium">Push-Benachrichtigungen</span>
+                      <span className="text-[0.938rem] block font-medium">{t("settings.pushTitle")}</span>
                       <span className="text-xs text-muted-foreground leading-relaxed">
-                        {pushStatus.savedToBackend ? "Aktiv – du erhältst Benachrichtigungen" : "Nicht aktiv"}
+                        {pushStatus.savedToBackend ? t("settings.pushActive") : t("settings.pushInactive")}
                       </span>
                     </div>
                   </span>
@@ -336,9 +336,9 @@ const SettingsPage = () => {
                       onClick={async () => {
                         const ok = await pushSubscribe();
                         if (ok) {
-                          toast.success("Push-Benachrichtigungen aktiviert");
+                          toast.success(t("settings.pushActivated"));
                         } else {
-                          toast.error("Push konnte nicht aktiviert werden – prüfe die Status-Anzeige unten");
+                          toast.error(t("settings.pushFailed"));
                         }
                       }}
                       disabled={pushStatus.loading}
