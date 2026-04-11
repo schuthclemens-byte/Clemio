@@ -160,6 +160,7 @@ const ChatPage = () => {
   const chatMenuBtnRef = useRef<HTMLDivElement>(null);
   const [showClemioKI, setShowClemioKI] = useState(false);
   const [clemioKIDraft, setClemioKIDraft] = useState("");
+  const [pendingSuggestion, setPendingSuggestion] = useState("");
 
   const mapDbMessage = useCallback((m: any): Message => ({
     id: m.id,
@@ -1313,6 +1314,7 @@ const ChatPage = () => {
           onStopTyping={showTypingIndicator ? clearTyping : undefined}
           onOpenClemioKI={(draft) => { setClemioKIDraft(draft); setShowClemioKI(true); }}
           hasReceivedMessages={messages.some(m => !m.isMine) || true}
+          externalText={pendingSuggestion}
         />
       </div>
 

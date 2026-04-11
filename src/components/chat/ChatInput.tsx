@@ -28,7 +28,7 @@ interface ChatInputProps {
   externalText?: string;
 }
 
-const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages }: ChatInputProps) => {
+const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages, externalText }: ChatInputProps) => {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
@@ -41,6 +41,14 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
   const { t, locale } = useI18n();
   const { autoCorrect: autoCorrectEnabled } = useAccessibility();
   const { suggestions, updateSuggestions, autoCorrect, applySuggestion } = useAutoCorrect(locale, autoCorrectEnabled);
+
+  // Insert external text (e.g. KI suggestion) into the input field for editing
+  useEffect(() => {
+    if (externalText) {
+      setText(externalText);
+      updateSuggestions(externalText);
+    }
+  }, [externalText]);
 
   const currentText = isListening ? transcript : text;
 
