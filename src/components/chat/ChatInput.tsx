@@ -23,7 +23,7 @@ interface ChatInputProps {
   transcript: string;
   onTyping?: () => void;
   onStopTyping?: () => void;
-  onOpenClemioKI?: () => void;
+  onOpenClemioKI?: (draftText: string) => void;
   hasReceivedMessages?: boolean;
 }
 
