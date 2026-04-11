@@ -1222,11 +1222,16 @@ const ChatPage = () => {
               <SwipeableBubble
                 key={msg.id}
                 isMine={msg.isMine}
-                onSwipeReply={() => setReplyTarget({
-                  id: msg.id,
-                  text: msg.text.slice(0, 100),
-                  senderName,
-                })}
+                onSwipeReply={() => {
+                  let displayText = msg.text.slice(0, 100);
+                  if (msg.messageType === "image") displayText = "📷 Bild";
+                  else if (msg.messageType === "audio" || msg.messageType === "voice") displayText = "🎤 Sprachnachricht";
+                  setReplyTarget({
+                    id: msg.id,
+                    text: displayText,
+                    senderName,
+                  });
+                }}
               >
                 <ChatBubble
                   message={msg.text}
@@ -1253,7 +1258,7 @@ const ChatPage = () => {
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
                   onEdit={msg.isMine ? handleEditMessage : undefined}
                   onSaveAsVoiceSample={!msg.isMine ? handleSaveAsVoiceSample : undefined}
-                  replyToText={replyMsg?.text}
+                  replyToText={replyMsg ? (replyMsg.messageType === "image" ? "📷 Bild" : replyMsg.messageType === "audio" || replyMsg.messageType === "voice" ? "🎤 Sprachnachricht" : replyMsg.text) : undefined}
                   replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
                   replyToId={msg.replyTo || undefined}
                   onScrollToMessage={scrollToMessage}
