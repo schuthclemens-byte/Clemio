@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchAccessibleProfiles, searchAccessibleProfiles } from "@/lib/accessibleProfiles";
+import { findOrCreateDirectChat } from "@/lib/chatCreation";
 
 interface ConversationItem {
   id: string;
@@ -288,49 +289,21 @@ const ChatListPage = () => {
     setStartingChatWith(target.id);
 
     try {
-      // Check for existing 1:1 conversation
-      const [myRes, theirRes] = await Promise.all([
-        supabase.from("conversation_members").select("conversation_id").eq("user_id", user.id),
-        supabase.from("conversation_members").select("conversation_id").eq("user_id", target.id),
-      ]);
-
-      const myIds = new Set((myRes.data ?? []).map((m) => m.conversation_id));
-      const sharedIds = (theirRes.data ?? []).map((m) => m.conversation_id).filter((id) => myIds.has(id));
-
-      if (sharedIds.length > 0) {
-        const { data: existing } = await supabase
-          .from("conversations")
-          .select("id")
-          .in("id", sharedIds)
-          .eq("is_group", false)
-          .limit(1)
-          .maybeSingle();
-        if (existing?.id) {
-          setSearch("");
-          navigate(`/chat/${existing.id}`);
-          return;
-        }
-      }
-
-      // Create new conversation
-      const convId = crypto.randomUUID();
-      await supabase.from("conversations").insert({ id: convId, created_by: user.id, is_group: false });
-      await supabase.from("conversation_members").insert({ conversation_id: convId, user_id: user.id });
-
-      // Create and auto-accept invitation so RLS allows adding the member
-      const { data: inv } = await supabase.from("chat_invitations").insert({
-        conversation_id: convId,
-        invited_by: user.id,
-        invited_user_id: target.id,
-        status: "accepted",
-      }).select("id").single();
-
-      await supabase.from("conversation_members").insert({ conversation_id: convId, user_id: target.id });
+      const convId = await findOrCreateDirectChat(user.id, target.id);
       setSearch("");
       navigate(`/chat/${convId}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("[ChatListPage] start chat failed", err);
-      toast.error("Chat konnte nicht gestartet werden");
+      const msg = err?.message || "";
+      if (msg.includes("conversations")) {
+        toast.error("Konversation konnte nicht erstellt werden");
+      } else if (msg.includes("chat_invitations")) {
+        toast.error("Einladung konnte nicht gesendet werden");
+      } else if (msg.includes("conversation_members")) {
+        toast.error("Mitglied konnte nicht hinzugefügt werden");
+      } else {
+        toast.error("Chat konnte nicht gestartet werden");
+      }
     } finally {
       setStartingChatWith(null);
     }

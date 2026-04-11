@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizePhone } from "@/lib/authPhone";
 import { searchAccessibleProfiles } from "@/lib/accessibleProfiles";
+import { findOrCreateDirectChat } from "@/lib/chatCreation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -163,74 +164,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     setError("");
 
     try {
-      const [myMembershipsResponse, targetMembershipsResponse] = await Promise.all([
-        supabase
-          .from("conversation_members")
-          .select("conversation_id")
-          .eq("user_id", user.id),
-        supabase
-          .from("conversation_members")
-          .select("conversation_id")
-          .eq("user_id", target.id),
-      ]);
-
-      if (myMembershipsResponse.error) throw myMembershipsResponse.error;
-      if (targetMembershipsResponse.error) throw targetMembershipsResponse.error;
-
-      const myConversationIds = new Set((myMembershipsResponse.data ?? []).map((membership) => membership.conversation_id));
-      const sharedConversationIds = (targetMembershipsResponse.data ?? [])
-        .map((membership) => membership.conversation_id)
-        .filter((conversationId) => myConversationIds.has(conversationId));
-
-      if (sharedConversationIds.length > 0) {
-        const { data: existingConversation, error: existingConversationError } = await supabase
-          .from("conversations")
-          .select("id")
-          .in("id", sharedConversationIds)
-          .eq("is_group", false)
-          .limit(1)
-          .maybeSingle();
-
-        if (existingConversationError) throw existingConversationError;
-
-        if (existingConversation?.id) {
-          handleClose();
-          navigate(`/chat/${existingConversation.id}`);
-          return;
-        }
-      }
-
-      const conversationId = crypto.randomUUID();
-
-      const { error: convErr } = await supabase
-        .from("conversations")
-        .insert({ id: conversationId, created_by: user.id, name: null, is_group: false });
-
-      if (convErr) throw convErr;
-
-      const { error: ownMembershipError } = await supabase
-        .from("conversation_members")
-        .insert({ conversation_id: conversationId, user_id: user.id });
-
-      if (ownMembershipError) throw ownMembershipError;
-
-      const { error: invitationError } = await supabase
-        .from("chat_invitations")
-        .insert({
-          conversation_id: conversationId,
-          invited_by: user.id,
-          invited_user_id: target.id,
-          status: "accepted",
-        });
-
-      if (invitationError) throw invitationError;
-
-      const { error: targetMembershipError } = await supabase
-        .from("conversation_members")
-        .insert({ conversation_id: conversationId, user_id: target.id });
-
-      if (targetMembershipError) throw targetMembershipError;
-
+      const conversationId = await findOrCreateDirectChat(user.id, target.id);
       handleClose();
       navigate(`/chat/${conversationId}`);
     } catch (err: any) {
