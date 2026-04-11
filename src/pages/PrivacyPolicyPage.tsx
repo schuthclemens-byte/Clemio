@@ -437,6 +437,7 @@ E-Mail: privacy@clemio.app`}
             <Bullet><strong>Online-Status:</strong> Wird bei Abmeldung oder Inaktivität automatisch zurückgesetzt.</Bullet>
             <Bullet><strong>Zahlungsdaten:</strong> Gemäß handels- und steuerrechtlichen Aufbewahrungsfristen (bis zu 10 Jahre).</Bullet>
             <Bullet><strong>Push-Tokens:</strong> Bis zur Deaktivierung oder Kontolöschung. Ungültige Tokens werden automatisch entfernt.</Bullet>
+            <Bullet><strong>Clemio-KI Nutzungsdaten:</strong> Zeitstempel der KI-Anfragen werden zur Durchsetzung der täglichen Nutzungsbegrenzung gespeichert. Löschung bei Kontolöschung.</Bullet>
           </ul>
           <p>
             Bei einer Kontolöschung werden alle personenbezogenen Daten vollständig und unwiderruflich entfernt, einschließlich Nachrichten, Medien, Stimmprofile, Consent-Daten, Kontakt-Einstellungen und Authentifizierungsdaten.
