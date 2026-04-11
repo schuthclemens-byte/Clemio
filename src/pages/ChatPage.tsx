@@ -1222,11 +1222,16 @@ const ChatPage = () => {
               <SwipeableBubble
                 key={msg.id}
                 isMine={msg.isMine}
-                onSwipeReply={() => setReplyTarget({
-                  id: msg.id,
-                  text: msg.text.slice(0, 100),
-                  senderName,
-                })}
+                onSwipeReply={() => {
+                  let displayText = msg.text.slice(0, 100);
+                  if (msg.messageType === "image") displayText = "📷 Bild";
+                  else if (msg.messageType === "audio" || msg.messageType === "voice") displayText = "🎤 Sprachnachricht";
+                  setReplyTarget({
+                    id: msg.id,
+                    text: displayText,
+                    senderName,
+                  });
+                }}
               >
                 <ChatBubble
                   message={msg.text}
