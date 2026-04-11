@@ -243,8 +243,14 @@ const SettingsPage = () => {
             )}
           </div>
         </div>
+      </header>
 
       <div className="flex-1 p-4 space-y-6">
+        {isSearching && visibleSections?.size === 0 && (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">Keine Einstellung gefunden für „{searchQuery}"</p>
+          </div>
+        )}
         {/* Profile link */}
         <button
           onClick={() => navigate("/profile")}
