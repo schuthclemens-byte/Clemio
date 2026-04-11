@@ -242,14 +242,8 @@ Generiere passende Antworten auf ${userLang}.`;
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Credits exhausted." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
+      console.error("Gemini API error:", response.status, t);
       throw new Error("AI generation failed");
     }
 
@@ -257,7 +251,7 @@ Generiere passende Antworten auf ${userLang}.`;
     await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
 
     const data = await response.json();
-    let raw = data.choices?.[0]?.message?.content?.trim() || "";
+    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
     raw = raw.replace(/^```json\s*/i, "").replace(/\s*```$/, "").trim();
 
     let parsed;
