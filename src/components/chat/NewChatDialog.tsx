@@ -406,7 +406,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{u.display_name || "Nutzer"}</p>
-                    <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
+                    <p className="text-xs text-muted-foreground">{t("chat.contactFound")}</p>
                   </div>
                   {isGroupMode ? (
                     <UserPlus className="w-4 h-4 text-primary shrink-0" />
@@ -451,7 +451,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{result.display_name || "Nutzer"}</p>
-                <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
+                <p className="text-xs text-muted-foreground">{t("chat.contactFound")}</p>
               </div>
               <MessageCirclePlus className="w-5 h-5 text-primary shrink-0" />
             </button>
@@ -469,7 +469,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  Gruppe erstellen
+                  {t("chat.createGroup")}
                 </>
               )}
             </button>
@@ -477,7 +477,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
           {isGroupMode && selectedUsers.length < 2 && (
             <p className="text-xs text-muted-foreground text-center py-2">
-              Füge mindestens 2 Kontakte hinzu
+              {t("chat.addMinMembers")}
             </p>
           )}
         </div>
