@@ -342,8 +342,12 @@ E-Mail: privacy@clemio.app`}
             <Bullet>Premium-Nutzer: unbegrenzte Nutzung</Bullet>
             <Bullet>Zur Durchsetzung der Begrenzung wird jede Nutzung mit Zeitstempel und Nutzer-ID erfasst</Bullet>
           </ul>
+          <p className="font-medium text-foreground">Datensouveränität:</p>
           <p>
-            Die Übermittlung erfolgt über den Lovable AI Gateway (GPT Engineer AB, Schweden) an das KI-Modell Google Gemini. Es werden keine Chatinhalte dauerhaft beim Gateway oder KI-Anbieter gespeichert. Die Verarbeitung erfolgt ausschließlich zur Generierung der Antwortvorschläge.
+            Die an die KI übermittelten Nachrichteninhalte werden <strong>zu keinem Zeitpunkt dauerhaft gespeichert</strong> – weder auf unseren Servern, noch beim Gateway-Betreiber, noch beim KI-Anbieter. Die Daten werden ausschließlich zur einmaligen Generierung der Vorschläge verarbeitet und unmittelbar danach verworfen. Es findet <strong>kein Training</strong> von KI-Modellen mit deinen Daten statt. Lediglich ein Nutzungszähler (Zeitstempel + Nutzer-ID, ohne Nachrichteninhalte) wird zur Durchsetzung der täglichen Nutzungsbegrenzung gespeichert.
+          </p>
+          <p>
+            Die Übermittlung erfolgt über den Lovable AI Gateway (GPT Engineer AB, Schweden) an das KI-Modell Google Gemini.
           </p>
           <p>
             KI-Modell: Google Gemini (Google LLC, USA).<br />
