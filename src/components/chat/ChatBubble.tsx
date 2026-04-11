@@ -150,7 +150,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     <>
     <PaywallGate />
     <div className={cn("flex w-full mb-3", isMine ? "justify-end" : "justify-start")}>
-      <div data-msg-id={msgId} className={cn("max-w-[80%] animate-reveal-up")}>
+      <div data-msg-id={msgId} className={cn("max-w-[80%] animate-bubble-in")}>
         {!isMine && senderName && (
           <span className="text-xs font-medium text-muted-foreground ml-3 mb-0.5 block">
             {senderName}
@@ -160,11 +160,11 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
           onClick={handleBubbleTap}
           onDoubleClick={() => message && setShowActions(!showActions)}
           className={cn(
-            "shadow-sm cursor-pointer select-none transition-all duration-200",
+            "cursor-pointer select-none transition-all duration-200",
             isMedia ? "rounded-2xl overflow-hidden" : "px-4 py-3",
             isMine
-              ? "bg-chat-mine text-chat-mine-foreground rounded-[1.25rem] rounded-br-md"
-              : "bg-chat-theirs text-chat-theirs-foreground rounded-[1.25rem] rounded-bl-md",
+              ? "bubble-glass-mine text-chat-mine-foreground rounded-[1.25rem] rounded-br-sm"
+              : "bubble-glass-theirs text-chat-theirs-foreground rounded-[1.25rem] rounded-bl-sm",
             isActive && "ring-2 shadow-md",
             isSpeaking && !isPlayingCloned && "ring-primary/40",
             isPlayingCloned && "ring-accent/40"
