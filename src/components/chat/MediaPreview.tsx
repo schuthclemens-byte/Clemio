@@ -83,7 +83,7 @@ function usePinchZoomSwipe(onClose: () => void) {
     pinchCenterY: 0,
   });
 
-  const getDistance = (t1: Touch, t2: Touch) =>
+  const getDistance = (t1: React.Touch, t2: React.Touch) =>
     Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -91,11 +91,12 @@ function usePinchZoomSwipe(onClose: () => void) {
     const g = gestureRef.current;
 
     if (e.touches.length === 2) {
-      // Pinch start
-      g.initialDistance = getDistance(e.touches[0], e.touches[1]);
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
+      g.initialDistance = getDistance(t0, t1);
       g.initialScale = transform.scale;
-      g.pinchCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-      g.pinchCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      g.pinchCenterX = (t0.clientX + t1.clientX) / 2;
+      g.pinchCenterY = (t0.clientY + t1.clientY) / 2;
       g.isPanning = false;
     } else if (e.touches.length === 1) {
       g.startX = e.touches[0].clientX;
