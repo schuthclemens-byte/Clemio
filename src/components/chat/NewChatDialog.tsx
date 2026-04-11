@@ -108,7 +108,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     const digitsQuery = query.replace(/\D/g, "");
     const normalizedDigitsQuery = digitsQuery ? normalizePhone(query) : "";
     const shouldSearchByName = /[^\d\s()+-]/.test(query);
-    const shouldSearchByPhone = digitsQuery.length >= 3 || isPhoneQuery(query);
+    const shouldSearchByPhone = digitsQuery.length >= MIN_AUTOSUGGEST_CHARS || isPhoneQuery(query);
     const searchTerm = shouldSearchByName ? query : (digitsQuery || normalizedDigitsQuery);
 
     const deduped = await searchAccessibleProfiles(searchTerm);
@@ -127,14 +127,27 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       );
     });
 
+    const singleDirectMatch = !isGroupMode && found.length === 1 ? found[0] : null;
+
     setSearching(false);
-    setResults(found);
-    setResult(!isGroupMode && found.length === 1 ? found[0] : null);
+    setResult(singleDirectMatch);
+    setResults(singleDirectMatch ? [] : found);
     setError(found.length === 0 ? (t("chat.userNotFound") || "Nutzer nicht gefunden") : "");
   }, [isGroupMode, selectedUsers, t, user]);
 
   const handleSearch = async () => {
-    await runSearch(searchQuery);
+    const trimmedQuery = searchQuery.trim();
+    const normalizedQuery = trimmedQuery.replace(/\D/g, "");
+    const canSearch = trimmedQuery.length >= MIN_AUTOSUGGEST_CHARS || normalizedQuery.length >= MIN_AUTOSUGGEST_CHARS;
+
+    if (!canSearch) {
+      setError(`Mindestens ${MIN_AUTOSUGGEST_CHARS} Buchstaben oder Zahlen eingeben`);
+      setResults([]);
+      setResult(null);
+      return;
+    }
+
+    await runSearch(trimmedQuery);
   };
 
   const selectUser = (u: FoundUser) => {
@@ -372,12 +385,9 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
             </button>
           </div>
 
-          {/* iOS hint – only show when no results and no error */}
-          {!isContactPickerSupported && results.length === 0 && !error && !result && (
-            <p className="text-xs text-muted-foreground text-center px-2">
-              Gib die Telefonnummer deines Kontakts ein, um ihn auf Clemio zu finden.
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground text-center px-2">
+            Vorschläge erscheinen automatisch ab 3 Buchstaben oder Zahlen. Dein eigener Account wird hier nicht angezeigt.
+          </p>
 
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
