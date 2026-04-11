@@ -141,7 +141,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     const canSearch = trimmedQuery.length >= MIN_AUTOSUGGEST_CHARS || normalizedQuery.length >= MIN_AUTOSUGGEST_CHARS;
 
     if (!canSearch) {
-      setError(`Mindestens ${MIN_AUTOSUGGEST_CHARS} Buchstaben oder Zahlen eingeben`);
+      setError(`${t("chat.minCharsError")}`);
       setResults([]);
       setResult(null);
       return;
@@ -348,7 +348,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Gruppenname..."
+              placeholder={t("chat.groupNamePlaceholder")}
               className="w-full h-10 rounded-xl bg-secondary px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           )}
@@ -362,7 +362,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Name oder Nummer suchen..."
+                placeholder={t("chat.searchPlaceholder")}
                 className="w-full h-10 rounded-xl bg-secondary pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 autoFocus
               />
@@ -386,7 +386,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
           </div>
 
           <p className="text-xs text-muted-foreground text-center px-2">
-            Vorschläge erscheinen automatisch ab 3 Buchstaben oder Zahlen. Dein eigener Account wird hier nicht angezeigt.
+            {t("chat.autoSuggestHint")}
           </p>
 
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
@@ -406,7 +406,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{u.display_name || "Nutzer"}</p>
-                    <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
+                    <p className="text-xs text-muted-foreground">{t("chat.contactFound")}</p>
                   </div>
                   {isGroupMode ? (
                     <UserPlus className="w-4 h-4 text-primary shrink-0" />
@@ -451,7 +451,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{result.display_name || "Nutzer"}</p>
-                <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
+                <p className="text-xs text-muted-foreground">{t("chat.contactFound")}</p>
               </div>
               <MessageCirclePlus className="w-5 h-5 text-primary shrink-0" />
             </button>
@@ -469,7 +469,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  Gruppe erstellen
+                  {t("chat.createGroup")}
                 </>
               )}
             </button>
@@ -477,7 +477,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
           {isGroupMode && selectedUsers.length < 2 && (
             <p className="text-xs text-muted-foreground text-center py-2">
-              Füge mindestens 2 Kontakte hinzu
+              {t("chat.addMinMembers")}
             </p>
           )}
         </div>

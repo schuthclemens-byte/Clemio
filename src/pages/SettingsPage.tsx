@@ -233,7 +233,7 @@ const SettingsPage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("settings.searchPlaceholder") !== "settings.searchPlaceholder" ? t("settings.searchPlaceholder") : "Einstellung suchen…"}
+              placeholder={t("settings.searchPlaceholder")}
               className="w-full h-10 pl-9 pr-9 rounded-xl bg-secondary text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/60"
             />
             {searchQuery && (
@@ -248,7 +248,7 @@ const SettingsPage = () => {
       <div className="flex-1 p-4 space-y-6">
         {isSearching && visibleSections?.size === 0 && (
           <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">Keine Einstellung gefunden für „{searchQuery}"</p>
+            <p className="text-sm text-muted-foreground">{t("settings.noResults")}</p>
           </div>
         )}
         {show("profile") && (
@@ -268,44 +268,44 @@ const SettingsPage = () => {
 
         {show("privacy") && <>
         {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
-        <CollapsibleSection icon={Shield} title="Privatsphäre & Nachrichten" defaultOpen={!isSearching} delay="30ms">
+        <CollapsibleSection icon={Shield} title={t("settings.privacyMessages")} defaultOpen={!isSearching} delay="30ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <ToggleRow
               icon={MessageSquareText}
-              label="Nachrichtenvorschau anzeigen"
-              description="Zeigt eine kurze Vorschau der Nachricht in Push-Benachrichtigungen."
+              label={t("settings.messagePreview")}
+              description={t("settings.messagePreviewDesc")}
               checked={previewEnabled}
               onChange={togglePreview}
             />
             <ToggleRow
               icon={Eye}
-              label="Lesebestätigungen senden"
-              description="Andere sehen, wenn du ihre Nachricht gelesen hast."
+              label={t("settings.readReceipts")}
+              description={t("settings.readReceiptsDesc")}
               checked={localStorage.getItem("clemio_read_receipts") !== "false"}
               onChange={() => {
                 const next = localStorage.getItem("clemio_read_receipts") === "false";
                 localStorage.setItem("clemio_read_receipts", next ? "true" : "false");
-                toast.success(next ? "Lesebestätigungen aktiviert" : "Lesebestätigungen deaktiviert");
+                toast.success(next ? t("settings.readReceiptsOn") : t("settings.readReceiptsOff"));
               }}
             />
             <ToggleRow
               icon={Radio}
-              label="Online-Status anzeigen"
-              description="Anderen zeigen, dass du online bist, und Status von Kontakten sehen."
+              label={t("settings.onlineStatus")}
+              description={t("settings.onlineStatusDesc")}
               checked={a11y.showOnlineStatus}
               onChange={() => a11y.toggle("showOnlineStatus")}
             />
             <ToggleRow
               icon={Type}
-              label="Tipp-Anzeige"
-              description="Zeigen wenn jemand tippt und anderen zeigen wenn du tippst."
+              label={t("settings.typingIndicator")}
+              description={t("settings.typingIndicatorDesc")}
               checked={a11y.showTypingIndicator}
               onChange={() => a11y.toggle("showTypingIndicator")}
             />
             <ToggleRow
               icon={Volume2}
-              label="Nachrichten automatisch vorlesen"
-              description="Neue Nachrichten werden automatisch mit der geklonten Stimme vorgelesen."
+              label={t("settings.autoReadMessages")}
+              description={t("settings.autoReadMessagesDesc")}
               checked={a11y.autoRead}
               onChange={() => a11y.toggle("autoRead")}
               borderBottom={false}
@@ -317,7 +317,7 @@ const SettingsPage = () => {
 
         {show("push") && <>
         {/* ──────────── PUSH-BENACHRICHTIGUNGEN ──────────── */}
-        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" defaultOpen={!isSearching} delay="45ms">
+        <CollapsibleSection icon={Bell} title={t("settings.pushTitle")} defaultOpen={!isSearching} delay="45ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {pushCap.canUsePush ? (
               <>
@@ -325,9 +325,9 @@ const SettingsPage = () => {
                   <span className="flex items-start gap-3 flex-1 min-w-0">
                     <Bell className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                     <div className="min-w-0">
-                      <span className="text-[0.938rem] block font-medium">Push-Benachrichtigungen</span>
+                      <span className="text-[0.938rem] block font-medium">{t("settings.pushTitle")}</span>
                       <span className="text-xs text-muted-foreground leading-relaxed">
-                        {pushStatus.savedToBackend ? "Aktiv – du erhältst Benachrichtigungen" : "Nicht aktiv"}
+                        {pushStatus.savedToBackend ? t("settings.pushActive") : t("settings.pushInactive")}
                       </span>
                     </div>
                   </span>
@@ -336,15 +336,15 @@ const SettingsPage = () => {
                       onClick={async () => {
                         const ok = await pushSubscribe();
                         if (ok) {
-                          toast.success("Push-Benachrichtigungen aktiviert");
+                          toast.success(t("settings.pushActivated"));
                         } else {
-                          toast.error("Push konnte nicht aktiviert werden – prüfe die Status-Anzeige unten");
+                          toast.error(t("settings.pushFailed"));
                         }
                       }}
                       disabled={pushStatus.loading}
                       className="px-4 py-2 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold shrink-0 ml-3 disabled:opacity-60"
                     >
-                      {pushStatus.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aktivieren"}
+                      {pushStatus.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("settings.pushActivate")}
                     </button>
                   )}
                   {pushStatus.savedToBackend && (
@@ -401,7 +401,7 @@ const SettingsPage = () => {
 
         {show("appearance") && <>
         {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
-        <CollapsibleSection icon={Palette} title="Erscheinungsbild" defaultOpen={isSearching} delay="60ms">
+        <CollapsibleSection icon={Palette} title={t("settings.appearanceTitle")} defaultOpen={isSearching} delay="60ms">
           <div className="space-y-4">
             {/* Theme */}
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
