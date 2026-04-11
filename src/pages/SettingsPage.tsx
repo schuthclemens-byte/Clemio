@@ -354,11 +354,11 @@ const SettingsPage = () => {
 
                 {/* Push Status */}
                 <div className="px-4 py-3 space-y-2">
-                  <StatusRow ok={pushCap.isIOS ? pushStatus.isStandalone : true} label={pushCap.isIOS ? (pushStatus.isStandalone ? "Läuft als Web-App" : "Nicht als Web-App installiert") : "Android / Desktop – kein Standalone nötig"} />
-                  <StatusRow ok={pushStatus.swActive} label="Service Worker aktiv" />
-                  <StatusRow ok={pushStatus.permissionGranted} label="Permission granted" />
-                  <StatusRow ok={pushStatus.subscriptionCreated} label="Subscription erstellt" />
-                  <StatusRow ok={pushStatus.savedToBackend} label="Im Backend gespeichert" />
+                  <StatusRow ok={pushCap.isIOS ? pushStatus.isStandalone : true} label={pushCap.isIOS ? (pushStatus.isStandalone ? t("settings.pushRunningAsApp") : t("settings.pushNotInstalled")) : t("settings.pushDesktopOk")} />
+                  <StatusRow ok={pushStatus.swActive} label={t("settings.pushSwActive")} />
+                  <StatusRow ok={pushStatus.permissionGranted} label={t("settings.pushPermGranted")} />
+                  <StatusRow ok={pushStatus.subscriptionCreated} label={t("settings.pushSubCreated")} />
+                  <StatusRow ok={pushStatus.savedToBackend} label={t("settings.pushSavedBackend")} />
                 </div>
                 {pushStatus.lastError && (
                   <div className="px-4 pb-3">
@@ -371,7 +371,7 @@ const SettingsPage = () => {
                 <div className="flex items-start gap-3">
                   <Info className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-[0.938rem] font-medium">Push wird nicht unterstützt</p>
+                    <p className="text-[0.938rem] font-medium">{t("settings.pushNotSupportedTitle")}</p>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{pushCap.reason}</p>
                   </div>
                 </div>
@@ -382,16 +382,16 @@ const SettingsPage = () => {
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary font-semibold text-sm transition-all active:scale-[0.97]"
                   >
                     <Smartphone className="w-4 h-4" />
-                    App zum Home-Bildschirm hinzufügen
+                    {t("settings.pushAddHome")}
                   </button>
                 )}
 
                 <div className="pt-2 space-y-2 border-t border-border">
-                  <StatusRow ok={pushCap.swSupported} label="Service Worker" />
-                  <StatusRow ok={pushCap.notificationSupported} label="Notification API" />
-                  <StatusRow ok={pushCap.pushSupported} label="Push API" />
-                  <StatusRow ok={pushCap.isStandalone} label={pushCap.isStandalone ? "Standalone-Modus" : "Browser-Modus"} />
-                  {pushCap.isIOS && <StatusRow ok={false} label="iOS erkannt – Standalone erforderlich" />}
+                  <StatusRow ok={pushCap.swSupported} label={t("settings.pushServiceWorker")} />
+                  <StatusRow ok={pushCap.notificationSupported} label={t("settings.pushNotificationApi")} />
+                  <StatusRow ok={pushCap.pushSupported} label={t("settings.pushApi")} />
+                  <StatusRow ok={pushCap.isStandalone} label={pushCap.isStandalone ? t("settings.pushStandalone") : t("settings.pushBrowserMode")} />
+                  {pushCap.isIOS && <StatusRow ok={false} label={t("settings.pushIosStandalone")} />}
                 </div>
               </div>
             )}
@@ -664,7 +664,7 @@ const SettingsPage = () => {
                   onClick={handleRefreshSubscription}
                   disabled={refreshingSubscription}
                   className="p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-60"
-                  aria-label="Premium-Status aktualisieren"
+                  aria-label={t("settings.subRefreshLabel")}
                 >
                   <RefreshCw className={cn("w-4 h-4 text-muted-foreground", refreshingSubscription && "animate-spin")} />
                 </button>
@@ -676,9 +676,9 @@ const SettingsPage = () => {
                   isPremium ? "bg-primary" : "bg-muted-foreground/40"
                 )} />
                 <p className="text-xs text-muted-foreground">
-                  {isPremium ? "Abo aktiv" : "Kein aktives Abo"}
+                  {isPremium ? t("settings.subActive") : t("settings.subInactive")}
                   {lastChecked && (
-                    <> · Zuletzt geprüft {lastChecked.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</>
+                    <> · {t("settings.subLastChecked")} {lastChecked.toLocaleTimeString(locale === "de" ? "de-DE" : undefined, { hour: "2-digit", minute: "2-digit" })}</>
                   )}
                 </p>
               </div>
