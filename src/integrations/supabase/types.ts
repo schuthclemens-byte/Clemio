@@ -621,6 +621,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_direct_chat: { Args: { _target_user_id: string }; Returns: string }
       ensure_current_profile: {
         Args: { profile_display_name?: string; profile_phone_number?: string }
         Returns: {
