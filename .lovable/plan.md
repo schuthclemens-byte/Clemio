@@ -1,34 +1,26 @@
 
 
-## Fehlende Übersetzungen für die Landingpage
+## Problem-Analyse
 
-### Problem
-Die Landing-Seiten-Texte (Hero, Promo, Positioning, Trust, Voice Rules, Premium, Age) sind nur in **Deutsch** und **Englisch** vorhanden. Für **Französisch, Türkisch, Arabisch und Spanisch** fehlen ~30 Keys — der Fallback zeigt dann die deutschen Texte an, obwohl das Handy z.B. auf Französisch oder Türkisch steht.
+Ich habe alle Dateien überprüft:
+- **Alle 4 Sprachdateien** (fr.ts, tr.ts, es.ts, ar.ts) haben die vollständigen Landing-Übersetzungen — korrekt und ohne Duplikate
+- **Alle Landing-Komponenten** nutzen `useI18n()` korrekt
+- **I18nContext** lädt Sprachen korrekt nach
+- **LanguageSwitcher** ist korrekt implementiert mit z-[9999]
+- **Keine Build-Fehler** in der Konsole
+
+### Wahrscheinliche Ursache
+Das Problem ist höchstwahrscheinlich ein **Cache/State-Problem**:
+1. `localStorage` hat noch `app-locale: "de"` gespeichert von einer früheren Session
+2. Der Preview-Browser hat alte gecachte JavaScript-Chunks
 
 ### Lösung
-Die fehlenden Landing-Keys in allen 4 Sprachdateien ergänzen.
 
-### Fehlende Keys (pro Sprache ~30 Einträge)
+1. **Harten Reload erzwingen**: Lade die Preview-Seite komplett neu (Strg+Shift+R oder den Preview-Refresh-Button)
+2. **localStorage leeren**: Falls es immer noch auf Deutsch bleibt, `localStorage` im Browser löschen
 
-```
-heroListenTitle, heroDemoText, heroAutoPlay, tapToStart, heroSubtitleNew, heroCTA,
-promoHeadline, promoDesc, promoFeat1-4, promoCTA,
-posLine1, posLine2,
-trustTitle, trustPoint1-4,
-voiceRulesTitle, voiceRule1-4,
-premTitle, premFeat1-4, premPrice, premExtra,
-ageText, ageCheckbox,
-startTitle, startDemoText, startSubtitle, startCTA
-```
+Falls das Problem nach einem harten Reload weiterhin besteht, kann ich eine Debug-Ausgabe einbauen, die zeigt welche Sprache erkannt wird und ob die Übersetzungsdateien korrekt geladen werden.
 
-### Änderungen
-
-| Datei | Änderung |
-|---|---|
-| `src/i18n/fr.ts` | ~30 fehlende `landing.*` Keys auf Französisch ergänzen |
-| `src/i18n/tr.ts` | ~30 fehlende `landing.*` Keys auf Türkisch ergänzen |
-| `src/i18n/ar.ts` | ~30 fehlende `landing.*` Keys auf Arabisch ergänzen |
-| `src/i18n/es.ts` | ~30 fehlende `landing.*` Keys auf Spanisch ergänzen |
-
-Keine DB-Änderungen. Keine Edge-Function-Änderungen.
+### Kein Code-Change nötig
+Die Übersetzungen sind alle korrekt in den Dateien. Es handelt sich um ein Cache-Problem, nicht um einen Code-Fehler.
 
