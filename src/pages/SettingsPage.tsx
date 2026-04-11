@@ -132,6 +132,31 @@ const SettingsPage = () => {
   const [previewEnabled, setPreviewEnabled] = useState(false);
   const [refreshingSubscription, setRefreshingSubscription] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Searchable settings items with keywords
+  const settingsIndex: { section: string; keywords: string[] }[] = [
+    { section: "profile", keywords: ["profil", "profile", "name", "avatar", "bild", "foto", "photo"] },
+    { section: "privacy", keywords: ["privatsphäre", "privacy", "nachrichten", "messages", "vorschau", "preview", "lesebestätigung", "read", "online", "status", "tippen", "typing", "vorlesen"] },
+    { section: "push", keywords: ["push", "benachrichtigung", "notification", "alert", "ton", "sound"] },
+    { section: "appearance", keywords: ["erscheinungsbild", "appearance", "theme", "design", "dunkel", "dark", "hell", "light", "farbe", "color", "hintergrund", "background", "wallpaper"] },
+    { section: "language", keywords: ["sprache", "language", "deutsch", "english", "français", "türkçe", "español", "العربية"] },
+    { section: "accessibility", keywords: ["barrierefreiheit", "accessibility", "schrift", "font", "dyslexie", "groß", "large", "kontrast", "contrast", "kopfhörer", "headphone", "autokorrektur", "autocorrect", "geschwindigkeit", "speed", "rate", "ruhezeit", "quiet", "kompakt", "compact", "stumm", "mute"] },
+    { section: "focus", keywords: ["fokus", "focus", "modus", "mode", "ruhe", "stille", "kontakte"] },
+    { section: "autoplay", keywords: ["autoplay", "automatisch", "abspielen", "vorlesen", "stimme", "voice"] },
+    { section: "install", keywords: ["installieren", "install", "app", "herunterladen", "download", "home"] },
+    { section: "session", keywords: ["angemeldet", "logged", "sitzung", "session", "passwort", "password"] },
+    { section: "subscription", keywords: ["abo", "subscription", "premium", "bezahlen", "payment", "stripe", "plan"] },
+    { section: "logout", keywords: ["abmelden", "logout", "ausloggen", "sign out"] },
+    { section: "legal", keywords: ["rechtliches", "legal", "datenschutz", "privacy policy", "agb", "terms", "impressum", "nutzungsbedingungen"] },
+  ];
+
+  const q = searchQuery.trim().toLowerCase();
+  const isSearching = q.length >= 3;
+  const visibleSections = isSearching
+    ? new Set(settingsIndex.filter(s => s.keywords.some(k => k.includes(q))).map(s => s.section))
+    : null;
+  const show = (section: string) => !visibleSections || visibleSections.has(section);
 
   // Load push preview from profile
   useEffect(() => {
