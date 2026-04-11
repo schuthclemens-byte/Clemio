@@ -577,42 +577,44 @@ const SettingsPage = () => {
             </div>
           </div>
         </CollapsibleSection>
+        </>}
 
         {/* ──────────── WEITERE LINKS ──────────── */}
         <div className="space-y-3">
-          {/* Focus Mode */}
-          <button
-            onClick={() => navigate("/focus-mode")}
-            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-          >
-            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-accent" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-semibold text-[0.938rem]">{t("settings.focusMode")}</p>
-              <p className="text-xs text-muted-foreground">{t("settings.focusModeDesc")}</p>
-            </div>
-          </button>
+          {show("focus") && (
+            <button
+              onClick={() => navigate("/focus-mode")}
+              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-accent" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-[0.938rem]">{t("settings.focusMode")}</p>
+                <p className="text-xs text-muted-foreground">{t("settings.focusModeDesc")}</p>
+              </div>
+            </button>
+          )}
 
-          {/* Auto-Play Contact */}
-          <button
-            onClick={() => navigate("/contact-autoplay")}
-            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Volume2 className="w-5 h-5 text-primary" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-semibold text-[0.938rem] flex items-center gap-2">
-                {t("settings.autoPlayContact")}
-                {!isPremium && <PremiumBadge />}
-              </p>
-              <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
-            </div>
-          </button>
+          {show("autoplay") && (
+            <button
+              onClick={() => navigate("/contact-autoplay")}
+              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Volume2 className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-[0.938rem] flex items-center gap-2">
+                  {t("settings.autoPlayContact")}
+                  {!isPremium && <PremiumBadge />}
+                </p>
+                <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
+              </div>
+            </button>
+          )}
 
-          {/* Install App */}
-          {!window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
+          {show("install") && !window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
             <button
               onClick={() => navigate("/install")}
               className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
@@ -628,20 +630,20 @@ const SettingsPage = () => {
           )}
         </div>
 
-        {/* Stay logged in */}
-        <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-          <ToggleRow
-            icon={KeyRound}
-            label={t("settings.stayLoggedIn")}
-            description={t("settings.stayLoggedInDesc")}
-            checked={stayLoggedIn}
-            onChange={toggleStayLoggedIn}
-            borderBottom={false}
-          />
-        </div>
+        {show("session") && (
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+            <ToggleRow
+              icon={KeyRound}
+              label={t("settings.stayLoggedIn")}
+              description={t("settings.stayLoggedInDesc")}
+              checked={stayLoggedIn}
+              onChange={toggleStayLoggedIn}
+              borderBottom={false}
+            />
+          </div>
+        )}
 
-        {/* Subscription */}
-        {!(isFoundingUser && daysRemaining === -1) && (
+        {show("subscription") && !(isFoundingUser && daysRemaining === -1) && (
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <div className="px-4 py-4 space-y-3">
               <div className="flex items-center justify-between">
@@ -668,7 +670,6 @@ const SettingsPage = () => {
                 </button>
               </div>
 
-              {/* Status line */}
               <div className="flex items-center gap-2 px-1">
                 <span className={cn(
                   "w-2 h-2 rounded-full shrink-0 transition-colors",
@@ -706,56 +707,58 @@ const SettingsPage = () => {
           </div>
         )}
 
-        {/* Logout */}
-        <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
-          {!showLogoutConfirm ? (
-            <button
-              onClick={() => setShowLogoutConfirm(true)}
-              className="w-full flex items-center justify-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl shadow-sm hover:bg-destructive/20 transition-colors active:scale-[0.98] font-semibold"
-            >
-              <LogOut className="w-5 h-5" />
-              {t("settings.logout")}
-            </button>
-          ) : (
-            <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
-              <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
-              <div className="flex gap-3">
-                <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
-                  {t("a11y.back")}
-                </button>
-                <button onClick={handleLogout} className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm">
-                  {t("settings.logout")}
-                </button>
+        {show("logout") && (
+          <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
+            {!showLogoutConfirm ? (
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="w-full flex items-center justify-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl shadow-sm hover:bg-destructive/20 transition-colors active:scale-[0.98] font-semibold"
+              >
+                <LogOut className="w-5 h-5" />
+                {t("settings.logout")}
+              </button>
+            ) : (
+              <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
+                <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
+                    {t("a11y.back")}
+                  </button>
+                  <button onClick={handleLogout} className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm">
+                    {t("settings.logout")}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Legal */}
-        <CollapsibleSection icon={Lock} title={t("settings.legal")} delay="110ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            <button
-              onClick={() => navigate("/privacy")}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors border-b border-border"
-            >
-              <Shield className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <span className="text-[0.938rem] block">{t("settings.privacy")}</span>
-                <span className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</span>
-              </div>
-            </button>
-            <button
-              onClick={() => navigate("/terms")}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
-            >
-              <FileText className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <span className="text-[0.938rem] block">{t("settings.terms")}</span>
-                <span className="text-xs text-muted-foreground">{t("settings.termsDesc")}</span>
-              </div>
-            </button>
+            )}
           </div>
-        </CollapsibleSection>
+        )}
+
+        {show("legal") && (
+          <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen={isSearching} delay="110ms">
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => navigate("/privacy")}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors border-b border-border"
+              >
+                <Shield className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block">{t("settings.privacy")}</span>
+                  <span className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</span>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate("/terms")}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
+              >
+                <FileText className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block">{t("settings.terms")}</span>
+                  <span className="text-xs text-muted-foreground">{t("settings.termsDesc")}</span>
+                </div>
+              </button>
+            </div>
+          </CollapsibleSection>
+        )}
       </div>
 
       <BackgroundPicker
