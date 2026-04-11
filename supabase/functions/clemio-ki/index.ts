@@ -78,7 +78,12 @@ serve(async (req) => {
       });
     }
 
-    const { receivedMessage, chatHistory, mode, checkOnly } = await req.json();
+    const { receivedMessage, chatHistory, mode, checkOnly, locale } = await req.json();
+
+    const langNames: Record<string, string> = {
+      de: "German", en: "English", fr: "French", tr: "Turkish", es: "Spanish", ar: "Arabic",
+    };
+    const userLang = langNames[locale] || "German";
 
     // Check subscription status
     const { data: sub } = await supabaseClient
@@ -142,6 +147,8 @@ serve(async (req) => {
     const isStrategy = mode === "strategy";
     const formatPrompt = isStrategy ? STRATEGY_FORMAT : STANDARD_FORMAT;
 
+    const langInstruction = `\n\nSPRACHE: Antworte IMMER auf ${userLang}. Alle Texte (Antworten, Einschätzung, Wirkung) müssen auf ${userLang} sein.`;
+
     let contextStr = "";
     if (chatHistory && chatHistory.length > 0) {
       const last5 = chatHistory.slice(-5);
@@ -153,7 +160,7 @@ serve(async (req) => {
     const userPrompt = `Die letzte Nachricht, auf die ich antworten will:
 "${receivedMessage}"${contextStr}
 
-Generiere passende Antworten.`;
+Generiere passende Antworten auf ${userLang}.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -164,7 +171,7 @@ Generiere passende Antworten.`;
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT + "\n\n" + formatPrompt },
+          { role: "system", content: SYSTEM_PROMPT + "\n\n" + formatPrompt + langInstruction },
           { role: "user", content: userPrompt },
         ],
       }),
