@@ -265,7 +265,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end justify-center">
-      <div className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border shadow-xl animate-reveal-up flex flex-col" style={{ maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))', maxHeight: 'calc(100dvh - 40px)' }}>
+      <div className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border shadow-xl animate-reveal-up flex flex-col max-h-[min(85vh,85dvh)]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <h2 className="text-lg font-bold">
