@@ -3,6 +3,7 @@ import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useMissedCallsCount } from "@/hooks/useMissedCallsCount";
+import { useI18n } from "@/contexts/I18nContext";
 import {
   Sidebar,
   SidebarContent,
@@ -15,24 +16,25 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const mainItems = [
-  { title: "Chats", url: "/chats", icon: MessageCircle },
-  { title: "Anrufe", url: "/call-history", icon: Phone },
-  { title: "Profil", url: "/profile", icon: User },
-  { title: "Einstellungen", url: "/settings", icon: Settings },
-];
-
-const extraItems = [
-  { title: "Stimmen", url: "/voice-recordings", icon: Mic },
-  { title: "Fokusmodus", url: "/focus-mode", icon: Moon },
-  { title: "Auto-Play", url: "/contact-autoplay", icon: Headphones },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const missedCalls = useMissedCallsCount();
+  const { t } = useI18n();
+
+  const mainItems = [
+    { title: t("nav.chats"), url: "/chats", icon: MessageCircle },
+    { title: t("nav.calls"), url: "/call-history", icon: Phone },
+    { title: t("nav.profile"), url: "/profile", icon: User },
+    { title: t("nav.settings"), url: "/settings", icon: Settings },
+  ];
+
+  const extraItems = [
+    { title: t("sidebar.voices"), url: "/voice-recordings", icon: Mic },
+    { title: t("sidebar.focusMode"), url: "/focus-mode", icon: Moon },
+    { title: t("sidebar.autoPlay"), url: "/contact-autoplay", icon: Headphones },
+  ];
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
@@ -52,7 +54,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
@@ -76,11 +78,11 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Extras</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("sidebar.extras")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {extraItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}

@@ -189,15 +189,15 @@ const SettingsPage = () => {
     const result = await refreshSubscription();
 
     if (!result?.ok) {
-      toast.error(result?.error ?? "Premium-Status konnte nicht geprüft werden");
+      toast.error(result?.error ?? t("settings.subNotFound"));
       setRefreshingSubscription(false);
       return;
     }
 
     toast.success(
       result.subscribed
-        ? "Premium-Abo wurde erkannt"
-        : "Kein aktives Premium-Abo gefunden"
+        ? t("settings.subRecognized")
+        : t("settings.subNotFound")
     );
     setLastChecked(new Date());
     setRefreshingSubscription(false);
@@ -233,7 +233,7 @@ const SettingsPage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("settings.searchPlaceholder") !== "settings.searchPlaceholder" ? t("settings.searchPlaceholder") : "Einstellung suchen…"}
+              placeholder={t("settings.searchPlaceholder")}
               className="w-full h-10 pl-9 pr-9 rounded-xl bg-secondary text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/60"
             />
             {searchQuery && (
@@ -248,7 +248,7 @@ const SettingsPage = () => {
       <div className="flex-1 p-4 space-y-6">
         {isSearching && visibleSections?.size === 0 && (
           <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">Keine Einstellung gefunden für „{searchQuery}"</p>
+            <p className="text-sm text-muted-foreground">{t("settings.noResults")} „{searchQuery}"</p>
           </div>
         )}
         {show("profile") && (
@@ -268,44 +268,44 @@ const SettingsPage = () => {
 
         {show("privacy") && <>
         {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
-        <CollapsibleSection icon={Shield} title="Privatsphäre & Nachrichten" defaultOpen={!isSearching} delay="30ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+        <CollapsibleSection icon={Shield} title={t("settings.privacyMessages")} defaultOpen={!isSearching} delay="30ms">
+           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <ToggleRow
               icon={MessageSquareText}
-              label="Nachrichtenvorschau anzeigen"
-              description="Zeigt eine kurze Vorschau der Nachricht in Push-Benachrichtigungen."
+              label={t("settings.messagePreview")}
+              description={t("settings.messagePreviewDesc")}
               checked={previewEnabled}
               onChange={togglePreview}
             />
             <ToggleRow
               icon={Eye}
-              label="Lesebestätigungen senden"
-              description="Andere sehen, wenn du ihre Nachricht gelesen hast."
+              label={t("settings.readReceipts")}
+              description={t("settings.readReceiptsDesc")}
               checked={localStorage.getItem("clemio_read_receipts") !== "false"}
               onChange={() => {
                 const next = localStorage.getItem("clemio_read_receipts") === "false";
                 localStorage.setItem("clemio_read_receipts", next ? "true" : "false");
-                toast.success(next ? "Lesebestätigungen aktiviert" : "Lesebestätigungen deaktiviert");
+                toast.success(next ? t("settings.readReceiptsOn") : t("settings.readReceiptsOff"));
               }}
             />
             <ToggleRow
               icon={Radio}
-              label="Online-Status anzeigen"
-              description="Anderen zeigen, dass du online bist, und Status von Kontakten sehen."
+              label={t("settings.onlineStatus")}
+              description={t("settings.onlineStatusDesc")}
               checked={a11y.showOnlineStatus}
               onChange={() => a11y.toggle("showOnlineStatus")}
             />
             <ToggleRow
               icon={Type}
-              label="Tipp-Anzeige"
-              description="Zeigen wenn jemand tippt und anderen zeigen wenn du tippst."
+              label={t("settings.typingIndicator")}
+              description={t("settings.typingIndicatorDesc")}
               checked={a11y.showTypingIndicator}
               onChange={() => a11y.toggle("showTypingIndicator")}
             />
             <ToggleRow
               icon={Volume2}
-              label="Nachrichten automatisch vorlesen"
-              description="Neue Nachrichten werden automatisch mit der geklonten Stimme vorgelesen."
+              label={t("settings.autoReadMessages")}
+              description={t("settings.autoReadMessagesDesc")}
               checked={a11y.autoRead}
               onChange={() => a11y.toggle("autoRead")}
               borderBottom={false}
@@ -317,7 +317,7 @@ const SettingsPage = () => {
 
         {show("push") && <>
         {/* ──────────── PUSH-BENACHRICHTIGUNGEN ──────────── */}
-        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" defaultOpen={!isSearching} delay="45ms">
+        <CollapsibleSection icon={Bell} title={t("settings.pushTitle")} defaultOpen={!isSearching} delay="45ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {pushCap.canUsePush ? (
               <>
@@ -325,9 +325,9 @@ const SettingsPage = () => {
                   <span className="flex items-start gap-3 flex-1 min-w-0">
                     <Bell className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                     <div className="min-w-0">
-                      <span className="text-[0.938rem] block font-medium">Push-Benachrichtigungen</span>
+                     <span className="text-[0.938rem] block font-medium">{t("settings.pushTitle")}</span>
                       <span className="text-xs text-muted-foreground leading-relaxed">
-                        {pushStatus.savedToBackend ? "Aktiv – du erhältst Benachrichtigungen" : "Nicht aktiv"}
+                        {pushStatus.savedToBackend ? t("settings.pushActive") : t("settings.pushInactive")}
                       </span>
                     </div>
                   </span>
@@ -336,15 +336,15 @@ const SettingsPage = () => {
                       onClick={async () => {
                         const ok = await pushSubscribe();
                         if (ok) {
-                          toast.success("Push-Benachrichtigungen aktiviert");
+                          toast.success(t("settings.pushActivated"));
                         } else {
-                          toast.error("Push konnte nicht aktiviert werden – prüfe die Status-Anzeige unten");
+                          toast.error(t("settings.pushFailed"));
                         }
                       }}
                       disabled={pushStatus.loading}
                       className="px-4 py-2 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold shrink-0 ml-3 disabled:opacity-60"
                     >
-                      {pushStatus.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aktivieren"}
+                      {pushStatus.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("settings.pushActivate")}
                     </button>
                   )}
                   {pushStatus.savedToBackend && (
@@ -354,11 +354,11 @@ const SettingsPage = () => {
 
                 {/* Push Status */}
                 <div className="px-4 py-3 space-y-2">
-                  <StatusRow ok={pushCap.isIOS ? pushStatus.isStandalone : true} label={pushCap.isIOS ? (pushStatus.isStandalone ? "Läuft als Web-App" : "Nicht als Web-App installiert") : "Android / Desktop – kein Standalone nötig"} />
-                  <StatusRow ok={pushStatus.swActive} label="Service Worker aktiv" />
-                  <StatusRow ok={pushStatus.permissionGranted} label="Permission granted" />
-                  <StatusRow ok={pushStatus.subscriptionCreated} label="Subscription erstellt" />
-                  <StatusRow ok={pushStatus.savedToBackend} label="Im Backend gespeichert" />
+                  <StatusRow ok={pushCap.isIOS ? pushStatus.isStandalone : true} label={pushCap.isIOS ? (pushStatus.isStandalone ? t("settings.pushRunningAsApp") : t("settings.pushNotInstalled")) : t("settings.pushDesktopOk")} />
+                  <StatusRow ok={pushStatus.swActive} label={t("settings.pushSwActive")} />
+                  <StatusRow ok={pushStatus.permissionGranted} label={t("settings.pushPermGranted")} />
+                  <StatusRow ok={pushStatus.subscriptionCreated} label={t("settings.pushSubCreated")} />
+                  <StatusRow ok={pushStatus.savedToBackend} label={t("settings.pushSavedBackend")} />
                 </div>
                 {pushStatus.lastError && (
                   <div className="px-4 pb-3">
@@ -371,8 +371,8 @@ const SettingsPage = () => {
                 <div className="flex items-start gap-3">
                   <Info className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-[0.938rem] font-medium">Push wird nicht unterstützt</p>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{pushCap.reason}</p>
+                     <p className="text-[0.938rem] font-medium">{t("settings.pushNotSupportedTitle")}</p>
+                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{pushCap.reason}</p>
                   </div>
                 </div>
 
@@ -382,16 +382,16 @@ const SettingsPage = () => {
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary font-semibold text-sm transition-all active:scale-[0.97]"
                   >
                     <Smartphone className="w-4 h-4" />
-                    App zum Home-Bildschirm hinzufügen
+                    {t("settings.pushAddHome")}
                   </button>
                 )}
 
                 <div className="pt-2 space-y-2 border-t border-border">
-                  <StatusRow ok={pushCap.swSupported} label="Service Worker" />
-                  <StatusRow ok={pushCap.notificationSupported} label="Notification API" />
-                  <StatusRow ok={pushCap.pushSupported} label="Push API" />
-                  <StatusRow ok={pushCap.isStandalone} label={pushCap.isStandalone ? "Standalone-Modus" : "Browser-Modus"} />
-                  {pushCap.isIOS && <StatusRow ok={false} label="iOS erkannt – Standalone erforderlich" />}
+                  <StatusRow ok={pushCap.swSupported} label={t("settings.pushServiceWorker")} />
+                  <StatusRow ok={pushCap.notificationSupported} label={t("settings.pushNotificationApi")} />
+                  <StatusRow ok={pushCap.pushSupported} label={t("settings.pushApi")} />
+                  <StatusRow ok={pushCap.isStandalone} label={pushCap.isStandalone ? t("settings.pushStandalone") : t("settings.pushBrowserMode")} />
+                  {pushCap.isIOS && <StatusRow ok={false} label={t("settings.pushIosStandalone")} />}
                 </div>
               </div>
             )}
@@ -401,7 +401,7 @@ const SettingsPage = () => {
 
         {show("appearance") && <>
         {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
-        <CollapsibleSection icon={Palette} title="Erscheinungsbild" defaultOpen={isSearching} delay="60ms">
+        <CollapsibleSection icon={Palette} title={t("settings.appearanceTitle")} defaultOpen={isSearching} delay="60ms">
           <div className="space-y-4">
             {/* Theme */}
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
@@ -664,7 +664,7 @@ const SettingsPage = () => {
                   onClick={handleRefreshSubscription}
                   disabled={refreshingSubscription}
                   className="p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-60"
-                  aria-label="Premium-Status aktualisieren"
+                  aria-label={t("settings.subRefreshLabel")}
                 >
                   <RefreshCw className={cn("w-4 h-4 text-muted-foreground", refreshingSubscription && "animate-spin")} />
                 </button>
@@ -676,9 +676,9 @@ const SettingsPage = () => {
                   isPremium ? "bg-primary" : "bg-muted-foreground/40"
                 )} />
                 <p className="text-xs text-muted-foreground">
-                  {isPremium ? "Abo aktiv" : "Kein aktives Abo"}
+                  {isPremium ? t("settings.subActive") : t("settings.subInactive")}
                   {lastChecked && (
-                    <> · Zuletzt geprüft {lastChecked.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</>
+                    <> · {t("settings.subLastChecked")} {lastChecked.toLocaleTimeString(locale === "de" ? "de-DE" : locale === "en" ? "en-US" : undefined, { hour: "2-digit", minute: "2-digit" })}</>
                   )}
                 </p>
               </div>
