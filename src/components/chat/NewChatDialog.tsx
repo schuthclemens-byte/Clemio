@@ -18,6 +18,16 @@ interface FoundUser {
   avatar_url?: string | null;
 }
 
+interface ContactPickerEntry {
+  tel?: string[];
+}
+
+interface ContactPickerNavigator extends Navigator {
+  contacts?: {
+    select?: (properties: string[], options: { multiple: boolean }) => Promise<ContactPickerEntry[]>;
+  };
+}
+
 interface NewChatDialogProps {
   open: boolean;
   onClose: () => void;
@@ -56,7 +66,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
   const handlePickContact = useCallback(async () => {
     try {
-      const nav = navigator as any;
+      const nav = navigator as ContactPickerNavigator;
       if (!nav.contacts?.select) return;
 
       const contacts = await nav.contacts.select(["tel"], { multiple: false });
@@ -203,6 +213,17 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
         .insert({ conversation_id: conversationId, user_id: user.id });
 
       if (ownMembershipError) throw ownMembershipError;
+
+      const { error: invitationError } = await supabase
+        .from("chat_invitations")
+        .insert({
+          conversation_id: conversationId,
+          invited_by: user.id,
+          invited_user_id: target.id,
+          status: "accepted",
+        });
+
+      if (invitationError) throw invitationError;
 
       const { error: targetMembershipError } = await supabase
         .from("conversation_members")
