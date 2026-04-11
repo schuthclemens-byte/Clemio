@@ -344,7 +344,7 @@ const SettingsPage = () => {
                       disabled={pushStatus.loading}
                       className="px-4 py-2 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold shrink-0 ml-3 disabled:opacity-60"
                     >
-                      {pushStatus.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aktivieren"}
+                      {pushStatus.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("settings.pushActivate")}
                     </button>
                   )}
                   {pushStatus.savedToBackend && (
