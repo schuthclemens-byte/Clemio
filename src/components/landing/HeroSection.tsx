@@ -7,11 +7,50 @@ import { useI18n } from "@/contexts/I18nContext";
 const LANDING_AUDIO_SRC = "/landing-voice-original.mp3";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-// Preload audio globally so it's ready instantly
+// Preload German fallback audio globally
 const preloadedAudio = new Audio(`${LANDING_AUDIO_SRC}?v=1`);
 preloadedAudio.preload = "auto";
 preloadedAudio.volume = 0.18;
 preloadedAudio.load();
+
+// ── Global TTS cache: fetch localized audio at module load ──
+const ttsCache = new Map<string, HTMLAudioElement>();
+const ttsPending = new Map<string, Promise<HTMLAudioElement | null>>();
+
+function detectLang(): string {
+  const saved = localStorage.getItem("app-locale");
+  if (saved && ["de", "en", "es", "fr", "tr", "ar"].includes(saved)) return saved;
+  const prefix = (navigator.language || "").split("-")[0].toLowerCase();
+  return ["de", "en", "es", "fr", "tr", "ar"].includes(prefix) ? prefix : "de";
+}
+
+function prefetchTTS(lang: string): Promise<HTMLAudioElement | null> {
+  if (ttsCache.has(lang)) return Promise.resolve(ttsCache.get(lang)!);
+  if (ttsPending.has(lang)) return ttsPending.get(lang)!;
+
+  const promise = fetch(`${SUPABASE_URL}/functions/v1/onboarding-tts?lang=${lang}&v=${Date.now()}`)
+    .then(async (res) => {
+      const ct = res.headers.get("Content-Type") || "";
+      if (ct.includes("application/json") || !res.ok) return null;
+      const blob = await res.blob();
+      const audio = new Audio(URL.createObjectURL(blob));
+      audio.preload = "auto";
+      audio.volume = 0.18;
+      ttsCache.set(lang, audio);
+      return audio;
+    })
+    .catch(() => null)
+    .finally(() => ttsPending.delete(lang));
+
+  ttsPending.set(lang, promise);
+  return promise;
+}
+
+// Start fetching immediately on module load
+const initialLang = detectLang();
+if (initialLang !== "de") {
+  prefetchTTS(initialLang);
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
