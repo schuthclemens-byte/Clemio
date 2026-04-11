@@ -95,23 +95,25 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
   const isPhoneQuery = (q: string) => /^[+0-9\s()-]+$/.test(q.trim());
 
-  const handleSearch = async () => {
-    const query = searchQuery.trim();
+  const runSearch = useCallback(async (rawQuery: string) => {
+    const query = rawQuery.trim();
     if (!query || !user) return;
 
+    const requestId = ++searchRequestIdRef.current;
     setSearching(true);
     setError("");
     setResult(null);
-    setResults([]);
 
     const lowerQuery = query.toLowerCase();
     const digitsQuery = query.replace(/\D/g, "");
     const normalizedDigitsQuery = digitsQuery ? normalizePhone(query) : "";
     const shouldSearchByName = /[^\d\s()+-]/.test(query);
     const shouldSearchByPhone = digitsQuery.length >= 3 || isPhoneQuery(query);
-
     const searchTerm = shouldSearchByName ? query : (digitsQuery || normalizedDigitsQuery);
+
     const deduped = await searchAccessibleProfiles(searchTerm);
+
+    if (requestId !== searchRequestIdRef.current) return;
 
     const found = deduped.filter((candidate) => {
       const candidateName = (candidate.display_name || "").toLowerCase();
@@ -126,13 +128,13 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     });
 
     setSearching(false);
-
-    if (found.length === 0) {
-      setError(t("chat.userNotFound") || "Nutzer nicht gefunden");
-      return;
-    }
-
     setResults(found);
+    setResult(!isGroupMode && found.length === 1 ? found[0] : null);
+    setError(found.length === 0 ? (t("chat.userNotFound") || "Nutzer nicht gefunden") : "");
+  }, [isGroupMode, selectedUsers, t, user]);
+
+  const handleSearch = async () => {
+    await runSearch(searchQuery);
   };
 
   const selectUser = (u: FoundUser) => {
