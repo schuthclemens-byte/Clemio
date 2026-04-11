@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, MessageCirclePlus, Users, UserPlus, Check, ContactRound } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -11,8 +11,6 @@ import { toast } from "sonner";
 
 /** Contact Picker API is only available on Android Chrome */
 const isContactPickerSupported = "contacts" in navigator && "ContactsManager" in window;
-const MIN_AUTOSUGGEST_CHARS = 3;
-const AUTOSUGGEST_DEBOUNCE_MS = 250;
 
 interface FoundUser {
   id: string;
@@ -35,7 +33,6 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<FoundUser[]>([]);
   const [groupName, setGroupName] = useState("");
-  const searchRequestIdRef = useRef(0);
   const navigate = useNavigate();
   const { t } = useI18n();
   const { user } = useAuth();
@@ -95,25 +92,23 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
   const isPhoneQuery = (q: string) => /^[+0-9\s()-]+$/.test(q.trim());
 
-  const runSearch = useCallback(async (rawQuery: string) => {
-    const query = rawQuery.trim();
+  const handleSearch = async () => {
+    const query = searchQuery.trim();
     if (!query || !user) return;
 
-    const requestId = ++searchRequestIdRef.current;
     setSearching(true);
     setError("");
     setResult(null);
+    setResults([]);
 
     const lowerQuery = query.toLowerCase();
     const digitsQuery = query.replace(/\D/g, "");
     const normalizedDigitsQuery = digitsQuery ? normalizePhone(query) : "";
     const shouldSearchByName = /[^\d\s()+-]/.test(query);
-    const shouldSearchByPhone = digitsQuery.length >= MIN_AUTOSUGGEST_CHARS || isPhoneQuery(query);
+    const shouldSearchByPhone = digitsQuery.length >= 3 || isPhoneQuery(query);
+
     const searchTerm = shouldSearchByName ? query : (digitsQuery || normalizedDigitsQuery);
-
     const deduped = await searchAccessibleProfiles(searchTerm);
-
-    if (requestId !== searchRequestIdRef.current) return;
 
     const found = deduped.filter((candidate) => {
       const candidateName = (candidate.display_name || "").toLowerCase();
@@ -127,27 +122,14 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       );
     });
 
-    const singleDirectMatch = !isGroupMode && found.length === 1 ? found[0] : null;
-
     setSearching(false);
-    setResult(singleDirectMatch);
-    setResults(singleDirectMatch ? [] : found);
-    setError(found.length === 0 ? (t("chat.userNotFound") || "Nutzer nicht gefunden") : "");
-  }, [isGroupMode, selectedUsers, t, user]);
 
-  const handleSearch = async () => {
-    const trimmedQuery = searchQuery.trim();
-    const normalizedQuery = trimmedQuery.replace(/\D/g, "");
-    const canSearch = trimmedQuery.length >= MIN_AUTOSUGGEST_CHARS || normalizedQuery.length >= MIN_AUTOSUGGEST_CHARS;
-
-    if (!canSearch) {
-      setError(`${t("chat.minCharsError")}`);
-      setResults([]);
-      setResult(null);
+    if (found.length === 0) {
+      setError(t("chat.userNotFound") || "Nutzer nicht gefunden");
       return;
     }
 
-    await runSearch(trimmedQuery);
+    setResults(found);
   };
 
   const selectUser = (u: FoundUser) => {
@@ -164,29 +146,6 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   const removeUser = (id: string) => {
     setSelectedUsers((prev) => prev.filter((u) => u.id !== id));
   };
-
-  useEffect(() => {
-    if (!open) return;
-
-    const trimmedQuery = searchQuery.trim();
-    const normalizedQuery = trimmedQuery.replace(/\D/g, "");
-    const canAutosuggest = trimmedQuery.length >= MIN_AUTOSUGGEST_CHARS || normalizedQuery.length >= MIN_AUTOSUGGEST_CHARS;
-
-    if (!canAutosuggest) {
-      searchRequestIdRef.current += 1;
-      setSearching(false);
-      setError("");
-      setResults([]);
-      setResult(null);
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      void runSearch(trimmedQuery);
-    }, AUTOSUGGEST_DEBOUNCE_MS);
-
-    return () => window.clearTimeout(timeout);
-  }, [open, runSearch, searchQuery]);
 
   const handleStartChatWith = async (target: FoundUser) => {
     if (!target || !user || creating) return;
@@ -348,7 +307,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder={t("chat.groupNamePlaceholder")}
+              placeholder="Gruppenname..."
               className="w-full h-10 rounded-xl bg-secondary px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           )}
@@ -362,7 +321,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder={t("chat.searchPlaceholder")}
+                placeholder="Name oder Nummer suchen..."
                 className="w-full h-10 rounded-xl bg-secondary pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 autoFocus
               />
@@ -385,9 +344,12 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
             </button>
           </div>
 
-          <p className="text-xs text-muted-foreground text-center px-2">
-            {t("chat.autoSuggestHint")}
-          </p>
+          {/* iOS hint – only show when no results and no error */}
+          {!isContactPickerSupported && results.length === 0 && !error && !result && (
+            <p className="text-xs text-muted-foreground text-center px-2">
+              Gib die Telefonnummer deines Kontakts ein, um ihn auf Clemio zu finden.
+            </p>
+          )}
 
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
@@ -406,7 +368,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{u.display_name || "Nutzer"}</p>
-                    <p className="text-xs text-muted-foreground">{t("chat.contactFound")}</p>
+                    <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
                   </div>
                   {isGroupMode ? (
                     <UserPlus className="w-4 h-4 text-primary shrink-0" />
@@ -451,7 +413,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{result.display_name || "Nutzer"}</p>
-                <p className="text-xs text-muted-foreground">{t("chat.contactFound")}</p>
+                <p className="text-xs text-muted-foreground">Kontakt gefunden</p>
               </div>
               <MessageCirclePlus className="w-5 h-5 text-primary shrink-0" />
             </button>
@@ -469,7 +431,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  {t("chat.createGroup")}
+                  Gruppe erstellen
                 </>
               )}
             </button>
@@ -477,7 +439,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
           {isGroupMode && selectedUsers.length < 2 && (
             <p className="text-xs text-muted-foreground text-center py-2">
-              {t("chat.addMinMembers")}
+              Füge mindestens 2 Kontakte hinzu
             </p>
           )}
         </div>

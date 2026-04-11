@@ -238,22 +238,22 @@ const ProfilePage = () => {
           </label>
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block ml-1">{t("profile.firstName")}</label>
+              <label className="text-xs text-muted-foreground mb-1 block ml-1">Vorname</label>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder={t("profile.firstNamePlaceholder")}
+                placeholder="Vorname eingeben…"
                 className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block ml-1">{t("profile.lastName")}</label>
+              <label className="text-xs text-muted-foreground mb-1 block ml-1">Nachname</label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder={t("profile.lastNamePlaceholder")}
+                placeholder="Nachname eingeben… (optional)"
                 className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
               />
             </div>
