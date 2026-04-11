@@ -1,74 +1,27 @@
 
 
-# Clemio Redesign: Erheblich von WhatsApp abheben
+# KI-Vorschläge ins Eingabefeld einfügen statt direkt senden
 
-## Ziel
-Clemio soll sich durch ein komplett eigenständiges, modernes Design, Voice-First-Interaktion und sichtbare KI-Integration klar von WhatsApp unterscheiden.
+## Kosten-Info
+Die Clemio-KI nutzt das Lovable AI Gateway. Dein Workspace hat ein monatliches AI-Guthaben ($1 kostenlos). Jede KI-Anfrage verbraucht einen kleinen Betrag davon. Solange du im Rahmen dieses Guthabens bleibst, entstehen keine zusätzlichen Kosten.
 
-## Phase 1: Visuelles Redesign
+## Problem
+Aktuell ruft `onUseSuggestion` in `ChatPage.tsx` direkt `handleSend(text)` auf — die KI-Antwort wird also sofort als Nachricht gesendet, ohne dass der Nutzer sie vorher bearbeiten kann.
 
-### 1.1 Chat-Bubbles neu gestalten
-- Weg von den klassischen WhatsApp-Bubbles (runde Ecken mit Schwanz)
-- Neue Form: **Glassmorphe Bubbles** mit Blur-Effekt, leichtem Gradient und sanftem Schatten
-- Eigene Nachrichten: Gradient (Sunset-Farben), fremde: Frosted-Glass auf transparentem Hintergrund
-- Subtile Eingangs-Animation (Scale + Fade statt nur Slide-Up)
+## Lösung
 
-### 1.2 Chat-Liste modernisieren
-- Runde Avatare → **Quadratische Avatare mit abgerundeten Ecken** (wie Telegram/Signal-Stil aber eigenständig)
-- Ungelesene Chats mit linkem Farbbalken (Gradient-Akzent) statt nur Badge-Zahl
-- Swipe-Aktionen mit modernen Glassmorphe-Hintergründen
-- Letzte Nachricht mit Typ-Icon (🎤 Mic-Icon bei Audio, 📷 bei Bild)
+### Änderung 1: ChatInput um `externalText`-Prop erweitern
+- Neues Prop `externalText?: string` an `ChatInput` hinzufügen
+- Per `useEffect` den internen `text`-State setzen, wenn `externalText` sich ändert
+- So wird der KI-Vorschlag ins Textfeld eingefügt und der Nutzer kann ihn bearbeiten
 
-### 1.3 Navigation umgestalten
-- Bottom-Tab-Bar: **Floating Pill-Design** statt flacher WhatsApp-Leiste
-- Aktiver Tab mit Gradient-Pill-Hintergrund statt nur Farbwechsel
-- Leicht schwebend mit Schatten, abgerundete Ecken, Glassmorphe
+### Änderung 2: ChatPage — KI-Vorschlag ins Feld leiten statt senden
+- Neuer State `pendingSuggestion` in `ChatPage`
+- `onUseSuggestion` setzt `pendingSuggestion` statt `handleSend` aufzurufen
+- `pendingSuggestion` wird als `externalText` an `ChatInput` übergeben
+- Nach dem Setzen wird `pendingSuggestion` zurückgesetzt
 
-### 1.4 Farbschema & Typografie verfeinern
-- Gradient-Akzente stärker einsetzen (Header, aktive Elemente)
-- Micro-Animationen: Übergänge beim Seitenwechsel, Hover-Effekte
-- Subtle Parallax-Effekte im Chat-Hintergrund
-
-## Phase 2: Voice-First UX
-
-### 2.1 Voice-Button prominent machen
-- Großer, pulsierender Voice-Button im Chat-Input (nicht nur kleines Mic-Icon)
-- Während Aufnahme: animierte Wellenform statt nur roter Punkt
-- Voice-Status-Badge an Kontakten ("Hat Stimmprofil" als kleines Soundwave-Icon)
-
-### 2.2 Inline-Vorlese-Indikator
-- Wenn eine Nachricht vorgelesen wird: animierte Soundwave direkt in der Bubble sichtbar (bereits vorhanden, wird prominenter)
-- "Tap to Listen"-Hinweis bei erstem Mal als Tooltip
-
-### 2.3 Voice-Onboarding
-- Beim ersten Chat-Öffnen: dezenter Hinweis "Clemio liest dir Nachrichten vor – tippe eine Nachricht an"
-
-## Phase 3: KI-Integration sichtbar machen
-
-### 3.1 Smart-Reply-Chips
-- Unter der letzten empfangenen Nachricht: 2-3 KI-generierte Antwort-Vorschläge als klickbare Chips
-- Lädt automatisch (nicht erst nach Klick auf Sparkles-Button)
-
-### 3.2 KI-Button-Redesign
-- Sparkles-Button (Clemio-KI) mit Gradient statt plain, leicht animiert (Shimmer-Effekt)
-- Bei Antippen: Sheet fährt sanft von unten hoch mit Glassmorphe-Hintergrund
-
-### 3.3 Übersetzungs-Indikator
-- Automatische Spracherkennung bei fremdsprachigen Nachrichten
-- Dezenter "Übersetzen"-Badge erscheint automatisch
-
-## Technische Umsetzung
-
-### Dateien die geändert werden:
-1. **`src/index.css`** – Neue CSS-Variablen, Glassmorphe-Klassen, Floating-Tab-Styles, neue Animationen
-2. **`src/components/chat/ChatBubble.tsx`** – Glassmorphe Bubbles, neue Animations-Klassen
-3. **`src/components/chat/ChatListItem.tsx`** – Neues Layout mit Akzent-Balken, quadratische Avatare
-4. **`src/components/BottomTabBar.tsx`** – Floating-Pill-Design
-5. **`src/components/chat/ChatInput.tsx`** – Prominenter Voice-Button, Smart-Reply-Chips
-6. **`src/pages/ChatPage.tsx`** – Smart-Reply-Integration, Voice-Hinweise
-7. **`src/pages/ChatListPage.tsx`** – Neuer Header mit Gradient
-8. **`tailwind.config.ts`** – Neue Animationen und Utilities
-
-### Keine Datenbank-Änderungen nötig
-Die Smart-Reply-Chips nutzen die bestehende `clemio-ki` Edge Function.
+### Betroffene Dateien
+1. `src/components/chat/ChatInput.tsx` — neues `externalText`-Prop + useEffect
+2. `src/pages/ChatPage.tsx` — `pendingSuggestion`-State, `onUseSuggestion`-Logik ändern
 
