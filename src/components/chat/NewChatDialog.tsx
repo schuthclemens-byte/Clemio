@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, MessageCirclePlus, Users, UserPlus, Check, ContactRound } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -11,6 +11,8 @@ import { toast } from "sonner";
 
 /** Contact Picker API is only available on Android Chrome */
 const isContactPickerSupported = "contacts" in navigator && "ContactsManager" in window;
+const MIN_AUTOSUGGEST_CHARS = 3;
+const AUTOSUGGEST_DEBOUNCE_MS = 250;
 
 interface FoundUser {
   id: string;
