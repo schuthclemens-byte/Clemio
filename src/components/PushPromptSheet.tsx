@@ -3,6 +3,7 @@ import { Bell, X, Smartphone } from "lucide-react";
 import { usePushCapability } from "@/hooks/usePushCapability";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -16,6 +17,7 @@ const ALLOWED_ROUTES = ["/chats", "/chat/", "/settings", "/profile", "/focus-mod
 
 const PushPromptSheet = () => {
   const { user } = useAuth();
+  const { t } = useI18n();
   const pushCap = usePushCapability();
   const { status, subscribe } = usePushSubscription();
   const navigate = useNavigate();
@@ -31,67 +33,32 @@ const PushPromptSheet = () => {
     const onAllowedRoute = ALLOWED_ROUTES.some(r => location.pathname.startsWith(r));
     if (!onAllowedRoute) return;
 
-    // ── Never show if push is already active ──
-    if (status.state === "active" || status.savedToBackend) {
-      console.log("[PushPrompt] state=active → no prompt");
-      return;
-    }
+    if (status.state === "active" || status.savedToBackend) return;
+    if (status.state === "denied") return;
+    if ("Notification" in window && Notification.permission === "denied") return;
+    if ("Notification" in window && Notification.permission === "granted" && status.savedToBackend) return;
 
-    // ── Never show if permission denied ──
-    if (status.state === "denied") {
-      console.log("[PushPrompt] state=denied → no prompt");
-      return;
-    }
-
-    // ── Check actual browser permission as failsafe ──
-    if ("Notification" in window && Notification.permission === "denied") {
-      console.log("[PushPrompt] Notification.permission=denied → no prompt");
-      return;
-    }
-    if ("Notification" in window && Notification.permission === "granted" && status.savedToBackend) {
-      console.log("[PushPrompt] granted + saved → no prompt");
-      return;
-    }
-
-    // ── Platform unsupported ──
     if (!pushCap.canUsePush) {
-      // Show iOS install hint only if not permanently dismissed
       if (localStorage.getItem(DISMISSED_KEY) === "true") return;
       const timer = setTimeout(() => setVisible(true), 500);
       return () => clearTimeout(timer);
     }
 
-    // ── Only show for prompt-ready state ──
-    if (status.state !== "prompt-ready") {
-      console.log("[PushPrompt] state=", status.state, "→ no prompt");
-      return;
-    }
+    if (status.state !== "prompt-ready") return;
+    if (localStorage.getItem(DISMISSED_KEY) === "true") return;
 
-    // ── Permanently dismissed by user ──
-    if (localStorage.getItem(DISMISSED_KEY) === "true") {
-      console.log("[PushPrompt] permanently dismissed → no prompt");
-      return;
-    }
-
-    // ── Cooldown: don't ask more than once per 7 days ──
     const lastShown = localStorage.getItem(LAST_PROMPT_KEY);
     if (lastShown) {
       const elapsed = Date.now() - parseInt(lastShown, 10);
-      if (elapsed < PROMPT_COOLDOWN_MS) {
-        console.log("[PushPrompt] cooldown active (", Math.round(elapsed / 3600000), "h ago) → no prompt");
-        return;
-      }
+      if (elapsed < PROMPT_COOLDOWN_MS) return;
     }
 
-    console.log("[PushPrompt] Showing push activation prompt");
     localStorage.setItem(LAST_PROMPT_KEY, Date.now().toString());
     const timer = setTimeout(() => setVisible(true), 500);
     return () => clearTimeout(timer);
   }, [user, location.pathname, status.state, status.savedToBackend, status.initialCheckDone, pushCap.canUsePush]);
 
   const handleDismiss = useCallback(() => {
-    // If unsupported (iOS browser), persist separately
-    // For supported platforms, set permanent dismiss
     localStorage.setItem(DISMISSED_KEY, "true");
     setVisible(false);
   }, []);
@@ -102,11 +69,9 @@ const PushPromptSheet = () => {
     setActivating(false);
     if (ok) {
       setResult("success");
-      // Clear dismissed flag since it's now active
       localStorage.removeItem(DISMISSED_KEY);
       setTimeout(() => setVisible(false), 2000);
     } else {
-      // Check if it was denied
       if ("Notification" in window && Notification.permission === "denied") {
         setResult("denied");
         localStorage.setItem(DISMISSED_KEY, "true");
@@ -125,7 +90,7 @@ const PushPromptSheet = () => {
         <button
           onClick={handleDismiss}
           className="absolute top-4 right-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
-          aria-label="Schließen"
+          aria-label={t("push.close")}
         >
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -136,7 +101,7 @@ const PushPromptSheet = () => {
               <Bell className="w-7 h-7 text-destructive" />
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-lg font-bold">Push wird nicht unterstützt</h2>
+              <h2 className="text-lg font-bold">{t("push.notSupported")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">{pushCap.reason}</p>
             </div>
             {pushCap.isIOSBrowserOnly && (
@@ -145,7 +110,7 @@ const PushPromptSheet = () => {
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary/10 text-primary font-semibold text-sm transition-all active:scale-[0.97]"
               >
                 <Smartphone className="w-4 h-4" />
-                App zum Home-Bildschirm hinzufügen
+                {t("push.addHome")}
               </button>
             )}
           </>
@@ -155,8 +120,8 @@ const PushPromptSheet = () => {
               <Bell className="w-7 h-7 text-primary" />
             </div>
             <div className="text-center space-y-1">
-              <h2 className="text-lg font-bold">Push aktiviert ✓</h2>
-              <p className="text-sm text-muted-foreground">Du erhältst jetzt Benachrichtigungen.</p>
+              <h2 className="text-lg font-bold">{t("push.activated")}</h2>
+              <p className="text-sm text-muted-foreground">{t("push.activatedDesc")}</p>
             </div>
           </>
         ) : result === "denied" ? (
@@ -165,13 +130,13 @@ const PushPromptSheet = () => {
               <Bell className="w-7 h-7 text-destructive" />
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-lg font-bold">Berechtigung verweigert</h2>
+              <h2 className="text-lg font-bold">{t("push.denied")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Du hast die Benachrichtigungs-Berechtigung abgelehnt. Du kannst sie in den Browser-Einstellungen wieder aktivieren.
+                {t("push.deniedDesc")}
               </p>
             </div>
             <button onClick={handleDismiss} className="w-full py-3 rounded-2xl bg-secondary text-foreground font-medium text-sm">
-              Verstanden
+              {t("push.understood")}
             </button>
           </>
         ) : (
@@ -180,9 +145,9 @@ const PushPromptSheet = () => {
               <Bell className="w-7 h-7 text-primary-foreground" />
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-lg font-bold">Push-Benachrichtigungen aktivieren</h2>
+              <h2 className="text-lg font-bold">{t("push.enableTitle")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Erhalte Benachrichtigungen über neue Nachrichten – auch wenn die App geschlossen ist.
+                {t("push.enableDesc")}
               </p>
             </div>
             <button
@@ -198,10 +163,10 @@ const PushPromptSheet = () => {
               ) : (
                 <Bell className="w-4 h-4" />
               )}
-              {activating ? "Wird aktiviert…" : "Aktivieren"}
+              {activating ? t("push.activating") : t("push.activate")}
             </button>
             <button onClick={handleDismiss} className="w-full py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Später
+              {t("push.later")}
             </button>
           </>
         )}
