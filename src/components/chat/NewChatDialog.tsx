@@ -204,6 +204,17 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
       if (ownMembershipError) throw ownMembershipError;
 
+      const { error: invitationError } = await supabase
+        .from("chat_invitations")
+        .insert({
+          conversation_id: conversationId,
+          invited_by: user.id,
+          invited_user_id: target.id,
+          status: "accepted",
+        });
+
+      if (invitationError) throw invitationError;
+
       const { error: targetMembershipError } = await supabase
         .from("conversation_members")
         .insert({ conversation_id: conversationId, user_id: target.id });
