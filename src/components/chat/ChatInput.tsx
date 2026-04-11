@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Send, Plus, Camera, ImagePlus, Mic, Sparkles } from "lucide-react";
 import VoiceButton from "./VoiceButton";
 import MediaPreview from "./MediaPreview";
@@ -34,6 +34,8 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
   const [showMediaMenu, setShowMediaMenu] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaToggleRef = useRef<HTMLButtonElement>(null);
+  const mediaMenuRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t, locale } = useI18n();
   const { autoCorrect: autoCorrectEnabled } = useAccessibility();
@@ -41,8 +43,25 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
 
   const currentText = isListening ? transcript : text;
 
+  useEffect(() => {
+    if (!showMediaMenu) return;
+
+    const handlePointerDownOutside = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (mediaToggleRef.current?.contains(target)) return;
+      if (mediaMenuRef.current?.contains(target)) return;
+      setShowMediaMenu(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDownOutside);
+    return () => document.removeEventListener("pointerdown", handlePointerDownOutside);
+  }, [showMediaMenu]);
+
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     let newText = e.target.value;
+
+    setShowMediaMenu(false);
     
     // Auto-correct on space
     const corrected = autoCorrect(newText);
@@ -177,6 +196,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
           {/* + button for media */}
           <div className="relative">
             <button
+              ref={mediaToggleRef}
               onClick={() => setShowMediaMenu(!showMediaMenu)}
               className={cn(
                 "flex items-center justify-center w-11 h-11 rounded-full transition-all duration-200 active:scale-90",
@@ -190,7 +210,10 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             </button>
 
             {showMediaMenu && (
-              <div className="absolute bottom-14 left-0 flex gap-2 bg-card border border-border rounded-2xl p-2 shadow-elevated animate-reveal-up">
+              <div
+                ref={mediaMenuRef}
+                className="absolute bottom-14 left-0 flex gap-2 bg-card border border-border rounded-2xl p-2 shadow-elevated animate-reveal-up"
+              >
                 <button
                   onClick={() => { setShowCamera(true); setShowMediaMenu(false); }}
                   className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-secondary transition-colors active:scale-95"
@@ -236,6 +259,8 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             <textarea
               value={currentText}
               onChange={handleTextChange}
+              onFocus={() => setShowMediaMenu(false)}
+              onClick={() => setShowMediaMenu(false)}
               onKeyDown={handleKeyDown}
               placeholder={isListening ? t("chat.listening") : t("chat.placeholder")}
               rows={1}
