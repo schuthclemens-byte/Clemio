@@ -82,42 +82,21 @@ const HeroSection = () => {
     };
   }, []);
 
-  // Background-fetch TTS audio in current language
+  // Ensure TTS is prefetched for the current locale (handles language switches)
   useEffect(() => {
-    if (ttsFetchedLangRef.current === locale) return;
-    ttsFetchedLangRef.current = locale;
-
-    const url = `${SUPABASE_URL}/functions/v1/onboarding-tts?lang=${locale}&v=${Date.now()}`;
-    fetch(url)
-      .then(async (res) => {
-        const contentType = res.headers.get("Content-Type") || "";
-        // If response is JSON (fallback/error), skip – use local MP3
-        if (contentType.includes("application/json")) {
-          ttsAudioRef.current = null;
-          return;
-        }
-        if (!res.ok) throw new Error("TTS fetch failed");
-        const blob = await res.blob();
-        const objUrl = URL.createObjectURL(blob);
-        const audio = new Audio(objUrl);
-        audio.preload = "auto";
-        audio.volume = 0.18;
-        ttsAudioRef.current = audio;
-      })
-      .catch(() => {
-        // TTS failed – fallback MP3 will be used
-        ttsAudioRef.current = null;
-      });
+    if (locale !== "de") {
+      prefetchTTS(locale);
+    }
   }, [locale]);
 
-  /** Fetch TTS audio from edge function in the user's language */
-  const fetchOnboardingAudio = useCallback(async (): Promise<HTMLAudioElement> => {
-    // Use TTS version if available, otherwise instant fallback
-    const source = ttsAudioRef.current ?? preloadedAudio;
+  /** Get the best available audio: cached TTS or German fallback */
+  const fetchOnboardingAudio = useCallback((): HTMLAudioElement => {
+    const cached = ttsCache.get(locale);
+    const source = cached ?? preloadedAudio;
     const audio = source.cloneNode(true) as HTMLAudioElement;
     audio.volume = 0.18;
     return audio;
-  }, []);
+  }, [locale]);
 
   /** Play the onboarding audio */
   const playAudio = useCallback(async (audio: HTMLAudioElement) => {
