@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2, MoreVertical } from "lucide-react";
@@ -156,6 +157,7 @@ const ChatPage = () => {
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
+  const chatMenuBtnRef = useRef<HTMLDivElement>(null);
   const [showClemioKI, setShowClemioKI] = useState(false);
 
   const mapDbMessage = useCallback((m: any): Message => ({
@@ -1081,7 +1083,7 @@ const ChatPage = () => {
           >
             <Video className="w-5 h-5 text-muted-foreground" />
           </button>
-          <div className="relative">
+          <div className="relative" ref={chatMenuBtnRef}>
             <button
               onClick={() => setShowChatMenu(!showChatMenu)}
               className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-90"
@@ -1089,10 +1091,16 @@ const ChatPage = () => {
             >
               <MoreVertical className="w-5 h-5 text-muted-foreground" />
             </button>
-            {showChatMenu && (
+            {showChatMenu && createPortal(
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowChatMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 py-1 animate-fade-in">
+                <div className="fixed inset-0 z-[9998]" onClick={() => setShowChatMenu(false)} />
+                <div
+                  className="fixed w-48 bg-card border border-border rounded-xl shadow-xl z-[9999] py-1 animate-fade-in"
+                  style={{
+                    top: (chatMenuBtnRef.current?.getBoundingClientRect().bottom ?? 0) + 4,
+                    right: window.innerWidth - (chatMenuBtnRef.current?.getBoundingClientRect().right ?? 0),
+                  }}
+                >
                   {isGroup && (
                     <button
                       onClick={() => { setShowChatMenu(false); setShowGroupMembers(true); }}
@@ -1108,7 +1116,8 @@ const ChatPage = () => {
                     <ImageIcon className="w-4 h-4" /> Medien
                   </button>
                 </div>
-              </>
+              </>,
+              document.body
             )}
           </div>
         </div>
