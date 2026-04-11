@@ -443,8 +443,8 @@ E-Mail: privacy@clemio.app`}
           </p>
         </Section>
 
-        {/* 19. Rechte */}
-        <Section title="19. Deine Rechte" delay={780}>
+        {/* 20. Rechte */}
+        <Section title="20. Deine Rechte" delay={800}>
           <p>Du hast nach der DSGVO folgende Rechte:</p>
           <ul className="space-y-1">
             <Bullet accent><strong>Auskunft</strong> (Art. 15 DSGVO) – Welche Daten über dich gespeichert sind</Bullet>
@@ -460,8 +460,8 @@ E-Mail: privacy@clemio.app`}
           </p>
         </Section>
 
-        {/* 20. Sicherheit */}
-        <Section title="20. Sicherheitsmaßnahmen" delay={820}>
+        {/* 21. Sicherheit */}
+        <Section title="21. Sicherheitsmaßnahmen" delay={840}>
           <p>Wir setzen folgende Maßnahmen zum Schutz deiner Daten ein:</p>
           <ul className="space-y-1">
             <Bullet>TLS-Verschlüsselung für alle Datenübertragungen</Bullet>
@@ -477,8 +477,8 @@ E-Mail: privacy@clemio.app`}
           </p>
         </Section>
 
-        {/* 21. Mindestalter */}
-        <Section title="21. Mindestalter" delay={860}>
+        {/* 22. Mindestalter */}
+        <Section title="22. Mindestalter" delay={880}>
           <p>
             Die Nutzung von Clemio ist ab 16 Jahren gestattet. Personen unter 16 Jahren dürfen die App nicht nutzen. Bei der Registrierung wird eine entsprechende Bestätigung abgefragt.
           </p>
