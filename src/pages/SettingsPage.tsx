@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -132,6 +132,31 @@ const SettingsPage = () => {
   const [previewEnabled, setPreviewEnabled] = useState(false);
   const [refreshingSubscription, setRefreshingSubscription] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Searchable settings items with keywords
+  const settingsIndex: { section: string; keywords: string[] }[] = [
+    { section: "profile", keywords: ["profil", "profile", "name", "avatar", "bild", "foto", "photo"] },
+    { section: "privacy", keywords: ["privatsphäre", "privacy", "nachrichten", "messages", "vorschau", "preview", "lesebestätigung", "read", "online", "status", "tippen", "typing", "vorlesen"] },
+    { section: "push", keywords: ["push", "benachrichtigung", "notification", "alert", "ton", "sound"] },
+    { section: "appearance", keywords: ["erscheinungsbild", "appearance", "theme", "design", "dunkel", "dark", "hell", "light", "farbe", "color", "hintergrund", "background", "wallpaper"] },
+    { section: "language", keywords: ["sprache", "language", "deutsch", "english", "français", "türkçe", "español", "العربية"] },
+    { section: "accessibility", keywords: ["barrierefreiheit", "accessibility", "schrift", "font", "dyslexie", "groß", "large", "kontrast", "contrast", "kopfhörer", "headphone", "autokorrektur", "autocorrect", "geschwindigkeit", "speed", "rate", "ruhezeit", "quiet", "kompakt", "compact", "stumm", "mute"] },
+    { section: "focus", keywords: ["fokus", "focus", "modus", "mode", "ruhe", "stille", "kontakte"] },
+    { section: "autoplay", keywords: ["autoplay", "automatisch", "abspielen", "vorlesen", "stimme", "voice"] },
+    { section: "install", keywords: ["installieren", "install", "app", "herunterladen", "download", "home"] },
+    { section: "session", keywords: ["angemeldet", "logged", "sitzung", "session", "passwort", "password"] },
+    { section: "subscription", keywords: ["abo", "subscription", "premium", "bezahlen", "payment", "stripe", "plan"] },
+    { section: "logout", keywords: ["abmelden", "logout", "ausloggen", "sign out"] },
+    { section: "legal", keywords: ["rechtliches", "legal", "datenschutz", "privacy policy", "agb", "terms", "impressum", "nutzungsbedingungen"] },
+  ];
+
+  const q = searchQuery.trim().toLowerCase();
+  const isSearching = q.length >= 3;
+  const visibleSections = isSearching
+    ? new Set(settingsIndex.filter(s => s.keywords.some(k => k.includes(q))).map(s => s.section))
+    : null;
+  const show = (section: string) => !visibleSections || visibleSections.has(section);
 
   // Load push preview from profile
   useEffect(() => {
@@ -198,27 +223,52 @@ const SettingsPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">{t("settings.title")}</h1>
+          <h1 className="text-xl font-bold flex-1">{t("settings.title")}</h1>
+        </div>
+        {/* Search bar */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("settings.searchPlaceholder") !== "settings.searchPlaceholder" ? t("settings.searchPlaceholder") : "Einstellung suchen…"}
+              className="w-full h-10 pl-9 pr-9 rounded-xl bg-secondary text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/60"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       <div className="flex-1 p-4 space-y-6">
-        {/* Profile link */}
-        <button
-          onClick={() => navigate("/profile")}
-          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
-        >
-          <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center text-primary-foreground">
-            <User className="w-6 h-6" />
+        {isSearching && visibleSections?.size === 0 && (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">Keine Einstellung gefunden für „{searchQuery}"</p>
           </div>
-          <div className="text-left">
-            <p className="font-semibold text-[0.938rem]">{t("settings.profile")}</p>
-            <p className="text-xs text-muted-foreground">{t("settings.profileDesc")}</p>
-          </div>
-        </button>
+        )}
+        {show("profile") && (
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
+          >
+            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center text-primary-foreground">
+              <User className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-[0.938rem]">{t("settings.profile")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.profileDesc")}</p>
+            </div>
+          </button>
+        )}
 
+        {show("privacy") && <>
         {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
-        <CollapsibleSection icon={Shield} title="Privatsphäre & Nachrichten" defaultOpen={true} delay="30ms">
+        <CollapsibleSection icon={Shield} title="Privatsphäre & Nachrichten" defaultOpen={!isSearching} delay="30ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <ToggleRow
               icon={MessageSquareText}
@@ -263,9 +313,11 @@ const SettingsPage = () => {
           </div>
 
         </CollapsibleSection>
+        </>}
 
+        {show("push") && <>
         {/* ──────────── PUSH-BENACHRICHTIGUNGEN ──────────── */}
-        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" defaultOpen={true} delay="45ms">
+        <CollapsibleSection icon={Bell} title="Push-Benachrichtigungen" defaultOpen={!isSearching} delay="45ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {pushCap.canUsePush ? (
               <>
@@ -345,9 +397,11 @@ const SettingsPage = () => {
             )}
           </div>
         </CollapsibleSection>
+        </>}
 
+        {show("appearance") && <>
         {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
-        <CollapsibleSection icon={Palette} title="Erscheinungsbild" delay="60ms">
+        <CollapsibleSection icon={Palette} title="Erscheinungsbild" defaultOpen={isSearching} delay="60ms">
           <div className="space-y-4">
             {/* Theme */}
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
@@ -419,9 +473,11 @@ const SettingsPage = () => {
             </button>
           </div>
         </CollapsibleSection>
+        </>}
 
+        {show("language") && <>
         {/* ──────────── SPRACHE ──────────── */}
-        <CollapsibleSection icon={Globe} title={t("settings.language")} delay="70ms">
+        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen={isSearching} delay="70ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {languages.map(([code, name]) => (
               <button
@@ -440,9 +496,11 @@ const SettingsPage = () => {
             ))}
           </div>
         </CollapsibleSection>
+        </>}
 
+        {show("accessibility") && <>
         {/* ──────────── BARRIEREFREIHEIT ──────────── */}
-        <CollapsibleSection icon={Eye} title={t("settings.accessibility")} delay="80ms">
+        <CollapsibleSection icon={Eye} title={t("settings.accessibility")} defaultOpen={isSearching} delay="80ms">
           <div className="space-y-3">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
               <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => a11y.toggle("dyslexiaFont")} />
@@ -519,42 +577,44 @@ const SettingsPage = () => {
             </div>
           </div>
         </CollapsibleSection>
+        </>}
 
         {/* ──────────── WEITERE LINKS ──────────── */}
         <div className="space-y-3">
-          {/* Focus Mode */}
-          <button
-            onClick={() => navigate("/focus-mode")}
-            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-          >
-            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-accent" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-semibold text-[0.938rem]">{t("settings.focusMode")}</p>
-              <p className="text-xs text-muted-foreground">{t("settings.focusModeDesc")}</p>
-            </div>
-          </button>
+          {show("focus") && (
+            <button
+              onClick={() => navigate("/focus-mode")}
+              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-accent" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-[0.938rem]">{t("settings.focusMode")}</p>
+                <p className="text-xs text-muted-foreground">{t("settings.focusModeDesc")}</p>
+              </div>
+            </button>
+          )}
 
-          {/* Auto-Play Contact */}
-          <button
-            onClick={() => navigate("/contact-autoplay")}
-            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Volume2 className="w-5 h-5 text-primary" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-semibold text-[0.938rem] flex items-center gap-2">
-                {t("settings.autoPlayContact")}
-                {!isPremium && <PremiumBadge />}
-              </p>
-              <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
-            </div>
-          </button>
+          {show("autoplay") && (
+            <button
+              onClick={() => navigate("/contact-autoplay")}
+              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Volume2 className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-semibold text-[0.938rem] flex items-center gap-2">
+                  {t("settings.autoPlayContact")}
+                  {!isPremium && <PremiumBadge />}
+                </p>
+                <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
+              </div>
+            </button>
+          )}
 
-          {/* Install App */}
-          {!window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
+          {show("install") && !window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
             <button
               onClick={() => navigate("/install")}
               className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
@@ -570,20 +630,20 @@ const SettingsPage = () => {
           )}
         </div>
 
-        {/* Stay logged in */}
-        <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-          <ToggleRow
-            icon={KeyRound}
-            label={t("settings.stayLoggedIn")}
-            description={t("settings.stayLoggedInDesc")}
-            checked={stayLoggedIn}
-            onChange={toggleStayLoggedIn}
-            borderBottom={false}
-          />
-        </div>
+        {show("session") && (
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+            <ToggleRow
+              icon={KeyRound}
+              label={t("settings.stayLoggedIn")}
+              description={t("settings.stayLoggedInDesc")}
+              checked={stayLoggedIn}
+              onChange={toggleStayLoggedIn}
+              borderBottom={false}
+            />
+          </div>
+        )}
 
-        {/* Subscription */}
-        {!(isFoundingUser && daysRemaining === -1) && (
+        {show("subscription") && !(isFoundingUser && daysRemaining === -1) && (
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <div className="px-4 py-4 space-y-3">
               <div className="flex items-center justify-between">
@@ -610,7 +670,6 @@ const SettingsPage = () => {
                 </button>
               </div>
 
-              {/* Status line */}
               <div className="flex items-center gap-2 px-1">
                 <span className={cn(
                   "w-2 h-2 rounded-full shrink-0 transition-colors",
@@ -648,56 +707,58 @@ const SettingsPage = () => {
           </div>
         )}
 
-        {/* Logout */}
-        <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
-          {!showLogoutConfirm ? (
-            <button
-              onClick={() => setShowLogoutConfirm(true)}
-              className="w-full flex items-center justify-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl shadow-sm hover:bg-destructive/20 transition-colors active:scale-[0.98] font-semibold"
-            >
-              <LogOut className="w-5 h-5" />
-              {t("settings.logout")}
-            </button>
-          ) : (
-            <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
-              <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
-              <div className="flex gap-3">
-                <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
-                  {t("a11y.back")}
-                </button>
-                <button onClick={handleLogout} className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm">
-                  {t("settings.logout")}
-                </button>
+        {show("logout") && (
+          <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
+            {!showLogoutConfirm ? (
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="w-full flex items-center justify-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl shadow-sm hover:bg-destructive/20 transition-colors active:scale-[0.98] font-semibold"
+              >
+                <LogOut className="w-5 h-5" />
+                {t("settings.logout")}
+              </button>
+            ) : (
+              <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
+                <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
+                    {t("a11y.back")}
+                  </button>
+                  <button onClick={handleLogout} className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm">
+                    {t("settings.logout")}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Legal */}
-        <CollapsibleSection icon={Lock} title={t("settings.legal")} delay="110ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            <button
-              onClick={() => navigate("/privacy")}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors border-b border-border"
-            >
-              <Shield className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <span className="text-[0.938rem] block">{t("settings.privacy")}</span>
-                <span className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</span>
-              </div>
-            </button>
-            <button
-              onClick={() => navigate("/terms")}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
-            >
-              <FileText className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <span className="text-[0.938rem] block">{t("settings.terms")}</span>
-                <span className="text-xs text-muted-foreground">{t("settings.termsDesc")}</span>
-              </div>
-            </button>
+            )}
           </div>
-        </CollapsibleSection>
+        )}
+
+        {show("legal") && (
+          <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen={isSearching} delay="110ms">
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => navigate("/privacy")}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors border-b border-border"
+              >
+                <Shield className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block">{t("settings.privacy")}</span>
+                  <span className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</span>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate("/terms")}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
+              >
+                <FileText className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block">{t("settings.terms")}</span>
+                  <span className="text-xs text-muted-foreground">{t("settings.termsDesc")}</span>
+                </div>
+              </button>
+            </div>
+          </CollapsibleSection>
+        )}
       </div>
 
       <BackgroundPicker
