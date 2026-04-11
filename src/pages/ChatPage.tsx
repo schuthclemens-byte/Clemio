@@ -30,6 +30,7 @@ import MediaGallerySheet from "@/components/chat/MediaGallerySheet";
 import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
+import ClemioKISheet from "@/components/chat/ClemioKISheet";
 
 interface Message {
   id: string;
@@ -155,6 +156,7 @@ const ChatPage = () => {
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
+  const [showClemioKI, setShowClemioKI] = useState(false);
 
   const mapDbMessage = useCallback((m: any): Message => ({
     id: m.id,
