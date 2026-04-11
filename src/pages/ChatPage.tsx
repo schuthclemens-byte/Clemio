@@ -157,6 +157,7 @@ const ChatPage = () => {
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
+  const chatMenuBtnRef = useRef<HTMLDivElement>(null);
   const [showClemioKI, setShowClemioKI] = useState(false);
 
   const mapDbMessage = useCallback((m: any): Message => ({
