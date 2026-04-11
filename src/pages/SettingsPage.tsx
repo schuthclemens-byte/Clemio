@@ -496,9 +496,11 @@ const SettingsPage = () => {
             ))}
           </div>
         </CollapsibleSection>
+        </>}
 
+        {show("accessibility") && <>
         {/* ──────────── BARRIEREFREIHEIT ──────────── */}
-        <CollapsibleSection icon={Eye} title={t("settings.accessibility")} delay="80ms">
+        <CollapsibleSection icon={Eye} title={t("settings.accessibility")} defaultOpen={isSearching} delay="80ms">
           <div className="space-y-3">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
               <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => a11y.toggle("dyslexiaFont")} />
