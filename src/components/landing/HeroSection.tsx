@@ -219,8 +219,7 @@ const HeroSection = () => {
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
                 />
                 <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shadow-soft z-10">
-                    <Volume2 className="w-7 h-7 text-primary-foreground" />
-                  )}
+                  <Volume2 className="w-7 h-7 text-primary-foreground" />
                 </div>
               </div>
 
