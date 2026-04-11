@@ -743,6 +743,23 @@ const en: Record<string, string> = {
     "paywall.legal": "7-day free trial. Then €4.99/month. Subscription renews automatically. Cancel anytime.",
     "paywall.privacyLink": "Privacy",
     "paywall.termsLink": "Terms of Service",
+    "sidebar.voices": "Voices",
+    "sidebar.focusMode": "Focus Mode",
+    "sidebar.autoPlay": "Auto-Play",
+    "sidebar.extras": "Extras",
+    "push.notSupported": "Push not supported",
+    "push.addHome": "Add app to home screen",
+    "push.activated": "Push activated ✓",
+    "push.activatedDesc": "You'll now receive notifications.",
+    "push.denied": "Permission denied",
+    "push.deniedDesc": "You denied the notification permission. You can re-enable it in your browser settings.",
+    "push.understood": "Got it",
+    "push.enableTitle": "Enable push notifications",
+    "push.enableDesc": "Get notified about new messages – even when the app is closed.",
+    "push.activating": "Activating…",
+    "push.activate": "Activate",
+    "push.later": "Later",
+    "push.close": "Close",
 };
 
 export default en;

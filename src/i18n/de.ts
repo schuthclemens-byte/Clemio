@@ -738,6 +738,23 @@ const de: Record<string, string> = {
     "paywall.legal": "7 Tage kostenlos testen. Danach 4,99 €/Monat. Das Abo verlängert sich automatisch. Jederzeit kündbar.",
     "paywall.privacyLink": "Datenschutz",
     "paywall.termsLink": "Nutzungsbedingungen",
+    "sidebar.voices": "Stimmen",
+    "sidebar.focusMode": "Fokusmodus",
+    "sidebar.autoPlay": "Auto-Play",
+    "sidebar.extras": "Extras",
+    "push.notSupported": "Push wird nicht unterstützt",
+    "push.addHome": "App zum Home-Bildschirm hinzufügen",
+    "push.activated": "Push aktiviert ✓",
+    "push.activatedDesc": "Du erhältst jetzt Benachrichtigungen.",
+    "push.denied": "Berechtigung verweigert",
+    "push.deniedDesc": "Du hast die Benachrichtigungs-Berechtigung abgelehnt. Du kannst sie in den Browser-Einstellungen wieder aktivieren.",
+    "push.understood": "Verstanden",
+    "push.enableTitle": "Push-Benachrichtigungen aktivieren",
+    "push.enableDesc": "Erhalte Benachrichtigungen über neue Nachrichten – auch wenn die App geschlossen ist.",
+    "push.activating": "Wird aktiviert…",
+    "push.activate": "Aktivieren",
+    "push.later": "Später",
+    "push.close": "Schließen",
 };
 
 export default de;
