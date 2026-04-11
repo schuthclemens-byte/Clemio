@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, MessageCirclePlus, Users, UserPlus, Check, ContactRound } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -11,6 +11,8 @@ import { toast } from "sonner";
 
 /** Contact Picker API is only available on Android Chrome */
 const isContactPickerSupported = "contacts" in navigator && "ContactsManager" in window;
+const MIN_AUTOSUGGEST_CHARS = 3;
+const AUTOSUGGEST_DEBOUNCE_MS = 250;
 
 interface FoundUser {
   id: string;
@@ -33,6 +35,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<FoundUser[]>([]);
   const [groupName, setGroupName] = useState("");
+  const searchRequestIdRef = useRef(0);
   const navigate = useNavigate();
   const { t } = useI18n();
   const { user } = useAuth();
@@ -92,23 +95,25 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
   const isPhoneQuery = (q: string) => /^[+0-9\s()-]+$/.test(q.trim());
 
-  const handleSearch = async () => {
-    const query = searchQuery.trim();
+  const runSearch = useCallback(async (rawQuery: string) => {
+    const query = rawQuery.trim();
     if (!query || !user) return;
 
+    const requestId = ++searchRequestIdRef.current;
     setSearching(true);
     setError("");
     setResult(null);
-    setResults([]);
 
     const lowerQuery = query.toLowerCase();
     const digitsQuery = query.replace(/\D/g, "");
     const normalizedDigitsQuery = digitsQuery ? normalizePhone(query) : "";
     const shouldSearchByName = /[^\d\s()+-]/.test(query);
-    const shouldSearchByPhone = digitsQuery.length >= 3 || isPhoneQuery(query);
-
+    const shouldSearchByPhone = digitsQuery.length >= MIN_AUTOSUGGEST_CHARS || isPhoneQuery(query);
     const searchTerm = shouldSearchByName ? query : (digitsQuery || normalizedDigitsQuery);
+
     const deduped = await searchAccessibleProfiles(searchTerm);
+
+    if (requestId !== searchRequestIdRef.current) return;
 
     const found = deduped.filter((candidate) => {
       const candidateName = (candidate.display_name || "").toLowerCase();
@@ -122,14 +127,27 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       );
     });
 
-    setSearching(false);
+    const singleDirectMatch = !isGroupMode && found.length === 1 ? found[0] : null;
 
-    if (found.length === 0) {
-      setError(t("chat.userNotFound") || "Nutzer nicht gefunden");
+    setSearching(false);
+    setResult(singleDirectMatch);
+    setResults(singleDirectMatch ? [] : found);
+    setError(found.length === 0 ? (t("chat.userNotFound") || "Nutzer nicht gefunden") : "");
+  }, [isGroupMode, selectedUsers, t, user]);
+
+  const handleSearch = async () => {
+    const trimmedQuery = searchQuery.trim();
+    const normalizedQuery = trimmedQuery.replace(/\D/g, "");
+    const canSearch = trimmedQuery.length >= MIN_AUTOSUGGEST_CHARS || normalizedQuery.length >= MIN_AUTOSUGGEST_CHARS;
+
+    if (!canSearch) {
+      setError(`Mindestens ${MIN_AUTOSUGGEST_CHARS} Buchstaben oder Zahlen eingeben`);
+      setResults([]);
+      setResult(null);
       return;
     }
 
-    setResults(found);
+    await runSearch(trimmedQuery);
   };
 
   const selectUser = (u: FoundUser) => {
@@ -146,6 +164,29 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   const removeUser = (id: string) => {
     setSelectedUsers((prev) => prev.filter((u) => u.id !== id));
   };
+
+  useEffect(() => {
+    if (!open) return;
+
+    const trimmedQuery = searchQuery.trim();
+    const normalizedQuery = trimmedQuery.replace(/\D/g, "");
+    const canAutosuggest = trimmedQuery.length >= MIN_AUTOSUGGEST_CHARS || normalizedQuery.length >= MIN_AUTOSUGGEST_CHARS;
+
+    if (!canAutosuggest) {
+      searchRequestIdRef.current += 1;
+      setSearching(false);
+      setError("");
+      setResults([]);
+      setResult(null);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void runSearch(trimmedQuery);
+    }, AUTOSUGGEST_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [open, runSearch, searchQuery]);
 
   const handleStartChatWith = async (target: FoundUser) => {
     if (!target || !user || creating) return;
@@ -344,12 +385,9 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
             </button>
           </div>
 
-          {/* iOS hint – only show when no results and no error */}
-          {!isContactPickerSupported && results.length === 0 && !error && !result && (
-            <p className="text-xs text-muted-foreground text-center px-2">
-              Gib die Telefonnummer deines Kontakts ein, um ihn auf Clemio zu finden.
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground text-center px-2">
+            Vorschläge erscheinen automatisch ab 3 Buchstaben oder Zahlen. Dein eigener Account wird hier nicht angezeigt.
+          </p>
 
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
