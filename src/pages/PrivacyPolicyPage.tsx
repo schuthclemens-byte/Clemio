@@ -324,6 +324,34 @@ E-Mail: privacy@clemio.app`}
           <p><strong>Rechtsgrundlage:</strong> Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) bzw. Vertragserfüllung.</p>
         </Section>
 
+        {/* 14. Clemio-KI Assistent */}
+        <Section title="14. Clemio-KI Assistent (Antwortvorschläge & Nachrichtenverbesserung)" delay={560}>
+          <p>
+            Clemio bietet einen KI-gestützten Assistenten („Clemio-KI"), der dir hilft, passende Antworten zu formulieren oder eigene Nachrichten zu verbessern. Die Funktion wird aktiv durch den Nutzer über den ✨-Button im Chat ausgelöst.
+          </p>
+          <p className="font-medium text-foreground">Verarbeitete Daten:</p>
+          <ul className="space-y-1">
+            <Bullet>Die empfangene Nachricht, auf die geantwortet werden soll, oder die eigene Nachricht, die verbessert werden soll</Bullet>
+            <Bullet>Die letzten 5 Nachrichten des Chatverlaufs (als Kontext)</Bullet>
+            <Bullet>Die eingestellte App-Sprache</Bullet>
+            <Bullet>Kein Zugriff auf andere Chats, Kontakte oder persönliche Daten</Bullet>
+          </ul>
+          <p className="font-medium text-foreground">Nutzungsbegrenzung:</p>
+          <ul className="space-y-1">
+            <Bullet>Kostenlose Nutzer: maximal 3 Anfragen pro Tag</Bullet>
+            <Bullet>Premium-Nutzer: unbegrenzte Nutzung</Bullet>
+            <Bullet>Zur Durchsetzung der Begrenzung wird jede Nutzung mit Zeitstempel und Nutzer-ID erfasst</Bullet>
+          </ul>
+          <p>
+            Die Übermittlung erfolgt über den Lovable AI Gateway (GPT Engineer AB, Schweden) an das KI-Modell Google Gemini. Es werden keine Chatinhalte dauerhaft beim Gateway oder KI-Anbieter gespeichert. Die Verarbeitung erfolgt ausschließlich zur Generierung der Antwortvorschläge.
+          </p>
+          <p>
+            KI-Modell: Google Gemini (Google LLC, USA).<br />
+            Datenschutz: <a href="https://policies.google.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener">policies.google.com/privacy</a>
+          </p>
+          <p><strong>Rechtsgrundlage:</strong> Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO) – die Funktion ist Bestandteil des Dienstes und wird nur auf aktive Nutzeranfrage ausgeführt.</p>
+        </Section>
+
         {/* 14. Privatsphäre-Einstellungen */}
         <Section title="14. Privatsphäre-Einstellungen" delay={580}>
           <p>
