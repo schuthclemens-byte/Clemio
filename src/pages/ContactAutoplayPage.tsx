@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { cn } from "@/lib/utils";
@@ -17,8 +18,10 @@ interface Contact {
 const ContactAutoplayPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { locale } = useI18n();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   useEffect(() => {
     if (!user) return;
@@ -56,7 +59,7 @@ const ContactAutoplayPage = () => {
       setContacts(
         (profiles || []).map((p) => ({
           user_id: p.id,
-          display_name: p.display_name || "Unbekannt",
+          display_name: p.display_name || tr("Unbekannt", "Unknown"),
           avatar_url: p.avatar_url,
           auto_play: settingsMap.get(p.id) ?? false,
         }))
@@ -82,7 +85,7 @@ const ContactAutoplayPage = () => {
       );
 
     if (error) {
-      toast.error("Fehler beim Speichern");
+      toast.error(tr("Fehler beim Speichern", "Failed to save"));
       setContacts((prev) =>
         prev.map((c) => (c.user_id === contactId ? { ...c, auto_play: currentValue } : c))
       );
@@ -102,14 +105,14 @@ const ContactAutoplayPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Auto-Play pro Kontakt</h1>
+          <h1 className="text-xl font-bold">{tr("Auto-Play pro Kontakt", "Auto-play per contact")}</h1>
         </div>
       </header>
 
       <div className="flex-1 p-4 space-y-4">
         <div className="bg-primary/5 rounded-2xl p-4 animate-reveal-up">
           <p className="text-sm text-muted-foreground">
-            🔊 Wähle aus, bei welchen Kontakten Nachrichten automatisch vorgelesen werden sollen. Alle anderen bleiben stumm.
+            {tr("🔊 Wähle aus, bei welchen Kontakten Nachrichten automatisch vorgelesen werden sollen. Alle anderen bleiben stumm.", "🔊 Choose which contacts should have messages read aloud automatically. All others stay silent.")}
           </p>
         </div>
 
@@ -119,7 +122,7 @@ const ContactAutoplayPage = () => {
           </div>
         ) : contacts.length === 0 ? (
           <div className="bg-card rounded-2xl p-6 text-center border border-border">
-            <p className="text-sm text-muted-foreground">Noch keine Kontakte vorhanden.</p>
+            <p className="text-sm text-muted-foreground">{tr("Noch keine Kontakte vorhanden.", "No contacts yet.")}</p>
           </div>
         ) : (
           <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden animate-reveal-up" style={{ animationDelay: "60ms" }}>
@@ -147,7 +150,7 @@ const ContactAutoplayPage = () => {
                 <div className="flex-1 text-left">
                   <p className="text-[0.938rem] font-medium">{contact.display_name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {contact.auto_play ? "Automatisch abspielen" : "Normal"}
+                    {contact.auto_play ? tr("Automatisch abspielen", "Play automatically") : tr("Normal", "Normal")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Mic, Loader2, CheckCircle, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/contexts/I18nContext";
 import { toast } from "sonner";
-import { toast as sonnerToast } from "sonner";
 import { cn } from "@/lib/utils";
 import VoiceConsentPopup from "./VoiceConsentPopup";
 
@@ -14,6 +14,7 @@ interface VoiceCloneUploadProps {
 
 const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) => {
   const { user } = useAuth();
+  const { locale } = useI18n();
   const [phase, setPhase] = useState<"idle" | "consent" | "recording" | "processing" | "done">("idle");
   const [seconds, setSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -25,6 +26,8 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
+
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   const startRecording = async () => {
     try {
@@ -53,11 +56,11 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
     } catch (err: any) {
       const name = err?.name || "";
       if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-        toast.error("Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff in deinen Geräteeinstellungen.");
+        toast.error(tr("Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff in deinen Geräteeinstellungen.", "Microphone access denied. Please allow access in your device settings."));
       } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-        toast.error("Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.");
+        toast.error(tr("Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.", "No microphone found. Please connect a microphone."));
       } else {
-        toast.error("Mikrofon konnte nicht aktiviert werden.");
+        toast.error(tr("Mikrofon konnte nicht aktiviert werden.", "Microphone could not be activated."));
       }
       setPhase("idle");
     }
@@ -94,14 +97,14 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || "Fehler");
+        throw new Error(err.error || tr("Fehler", "Error"));
       }
 
       setPhase("done");
-      toast.success("Deine Stimme ist bereit! 🎉");
+      toast.success(tr("Deine Stimme ist bereit! 🎉", "Your voice is ready! 🎉"));
       onCloned();
     } catch (error: any) {
-      toast.error(error.message || "Etwas ist schiefgelaufen");
+      toast.error(error.message || tr("Etwas ist schiefgelaufen", "Something went wrong"));
       setPhase("idle");
     }
   };
@@ -123,9 +126,9 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
             <CheckCircle className="w-6 h-6 text-accent" />
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-[0.938rem]">Deine Stimme ist aktiv ✨</p>
+            <p className="font-semibold text-[0.938rem]">{tr("Deine Stimme ist aktiv ✨", "Your voice is active ✨")}</p>
             <p className="text-xs text-muted-foreground">
-              Deine Kontakte können Nachrichten in deiner Stimme hören
+              {tr("Deine Kontakte können Nachrichten in deiner Stimme hören", "Your contacts can hear messages in your voice")}
             </p>
           </div>
         </div>
@@ -141,9 +144,9 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
         </div>
         <div>
-          <p className="font-semibold text-[0.938rem]">Einen Moment...</p>
+          <p className="font-semibold text-[0.938rem]">{tr("Einen Moment...", "One moment...")}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Deine Stimme wird gerade eingerichtet
+            {tr("Deine Stimme wird gerade eingerichtet", "Your voice is being prepared")}
           </p>
         </div>
       </div>
@@ -167,8 +170,8 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           <p className="text-2xl font-bold tabular-nums">{formatTime(seconds)}</p>
           <p className="text-xs text-muted-foreground mt-1">
             {canStop
-              ? "Du kannst jetzt aufhören – oder weitersprechen für bessere Qualität"
-              : "Erzähl einfach etwas über deinen Tag..."
+              ? tr("Du kannst jetzt aufhören – oder weitersprechen für bessere Qualität", "You can stop now — or keep talking for better quality")
+              : tr("Erzähl einfach etwas über deinen Tag...", "Just talk a little about your day...")
             }
           </p>
         </div>
@@ -194,7 +197,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
               : "bg-secondary text-muted-foreground cursor-not-allowed"
           )}
         >
-          {canStop ? "Fertig" : `Noch ${minSeconds - seconds} Sekunden...`}
+            {canStop ? tr("Fertig", "Done") : tr(`Noch ${minSeconds - seconds} Sekunden...`, `${minSeconds - seconds} seconds left...`)}
         </button>
       </div>
     );
@@ -209,9 +212,9 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
             <Mic className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <p className="font-semibold text-lg">Lass dich hören</p>
+            <p className="font-semibold text-lg">{tr("Lass dich hören", "Let yourself be heard")}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Bitte bestätige die Einwilligung, um fortzufahren
+              {tr("Bitte bestätige die Einwilligung, um fortzufahren", "Please confirm consent to continue")}
             </p>
           </div>
         </div>
@@ -234,19 +237,19 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         <Mic className="w-8 h-8 text-primary-foreground" />
       </div>
       <div>
-        <p className="font-semibold text-lg">Lass dich hören</p>
+        <p className="font-semibold text-lg">{tr("Lass dich hören", "Let yourself be heard")}</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Sprich 30 Sekunden – und deine Kontakte hören Nachrichten in deiner Stimme
+          {tr("Sprich 30 Sekunden – und deine Kontakte hören Nachrichten in deiner Stimme", "Speak for 30 seconds — and your contacts can hear messages in your voice")}
         </p>
       </div>
       <button
         onClick={() => setPhase("consent")}
         className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
       >
-        Eigene Stimme erstellen
+        {tr("Eigene Stimme erstellen", "Create your own voice")}
       </button>
       <p className="text-[0.688rem] text-muted-foreground">
-        🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.
+        {tr("🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.", "🔐 Voices are only used with your consent and can be deleted at any time.")}
       </p>
     </div>
   );

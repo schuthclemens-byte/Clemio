@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import PermissionDialog from "@/components/PermissionDialog";
 import { usePermissionGate } from "@/hooks/usePermissionGate";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface VoiceRecorderProps {
   onSend: (file: File) => Promise<boolean | void> | boolean | void;
@@ -32,6 +33,7 @@ const getAudioExtension = (mimeType: string) => {
 };
 
 const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
+  const { locale } = useI18n();
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -41,6 +43,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   const autoStartedRef = useRef(false);
   const [micBlocked, setMicBlocked] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   const { showDialog, gate, handleAllow, handleCancel } = usePermissionGate("microphone");
 
@@ -106,9 +109,9 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
       if (name === "NotAllowedError" || name === "PermissionDeniedError") {
         setMicBlocked(true);
       } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-        toast.error("Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.");
+        toast.error(tr("Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.", "No microphone found. Please connect a microphone."));
       } else {
-        toast.error("Mikrofon konnte nicht aktiviert werden.");
+        toast.error(tr("Mikrofon konnte nicht aktiviert werden.", "Microphone could not be activated."));
       }
     }
   };
@@ -143,14 +146,14 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
       <div className="flex items-center gap-3 px-4 py-3 bg-destructive/5 rounded-2xl border border-destructive/20 animate-fade-in">
         <MicOff className="w-5 h-5 text-destructive shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground">Mikrofon blockiert</p>
-          <p className="text-xs text-muted-foreground">Erlaube den Zugriff in deinen Browser- oder Geräteeinstellungen und versuche es erneut.</p>
+          <p className="text-sm font-medium text-foreground">{tr("Mikrofon blockiert", "Microphone blocked")}</p>
+          <p className="text-xs text-muted-foreground">{tr("Erlaube den Zugriff in deinen Browser- oder Geräteeinstellungen und versuche es erneut.", "Allow access in your browser or device settings and try again.")}</p>
         </div>
         <button
           onClick={() => { setMicBlocked(false); startRecording(); }}
           className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground active:scale-95 transition-transform"
         >
-          Erneut
+          {tr("Erneut", "Retry")}
         </button>
       </div>
     );
@@ -160,7 +163,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
     return (
       <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-2xl">
         <Loader2 className="w-4 h-4 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground">Sprachnachricht wird gesendet...</span>
+        <span className="text-sm text-muted-foreground">{tr("Sprachnachricht wird gesendet...", "Sending voice message...")}</span>
       </div>
     );
   }
@@ -173,7 +176,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
         <button
           onClick={stopRecording}
           className="w-10 h-10 rounded-full bg-destructive flex items-center justify-center text-destructive-foreground active:scale-90 transition-transform"
-          aria-label="Aufnahme stoppen"
+          aria-label={tr("Aufnahme stoppen", "Stop recording")}
         >
           <Square className="w-4 h-4" />
         </button>
@@ -192,7 +195,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
       <button
         onClick={startRecording}
         className="flex items-center justify-center w-11 h-11 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors active:scale-90"
-        aria-label="Sprachnachricht aufnehmen"
+        aria-label={tr("Sprachnachricht aufnehmen", "Record voice message")}
       >
         <Mic className="w-5 h-5" />
       </button>

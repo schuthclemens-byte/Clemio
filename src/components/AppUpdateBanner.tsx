@@ -2,10 +2,13 @@ import { Download, X, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react
 import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/contexts/I18nContext";
 
 const AppUpdateBanner = () => {
   const { showBanner, forceUpdate, latestVersion, changelog, dismiss, openStore, storeUrl } = useAppUpdate();
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const { locale } = useI18n();
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   if (!showBanner) return null;
 
@@ -49,11 +52,11 @@ const AppUpdateBanner = () => {
 
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-[0.938rem]">
-                {forceUpdate ? "Wichtiges Update erforderlich" : "Update verfügbar"}
+                {forceUpdate ? tr("Wichtiges Update erforderlich", "Important update required") : tr("Update verfügbar", "Update available")}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Version {latestVersion}
-                {forceUpdate && " – Bitte aktualisiere die App, um fortzufahren."}
+                {forceUpdate && tr(" – Bitte aktualisiere die App, um fortzufahren.", " – Please update the app to continue.")}
               </p>
             </div>
 
@@ -61,7 +64,7 @@ const AppUpdateBanner = () => {
               <button
                 onClick={dismiss}
                 className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-secondary transition-colors shrink-0"
-                aria-label="Später"
+                aria-label={tr("Später", "Later")}
               >
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -75,7 +78,7 @@ const AppUpdateBanner = () => {
                 onClick={() => setChangelogOpen(!changelogOpen)}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                Was ist neu?
+                {tr("Was ist neu?", "What's new?")}
                 {changelogOpen ? (
                   <ChevronUp className="w-3 h-3" />
                 ) : (
@@ -98,7 +101,7 @@ const AppUpdateBanner = () => {
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl gradient-primary text-primary-foreground text-sm font-semibold transition-all active:scale-[0.97]"
               >
                 <Download className="w-4 h-4" />
-                Jetzt aktualisieren
+                {tr("Jetzt aktualisieren", "Update now")}
               </button>
             )}
             {!forceUpdate && (
@@ -106,7 +109,7 @@ const AppUpdateBanner = () => {
                 onClick={dismiss}
                 className="flex-1 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium transition-all active:scale-[0.97]"
               >
-                Später
+                {tr("Später", "Later")}
               </button>
             )}
           </div>

@@ -3,19 +3,22 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMissedCallsCount } from "@/hooks/useMissedCallsCount";
 import { useUnreadChatsCount } from "@/hooks/useUnreadChatsCount";
-
-const tabs = [
-  { label: "Chats", path: "/chats", icon: MessageCircle },
-  { label: "Anrufe", path: "/call-history", icon: Phone },
-  { label: "Profil", path: "/profile", icon: User },
-  { label: "Settings", path: "/settings", icon: Settings },
-];
+import { useI18n } from "@/contexts/I18nContext";
 
 const BottomTabBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const missedCalls = useMissedCallsCount();
   const unreadChats = useUnreadChatsCount();
+  const { locale, t } = useI18n();
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
+
+  const tabs = [
+    { label: t("chat.chats"), path: "/chats", icon: MessageCircle },
+    { label: tr("Anrufe", "Calls"), path: "/call-history", icon: Phone },
+    { label: tr("Profil", "Profile"), path: "/profile", icon: User },
+    { label: t("settings.title"), path: "/settings", icon: Settings },
+  ];
 
   const getBadge = (path: string) => {
     if (path === "/call-history") return missedCalls;
