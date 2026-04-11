@@ -233,9 +233,18 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
 
       handleClose();
       navigate(`/chat/${conversationId}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("[NewChatDialog] Chat start failed", err);
-      toast.error("Chat konnte nicht gestartet werden");
+      const msg = err?.message || "";
+      if (msg.includes("conversations")) {
+        toast.error("Konversation konnte nicht erstellt werden");
+      } else if (msg.includes("chat_invitations")) {
+        toast.error("Einladung konnte nicht gesendet werden");
+      } else if (msg.includes("conversation_members")) {
+        toast.error("Mitglied konnte nicht hinzugefügt werden");
+      } else {
+        toast.error("Chat konnte nicht gestartet werden");
+      }
     } finally {
       setCreating(false);
     }
