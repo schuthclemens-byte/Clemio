@@ -189,15 +189,15 @@ const SettingsPage = () => {
     const result = await refreshSubscription();
 
     if (!result?.ok) {
-      toast.error(result?.error ?? "Premium-Status konnte nicht geprüft werden");
+      toast.error(result?.error ?? t("settings.subNotFound"));
       setRefreshingSubscription(false);
       return;
     }
 
     toast.success(
       result.subscribed
-        ? "Premium-Abo wurde erkannt"
-        : "Kein aktives Premium-Abo gefunden"
+        ? t("settings.subRecognized")
+        : t("settings.subNotFound")
     );
     setLastChecked(new Date());
     setRefreshingSubscription(false);

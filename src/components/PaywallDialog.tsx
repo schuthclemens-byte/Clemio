@@ -1,27 +1,28 @@
 import { Crown, Mic, Globe, Headphones, Sparkles, X, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/contexts/I18nContext";
 
 interface PaywallDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-const features = [
-  { icon: Mic, label: "Stimmen-Klonen", desc: "Nachrichten in echter Stimme hören" },
-  { icon: Globe, label: "Echtzeit-Übersetzung", desc: "Nachrichten automatisch übersetzen" },
-  { icon: Headphones, label: "Auto-Abspielen", desc: "Automatisch bei Kopfhörern abspielen" },
-  { icon: Sparkles, label: "Premium Stimmen", desc: "Hochwertige, natürliche Stimmen" },
-];
-
 const PaywallDialog = ({ open, onClose }: PaywallDialogProps) => {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   if (!open) return null;
 
+  const features = [
+    { icon: Mic, label: t("paywall.featVoiceClone"), desc: t("paywall.featVoiceCloneDesc") },
+    { icon: Globe, label: t("paywall.featTranslation"), desc: t("paywall.featTranslationDesc") },
+    { icon: Headphones, label: t("paywall.featAutoPlay"), desc: t("paywall.featAutoPlayDesc") },
+    { icon: Sparkles, label: t("paywall.featPremiumVoices"), desc: t("paywall.featPremiumVoicesDesc") },
+  ];
+
   const handleRestore = () => {
-    // Placeholder for IAP restore – will connect to App Store / Google Play
-    alert("Käufe werden wiederhergestellt…");
+    alert(t("paywall.restoring"));
   };
 
   return (
@@ -41,9 +42,9 @@ const PaywallDialog = ({ open, onClose }: PaywallDialogProps) => {
           <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-4 shadow-soft">
             <Crown className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Erlebe Kommunikation neu</h2>
+          <h2 className="text-2xl font-bold mb-2">{t("paywall.title")}</h2>
           <p className="text-muted-foreground text-sm">
-            Höre Nachrichten wie echte Gespräche
+            {t("paywall.subtitle")}
           </p>
         </div>
 
@@ -68,8 +69,8 @@ const PaywallDialog = ({ open, onClose }: PaywallDialogProps) => {
         {/* Pricing */}
         <div className="px-6 pb-3">
           <div className="bg-secondary/50 rounded-xl p-4 text-center">
-            <p className="text-lg font-bold">4,99 €<span className="text-sm font-normal text-muted-foreground">/Monat</span></p>
-            <p className="text-xs text-muted-foreground mt-1">Nach 7 Tagen kostenloser Testphase</p>
+            <p className="text-lg font-bold">{t("paywall.price")}<span className="text-sm font-normal text-muted-foreground">{t("paywall.perMonth")}</span></p>
+            <p className="text-xs text-muted-foreground mt-1">{t("paywall.trialNote")}</p>
           </div>
         </div>
 
@@ -79,7 +80,7 @@ const PaywallDialog = ({ open, onClose }: PaywallDialogProps) => {
             onClick={onClose}
             className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
           >
-            7 Tage kostenlos testen
+            {t("paywall.cta")}
           </button>
         </div>
 
@@ -90,28 +91,28 @@ const PaywallDialog = ({ open, onClose }: PaywallDialogProps) => {
             className="w-full h-11 rounded-xl bg-secondary/50 text-muted-foreground text-sm font-medium flex items-center justify-center gap-2 hover:bg-secondary transition-colors active:scale-[0.97]"
           >
             <RotateCcw className="w-4 h-4" />
-            Käufe wiederherstellen
+            {t("paywall.restore")}
           </button>
         </div>
 
         {/* Legal */}
         <div className="px-6 pb-6 space-y-2">
           <p className="text-center text-xs text-muted-foreground">
-            7 Tage kostenlos testen. Danach 4,99 €/Monat. Das Abo verlängert sich automatisch. Jederzeit kündbar.
+            {t("paywall.legal")}
           </p>
           <div className="flex items-center justify-center gap-3 text-xs">
             <button
               onClick={() => { onClose(); navigate("/privacy"); }}
               className="text-primary hover:underline"
             >
-              Datenschutz
+              {t("paywall.privacyLink")}
             </button>
             <span className="text-border">|</span>
             <button
               onClick={() => { onClose(); navigate("/terms"); }}
               className="text-primary hover:underline"
             >
-              Nutzungsbedingungen
+              {t("paywall.termsLink")}
             </button>
           </div>
         </div>
