@@ -23,7 +23,7 @@ interface ChatInputProps {
   transcript: string;
   onTyping?: () => void;
   onStopTyping?: () => void;
-  onOpenClemioKI?: () => void;
+  onOpenClemioKI?: (draftText: string) => void;
   hasReceivedMessages?: boolean;
 }
 
@@ -244,7 +244,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
           {/* Clemio-KI button */}
           {onOpenClemioKI && hasReceivedMessages && (
             <button
-              onClick={onOpenClemioKI}
+              onClick={() => onOpenClemioKI(currentText)}
               className="flex items-center justify-center w-11 h-11 rounded-full bg-secondary text-primary hover:bg-primary/10 transition-all duration-200 active:scale-90"
               aria-label={t("ki.aiSuggestions")}
             >

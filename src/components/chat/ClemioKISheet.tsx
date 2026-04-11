@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sparkles, Copy, Send, ChevronUp, Loader2, Lock, Zap } from "lucide-react";
+import { Sparkles, Copy, Send, ChevronUp, Loader2, Lock, Zap, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,12 +17,14 @@ interface KIResponse {
   remaining?: number;
   limit?: number;
   isPremium?: boolean;
+  isRefine?: boolean;
 }
 
 interface ClemioKISheetProps {
   open: boolean;
   onClose: () => void;
   receivedMessage: string;
+  draftMessage?: string;
   chatHistory: { text: string; isMine: boolean }[];
   isPremium: boolean;
   onUseSuggestion: (text: string) => void;
@@ -32,6 +34,7 @@ const ClemioKISheet = ({
   open,
   onClose,
   receivedMessage,
+  draftMessage,
   chatHistory,
   isPremium,
   onUseSuggestion,
@@ -42,6 +45,8 @@ const ClemioKISheet = ({
   const [mode, setMode] = useState<"standard" | "strategy">("standard");
   const [remaining, setRemaining] = useState<number | null>(null);
   const [limit, setLimit] = useState(3);
+
+  const isRefineMode = !!(draftMessage && draftMessage.trim());
 
   useEffect(() => {
     if (!open) return;
@@ -75,14 +80,19 @@ const ClemioKISheet = ({
     setMode(selectedMode);
 
     try {
-      const { data, error } = await supabase.functions.invoke("clemio-ki", {
-        body: {
-          receivedMessage,
-          chatHistory: chatHistory.slice(-5),
-          mode: selectedMode,
-          locale,
-        },
-      });
+      const body: Record<string, unknown> = {
+        chatHistory: chatHistory.slice(-5),
+        mode: selectedMode,
+        locale,
+      };
+
+      if (isRefineMode) {
+        body.draftMessage = draftMessage!.trim();
+      } else {
+        body.receivedMessage = receivedMessage;
+      }
+
+      const { data, error } = await supabase.functions.invoke("clemio-ki", { body });
 
       if (error) {
         try {
@@ -133,13 +143,20 @@ const ClemioKISheet = ({
         .replace("{s}", remaining !== 1 ? "n" : "")
     : "";
 
+  const contextMessage = isRefineMode ? draftMessage!.trim() : receivedMessage;
+  const contextLabel = isRefineMode ? t("ki.refineDraft") : t("ki.replyTo");
+
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) { onClose(); setResponse(null); } }}>
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[75vh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
         <SheetHeader className="pb-2">
           <SheetTitle className="flex items-center justify-between text-base">
             <span className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
+              {isRefineMode ? (
+                <Pencil className="w-5 h-5 text-primary" />
+              ) : (
+                <Sparkles className="w-5 h-5 text-primary" />
+              )}
               {t("ki.title")}
             </span>
             {remaining !== null && remaining >= 0 && (
@@ -158,9 +175,9 @@ const ClemioKISheet = ({
 
         {/* Message context */}
         <div className="mb-4 px-1">
-          <p className="text-xs text-muted-foreground mb-1">{t("ki.replyTo")}</p>
+          <p className="text-xs text-muted-foreground mb-1">{contextLabel}</p>
           <p className="text-sm bg-secondary rounded-xl px-3 py-2 line-clamp-2">
-            {receivedMessage}
+            {contextMessage}
           </p>
         </div>
 
@@ -175,29 +192,43 @@ const ClemioKISheet = ({
         {/* Mode buttons */}
         {!response && !loading && !limitReached && (
           <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => generate("standard")}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm active:scale-95 transition-transform"
-            >
-              <Sparkles className="w-4 h-4" />
-              {t("ki.answers")}
-            </button>
-            <button
-              onClick={() => generate("strategy")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm active:scale-95 transition-transform",
-                isPremium
-                  ? "bg-gradient-to-r from-primary/80 to-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground"
-              )}
-            >
-              {isPremium ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <Lock className="w-4 h-4" />
-              )}
-              {t("ki.strategy")}
-            </button>
+            {isRefineMode ? (
+              /* Refine mode: single button */
+              <button
+                onClick={() => generate("standard")}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm active:scale-95 transition-transform"
+              >
+                <Pencil className="w-4 h-4" />
+                {t("ki.refine")}
+              </button>
+            ) : (
+              /* Reply mode: standard + strategy */
+              <>
+                <button
+                  onClick={() => generate("standard")}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm active:scale-95 transition-transform"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {t("ki.answers")}
+                </button>
+                <button
+                  onClick={() => generate("strategy")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm active:scale-95 transition-transform",
+                    isPremium
+                      ? "bg-gradient-to-r from-primary/80 to-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground"
+                  )}
+                >
+                  {isPremium ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <Lock className="w-4 h-4" />
+                  )}
+                  {t("ki.strategy")}
+                </button>
+              </>
+            )}
           </div>
         )}
 

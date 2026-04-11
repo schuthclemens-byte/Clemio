@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const FREE_DAILY_LIMIT = 3;
 
-const SYSTEM_PROMPT = `Du bist Clemio-KI – eine KI, die direkt in Nachrichten integriert ist.
+const REPLY_SYSTEM_PROMPT = `Du bist Clemio-KI – eine KI, die direkt in Nachrichten integriert ist.
 Du hilfst Nutzern, genau die richtigen Worte zu finden – schnell, natürlich und menschlich.
 
 SCHREIBSTIL:
@@ -41,10 +41,42 @@ WICHTIG:
 
 Du antwortest IMMER im folgenden JSON-Format, NICHTS anderes:`;
 
+const REFINE_SYSTEM_PROMPT = `Du bist Clemio-KI – eine KI, die Nutzern hilft, ihre eigenen Nachrichten zu verbessern.
+Der Nutzer hat bereits eine Nachricht getippt, aber möchte sie besser formulieren.
+
+DEIN JOB:
+- Verbessere die Nachricht des Nutzers
+- Behalte die ursprüngliche Intention und den Ton bei
+- Mache sie natürlicher, klarer oder wirkungsvoller
+- Biete verschiedene Varianten an (z.B. direkter, emotionaler, lockerer)
+
+SCHREIBSTIL:
+- wie echte WhatsApp Nachrichten
+- leicht unperfekt, nicht zu glatt
+- emotional passend zur Situation
+- keine formelle Sprache
+
+VERMEIDE:
+- typische KI-Sätze
+- komplizierte Formulierungen
+- den Sinn der Nachricht zu verändern
+
+WICHTIG:
+- Die Varianten müssen sofort nutzbar sein
+- keine zusätzlichen Erklärungen
+- Gib die Antworten als JSON-Array zurück
+
+Du antwortest IMMER im folgenden JSON-Format, NICHTS anderes:`;
+
 const STANDARD_FORMAT = `MODUS STANDARD:
 Gib genau 3 Antwortvarianten zurück als JSON:
 {"answers":[{"text":"..."},{"text":"..."},{"text":"..."}]}
 Keine Erklärung, keine Wirkung, nur die Antworten.`;
+
+const REFINE_FORMAT = `MODUS VERBESSERN:
+Gib genau 3 verbesserte Varianten der Nachricht des Nutzers zurück als JSON:
+{"answers":[{"text":"..."},{"text":"..."},{"text":"..."}]}
+Keine Erklärung, nur die verbesserten Nachrichten.`;
 
 const STRATEGY_FORMAT = `MODUS STRATEGIE:
 Gib eine kurze Einschätzung und 3 Antworten mit Wirkung zurück als JSON:
@@ -78,7 +110,7 @@ serve(async (req) => {
       });
     }
 
-    const { receivedMessage, chatHistory, mode, checkOnly, locale } = await req.json();
+    const { receivedMessage, draftMessage, chatHistory, mode, checkOnly, locale } = await req.json();
 
     const langNames: Record<string, string> = {
       de: "German", en: "English", fr: "French", tr: "Turkish", es: "Spanish", ar: "Arabic",
@@ -132,9 +164,13 @@ serve(async (req) => {
       );
     }
 
-    if (!receivedMessage) {
+    // Determine mode: refine (user's draft) vs reply (answer to received message)
+    const isRefine = !!draftMessage;
+    const isStrategy = mode === "strategy" && !isRefine;
+
+    if (!isRefine && !receivedMessage) {
       return new Response(
-        JSON.stringify({ error: "receivedMessage is required" }),
+        JSON.stringify({ error: "receivedMessage or draftMessage is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -144,23 +180,45 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const isStrategy = mode === "strategy";
-    const formatPrompt = isStrategy ? STRATEGY_FORMAT : STANDARD_FORMAT;
+    let systemPrompt: string;
+    let formatPrompt: string;
+    let userPrompt: string;
 
-    const langInstruction = `\n\nSPRACHE: Antworte IMMER auf ${userLang}. Alle Texte (Antworten, Einschätzung, Wirkung) müssen auf ${userLang} sein.`;
+    if (isRefine) {
+      systemPrompt = REFINE_SYSTEM_PROMPT;
+      formatPrompt = REFINE_FORMAT;
 
-    let contextStr = "";
-    if (chatHistory && chatHistory.length > 0) {
-      const last5 = chatHistory.slice(-5);
-      contextStr = "\n\nLetzter Chatverlauf:\n" + last5.map((m: any) =>
-        `${m.isMine ? "Ich" : "Kontakt"}: ${m.text}`
-      ).join("\n");
-    }
+      let contextStr = "";
+      if (chatHistory && chatHistory.length > 0) {
+        const last5 = chatHistory.slice(-5);
+        contextStr = "\n\nLetzter Chatverlauf:\n" + last5.map((m: any) =>
+          `${m.isMine ? "Ich" : "Kontakt"}: ${m.text}`
+        ).join("\n");
+      }
 
-    const userPrompt = `Die letzte Nachricht, auf die ich antworten will:
+      userPrompt = `Meine Nachricht, die ich verbessern möchte:
+"${draftMessage}"${contextStr}
+
+Generiere 3 verbesserte Varianten auf ${userLang}.`;
+    } else {
+      systemPrompt = REPLY_SYSTEM_PROMPT;
+      formatPrompt = isStrategy ? STRATEGY_FORMAT : STANDARD_FORMAT;
+
+      let contextStr = "";
+      if (chatHistory && chatHistory.length > 0) {
+        const last5 = chatHistory.slice(-5);
+        contextStr = "\n\nLetzter Chatverlauf:\n" + last5.map((m: any) =>
+          `${m.isMine ? "Ich" : "Kontakt"}: ${m.text}`
+        ).join("\n");
+      }
+
+      userPrompt = `Die letzte Nachricht, auf die ich antworten will:
 "${receivedMessage}"${contextStr}
 
 Generiere passende Antworten auf ${userLang}.`;
+    }
+
+    const langInstruction = `\n\nSPRACHE: Antworte IMMER auf ${userLang}. Alle Texte (Antworten, Einschätzung, Wirkung) müssen auf ${userLang} sein.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -171,7 +229,7 @@ Generiere passende Antworten auf ${userLang}.`;
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT + "\n\n" + formatPrompt + langInstruction },
+          { role: "system", content: systemPrompt + "\n\n" + formatPrompt + langInstruction },
           { role: "user", content: userPrompt },
         ],
       }),
@@ -214,6 +272,7 @@ Generiere passende Antworten auf ${userLang}.`;
     parsed.remaining = newRemaining;
     parsed.limit = FREE_DAILY_LIMIT;
     parsed.isPremium = isPremium;
+    parsed.isRefine = isRefine;
 
     return new Response(
       JSON.stringify(parsed),

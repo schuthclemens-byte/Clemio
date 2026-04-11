@@ -159,6 +159,7 @@ const ChatPage = () => {
   const [showChatMenu, setShowChatMenu] = useState(false);
   const chatMenuBtnRef = useRef<HTMLDivElement>(null);
   const [showClemioKI, setShowClemioKI] = useState(false);
+  const [clemioKIDraft, setClemioKIDraft] = useState("");
 
   const mapDbMessage = useCallback((m: any): Message => ({
     id: m.id,
@@ -1305,8 +1306,8 @@ const ChatPage = () => {
           transcript={transcript}
           onTyping={showTypingIndicator ? sendTyping : undefined}
           onStopTyping={showTypingIndicator ? clearTyping : undefined}
-          onOpenClemioKI={() => setShowClemioKI(true)}
-          hasReceivedMessages={messages.some(m => !m.isMine)}
+          onOpenClemioKI={(draft) => { setClemioKIDraft(draft); setShowClemioKI(true); }}
+          hasReceivedMessages={messages.some(m => !m.isMine) || true}
         />
       </div>
 
@@ -1363,14 +1364,20 @@ const ChatPage = () => {
       {/* Clemio-KI Sheet */}
       <ClemioKISheet
         open={showClemioKI}
-        onClose={() => setShowClemioKI(false)}
+        onClose={() => { setShowClemioKI(false); setClemioKIDraft(""); }}
         receivedMessage={
           messages.filter(m => !m.isMine).slice(-1)[0]?.text || ""
         }
+        draftMessage={clemioKIDraft}
         chatHistory={messages.slice(-10).map(m => ({ text: m.text, isMine: m.isMine }))}
         isPremium={isPremium}
         onUseSuggestion={(text) => {
-          handleSend(text);
+          if (clemioKIDraft.trim()) {
+            // Refine mode: replace the input text, don't send
+            handleSend(text);
+          } else {
+            handleSend(text);
+          }
         }}
       />
     </div>
