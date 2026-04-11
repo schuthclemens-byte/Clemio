@@ -325,6 +325,23 @@ const tr: Record<string, string> = {
     "password.lowercase": "Bir küçük harf (a–z)",
     "password.number": "Bir rakam (0–9)",
     "password.special": "Bir özel karakter (!@#$...)",
+    "ki.title": "Clemio AI",
+    "ki.replyTo": "Yanıt:",
+    "ki.answers": "3 Yanıt",
+    "ki.strategy": "Strateji",
+    "ki.thinking": "Clemio düşünüyor…",
+    "ki.copy": "Kopyala",
+    "ki.copied": "Kopyalandı ✓",
+    "ki.use": "Kullan",
+    "ki.retry": "Tekrar dene",
+    "ki.assessment": "Değerlendirme",
+    "ki.effect": "Etki",
+    "ki.today": "bugün",
+    "ki.remaining": "Bugün {n} istek{s} kaldı",
+    "ki.limitTitle": "Günlük limit doldu",
+    "ki.limitDesc": "Limitine ulaştın. Sınırsız yanıtlar için Premium'a geç.",
+    "ki.strategyLocked": "Strateji modu sadece Premium için.",
+    "ki.aiSuggestions": "Clemio AI önerileri",
 };
 
 export default tr;

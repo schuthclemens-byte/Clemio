@@ -325,6 +325,23 @@ const es: Record<string, string> = {
     "password.lowercase": "Una letra minúscula (a–z)",
     "password.number": "Un número (0–9)",
     "password.special": "Un carácter especial (!@#$...)",
+    "ki.title": "Clemio IA",
+    "ki.replyTo": "Respuesta a:",
+    "ki.answers": "3 Respuestas",
+    "ki.strategy": "Estrategia",
+    "ki.thinking": "Clemio está pensando…",
+    "ki.copy": "Copiar",
+    "ki.copied": "Copiado ✓",
+    "ki.use": "Usar",
+    "ki.retry": "Intentar de nuevo",
+    "ki.assessment": "Evaluación",
+    "ki.effect": "Efecto",
+    "ki.today": "hoy",
+    "ki.remaining": "{n} solicitud{s} restante{s} hoy",
+    "ki.limitTitle": "Límite diario alcanzado",
+    "ki.limitDesc": "Has alcanzado tu límite. Obtén Premium para respuestas ilimitadas.",
+    "ki.strategyLocked": "El modo Estrategia es solo para Premium.",
+    "ki.aiSuggestions": "Sugerencias Clemio IA",
 };
 
 export default es;

@@ -318,6 +318,23 @@ const de: Record<string, string> = {
     "password.lowercase": "Ein Kleinbuchstabe (a–z)",
     "password.number": "Eine Zahl (0–9)",
     "password.special": "Ein Sonderzeichen (!@#$...)",
+    "ki.title": "Clemio-KI",
+    "ki.replyTo": "Antwort auf:",
+    "ki.answers": "3 Antworten",
+    "ki.strategy": "Strategie",
+    "ki.thinking": "Clemio denkt nach…",
+    "ki.copy": "Kopieren",
+    "ki.copied": "Kopiert ✓",
+    "ki.use": "Verwenden",
+    "ki.retry": "Nochmal versuchen",
+    "ki.assessment": "Einschätzung",
+    "ki.effect": "Wirkung",
+    "ki.today": "heute",
+    "ki.remaining": "Noch {n} Anfrage{s} heute übrig",
+    "ki.limitTitle": "Tageslimit erreicht",
+    "ki.limitDesc": "Du hast dein Limit erreicht. Hol dir Premium für unbegrenzte Antworten.",
+    "ki.strategyLocked": "Strategie-Modus ist nur für Premium verfügbar.",
+    "ki.aiSuggestions": "Clemio-KI Antworten",
 };
 
 export default de;

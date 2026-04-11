@@ -325,6 +325,23 @@ const ar: Record<string, string> = {
     "password.lowercase": "حرف صغير واحد (a–z)",
     "password.number": "رقم واحد (0–9)",
     "password.special": "رمز خاص واحد (!@#$...)",
+    "ki.title": "Clemio AI",
+    "ki.replyTo": "رد على:",
+    "ki.answers": "3 ردود",
+    "ki.strategy": "استراتيجية",
+    "ki.thinking": "Clemio يفكّر…",
+    "ki.copy": "نسخ",
+    "ki.copied": "تم النسخ ✓",
+    "ki.use": "استخدام",
+    "ki.retry": "حاول مرة أخرى",
+    "ki.assessment": "تقييم",
+    "ki.effect": "التأثير",
+    "ki.today": "اليوم",
+    "ki.remaining": "{n} طلب{s} متبقي اليوم",
+    "ki.limitTitle": "تم الوصول للحد اليومي",
+    "ki.limitDesc": "لقد وصلت إلى حدك. احصل على Premium لردود غير محدودة.",
+    "ki.strategyLocked": "وضع الاستراتيجية متاح فقط لـ Premium.",
+    "ki.aiSuggestions": "اقتراحات Clemio AI",
 };
 
 export default ar;
