@@ -1296,6 +1296,8 @@ const ChatPage = () => {
           transcript={transcript}
           onTyping={showTypingIndicator ? sendTyping : undefined}
           onStopTyping={showTypingIndicator ? clearTyping : undefined}
+          onOpenClemioKI={() => setShowClemioKI(true)}
+          hasReceivedMessages={messages.some(m => !m.isMine)}
         />
       </div>
 
