@@ -218,6 +218,17 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             onChange={handleFileSelect}
           />
 
+          {/* Clemio-KI button */}
+          {onOpenClemioKI && hasReceivedMessages && (
+            <button
+              onClick={onOpenClemioKI}
+              className="flex items-center justify-center w-11 h-11 rounded-full bg-secondary text-primary hover:bg-primary/10 transition-all duration-200 active:scale-90"
+              aria-label="Clemio-KI Antworten"
+            >
+              <Sparkles className="w-5 h-5" />
+            </button>
+          )}
+
           {/* Voice dictation button removed – voice recorder (right side) handles audio */}
 
           {/* Text input */}
