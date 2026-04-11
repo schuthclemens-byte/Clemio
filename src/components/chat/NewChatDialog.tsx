@@ -141,7 +141,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
     const canSearch = trimmedQuery.length >= MIN_AUTOSUGGEST_CHARS || normalizedQuery.length >= MIN_AUTOSUGGEST_CHARS;
 
     if (!canSearch) {
-      setError(`Mindestens ${MIN_AUTOSUGGEST_CHARS} Buchstaben oder Zahlen eingeben`);
+      setError(`${t("chat.minCharsError")}`);
       setResults([]);
       setResult(null);
       return;
@@ -348,7 +348,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Gruppenname..."
+              placeholder={t("chat.groupNamePlaceholder")}
               className="w-full h-10 rounded-xl bg-secondary px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           )}
@@ -362,7 +362,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Name oder Nummer suchen..."
+                placeholder={t("chat.searchPlaceholder")}
                 className="w-full h-10 rounded-xl bg-secondary pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 autoFocus
               />
@@ -386,7 +386,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
           </div>
 
           <p className="text-xs text-muted-foreground text-center px-2">
-            Vorschläge erscheinen automatisch ab 3 Buchstaben oder Zahlen. Dein eigener Account wird hier nicht angezeigt.
+            {t("chat.autoSuggestHint")}
           </p>
 
           {error && <p className="text-sm text-destructive text-center">{error}</p>}
