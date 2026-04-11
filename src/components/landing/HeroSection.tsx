@@ -219,9 +219,6 @@ const HeroSection = () => {
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
                 />
                 <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shadow-soft z-10">
-                  {isLoadingAudio ? (
-                    <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  ) : (
                     <Volume2 className="w-7 h-7 text-primary-foreground" />
                   )}
                 </div>
@@ -297,9 +294,7 @@ const HeroSection = () => {
             className="group relative inline-flex items-center gap-4 px-5 py-4 rounded-2xl bg-card border border-border shadow-elevated hover:shadow-soft transition-all duration-300 w-full"
           >
             <span className={`relative w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shrink-0 transition-all duration-300 ${isPlaying ? "animate-voice-pulse" : "group-hover:scale-105"}`}>
-              {isLoadingAudio ? (
-                <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              ) : isPlaying ? (
+              {isPlaying ? (
                 <Pause className="w-5 h-5 text-primary-foreground" />
               ) : (
                 <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
