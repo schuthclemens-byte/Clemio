@@ -251,7 +251,7 @@ const SettingsPage = () => {
             <p className="text-sm text-muted-foreground">Keine Einstellung gefunden für „{searchQuery}"</p>
           </div>
         )}
-        {/* Profile link */}
+        {show("profile") && /* Profile link */
         <button
           onClick={() => navigate("/profile")}
           className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98] animate-reveal-up"
