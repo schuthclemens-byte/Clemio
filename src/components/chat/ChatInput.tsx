@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Send, Plus, Camera, ImagePlus, Mic } from "lucide-react";
+import { Send, Plus, Camera, ImagePlus, Mic, Sparkles } from "lucide-react";
 import VoiceButton from "./VoiceButton";
 import MediaPreview from "./MediaPreview";
 import CameraCapture from "./CameraCapture";
@@ -23,9 +23,11 @@ interface ChatInputProps {
   transcript: string;
   onTyping?: () => void;
   onStopTyping?: () => void;
+  onOpenClemioKI?: () => void;
+  hasReceivedMessages?: boolean;
 }
 
-const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping }: ChatInputProps) => {
+const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages }: ChatInputProps) => {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
