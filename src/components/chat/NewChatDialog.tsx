@@ -264,8 +264,9 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center">
-      <div className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border shadow-xl animate-reveal-up max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm overflow-y-auto">
+      <div className="min-h-full flex items-end sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
+        <div className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border shadow-xl animate-reveal-up flex flex-col max-h-[80dvh]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <h2 className="text-lg font-bold">
@@ -442,6 +443,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
             </p>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
