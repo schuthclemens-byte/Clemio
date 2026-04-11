@@ -444,6 +444,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
           )}
         </div>
       </div>
+      </div>
     </div>
   );
 };
