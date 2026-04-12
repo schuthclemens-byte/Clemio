@@ -65,13 +65,6 @@ const PresenceTracker = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-/** Renders the global sparkle overlay when magic mode is active */
-const GlobalSparkle = () => {
-  const { DesignSystemProvider: _, ...rest } = {} as any; // avoid circular — we import the hook
-  // We need to import useDesignSystem inside the tree, so use a separate component
-  return <SparkleOverlayWrapper />;
-};
-
 import { useDesignSystem } from "@/contexts/DesignSystemContext";
 const SparkleOverlayWrapper = () => {
   const { state } = useDesignSystem();
