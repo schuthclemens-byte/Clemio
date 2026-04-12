@@ -101,6 +101,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <OfflineBanner />
+            <SparkleOverlayWrapper />
             <BrowserRouter>
               <IncomingCallOverlay />
               <PushPromptSheet />
@@ -116,6 +117,7 @@ const App = () => (
                   <Route path="/chats" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                   <Route path="/chat/:id" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+                  <Route path="/design-settings" element={<ProtectedRoute><DesignSettingsPage /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                   <Route path="/focus-mode" element={<ProtectedRoute><FocusModePage /></ProtectedRoute>} />
                   <Route path="/contact-autoplay" element={<ProtectedRoute><ContactAutoplayPage /></ProtectedRoute>} />
@@ -136,6 +138,7 @@ const App = () => (
         </AuthProvider>
       </AccessibilityProvider>
       </ChatBackgroundProvider>
+      </DesignSystemProvider>
       </ColorThemeProvider>
       </ThemeProvider>
     </I18nProvider>
