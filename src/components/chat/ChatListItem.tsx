@@ -24,6 +24,7 @@ const ChatListItem = forwardRef<HTMLButtonElement, ChatListItemProps>(({ name, l
 
   return (
     <button
+      ref={ref}
       onClick={onClick}
       className={cn(
         "flex items-center gap-3.5 w-full px-5 py-4 text-left",
