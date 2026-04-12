@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Sparkles } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -139,7 +139,7 @@ const SettingsPage = () => {
     { section: "profile", keywords: ["profil", "profile", "name", "avatar", "bild", "foto", "photo"] },
     { section: "privacy", keywords: ["privatsphäre", "privacy", "nachrichten", "messages", "vorschau", "preview", "lesebestätigung", "read", "online", "status", "tippen", "typing", "vorlesen"] },
     { section: "push", keywords: ["push", "benachrichtigung", "notification", "alert", "ton", "sound"] },
-    { section: "appearance", keywords: ["erscheinungsbild", "appearance", "theme", "design", "dunkel", "dark", "hell", "light", "farbe", "color", "hintergrund", "background", "wallpaper"] },
+    { section: "appearance", keywords: ["erscheinungsbild", "appearance", "theme", "design", "dunkel", "dark", "hell", "light", "farbe", "color", "hintergrund", "background", "wallpaper", "magie", "magic", "sparkle", "glitzer", "partikel", "particles", "effekte", "effects"] },
     { section: "language", keywords: ["sprache", "language", "deutsch", "english", "français", "türkçe", "español", "العربية"] },
     { section: "accessibility", keywords: ["barrierefreiheit", "accessibility", "schrift", "font", "dyslexie", "groß", "large", "kontrast", "contrast", "kopfhörer", "headphone", "autokorrektur", "autocorrect", "geschwindigkeit", "speed", "rate", "ruhezeit", "quiet", "kompakt", "compact", "stumm", "mute"] },
     { section: "focus", keywords: ["fokus", "focus", "modus", "mode", "ruhe", "stille", "kontakte"] },
@@ -469,6 +469,20 @@ const SettingsPage = () => {
               <div className="text-left">
                 <p className="font-semibold text-[0.938rem]">{t("settings.changeBackground")}</p>
                 <p className="text-xs text-muted-foreground">{t("settings.backgroundDesc")}</p>
+              </div>
+            </button>
+
+            {/* Design System Link */}
+            <button
+              onClick={() => navigate("/design-settings")}
+              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-accent" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-[0.938rem]">{t("design.title")}</p>
+                <p className="text-xs text-muted-foreground">{t("design.settingsDesc")}</p>
               </div>
             </button>
           </div>

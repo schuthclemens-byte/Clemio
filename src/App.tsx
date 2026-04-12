@@ -11,6 +11,8 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ColorThemeProvider } from "@/contexts/ColorThemeContext";
 import { ChatBackgroundProvider } from "@/contexts/ChatBackgroundContext";
+import { DesignSystemProvider } from "@/contexts/DesignSystemContext";
+import SparkleOverlay from "@/components/design/SparkleOverlay";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CallProvider } from "@/contexts/CallContext";
 import { useAutoPush } from "@/hooks/useAutoPush";
@@ -30,6 +32,7 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const ChatListPage = lazy(() => import("./pages/ChatListPage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const DesignSettingsPage = lazy(() => import("./pages/DesignSettingsPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const FocusModePage = lazy(() => import("./pages/FocusModePage"));
 const ContactAutoplayPage = lazy(() => import("./pages/ContactAutoplayPage"));
@@ -62,11 +65,26 @@ const PresenceTracker = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+import { useDesignSystem } from "@/contexts/DesignSystemContext";
+const SparkleOverlayWrapper = () => {
+  const { state } = useDesignSystem();
+  if (!state.magic.enabled) return null;
+  return (
+    <SparkleOverlay
+      settings={state.magic}
+      effectHue={state.colors.hue}
+      effectSaturation={state.colors.saturation}
+      effectLightness={state.colors.lightness}
+    />
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <I18nProvider>
       <ThemeProvider>
       <ColorThemeProvider>
+      <DesignSystemProvider>
       <ChatBackgroundProvider>
       <AccessibilityProvider>
         <AuthProvider>
@@ -76,6 +94,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <OfflineBanner />
+            <SparkleOverlayWrapper />
             <BrowserRouter>
               <IncomingCallOverlay />
               <PushPromptSheet />
@@ -91,6 +110,7 @@ const App = () => (
                   <Route path="/chats" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                   <Route path="/chat/:id" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+                  <Route path="/design-settings" element={<ProtectedRoute><DesignSettingsPage /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                   <Route path="/focus-mode" element={<ProtectedRoute><FocusModePage /></ProtectedRoute>} />
                   <Route path="/contact-autoplay" element={<ProtectedRoute><ContactAutoplayPage /></ProtectedRoute>} />
@@ -111,6 +131,7 @@ const App = () => (
         </AuthProvider>
       </AccessibilityProvider>
       </ChatBackgroundProvider>
+      </DesignSystemProvider>
       </ColorThemeProvider>
       </ThemeProvider>
     </I18nProvider>
