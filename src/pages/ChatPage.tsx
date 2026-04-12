@@ -1186,9 +1186,16 @@ const ChatPage = () => {
         aria-live="polite"
         style={(() => {
           const bg = conversationId ? getChatBackground(conversationId) : { type: "none" as const, value: "" };
-          if (bg.type === "gradient" || bg.type === "color") return { background: bg.value };
-          if (bg.type === "image") return { backgroundImage: `url(${bg.value})`, backgroundSize: "cover", backgroundPosition: "center" };
-          return {};
+          const themeTint = "linear-gradient(180deg, hsl(var(--background) / 0.74), hsl(var(--background) / 0.88))";
+          if (bg.type === "gradient" || bg.type === "color") return { background: `${themeTint}, ${bg.value}` };
+          if (bg.type === "image") {
+            return {
+              backgroundImage: `${themeTint}, url(${bg.value})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            };
+          }
+          return { backgroundColor: "hsl(var(--background))" };
         })()}
         onTouchStart={() => {
           longPressTimer.current = setTimeout(() => setBgPickerOpen(true), 600);

@@ -138,82 +138,83 @@
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(45 95% 58%), hsl(18 90% 55%), hsl(350 80% 55%), hsl(320 70% 50%));
+    background: var(--theme-primary-gradient, linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent))));
   }
 
   .gradient-accent {
-    background: linear-gradient(135deg, hsl(340 75% 55%), hsl(320 70% 50%));
+    background: var(--theme-accent-gradient, linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary))));
   }
 
   .glass {
+    background: linear-gradient(180deg, hsl(var(--card) / 0.78), hsl(var(--background) / 0.72));
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
 
   .glass-strong {
+    background: linear-gradient(180deg, hsl(var(--card) / 0.9), hsl(var(--background) / 0.84));
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
   }
 
   .shadow-soft {
-    box-shadow: 0 2px 16px -2px hsl(18 90% 55% / 0.15), 0 1px 4px -1px hsl(18 90% 55% / 0.1);
+    box-shadow: var(--surface-glow, 0 16px 40px -28px hsl(var(--primary) / 0.24), 0 8px 22px -18px hsl(var(--accent) / 0.16));
   }
 
   .shadow-elevated {
-    box-shadow: 0 8px 32px -4px hsl(20 30% 10% / 0.12), 0 2px 8px -2px hsl(20 30% 10% / 0.08);
+    box-shadow: var(--surface-glow-strong, 0 22px 52px -30px hsl(var(--primary) / 0.28), 0 12px 28px -20px hsl(var(--accent) / 0.18));
   }
 
-  /* Glassmorphe bubble styles */
   .bubble-glass-mine {
-    background: linear-gradient(135deg, hsl(18 90% 55% / 0.95), hsl(350 80% 55% / 0.9));
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 4px 24px -4px hsl(18 90% 55% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.15);
+    background: linear-gradient(135deg, hsl(var(--chat-mine) / 0.97), hsl(var(--accent) / 0.9));
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    box-shadow: var(--surface-glow, 0 16px 40px -28px hsl(var(--primary) / 0.24), 0 8px 22px -18px hsl(var(--accent) / 0.16)), inset 0 1px 0 hsl(var(--chat-mine-foreground) / 0.16);
+    border: 1px solid hsl(var(--chat-mine-foreground) / 0.08);
   }
 
   .bubble-glass-theirs {
-    background: hsl(var(--chat-theirs) / 0.7);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    box-shadow: 0 2px 16px -2px hsl(20 30% 10% / 0.06), inset 0 1px 0 hsl(0 0% 100% / 0.5);
-    border: 1px solid hsl(var(--border) / 0.4);
+    background: linear-gradient(135deg, hsl(var(--chat-theirs) / 0.92), hsl(var(--card) / 0.88));
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    box-shadow: 0 8px 28px -24px hsl(var(--foreground) / 0.18), inset 0 1px 0 hsl(var(--foreground) / 0.06);
+    border: 1px solid hsl(var(--border) / 0.65);
   }
 
   .dark .bubble-glass-theirs {
-    background: hsl(var(--chat-theirs) / 0.5);
-    box-shadow: 0 2px 16px -2px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(0 0% 100% / 0.05);
-    border: 1px solid hsl(var(--border) / 0.3);
+    background: linear-gradient(135deg, hsl(var(--chat-theirs) / 0.9), hsl(var(--card) / 0.82));
+    box-shadow: 0 10px 30px -24px hsl(0 0% 0% / 0.36), inset 0 1px 0 hsl(var(--foreground) / 0.05);
+    border: 1px solid hsl(var(--border) / 0.5);
   }
 
-  /* Floating nav pill */
   .floating-nav {
-    background: hsl(var(--card) / 0.85);
+    background: linear-gradient(180deg, hsl(var(--card) / 0.9), hsl(var(--background) / 0.86));
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    box-shadow: 0 4px 32px -8px hsl(20 30% 10% / 0.15), 0 0 0 1px hsl(var(--border) / 0.3);
+    box-shadow: var(--surface-glow, 0 16px 40px -28px hsl(var(--primary) / 0.24), 0 8px 22px -18px hsl(var(--accent) / 0.16)), 0 0 0 1px hsl(var(--border) / 0.45);
   }
 
   .dark .floating-nav {
-    box-shadow: 0 4px 32px -8px hsl(0 0% 0% / 0.4), 0 0 0 1px hsl(var(--border) / 0.2);
+    box-shadow: var(--surface-glow, 0 16px 40px -28px hsl(var(--primary) / 0.24), 0 8px 22px -18px hsl(var(--accent) / 0.16)), 0 0 0 1px hsl(var(--border) / 0.35);
   }
 
-  /* Shimmer effect for AI elements */
   .shimmer {
     background: linear-gradient(
       110deg,
-      transparent 20%,
-      hsl(18 90% 55% / 0.1) 40%,
-      hsl(340 75% 55% / 0.15) 60%,
-      transparent 80%
+      transparent 16%,
+      hsl(var(--primary) / 0.08) 36%,
+      hsl(var(--accent) / 0.14) 56%,
+      hsl(var(--effect-color, 18 90% 55%) / 0.18) 68%,
+      transparent 84%
     );
     background-size: 200% 100%;
     animation: shimmer 2.5s ease-in-out infinite;
   }
 
-  /* Unread accent bar */
   .unread-bar {
     position: relative;
   }
+
   .unread-bar::before {
     content: '';
     position: absolute;
@@ -222,7 +223,16 @@
     bottom: 12px;
     width: 3px;
     border-radius: 0 3px 3px 0;
-    background: linear-gradient(180deg, hsl(45 95% 58%), hsl(18 90% 55%), hsl(350 80% 55%));
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--effect-color, 18 90% 55%)));
+  }
+
+  :root[data-magic-mode="on"] .gradient-primary,
+  :root[data-magic-mode="on"] .bg-primary {
+    box-shadow: 0 0 0 1px hsl(var(--effect-color, 18 90% 55%) / 0.16), 0 14px 34px -20px hsl(var(--effect-color, 18 90% 55%) / 0.4);
+  }
+
+  :root[data-magic-mode="on"] .bubble-glass-mine {
+    box-shadow: var(--surface-glow-strong, 0 22px 52px -30px hsl(var(--primary) / 0.28), 0 12px 28px -20px hsl(var(--accent) / 0.18)), inset 0 1px 0 hsl(var(--chat-mine-foreground) / 0.18);
   }
 }
 
