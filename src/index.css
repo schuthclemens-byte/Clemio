@@ -112,15 +112,18 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Smooth design-system color transitions */
-  *, *::before, *::after {
-    transition-property: background-color, border-color, color, box-shadow;
-    transition-duration: 300ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  /* Exclude elements that need instant transitions */
-  input, textarea, [data-no-transition], .no-color-transition {
-    transition-property: none !important;
+  /* Smooth design-system color transitions – only on themed containers */
+  body,
+  .bg-background,
+  .bg-card,
+  .bg-primary,
+  .bg-secondary,
+  .bg-muted,
+  .bg-accent,
+  .bg-popover {
+    transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Better tap targets for mobile */

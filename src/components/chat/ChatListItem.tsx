@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface ChatListItemProps {
@@ -9,7 +10,7 @@ interface ChatListItemProps {
   onClick: () => void;
 }
 
-const ChatListItem = ({ name, lastMessage, time, unread, avatar, onClick }: ChatListItemProps) => {
+const ChatListItem = forwardRef<HTMLButtonElement, ChatListItemProps>(({ name, lastMessage, time, unread, avatar, onClick }, ref) => {
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -23,6 +24,7 @@ const ChatListItem = ({ name, lastMessage, time, unread, avatar, onClick }: Chat
 
   return (
     <button
+      ref={ref}
       onClick={onClick}
       className={cn(
         "flex items-center gap-3.5 w-full px-5 py-4 text-left",
@@ -70,6 +72,8 @@ const ChatListItem = ({ name, lastMessage, time, unread, avatar, onClick }: Chat
       ) : null}
     </button>
   );
-};
+});
+
+ChatListItem.displayName = "ChatListItem";
 
 export default ChatListItem;
