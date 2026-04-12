@@ -112,6 +112,17 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Smooth design-system color transitions */
+  *, *::before, *::after {
+    transition-property: background-color, border-color, color, box-shadow;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* Exclude elements that need instant transitions */
+  input, textarea, [data-no-transition], .no-color-transition {
+    transition-property: none !important;
+  }
+
   /* Better tap targets for mobile */
   button, a, input, select, textarea {
     -webkit-tap-highlight-color: transparent;

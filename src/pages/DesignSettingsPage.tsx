@@ -282,46 +282,10 @@ const DesignSettingsPage = () => {
           </div>
         </section>
 
-        {/* ─── Live Preview ─── */}
-        <section className="animate-reveal-up" style={{ animationDelay: "120ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            {t("design.livePreview")}
-          </h2>
-          <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 overflow-hidden relative">
-            {/* Background hint */}
-            <div className="absolute inset-0 opacity-5" style={{ background: `hsl(${state.colors.hue}, ${state.colors.saturation}%, ${state.colors.lightness}%)` }} />
-            
-            {/* Fake chat bubbles */}
-            <div className="relative z-10 space-y-2">
-              <div className="flex justify-start">
-                <div className="bubble-glass-theirs px-4 py-2.5 rounded-2xl max-w-[75%]">
-                  <p className="text-sm">{t("design.previewMsgTheirs")}</p>
-                  <span className="text-[10px] text-muted-foreground mt-1 block text-right">14:32</span>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <div className="bubble-glass-mine px-4 py-2.5 rounded-2xl max-w-[75%]" style={{
-                  background: `linear-gradient(135deg, hsl(${state.colors.hue} ${state.colors.saturation}% ${state.colors.lightness}% / 0.95), hsl(${(state.colors.hue + 30) % 360} ${Math.max(state.colors.saturation - 10, 20)}% ${Math.min(state.colors.lightness + 5, 80)}% / 0.9))`,
-                }}>
-                  <p className="text-sm text-primary-foreground">{t("design.previewMsgMine")}</p>
-                  <span className="text-[10px] text-primary-foreground/70 mt-1 block text-right">14:33 ✓✓</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Preview buttons */}
-            <div className="relative z-10 flex gap-2 pt-2">
-              <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground transition-all" style={{
-                background: `linear-gradient(135deg, hsl(${state.colors.hue}, ${state.colors.saturation}%, ${state.colors.lightness}%), hsl(${(state.colors.hue + 40) % 360}, ${state.colors.saturation}%, ${state.colors.lightness}%))`,
-              }}>
-                {t("design.previewButton")}
-              </button>
-              <button className="flex-1 py-2.5 rounded-xl bg-secondary text-sm font-medium text-foreground">
-                {t("design.previewSecondary")}
-              </button>
-            </div>
-          </div>
-        </section>
+        {/* ─── Hint: the whole app is the live preview ─── */}
+        <div className="text-center text-xs text-muted-foreground py-4 opacity-70">
+          {t("design.liveHint")}
+        </div>
       </div>
     </div>
   );

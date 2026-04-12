@@ -8,15 +8,14 @@ interface SparkleOverlayProps {
   effectLightness: number;
 }
 
-const speedMap = { slow: 0.3, medium: 0.7, fast: 1.2 };
-const sizeMap = { small: 2, medium: 4, large: 7 };
+const speedMap = { slow: 0.15, medium: 0.35, fast: 0.6 };
+const sizeMap = { small: 1.5, medium: 3, large: 5 };
 
 interface Particle {
   x: number; y: number;
   vx: number; vy: number;
   size: number;
   alpha: number;
-  alphaDir: number;
   hueShift: number;
   life: number;
   maxLife: number;
@@ -35,7 +34,7 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Check for low-end device
+    // Skip on low-end devices
     const isLowEnd = navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 2;
     if (isLowEnd) return;
 
@@ -53,13 +52,17 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
 
     const speed = speedMap[settings.sparkleSpeed];
     const baseSize = sizeMap[settings.sparkleSize];
-    const count = Math.round(settings.sparkleDensity * (settings.sparkleIntensity / 100 + 0.3));
+    // Fewer particles – max 30, scaled by intensity
+    const count = Math.round(
+      Math.min(settings.sparkleDensity, 30) * (settings.sparkleIntensity / 100 + 0.15)
+    );
 
-    // Initialize particles
-    particlesRef.current = Array.from({ length: Math.min(count, 60) }, () => createParticle(w(), h(), baseSize, speed));
+    particlesRef.current = Array.from({ length: Math.min(count, 30) }, () =>
+      createParticle(w(), h(), baseSize, speed)
+    );
 
     let lastTime = 0;
-    const frameDuration = 1000 / 30; // cap at 30fps
+    const frameDuration = 1000 / 30;
 
     const render = (timestamp: number) => {
       if (timestamp - lastTime < frameDuration) {
@@ -75,37 +78,36 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
         p.y += p.vy;
         p.life++;
 
-        // Fade in/out lifecycle
+        // Smooth fade-in / fade-out lifecycle
         const lifeRatio = p.life / p.maxLife;
-        if (lifeRatio < 0.2) {
-          p.alpha = (lifeRatio / 0.2) * 0.5;
-        } else if (lifeRatio > 0.8) {
-          p.alpha = ((1 - lifeRatio) / 0.2) * 0.5;
+        if (lifeRatio < 0.3) {
+          p.alpha = (lifeRatio / 0.3) * 0.3;
+        } else if (lifeRatio > 0.7) {
+          p.alpha = ((1 - lifeRatio) / 0.3) * 0.3;
+        } else {
+          p.alpha = 0.3;
         }
 
-        // Reset if off-screen or life expired
+        // Max opacity capped at 0.4 (subtle, not flashy)
+        p.alpha = Math.min(p.alpha, 0.4);
+
+        // Reset if off-screen or expired
         if (p.life >= p.maxLife || p.x < -20 || p.x > w() + 20 || p.y < -20 || p.y > h() + 20) {
           Object.assign(p, createParticle(w(), h(), baseSize, speed));
         }
 
         const hue = (effectHue + p.hueShift) % 360;
-        const light = Math.max(20, Math.min(80, effectLightness + (Math.random() - 0.5) * 20));
-        
-        // Glow effect
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-        gradient.addColorStop(0, `hsla(${hue}, ${effectSaturation}%, ${light}%, ${p.alpha * 0.6})`);
-        gradient.addColorStop(0.5, `hsla(${hue}, ${effectSaturation}%, ${light}%, ${p.alpha * 0.2})`);
-        gradient.addColorStop(1, `hsla(${hue}, ${effectSaturation}%, ${light}%, 0)`);
-        
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
+        const light = Math.max(30, Math.min(75, effectLightness + (Math.random() - 0.5) * 10));
 
-        // Core sparkle
+        // Soft glow – single radial gradient, no harsh core
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4);
+        gradient.addColorStop(0, `hsla(${hue}, ${effectSaturation}%, ${light}%, ${p.alpha * 0.8})`);
+        gradient.addColorStop(0.4, `hsla(${hue}, ${effectSaturation}%, ${light}%, ${p.alpha * 0.3})`);
+        gradient.addColorStop(1, `hsla(${hue}, ${effectSaturation}%, ${light}%, 0)`);
+
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${hue}, ${effectSaturation}%, ${Math.min(light + 20, 95)}%, ${p.alpha})`;
+        ctx.arc(p.x, p.y, p.size * 4, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
         ctx.fill();
       });
 
@@ -125,8 +127,8 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-full h-full pointer-events-none z-0"
-      style={{ opacity: 0.8 }}
+      className="fixed inset-0 w-full h-full pointer-events-none z-0 no-color-transition"
+      style={{ opacity: 0.6 }}
     />
   );
 });
@@ -137,14 +139,13 @@ function createParticle(w: number, h: number, baseSize: number, speed: number): 
   return {
     x: Math.random() * w,
     y: Math.random() * h,
-    vx: (Math.random() - 0.5) * speed * 0.5,
-    vy: (Math.random() - 0.5) * speed * 0.5 - 0.1,
-    size: baseSize * (0.5 + Math.random()),
+    vx: (Math.random() - 0.5) * speed * 0.3,
+    vy: (Math.random() - 0.5) * speed * 0.3 - 0.05,
+    size: baseSize * (0.5 + Math.random() * 0.5),
     alpha: 0,
-    alphaDir: 1,
-    hueShift: (Math.random() - 0.5) * 36, // ±10% hue range (±18deg)
-    life: 0,
-    maxLife: 150 + Math.random() * 200,
+    hueShift: (Math.random() - 0.5) * 20,
+    life: Math.floor(Math.random() * 100), // stagger starts
+    maxLife: 250 + Math.random() * 300,
   };
 }
 

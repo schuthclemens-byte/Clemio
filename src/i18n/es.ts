@@ -644,6 +644,7 @@ const es: Record<string, string> = {
     "design.previewMsgMine": "¡Genial, gracias! ¿Y tú?",
     "design.previewButton": "Primario",
     "design.previewSecondary": "Secundario",
+    "design.liveHint": "💡 Todos los cambios son visibles al instante en toda la app.",
 };
 
 export default es;

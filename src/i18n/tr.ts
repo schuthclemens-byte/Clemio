@@ -644,6 +644,7 @@ const tr: Record<string, string> = {
     "design.previewMsgMine": "İyiyim, teşekkürler! Sen?",
     "design.previewButton": "Birincil",
     "design.previewSecondary": "İkincil",
+    "design.liveHint": "💡 Tüm değişiklikler anında tüm uygulamada görünür.",
 };
 
 export default tr;
