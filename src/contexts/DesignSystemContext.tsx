@@ -1,10 +1,18 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
-// ─── Types ───────────────────────────────────────────────
 export interface DesignColors {
-  hue: number;        // 0–360
-  saturation: number; // 0–100
-  lightness: number;  // 0–100
+  hue: number;
+  saturation: number;
+  lightness: number;
 }
 
 export type SparkleSize = "small" | "medium" | "large";
@@ -12,10 +20,10 @@ export type SparkleSpeed = "slow" | "medium" | "fast";
 
 export interface MagicModeSettings {
   enabled: boolean;
-  sparkleIntensity: number; // 0–100
+  sparkleIntensity: number;
   sparkleSize: SparkleSize;
   sparkleSpeed: SparkleSpeed;
-  sparkleDensity: number;   // 1–50
+  sparkleDensity: number;
 }
 
 export type DesignPreset = "custom" | "softMagic" | "galaxy" | "elegant" | "neon";
@@ -26,204 +34,275 @@ export interface DesignSystemState {
   preset: DesignPreset;
 }
 
-interface DesignSystemContextType {
-  state: DesignSystemState;
-  setColors: (c: Partial<DesignColors>) => void;
-  setMagic: (m: Partial<MagicModeSettings>) => void;
-  applyPreset: (p: DesignPreset) => void;
-  computedColors: ComputedColors;
-}
-
-export interface ComputedColors {
-  primary: string;
-  secondary: string;
-  background: string;
-  surface: string;
+export interface GlobalTheme {
+  primaryColor: string;
+  primaryForeground: string;
+  secondaryColor: string;
+  secondaryForeground: string;
+  backgroundColor: string;
+  surfaceColor: string;
+  surfaceMutedColor: string;
   textPrimary: string;
   textSecondary: string;
   effectColor: string;
+  borderColor: string;
+  chatTheirsColor: string;
+  sidebarBackgroundColor: string;
+  sidebarAccentColor: string;
+  sparkleIntensity: number;
+  magicMode: boolean;
 }
 
-// ─── Presets ─────────────────────────────────────────────
-const presets: Record<Exclude<DesignPreset, "custom">, { colors: DesignColors; magic: MagicModeSettings }> = {
-  softMagic: {
-    colors: { hue: 300, saturation: 40, lightness: 65 },
-    magic: { enabled: true, sparkleIntensity: 25, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 12 },
-  },
-  galaxy: {
-    colors: { hue: 260, saturation: 70, lightness: 45 },
-    magic: { enabled: true, sparkleIntensity: 50, sparkleSize: "medium", sparkleSpeed: "medium", sparkleDensity: 20 },
-  },
-  elegant: {
-    colors: { hue: 220, saturation: 15, lightness: 50 },
-    magic: { enabled: false, sparkleIntensity: 0, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 5 },
-  },
-  neon: {
-    colors: { hue: 160, saturation: 100, lightness: 50 },
-    magic: { enabled: true, sparkleIntensity: 70, sparkleSize: "large", sparkleSpeed: "fast", sparkleDensity: 30 },
-  },
-};
+export type ComputedColors = GlobalTheme;
 
-// ─── Default state ───────────────────────────────────────
-const defaultState: DesignSystemState = {
-  colors: { hue: 18, saturation: 90, lightness: 55 },
-  magic: { enabled: false, sparkleIntensity: 30, sparkleSize: "medium", sparkleSpeed: "slow", sparkleDensity: 15 },
-  preset: "custom",
-};
-
-// ─── Color utilities ─────────────────────────────────────
-function hslToHex(h: number, s: number, l: number): string {
-  s /= 100; l /= 100;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => {
-    const k = (n + h / 30) % 12;
-    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-    return Math.round(255 * color).toString(16).padStart(2, '0');
-  };
-  return `#${f(0)}${f(8)}${f(4)}`;
+interface DesignSystemContextType {
+  state: DesignSystemState;
+  theme: GlobalTheme;
+  computedColors: ComputedColors;
+  setColors: (colors: Partial<DesignColors>) => void;
+  setMagic: (magic: Partial<MagicModeSettings>) => void;
+  applyPreset: (preset: DesignPreset) => void;
 }
-
-function relativeLuminance(h: number, s: number, l: number): number {
-  // Approximate luminance from HSL lightness
-  return l / 100;
-}
-
-function ensureContrast(bgL: number): { textPrimaryL: number; textSecondaryL: number } {
-  // WCAG AA requires 4.5:1 for normal text
-  if (bgL > 50) {
-    return { textPrimaryL: 10, textSecondaryL: 35 };
-  }
-  return { textPrimaryL: 95, textSecondaryL: 70 };
-}
-
-function computeColors(c: DesignColors, isDark: boolean): ComputedColors {
-  const { hue, saturation, lightness } = c;
-  
-  // Secondary: complementary shift or lighter version
-  const secHue = (hue + 30) % 360;
-  const secSat = Math.max(saturation - 15, 10);
-  const secLight = Math.min(lightness + 15, 85);
-
-  // Background
-  const bgLight = isDark ? 7 : 97;
-  const bgSat = isDark ? 25 : 20;
-
-  // Surface (cards)
-  const surfLight = isDark ? 12 : 100;
-  const surfSat = isDark ? 20 : 0;
-
-  const { textPrimaryL, textSecondaryL } = ensureContrast(bgLight);
-
-  return {
-    primary: `${hue} ${saturation}% ${lightness}%`,
-    secondary: `${secHue} ${secSat}% ${secLight}%`,
-    background: `${hue} ${bgSat}% ${bgLight}%`,
-    surface: `${hue} ${surfSat}% ${surfLight}%`,
-    textPrimary: `${hue} 20% ${textPrimaryL}%`,
-    textSecondary: `${hue} 10% ${textSecondaryL}%`,
-    effectColor: `${hue} ${saturation}% ${lightness}%`,
-  };
-}
-
-// ─── Context ─────────────────────────────────────────────
-const DesignSystemContext = createContext<DesignSystemContextType | undefined>(undefined);
-
-export const useDesignSystem = () => {
-  const ctx = useContext(DesignSystemContext);
-  if (!ctx) throw new Error("useDesignSystem must be used within DesignSystemProvider");
-  return ctx;
-};
 
 const STORAGE_KEY = "clemio-design-system";
 
-export const DesignSystemProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<DesignSystemState>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return { ...defaultState, ...JSON.parse(saved) };
-    } catch {}
+const defaultState: DesignSystemState = {
+  colors: { hue: 18, saturation: 90, lightness: 55 },
+  magic: { enabled: false, sparkleIntensity: 24, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 10 },
+  preset: "custom",
+};
+
+const presets: Record<Exclude<DesignPreset, "custom">, { colors: DesignColors; magic: MagicModeSettings }> = {
+  softMagic: {
+    colors: { hue: 328, saturation: 56, lightness: 62 },
+    magic: { enabled: true, sparkleIntensity: 18, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 8 },
+  },
+  galaxy: {
+    colors: { hue: 248, saturation: 78, lightness: 58 },
+    magic: { enabled: true, sparkleIntensity: 28, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 11 },
+  },
+  elegant: {
+    colors: { hue: 214, saturation: 20, lightness: 48 },
+    magic: { enabled: false, sparkleIntensity: 0, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 6 },
+  },
+  neon: {
+    colors: { hue: 168, saturation: 94, lightness: 52 },
+    magic: { enabled: true, sparkleIntensity: 34, sparkleSize: "medium", sparkleSpeed: "medium", sparkleDensity: 14 },
+  },
+};
+
+const DesignSystemContext = createContext<DesignSystemContextType | undefined>(undefined);
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const wrapHue = (value: number) => ((Math.round(value) % 360) + 360) % 360;
+const hsl = (hue: number, saturation: number, lightness: number) => `${wrapHue(hue)} ${clamp(saturation, 0, 100)}% ${clamp(lightness, 0, 100)}%`;
+
+const readStoredState = (): DesignSystemState => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return defaultState;
+    const parsed = JSON.parse(saved) as Partial<DesignSystemState>;
+
+    return {
+      colors: { ...defaultState.colors, ...parsed.colors },
+      magic: { ...defaultState.magic, ...parsed.magic },
+      preset: parsed.preset ?? defaultState.preset,
+    };
+  } catch {
     return defaultState;
+  }
+};
+
+const createTheme = (colors: DesignColors, magic: MagicModeSettings, isDark: boolean): GlobalTheme => {
+  const primaryHue = wrapHue(colors.hue);
+  const primarySaturation = clamp(colors.saturation, 24, 100);
+  const primaryLightness = clamp(colors.lightness, 28, 72);
+
+  const secondaryHue = wrapHue(primaryHue + (isDark ? 42 : 30));
+  const secondarySaturation = clamp(primarySaturation * (isDark ? 0.82 : 0.72), 18, 96);
+  const secondaryLightness = clamp(primaryLightness + (isDark ? 6 : 10), isDark ? 42 : 34, isDark ? 72 : 80);
+
+  const backgroundSaturation = clamp(primarySaturation * (isDark ? 0.4 : 0.3), isDark ? 14 : 8, isDark ? 34 : 28);
+  const backgroundLightness = isDark
+    ? clamp(7 + (100 - primaryLightness) * 0.04, 7, 13)
+    : clamp(97 - primarySaturation * 0.05, 89, 97);
+
+  const surfaceSaturation = clamp(backgroundSaturation + (isDark ? 4 : 2), isDark ? 14 : 8, isDark ? 30 : 20);
+  const surfaceLightness = isDark
+    ? clamp(backgroundLightness + 6, 13, 19)
+    : clamp(backgroundLightness - 3, 84, 95);
+
+  const surfaceMutedLightness = isDark
+    ? clamp(surfaceLightness + 2, 15, 22)
+    : clamp(surfaceLightness - 2, 80, 92);
+
+  const borderLightness = isDark
+    ? clamp(surfaceLightness + 7, 18, 28)
+    : clamp(surfaceLightness - 8, 72, 88);
+
+  const effectHue = wrapHue(primaryHue + 12);
+  const effectSaturation = clamp(primarySaturation * 0.88, 24, 100);
+  const effectLightness = clamp(primaryLightness + (isDark ? 10 : 6), isDark ? 46 : 34, isDark ? 80 : 86);
+
+  const textPrimaryLightness = backgroundLightness > 58 ? 11 : 97;
+  const textSecondaryLightness = backgroundLightness > 58 ? 34 : 76;
+  const primaryForegroundLightness = primaryLightness > 62 ? 12 : 98;
+  const secondaryForegroundLightness = secondaryLightness > 64 ? 12 : 98;
+  const chatTheirsLightness = isDark
+    ? clamp(surfaceLightness + 1, 15, 20)
+    : clamp(surfaceLightness + 1, 86, 96);
+  const sidebarBackgroundLightness = isDark
+    ? clamp(backgroundLightness + 2, 9, 15)
+    : clamp(backgroundLightness - 2, 88, 95);
+  const sidebarAccentLightness = isDark
+    ? clamp(surfaceLightness + 3, 18, 24)
+    : clamp(surfaceLightness - 4, 78, 90);
+
+  return {
+    primaryColor: hsl(primaryHue, primarySaturation, primaryLightness),
+    primaryForeground: hsl(primaryHue, 18, primaryForegroundLightness),
+    secondaryColor: hsl(secondaryHue, secondarySaturation, secondaryLightness),
+    secondaryForeground: hsl(secondaryHue, 18, secondaryForegroundLightness),
+    backgroundColor: hsl(primaryHue, backgroundSaturation, backgroundLightness),
+    surfaceColor: hsl(primaryHue, surfaceSaturation, surfaceLightness),
+    surfaceMutedColor: hsl(primaryHue, clamp(backgroundSaturation * 0.9, 6, 24), surfaceMutedLightness),
+    textPrimary: hsl(primaryHue, 18, textPrimaryLightness),
+    textSecondary: hsl(primaryHue, 12, textSecondaryLightness),
+    effectColor: hsl(effectHue, effectSaturation, effectLightness),
+    borderColor: hsl(primaryHue, clamp(backgroundSaturation * 0.75, 6, 22), borderLightness),
+    chatTheirsColor: hsl(primaryHue, surfaceSaturation, chatTheirsLightness),
+    sidebarBackgroundColor: hsl(primaryHue, clamp(backgroundSaturation + 2, 8, 30), sidebarBackgroundLightness),
+    sidebarAccentColor: hsl(primaryHue, clamp(surfaceSaturation, 8, 24), sidebarAccentLightness),
+    sparkleIntensity: magic.sparkleIntensity,
+    magicMode: magic.enabled,
+  };
+};
+
+const applyThemeToRoot = (theme: GlobalTheme) => {
+  const root = document.documentElement;
+  const softGlow = theme.magicMode
+    ? `0 18px 48px -24px hsl(${theme.effectColor} / 0.45), 0 10px 24px -18px hsl(${theme.primaryColor} / 0.28)`
+    : `0 16px 40px -28px hsl(${theme.effectColor} / 0.24), 0 8px 22px -18px hsl(${theme.primaryColor} / 0.16)`;
+  const strongGlow = theme.magicMode
+    ? `0 24px 60px -28px hsl(${theme.effectColor} / 0.55), 0 12px 32px -18px hsl(${theme.primaryColor} / 0.32)`
+    : `0 20px 48px -30px hsl(${theme.effectColor} / 0.28), 0 10px 26px -18px hsl(${theme.primaryColor} / 0.18)`;
+
+  const cssVars: Record<string, string> = {
+    "--primary": theme.primaryColor,
+    "--primary-foreground": theme.primaryForeground,
+    "--secondary": theme.surfaceMutedColor,
+    "--secondary-foreground": theme.textPrimary,
+    "--accent": theme.secondaryColor,
+    "--accent-foreground": theme.secondaryForeground,
+    "--background": theme.backgroundColor,
+    "--foreground": theme.textPrimary,
+    "--card": theme.surfaceColor,
+    "--card-foreground": theme.textPrimary,
+    "--popover": theme.surfaceColor,
+    "--popover-foreground": theme.textPrimary,
+    "--muted": theme.surfaceMutedColor,
+    "--muted-foreground": theme.textSecondary,
+    "--border": theme.borderColor,
+    "--input": theme.borderColor,
+    "--ring": theme.primaryColor,
+    "--chat-mine": theme.primaryColor,
+    "--chat-mine-foreground": theme.primaryForeground,
+    "--chat-theirs": theme.chatTheirsColor,
+    "--chat-theirs-foreground": theme.textPrimary,
+    "--sidebar-background": theme.sidebarBackgroundColor,
+    "--sidebar-foreground": theme.textPrimary,
+    "--sidebar-primary": theme.primaryColor,
+    "--sidebar-primary-foreground": theme.primaryForeground,
+    "--sidebar-accent": theme.sidebarAccentColor,
+    "--sidebar-accent-foreground": theme.textPrimary,
+    "--sidebar-border": theme.borderColor,
+    "--sidebar-ring": theme.effectColor,
+    "--effect-color": theme.effectColor,
+    "--theme-primary-gradient": `linear-gradient(135deg, hsl(${theme.primaryColor}), hsl(${theme.secondaryColor}))`,
+    "--theme-accent-gradient": `linear-gradient(135deg, hsl(${theme.secondaryColor}), hsl(${theme.effectColor}))`,
+    "--surface-glow": softGlow,
+    "--surface-glow-strong": strongGlow,
+  };
+
+  Object.entries(cssVars).forEach(([key, value]) => {
+    root.style.setProperty(key, value);
   });
 
-  // Persist to localStorage
+  root.dataset.magicMode = theme.magicMode ? "on" : "off";
+};
+
+export const useDesignSystem = () => {
+  const context = useContext(DesignSystemContext);
+  if (!context) {
+    throw new Error("useDesignSystem must be used within DesignSystemProvider");
+  }
+  return context;
+};
+
+export const DesignSystemProvider = ({ children }: { children: ReactNode }) => {
+  const [state, setState] = useState<DesignSystemState>(readStoredState);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
-  const isDark = document.documentElement.classList.contains("dark");
-  const computedColors = useMemo(() => computeColors(state.colors, isDark), [state.colors, isDark]);
-
-  // Apply CSS variables to root
   useEffect(() => {
-    const root = document.documentElement;
-    const cc = computedColors;
+    const updateMode = () => setIsDark(document.documentElement.classList.contains("dark"));
+    updateMode();
 
-    root.style.setProperty("--primary", cc.primary);
-    root.style.setProperty("--ring", cc.primary);
-    root.style.setProperty("--chat-mine", cc.primary);
-    root.style.setProperty("--sidebar-ring", cc.primary);
-    root.style.setProperty("--background", cc.background);
-    root.style.setProperty("--foreground", cc.textPrimary);
-    root.style.setProperty("--card", cc.surface);
-    root.style.setProperty("--card-foreground", cc.textPrimary);
-    root.style.setProperty("--popover", cc.surface);
-    root.style.setProperty("--popover-foreground", cc.textPrimary);
-    root.style.setProperty("--muted-foreground", cc.textSecondary);
-    root.style.setProperty("--accent", cc.secondary);
-
-    return () => {
-      ["--primary","--ring","--chat-mine","--sidebar-ring","--background","--foreground",
-       "--card","--card-foreground","--popover","--popover-foreground","--muted-foreground","--accent"]
-        .forEach(k => root.style.removeProperty(k));
-    };
-  }, [computedColors]);
-
-  // Re-apply on dark/light mode change
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const nowDark = document.documentElement.classList.contains("dark");
-      const cc = computeColors(state.colors, nowDark);
-      const root = document.documentElement;
-      root.style.setProperty("--primary", cc.primary);
-      root.style.setProperty("--ring", cc.primary);
-      root.style.setProperty("--chat-mine", cc.primary);
-      root.style.setProperty("--background", cc.background);
-      root.style.setProperty("--foreground", cc.textPrimary);
-      root.style.setProperty("--card", cc.surface);
-      root.style.setProperty("--card-foreground", cc.textPrimary);
-      root.style.setProperty("--popover", cc.surface);
-      root.style.setProperty("--popover-foreground", cc.textPrimary);
-      root.style.setProperty("--muted-foreground", cc.textSecondary);
-      root.style.setProperty("--accent", cc.secondary);
-    });
+    const observer = new MutationObserver(updateMode);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
     return () => observer.disconnect();
-  }, [state.colors]);
-
-  const setColors = useCallback((c: Partial<DesignColors>) => {
-    setState(prev => ({ ...prev, colors: { ...prev.colors, ...c }, preset: "custom" }));
   }, []);
 
-  const setMagic = useCallback((m: Partial<MagicModeSettings>) => {
-    setState(prev => ({ ...prev, magic: { ...prev.magic, ...m }, preset: "custom" }));
+  const theme = useMemo(() => createTheme(state.colors, state.magic, isDark), [state.colors, state.magic, isDark]);
+
+  useLayoutEffect(() => {
+    applyThemeToRoot(theme);
+  }, [theme]);
+
+  const setColors = useCallback((colors: Partial<DesignColors>) => {
+    setState((previous) => ({
+      ...previous,
+      colors: { ...previous.colors, ...colors },
+      preset: "custom",
+    }));
   }, []);
 
-  const applyPreset = useCallback((p: DesignPreset) => {
-    if (p === "custom") {
-      setState(prev => ({ ...prev, preset: "custom" }));
+  const setMagic = useCallback((magic: Partial<MagicModeSettings>) => {
+    setState((previous) => ({
+      ...previous,
+      magic: { ...previous.magic, ...magic },
+      preset: "custom",
+    }));
+  }, []);
+
+  const applyPreset = useCallback((preset: DesignPreset) => {
+    if (preset === "custom") {
+      setState((previous) => ({ ...previous, preset: "custom" }));
       return;
     }
-    const preset = presets[p];
-    setState({ colors: { ...preset.colors }, magic: { ...preset.magic }, preset: p });
+
+    setState({
+      colors: { ...presets[preset].colors },
+      magic: { ...presets[preset].magic },
+      preset,
+    });
   }, []);
 
-  const value = useMemo(() => ({
-    state, setColors, setMagic, applyPreset, computedColors,
-  }), [state, setColors, setMagic, applyPreset, computedColors]);
-
-  return (
-    <DesignSystemContext.Provider value={value}>
-      {children}
-    </DesignSystemContext.Provider>
+  const value = useMemo<DesignSystemContextType>(
+    () => ({
+      state,
+      theme,
+      computedColors: theme,
+      setColors,
+      setMagic,
+      applyPreset,
+    }),
+    [state, theme, setColors, setMagic, applyPreset],
   );
+
+  return <DesignSystemContext.Provider value={value}>{children}</DesignSystemContext.Provider>;
 };
