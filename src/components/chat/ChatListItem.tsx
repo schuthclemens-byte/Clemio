@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface ChatListItemProps {
@@ -9,7 +10,7 @@ interface ChatListItemProps {
   onClick: () => void;
 }
 
-const ChatListItem = ({ name, lastMessage, time, unread, avatar, onClick }: ChatListItemProps) => {
+const ChatListItem = forwardRef<HTMLButtonElement, ChatListItemProps>(({ name, lastMessage, time, unread, avatar, onClick }, ref) => {
   const initials = name
     .split(" ")
     .map((n) => n[0])
