@@ -644,6 +644,7 @@ const ar: Record<string, string> = {
     "design.previewMsgMine": "بخير، شكراً! وأنت؟",
     "design.previewButton": "أساسي",
     "design.previewSecondary": "ثانوي",
+    "design.liveHint": "💡 جميع التغييرات مرئية فوراً في التطبيق بالكامل.",
 };
 
 export default ar;

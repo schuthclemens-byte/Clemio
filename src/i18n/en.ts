@@ -789,6 +789,7 @@ const en: Record<string, string> = {
     "design.previewMsgMine": "Great, thanks! What about you?",
     "design.previewButton": "Primary",
     "design.previewSecondary": "Secondary",
+    "design.liveHint": "💡 All changes are instantly visible across the entire app.",
 };
 
 export default en;
