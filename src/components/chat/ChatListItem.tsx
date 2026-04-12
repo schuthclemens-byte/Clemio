@@ -72,6 +72,8 @@ const ChatListItem = forwardRef<HTMLButtonElement, ChatListItemProps>(({ name, l
       ) : null}
     </button>
   );
-};
+});
+
+ChatListItem.displayName = "ChatListItem";
 
 export default ChatListItem;
