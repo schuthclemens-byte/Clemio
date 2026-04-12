@@ -11,6 +11,8 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ColorThemeProvider } from "@/contexts/ColorThemeContext";
 import { ChatBackgroundProvider } from "@/contexts/ChatBackgroundContext";
+import { DesignSystemProvider } from "@/contexts/DesignSystemContext";
+import SparkleOverlay from "@/components/design/SparkleOverlay";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CallProvider } from "@/contexts/CallContext";
 import { useAutoPush } from "@/hooks/useAutoPush";
@@ -30,6 +32,7 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const ChatListPage = lazy(() => import("./pages/ChatListPage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const DesignSettingsPage = lazy(() => import("./pages/DesignSettingsPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const FocusModePage = lazy(() => import("./pages/FocusModePage"));
 const ContactAutoplayPage = lazy(() => import("./pages/ContactAutoplayPage"));
@@ -62,11 +65,33 @@ const PresenceTracker = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+/** Renders the global sparkle overlay when magic mode is active */
+const GlobalSparkle = () => {
+  const { DesignSystemProvider: _, ...rest } = {} as any; // avoid circular — we import the hook
+  // We need to import useDesignSystem inside the tree, so use a separate component
+  return <SparkleOverlayWrapper />;
+};
+
+import { useDesignSystem } from "@/contexts/DesignSystemContext";
+const SparkleOverlayWrapper = () => {
+  const { state } = useDesignSystem();
+  if (!state.magic.enabled) return null;
+  return (
+    <SparkleOverlay
+      settings={state.magic}
+      effectHue={state.colors.hue}
+      effectSaturation={state.colors.saturation}
+      effectLightness={state.colors.lightness}
+    />
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <I18nProvider>
       <ThemeProvider>
       <ColorThemeProvider>
+      <DesignSystemProvider>
       <ChatBackgroundProvider>
       <AccessibilityProvider>
         <AuthProvider>
