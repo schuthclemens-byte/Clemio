@@ -3,26 +3,23 @@ import { ArrowLeft, Sparkles, Palette, Sun, Moon, Monitor, Wand2 } from "lucide-
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useDesignSystem, type DesignPreset, type SparkleSize, type SparkleSpeed } from "@/contexts/DesignSystemContext";
+import { useDesignSystem, type DesignPreset, type SparkleMode } from "@/contexts/DesignSystemContext";
 import { cn } from "@/lib/utils";
-import ColorWheel from "@/components/design/ColorWheel";
+import ColorSurface from "@/components/design/ColorSurface";
 import { Slider } from "@/components/ui/slider";
 
-const presetConfigs: { id: DesignPreset; labelKey: string; colors: string[]; icon: string }[] = [
-  { id: "softMagic", labelKey: "design.presetSoftMagic", colors: ["hsl(300,40%,65%)", "hsl(330,35%,75%)", "hsl(270,30%,70%)"], icon: "✨" },
-  { id: "galaxy", labelKey: "design.presetGalaxy", colors: ["hsl(260,70%,45%)", "hsl(240,65%,40%)", "hsl(280,60%,50%)"], icon: "🌌" },
-  { id: "elegant", labelKey: "design.presetElegant", colors: ["hsl(220,15%,50%)", "hsl(210,10%,60%)", "hsl(200,12%,55%)"], icon: "🪶" },
-  { id: "neon", labelKey: "design.presetNeon", colors: ["hsl(160,100%,50%)", "hsl(280,100%,60%)", "hsl(50,100%,55%)"], icon: "⚡" },
+const presetConfigs: { id: DesignPreset; label: string; colors: string[]; icon: string }[] = [
+  { id: "softMagic", label: "Soft Magic", colors: ["hsl(328,56%,62%)", "hsl(300,40%,70%)", "hsl(350,50%,65%)"], icon: "✨" },
+  { id: "galaxy", label: "Galaxy", colors: ["hsl(248,78%,58%)", "hsl(240,65%,45%)", "hsl(270,60%,52%)"], icon: "🌌" },
+  { id: "elegant", label: "Elegant", colors: ["hsl(214,20%,48%)", "hsl(220,15%,55%)", "hsl(200,18%,50%)"], icon: "🪶" },
+  { id: "neon", label: "Neon", colors: ["hsl(168,94%,52%)", "hsl(180,90%,48%)", "hsl(150,80%,50%)"], icon: "⚡" },
 ];
-
-const sizeLabelKey: Record<SparkleSize, string> = { small: "design.sizeSmall", medium: "design.sizeMedium", large: "design.sizeLarge" };
-const speedLabelKey: Record<SparkleSpeed, string> = { slow: "design.speedSlow", medium: "design.speedMedium", fast: "design.speedFast" };
 
 const DesignSettingsPage = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { theme, setTheme } = useTheme();
-  const { state, setColors, setMagic, applyPreset, computedColors } = useDesignSystem();
+  const { state, setColors, setMagic, applyPreset } = useDesignSystem();
 
   const themeOptions = [
     { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
@@ -47,7 +44,7 @@ const DesignSettingsPage = () => {
       </header>
 
       <div className="flex-1 p-4 space-y-6 pb-24">
-        {/* ─── Theme Section ─── */}
+        {/* ─── Theme (Light/Dark/System) ─── */}
         <section className="animate-reveal-up">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
             <Palette className="w-4 h-4" />
@@ -73,23 +70,21 @@ const DesignSettingsPage = () => {
           </div>
         </section>
 
-        {/* ─── Colors Section ─── */}
+        {/* ─── Color Surface ─── */}
         <section className="animate-reveal-up" style={{ animationDelay: "30ms" }}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
             <Palette className="w-4 h-4" />
             {t("design.colorsSection")}
           </h2>
-          <div className="bg-card rounded-2xl shadow-sm p-6 space-y-6">
-            {/* Color Wheel */}
-            <div className="flex justify-center">
-              <ColorWheel
-                hue={state.colors.hue}
-                saturation={state.colors.saturation}
-                lightness={state.colors.lightness}
-                onHueChange={(hue) => setColors({ hue })}
-                size={200}
-              />
-            </div>
+          <div className="bg-card rounded-2xl shadow-sm p-4 space-y-5">
+            {/* Large Color Surface */}
+            <ColorSurface
+              hue={state.colors.hue}
+              saturation={state.colors.saturation}
+              lightness={state.colors.lightness}
+              onColorChange={(hue, saturation, lightness) => setColors({ hue, saturation, lightness })}
+              height={260}
+            />
 
             {/* Saturation Slider */}
             <div className="space-y-2">
@@ -125,7 +120,7 @@ const DesignSettingsPage = () => {
                 <div
                   className="absolute inset-x-0 h-3 rounded-full"
                   style={{
-                    background: `linear-gradient(to right, hsl(${state.colors.hue}, ${state.colors.saturation}%, 10%), hsl(${state.colors.hue}, ${state.colors.saturation}%, 50%), hsl(${state.colors.hue}, ${state.colors.saturation}%, 90%))`,
+                    background: `linear-gradient(to right, hsl(${state.colors.hue}, ${state.colors.saturation}%, 15%), hsl(${state.colors.hue}, ${state.colors.saturation}%, 50%), hsl(${state.colors.hue}, ${state.colors.saturation}%, 85%))`,
                   }}
                 />
                 <Slider
@@ -147,39 +142,39 @@ const DesignSettingsPage = () => {
             <Wand2 className="w-4 h-4" />
             {t("design.presets")}
           </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {presetConfigs.map(({ id, labelKey, colors, icon }) => (
+          <div className="grid grid-cols-4 gap-3">
+            {presetConfigs.map(({ id, label, colors, icon }) => (
               <button
                 key={id}
                 onClick={() => applyPreset(id)}
                 className={cn(
-                  "flex flex-col items-center gap-2 p-4 rounded-2xl bg-card shadow-sm transition-all duration-200",
+                  "flex flex-col items-center gap-2 p-3 rounded-2xl bg-card shadow-sm transition-all duration-200",
                   "hover:bg-secondary/50 active:scale-[0.97]",
                   state.preset === id && "ring-2 ring-primary bg-primary/10"
                 )}
               >
-                <span className="text-2xl">{icon}</span>
-                <div className="flex gap-1">
+                <span className="text-xl">{icon}</span>
+                <div className="flex gap-0.5">
                   {colors.map((c, i) => (
-                    <div key={i} className="w-5 h-5 rounded-full" style={{ backgroundColor: c }} />
+                    <div key={i} className="w-4 h-4 rounded-full" style={{ backgroundColor: c }} />
                   ))}
                 </div>
-                <span className={cn("text-xs font-medium", state.preset === id ? "text-primary" : "text-muted-foreground")}>
-                  {t(labelKey)}
+                <span className={cn("text-[0.688rem] font-medium", state.preset === id ? "text-primary" : "text-muted-foreground")}>
+                  {label}
                 </span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* ─── Magic Mode / Effects ─── */}
+        {/* ─── Sparkle / Effects ─── */}
         <section className="animate-reveal-up" style={{ animationDelay: "90ms" }}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4" />
             {t("design.effectsSection")}
           </h2>
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            {/* Toggle */}
+            {/* Enable toggle */}
             <button
               onClick={() => setMagic({ enabled: !state.magic.enabled })}
               className="w-full flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-secondary/50 active:scale-[0.99] border-b border-border"
@@ -206,6 +201,28 @@ const DesignSettingsPage = () => {
 
             {state.magic.enabled && (
               <div className="p-4 space-y-5">
+                {/* Sparkle Mode: sparkle vs soft */}
+                <div className="space-y-2">
+                  <span className="text-sm text-muted-foreground">{t("design.sparkleMode") || "Modus"}</span>
+                  <div className="flex gap-2">
+                    {(["sparkle", "soft"] as SparkleMode[]).map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setMagic({ sparkleMode: mode })}
+                        className={cn(
+                          "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-sm font-medium transition-all active:scale-95",
+                          state.magic.sparkleMode === mode
+                            ? "gradient-primary text-primary-foreground shadow-soft"
+                            : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                        )}
+                      >
+                        <span className="text-lg">{mode === "sparkle" ? "✨" : "🌙"}</span>
+                        <span>{mode === "sparkle" ? (t("design.modeSparkle") || "Funkeln") : (t("design.modeSoft") || "Sanft")}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Intensity */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -220,69 +237,12 @@ const DesignSettingsPage = () => {
                     onValueChange={([v]) => setMagic({ sparkleIntensity: v })}
                   />
                 </div>
-
-                {/* Density */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{t("design.density")}</span>
-                    <span className="font-semibold text-primary">{state.magic.sparkleDensity}</span>
-                  </div>
-                  <Slider
-                    value={[state.magic.sparkleDensity]}
-                    min={1}
-                    max={50}
-                    step={1}
-                    onValueChange={([v]) => setMagic({ sparkleDensity: v })}
-                  />
-                </div>
-
-                {/* Size */}
-                <div className="space-y-2">
-                  <span className="text-sm text-muted-foreground">{t("design.size")}</span>
-                  <div className="flex gap-2">
-                    {(["small", "medium", "large"] as SparkleSize[]).map(s => (
-                      <button
-                        key={s}
-                        onClick={() => setMagic({ sparkleSize: s })}
-                        className={cn(
-                          "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
-                          state.magic.sparkleSize === s
-                            ? "gradient-primary text-primary-foreground shadow-soft"
-                            : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                        )}
-                      >
-                        {t(sizeLabelKey[s])}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Speed */}
-                <div className="space-y-2">
-                  <span className="text-sm text-muted-foreground">{t("design.speed")}</span>
-                  <div className="flex gap-2">
-                    {(["slow", "medium", "fast"] as SparkleSpeed[]).map(s => (
-                      <button
-                        key={s}
-                        onClick={() => setMagic({ sparkleSpeed: s })}
-                        className={cn(
-                          "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
-                          state.magic.sparkleSpeed === s
-                            ? "gradient-primary text-primary-foreground shadow-soft"
-                            : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                        )}
-                      >
-                        {t(speedLabelKey[s])}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
           </div>
         </section>
 
-        {/* ─── Hint: the whole app is the live preview ─── */}
+        {/* ─── Hint ─── */}
         <div className="text-center text-xs text-muted-foreground py-4 opacity-70">
           {t("design.liveHint")}
         </div>
