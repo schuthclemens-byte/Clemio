@@ -17,6 +17,7 @@ export interface DesignColors {
 
 export type SparkleSize = "small" | "medium" | "large";
 export type SparkleSpeed = "slow" | "medium" | "fast";
+export type SparkleMode = "sparkle" | "soft";
 
 export interface MagicModeSettings {
   enabled: boolean;
@@ -24,6 +25,7 @@ export interface MagicModeSettings {
   sparkleSize: SparkleSize;
   sparkleSpeed: SparkleSpeed;
   sparkleDensity: number;
+  sparkleMode: SparkleMode;
 }
 
 export type DesignPreset = "custom" | "softMagic" | "galaxy" | "elegant" | "neon";
@@ -68,26 +70,26 @@ const STORAGE_KEY = "clemio-design-system";
 
 const defaultState: DesignSystemState = {
   colors: { hue: 18, saturation: 90, lightness: 55 },
-  magic: { enabled: false, sparkleIntensity: 24, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 10 },
+  magic: { enabled: false, sparkleIntensity: 24, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 10, sparkleMode: "sparkle" as SparkleMode },
   preset: "custom",
 };
 
 const presets: Record<Exclude<DesignPreset, "custom">, { colors: DesignColors; magic: MagicModeSettings }> = {
   softMagic: {
     colors: { hue: 328, saturation: 56, lightness: 62 },
-    magic: { enabled: true, sparkleIntensity: 18, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 8 },
+    magic: { enabled: true, sparkleIntensity: 18, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 8, sparkleMode: "soft" as SparkleMode },
   },
   galaxy: {
     colors: { hue: 248, saturation: 78, lightness: 58 },
-    magic: { enabled: true, sparkleIntensity: 28, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 11 },
+    magic: { enabled: true, sparkleIntensity: 28, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 11, sparkleMode: "sparkle" as SparkleMode },
   },
   elegant: {
     colors: { hue: 214, saturation: 20, lightness: 48 },
-    magic: { enabled: false, sparkleIntensity: 0, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 6 },
+    magic: { enabled: false, sparkleIntensity: 0, sparkleSize: "small", sparkleSpeed: "slow", sparkleDensity: 6, sparkleMode: "soft" as SparkleMode },
   },
   neon: {
     colors: { hue: 168, saturation: 94, lightness: 52 },
-    magic: { enabled: true, sparkleIntensity: 34, sparkleSize: "medium", sparkleSpeed: "medium", sparkleDensity: 14 },
+    magic: { enabled: true, sparkleIntensity: 34, sparkleSize: "medium", sparkleSpeed: "medium", sparkleDensity: 14, sparkleMode: "sparkle" as SparkleMode },
   },
 };
 
