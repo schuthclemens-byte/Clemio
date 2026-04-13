@@ -5,7 +5,7 @@ import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, Use
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useColorTheme, colorThemeLabels, colorThemePreview, type ColorTheme } from "@/contexts/ColorThemeContext";
+import { useDesignSystem, type DesignPreset } from "@/contexts/DesignSystemContext";
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -119,7 +119,7 @@ const SettingsPage = () => {
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
   const { theme, setTheme } = useTheme();
-  const { colorTheme, setColorTheme } = useColorTheme();
+  const { state: designState, applyPreset } = useDesignSystem();
   const { globalBackground, setGlobalBackground } = useChatBackground();
   const { user } = useAuth();
   const { signOut } = useAuth();
@@ -204,7 +204,12 @@ const SettingsPage = () => {
   };
 
   const languages = Object.entries(localeNames) as [Locale, string][];
-  const colorThemes = Object.keys(colorThemeLabels) as ColorTheme[];
+  const designPresets: { id: DesignPreset; label: string; colors: string[] }[] = [
+    { id: "softMagic", label: "Soft Magic", colors: ["hsl(328,56%,62%)", "hsl(300,40%,70%)", "hsl(350,50%,65%)"] },
+    { id: "galaxy", label: "Galaxy", colors: ["hsl(248,78%,58%)", "hsl(260,70%,50%)", "hsl(230,60%,55%)"] },
+    { id: "elegant", label: "Elegant", colors: ["hsl(214,20%,48%)", "hsl(220,15%,55%)", "hsl(200,18%,50%)"] },
+    { id: "neon", label: "Neon", colors: ["hsl(168,94%,52%)", "hsl(180,90%,48%)", "hsl(150,80%,50%)"] },
+  ];
 
   const themeOptions = [
     { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
@@ -423,26 +428,26 @@ const SettingsPage = () => {
               ))}
             </div>
 
-            {/* Color Theme */}
+            {/* Design Presets */}
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4">
               <div className="grid grid-cols-4 gap-3">
-                {colorThemes.map((ct) => (
+                {designPresets.map(({ id, label, colors }) => (
                   <button
-                    key={ct}
-                    onClick={() => setColorTheme(ct)}
+                    key={id}
+                    onClick={() => applyPreset(id)}
                     className={cn(
                       "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
                       "hover:bg-secondary/50 active:scale-[0.95]",
-                      colorTheme === ct && "ring-2 ring-primary bg-primary/10"
+                      designState.preset === id && "ring-2 ring-primary bg-primary/10"
                     )}
                   >
                     <div className="flex gap-0.5">
-                      {colorThemePreview[ct].map((color, i) => (
+                      {colors.map((color, i) => (
                         <div key={i} className="w-5 h-5 rounded-full" style={{ backgroundColor: color }} />
                       ))}
                     </div>
-                    <span className={cn("text-xs font-medium", colorTheme === ct ? "text-primary" : "text-muted-foreground")}>
-                      {colorThemeLabels[ct]}
+                    <span className={cn("text-xs font-medium", designState.preset === id ? "text-primary" : "text-muted-foreground")}>
+                      {label}
                     </span>
                   </button>
                 ))}
