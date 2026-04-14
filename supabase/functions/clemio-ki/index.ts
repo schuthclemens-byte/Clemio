@@ -78,6 +78,24 @@ Gib genau 3 verbesserte Varianten der Nachricht des Nutzers zurück als JSON:
 {"answers":[{"text":"..."},{"text":"..."},{"text":"..."}]}
 Keine Erklärung, nur die verbesserten Nachrichten.`;
 
+const IMPROVE_SYSTEM_PROMPT = `Du bist Clemio-KI – ein Assistent, der Nachrichten in einem bestimmten Stil umformuliert.
+Der Nutzer gibt dir eine Nachricht und einen gewünschten Stil. Formuliere die Nachricht exakt in diesem Stil um.
+
+STILE:
+- "clearer" = klarer, direkter, auf den Punkt
+- "calmer" = ruhiger, gelassener, deeskalierend  
+- "friendlier" = freundlicher, herzlicher, wärmer
+
+REGELN:
+- Behalte den Inhalt und die Intention bei
+- Passe NUR den Ton an
+- Schreibe wie eine echte WhatsApp-Nachricht
+- Kurz und natürlich
+- Keine KI-Floskeln
+
+Du antwortest IMMER im folgenden JSON-Format, NICHTS anderes:
+{"improved":"die verbesserte Nachricht"}`;
+
 const STRATEGY_FORMAT = `MODUS STRATEGIE:
 Gib eine kurze Einschätzung und 3 Antworten mit Wirkung zurück als JSON:
 {"assessment":"...(max 1 Satz)","answers":[{"text":"...","effect":"...(max 1 Satz)"},{"text":"...","effect":"..."},{"text":"...","effect":"..."}]}`;
@@ -110,7 +128,7 @@ serve(async (req) => {
       });
     }
 
-    const { receivedMessage, draftMessage, chatHistory, mode, checkOnly, locale } = await req.json();
+    const { receivedMessage, draftMessage, chatHistory, mode, checkOnly, locale, improveText, improveStyle } = await req.json();
 
     const langNames: Record<string, string> = {
       de: "German", en: "English", fr: "French", tr: "Turkish", es: "Spanish", ar: "Arabic",
@@ -161,6 +179,50 @@ serve(async (req) => {
           limit: FREE_DAILY_LIMIT,
         }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─── IMPROVE MODE: single styled rewrite ───
+    const isImprove = mode === "improve" && improveText;
+    if (isImprove) {
+      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+      if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+
+      const styleLabel = improveStyle || "clearer";
+      const userPrompt = `Stil: "${styleLabel}"\nNachricht: "${improveText}"\n\nFormuliere die Nachricht auf ${userLang} um.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: IMPROVE_SYSTEM_PROMPT }] },
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: { temperature: 0.7 },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const t = await response.text();
+        console.error("Gemini improve error:", response.status, t);
+        throw new Error("AI improve failed");
+      }
+
+      await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
+
+      const data = await response.json();
+      let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+      raw = raw.replace(/^```json\s*/i, "").replace(/\s*```$/, "").trim();
+
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch { parsed = { improved: raw }; }
+
+      const newRemaining = isPremium ? -1 : Math.max(0, FREE_DAILY_LIMIT - usedToday - 1);
+      return new Response(
+        JSON.stringify({ improved: parsed.improved || raw, remaining: newRemaining, limit: FREE_DAILY_LIMIT, isPremium }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

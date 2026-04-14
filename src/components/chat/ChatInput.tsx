@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Send, Plus, Camera, ImagePlus, Mic, Sparkles } from "lucide-react";
+import { Send, Plus, Camera, ImagePlus, Mic, Sparkles, Wand2 } from "lucide-react";
+import ImproveMessageSheet from "./ImproveMessageSheet";
 import VoiceButton from "./VoiceButton";
 import MediaPreview from "./MediaPreview";
 import CameraCapture from "./CameraCapture";
@@ -26,14 +27,16 @@ interface ChatInputProps {
   onOpenClemioKI?: (draftText: string) => void;
   hasReceivedMessages?: boolean;
   externalText?: string;
+  onPlayVoice?: (text: string) => void;
 }
 
-const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages, externalText }: ChatInputProps) => {
+const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages, externalText, onPlayVoice }: ChatInputProps) => {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [showMediaMenu, setShowMediaMenu] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [showImprove, setShowImprove] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaToggleRef = useRef<HTMLButtonElement>(null);
   const mediaMenuRef = useRef<HTMLDivElement>(null);
@@ -288,6 +291,22 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             />
           </div>
 
+          {/* Improve button – only when text has content */}
+          {currentText.trim() && !isListening && (
+            <button
+              onClick={() => setShowImprove(!showImprove)}
+              className={cn(
+                "flex items-center justify-center w-11 h-11 rounded-full shrink-0 transition-all duration-200 active:scale-90",
+                showImprove
+                  ? "gradient-primary text-primary-foreground shadow-soft"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+              aria-label={locale === "de" ? "Nachricht verbessern" : "Improve message"}
+            >
+              <Wand2 className="w-4.5 h-4.5" />
+            </button>
+          )}
+
           {/* Send or Voice Record */}
           {hasContent ? (
             <button
@@ -325,6 +344,17 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             </button>
           )}
         </div>
+
+        {/* Improve message sheet */}
+        {showImprove && currentText.trim() && (
+          <ImproveMessageSheet
+            originalText={currentText.trim()}
+            onAccept={(improved) => { setText(improved); setShowImprove(false); }}
+            onSend={(improved) => { onSend(improved); setText(""); setShowImprove(false); onStopTyping?.(); }}
+            onClose={() => setShowImprove(false)}
+            onPlayVoice={onPlayVoice}
+          />
+        )}
       </div>
 
       <CameraCapture
