@@ -360,26 +360,28 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         <Mic className="w-8 h-8 text-primary-foreground" />
       </div>
       <div>
-        <p className="font-semibold text-lg">{tr("Lass dich hören", "Let yourself be heard")}</p>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="font-bold text-xl">{tr("Meine Stimme", "My Voice")}</p>
+        <p className="text-sm text-muted-foreground mt-1.5">
           {tr(
-            "Erstelle dein Stimmprofil in 2 Schritten: 30 Sekunden frei sprechen, dann einen Satz vorlesen.",
-            "Create your voice profile in 2 steps: 30 seconds of free speech, then read a sentence aloud."
+            "Andere können deine Nachrichten in deiner Stimme hören.",
+            "Others can hear your messages in your voice."
           )}
         </p>
+        <div className="flex items-center justify-center gap-3 mt-3">
+          <span className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
+            {tr("⏱ ca. 1 Minute", "⏱ ~1 minute")}
+          </span>
+          <span className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
+            {tr("📌 Noch nicht eingerichtet", "📌 Not set up yet")}
+          </span>
+        </div>
       </div>
       <button
         onClick={() => setPhase("consent")}
         className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
       >
-        {tr("Eigene Stimme erstellen", "Create your own voice")}
+        {tr("Stimmprofil einrichten", "Set up voice profile")}
       </button>
-      <p className="text-[0.688rem] text-muted-foreground">
-        {tr(
-          "🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.",
-          "🔐 Voices are only used with your consent and can be deleted at any time."
-        )}
-      </p>
     </div>
   );
 };
