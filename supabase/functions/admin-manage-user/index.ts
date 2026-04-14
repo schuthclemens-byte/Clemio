@@ -41,7 +41,7 @@ serve(async (req) => {
 
     if (!roleRow) return json({ error: "Forbidden: admin role required" }, 403);
 
-    const { action, targetUserId, reason, plan, premiumUntil, newPassword } = await req.json();
+    const { action, targetUserId, reason, plan, premiumUntil, newPassword, reportId, status: reportStatus, adminNote } = await req.json();
 
     // ── STATS ──
     if (action === "stats") {
