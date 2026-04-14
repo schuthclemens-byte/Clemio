@@ -9,10 +9,10 @@ interface SparkleOverlayProps {
 }
 
 interface Particle {
-  x: number; y: number;
+  x: number;
+  y: number;
   size: number;
   alpha: number;
-  hueShift: number;
   life: number;
   maxLife: number;
   peakTime: number;
@@ -24,7 +24,6 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const poolRef = useRef<Particle[]>([]);
-  const frameRef = useRef(0);
 
   useEffect(() => {
     if (!settings.enabled) return;
@@ -34,8 +33,8 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const isLowEnd = navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 2;
-    if (isLowEnd) return;
+    // Skip on very low-end devices
+    if (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 2) return;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio, 2);
@@ -52,32 +51,32 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
     const isSparkle = settings.sparkleMode === "sparkle";
     const intensity = settings.sparkleIntensity / 100;
 
-    // Pool size based on intensity
+    // More particles for better visibility
     const poolSize = isSparkle
-      ? Math.round(8 + intensity * 40)   // 8-48 sparkle slots
-      : Math.round(5 + intensity * 25);  // 5-30 soft glow slots
+      ? Math.round(12 + intensity * 50)
+      : Math.round(6 + intensity * 20);
 
     const createParticle = (delayed: boolean): Particle => ({
       x: Math.random() * w(),
       y: Math.random() * h(),
       size: isSparkle
-        ? (Math.random() < 0.15 ? 3 + Math.random() * 3 : 1 + Math.random() * 2) // 85% small, 15% highlight
-        : 2 + Math.random() * 4,
+        ? (Math.random() < 0.2 ? 4 + Math.random() * 3 : 1.5 + Math.random() * 2)
+        : 3 + Math.random() * 5,
       alpha: 0,
-      hueShift: (Math.random() - 0.5) * 30,
       life: 0,
       maxLife: isSparkle
-        ? 9 + Math.floor(Math.random() * 15)  // 300-800ms at 30fps → 9-24 frames
-        : 180 + Math.floor(Math.random() * 360),
+        ? 10 + Math.floor(Math.random() * 16) // ~330-860ms at 30fps
+        : 120 + Math.floor(Math.random() * 240),
       peakTime: isSparkle
-        ? 0.15 + Math.random() * 0.15  // Peak at 15-30% of life (early flash)
-        : 0.2,
+        ? 0.12 + Math.random() * 0.13 // Peak early (12-25%)
+        : 0.3,
       active: !delayed,
-      spawnDelay: delayed ? Math.floor(Math.random() * (isSparkle ? Math.round(60 / (0.3 + intensity * 2)) : 30)) : 0,
+      spawnDelay: delayed
+        ? Math.floor(Math.random() * Math.max(2, Math.round(30 / (0.5 + intensity * 3))))
+        : 0,
     });
 
-    poolRef.current = Array.from({ length: poolSize }, (_, i) => createParticle(i > 2));
-    frameRef.current = 0;
+    poolRef.current = Array.from({ length: poolSize }, (_, i) => createParticle(i > 3));
 
     let lastTime = 0;
     const frameDuration = 1000 / 30;
@@ -88,95 +87,90 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
         return;
       }
       lastTime = timestamp;
-      frameRef.current++;
 
       ctx.clearRect(0, 0, w(), h());
 
-      poolRef.current.forEach(p => {
-        // Handle spawn delay
+      const pool = poolRef.current;
+      for (let i = 0; i < pool.length; i++) {
+        const p = pool[i];
+
         if (!p.active) {
           p.spawnDelay--;
           if (p.spawnDelay <= 0) p.active = true;
-          else return;
+          else continue;
         }
 
         p.life++;
         const lifeRatio = p.life / p.maxLife;
 
         if (isSparkle) {
-          // SPARKLE: sharp flash then quick fade
+          // Sharp flash: fast cubic ramp → bright peak → quick quadratic fade
           if (lifeRatio < p.peakTime) {
-            // Ramp up fast — cubic ease-in
             const t = lifeRatio / p.peakTime;
-            p.alpha = t * t * t * (0.7 + intensity * 0.3);
+            p.alpha = t * t * t * (0.85 + intensity * 0.15);
           } else {
-            // Quick fade out
             const t = (lifeRatio - p.peakTime) / (1 - p.peakTime);
-            p.alpha = (1 - t * t) * (0.7 + intensity * 0.3);
+            p.alpha = (1 - t * t) * (0.85 + intensity * 0.15);
           }
         } else {
-          // SOFT GLOW: gentle constant presence with breathing
-          if (lifeRatio < 0.15) {
-            p.alpha = (lifeRatio / 0.15) * (0.08 + intensity * 0.14);
-          } else if (lifeRatio > 0.85) {
-            p.alpha = ((1 - lifeRatio) / 0.15) * (0.08 + intensity * 0.14);
+          // Soft glow: gentle breathing
+          if (lifeRatio < 0.12) {
+            p.alpha = (lifeRatio / 0.12) * (0.12 + intensity * 0.18);
+          } else if (lifeRatio > 0.88) {
+            p.alpha = ((1 - lifeRatio) / 0.12) * (0.12 + intensity * 0.18);
           } else {
-            const breath = Math.sin(lifeRatio * Math.PI * 4) * 0.03;
-            p.alpha = (0.08 + intensity * 0.14) + breath;
+            const breath = Math.sin(lifeRatio * Math.PI * 3) * 0.04;
+            p.alpha = (0.12 + intensity * 0.18) + breath;
           }
         }
 
         p.alpha = Math.max(0, Math.min(p.alpha, 1.0));
 
-        // Reset when expired
+        // Recycle when expired
         if (p.life >= p.maxLife) {
-          Object.assign(p, createParticle(true));
-          return;
+          const newP = createParticle(true);
+          pool[i] = newP;
+          continue;
         }
 
-        // Skip drawing if invisible
-        if (p.alpha < 0.01) return;
+        if (p.alpha < 0.01) continue;
 
-        const hue = (effectHue + p.hueShift) % 360;
-        const light = Math.max(70, Math.min(98, effectLightness + 30));
-
+        // Use white/near-white for maximum contrast against any background
         if (isSparkle) {
-          // Bright core + soft outer glow
-          const outerR = p.size * 4;
+          const outerR = p.size * 5;
 
-          // Outer glow
-          const outer = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, outerR);
-          outer.addColorStop(0, `hsla(${hue}, ${Math.min(effectSaturation, 25)}%, ${Math.min(light + 5, 100)}%, ${p.alpha * 0.9})`);
-          outer.addColorStop(0.2, `hsla(${hue}, ${effectSaturation * 0.5}%, ${light}%, ${p.alpha * 0.5})`);
-          outer.addColorStop(0.5, `hsla(${hue}, ${effectSaturation}%, ${light - 15}%, ${p.alpha * 0.15})`);
-          outer.addColorStop(1, `hsla(${hue}, ${effectSaturation}%, ${light - 20}%, 0)`);
+          // Outer glow ring
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, outerR);
+          grad.addColorStop(0, `rgba(255, 255, 255, ${p.alpha * 0.95})`);
+          grad.addColorStop(0.15, `rgba(255, 255, 255, ${p.alpha * 0.6})`);
+          grad.addColorStop(0.4, `hsla(${effectHue}, ${Math.min(effectSaturation, 40)}%, 85%, ${p.alpha * 0.25})`);
+          grad.addColorStop(1, `hsla(${effectHue}, ${effectSaturation}%, 70%, 0)`);
 
           ctx.beginPath();
           ctx.arc(p.x, p.y, outerR, 0, Math.PI * 2);
-          ctx.fillStyle = outer;
+          ctx.fillStyle = grad;
           ctx.fill();
 
-          // Bright center dot for extra "pop"
-          if (p.alpha > 0.3) {
-            const dotAlpha = Math.min(p.alpha * 1.2, 1.0);
+          // Bright white center dot for the "pop" / "flash" effect
+          if (p.alpha > 0.2) {
             ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(p.size * 0.5, 0.8), 0, Math.PI * 2);
-            ctx.fillStyle = `hsla(${hue}, 10%, 98%, ${dotAlpha})`;
+            ctx.arc(p.x, p.y, Math.max(p.size * 0.6, 1), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(p.alpha * 1.3, 1.0)})`;
             ctx.fill();
           }
         } else {
-          // Soft glow - larger, gentler
-          const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 6);
-          gradient.addColorStop(0, `hsla(${hue}, ${effectSaturation * 0.5}%, ${light}%, ${p.alpha * 0.5})`);
-          gradient.addColorStop(0.4, `hsla(${hue}, ${effectSaturation * 0.3}%, ${light}%, ${p.alpha * 0.2})`);
-          gradient.addColorStop(1, `hsla(${hue}, ${effectSaturation * 0.2}%, ${light}%, 0)`);
+          // Soft: larger, gentler, colored glow
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 8);
+          grad.addColorStop(0, `hsla(${effectHue}, ${effectSaturation * 0.6}%, 88%, ${p.alpha * 0.6})`);
+          grad.addColorStop(0.35, `hsla(${effectHue}, ${effectSaturation * 0.4}%, 85%, ${p.alpha * 0.25})`);
+          grad.addColorStop(1, `hsla(${effectHue}, ${effectSaturation * 0.3}%, 80%, 0)`);
 
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 6, 0, Math.PI * 2);
-          ctx.fillStyle = gradient;
+          ctx.arc(p.x, p.y, p.size * 8, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
           ctx.fill();
         }
-      });
+      }
 
       animRef.current = requestAnimationFrame(render);
     };
@@ -194,8 +188,8 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-full h-full pointer-events-none z-0 no-color-transition"
-      style={{ opacity: 0.85 }}
+      className="fixed inset-0 w-full h-full pointer-events-none"
+      style={{ zIndex: 9, opacity: 1 }}
     />
   );
 });
