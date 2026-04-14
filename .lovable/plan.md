@@ -1,37 +1,37 @@
 
 
-## Plan: TTS-Wiedergabe sofort starten (Streaming-Playback)
+## Plan: Gruppenchat verbessern
 
-### Problem
-Aktuell wartet der Client auf den **kompletten** Audio-Download (`response.blob()`), bevor die Wiedergabe startet. Bei längeren Nachrichten dauert das mehrere Sekunden. Zusätzlich laufen die DB-Abfragen im Edge Function nacheinander statt parallel.
+### Übersicht
+Gruppenname und Gruppen-Avatar direkt im Mitglieder-Sheet bearbeiten. Admin-Rechte (Ersteller) werden visuell gekennzeichnet. Mitglieder entfernen funktioniert bereits – wird beibehalten.
 
-### Lösung: 3 Optimierungen
+### Änderungen
 
-**1. Edge Function: Parallele DB-Abfragen + Latenz-Optimierung**
-- Scope-Check und Voice-Profile-Lookup gleichzeitig ausführen (`Promise.all`) statt nacheinander → spart ~100-200ms
-- ElevenLabs API-Parameter `optimize_streaming_latency=4` hinzufügen (maximale Latenz-Optimierung)
-- Kleineres Ausgabeformat: `mp3_22050_32` statt `mp3_44100_128` → schnellere Generierung, kleinere Datei
+**1. Migration: `avatar_url` Spalte zur `conversations`-Tabelle**
+```sql
+ALTER TABLE public.conversations ADD COLUMN avatar_url text;
+```
+Keine neuen RLS-Policies nötig – die bestehende UPDATE-Policy für Members erlaubt bereits Änderungen.
 
-**2. Client: Streaming-Playback mit MediaSource**
-- Statt `response.blob()` abzuwarten, die Chunks via `ReadableStream` lesen
-- `MediaSource` API nutzen um Audio abzuspielen sobald die ersten Bytes ankommen
-- Fallback für Safari (kein MediaSource für MP3): Blob-basierte Wiedergabe beibehalten
-- Ergebnis: Wiedergabe startet nach ~200-500ms statt nach dem kompletten Download
+**2. `src/components/chat/GroupMembersSheet.tsx` – Erweitern**
+- Oben im Sheet: Gruppenavatar (klickbar zum Hochladen) + Gruppenname (editierbar, nur für Creator)
+- Avatar-Upload in den bestehenden `avatars`-Storage-Bucket
+- Gruppenname inline editierbar mit Stift-Icon
+- `onNameChanged` Callback hinzufügen, damit ChatPage den Namen aktualisiert
 
-**3. Client: Preload sichtbarer Nachrichten**
-- Wenn der Chat geöffnet wird, im Hintergrund TTS für die letzten 2-3 empfangenen Nachrichten vorladen
-- Nutzt den bestehenden `ttsCache` → bei Tap ist das Audio sofort da
+**3. `src/pages/ChatPage.tsx` – Anpassungen**
+- `GroupMembersSheet` bekommt neue Props: `groupName`, `groupAvatarUrl`, `onNameChanged`, `onAvatarChanged`
+- Chat-Header zeigt Gruppen-Avatar neben dem Namen an
+- Nach Änderung wird `chatName` / Avatar-State aktualisiert
 
-### Technische Änderungen
+**4. `src/pages/ChatListPage.tsx` – Gruppen-Avatar in Liste**
+- Wenn `conversation.avatar_url` vorhanden, in der Chat-Liste anzeigen statt Fallback-Initiale
 
+### Dateien
 | Datei | Änderung |
 |---|---|
-| `supabase/functions/voice-tts-stream/index.ts` | `Promise.all` für DB-Queries, `optimize_streaming_latency=4`, Format auf `mp3_22050_32` |
-| `src/hooks/useVoiceTTS.ts` | Neue `playStreaming()` Methode mit MediaSource + ReadableStream, Feature-Detection für Fallback |
-| `src/pages/ChatPage.tsx` | Preload-Logik: letzte empfangene Nachrichten beim Chat-Öffnen im Hintergrund laden |
-
-### Erwartetes Ergebnis
-- Erste Audiowiedergabe: **unter 1 Sekunde** statt 2-4 Sekunden
-- Cached Nachrichten: **sofort** (wie bisher)
-- Spürbar flüssigeres Erlebnis beim Vorlesen
+| Migration (SQL) | `avatar_url` zu `conversations` |
+| `GroupMembersSheet.tsx` | Avatar-Upload, Name-Edit UI, neue Props |
+| `ChatPage.tsx` | Props weiterreichen, Header-Avatar, State-Updates |
+| `ChatListPage.tsx` | Gruppen-Avatar in Liste anzeigen |
 
