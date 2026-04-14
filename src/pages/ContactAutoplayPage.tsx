@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +16,7 @@ interface Contact {
 }
 
 const ContactAutoplayPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const { user } = useAuth();
   const { locale } = useI18n();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -96,11 +96,11 @@ const ContactAutoplayPage = () => {
     name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
           >
             <ArrowLeft className="w-5 h-5" />

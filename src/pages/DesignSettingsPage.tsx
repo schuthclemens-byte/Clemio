@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, Palette, Sun, Moon, Monitor, ChevronDown, ImageIcon, Check } from "lucide-react";
-import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDesignSystem, type DesignPreset, type SparkleMode, type SparkleColor } from "@/contexts/DesignSystemContext";
@@ -103,7 +102,7 @@ const ChatPreview = ({ hue, sat, light, accentHue, compact = false }: { hue: num
 };
 
 const DesignSettingsPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/chats");
   const { t } = useI18n();
   const { theme, setTheme } = useTheme();
   const { state, setColors, setMagic, applyPreset } = useDesignSystem();
@@ -118,12 +117,12 @@ const DesignSettingsPage = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background" {...useSwipeBack({ fallbackPath: "/chats" })}>
+    <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
             aria-label={t("a11y.back")}
           >

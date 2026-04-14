@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Settings2, Sliders } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
@@ -116,6 +116,7 @@ const StatusRow = ({ ok, label }: { ok: boolean; label: string }) => (
 const savedToast = () => toast("Gespeichert ✓", { duration: 2000 });
 
 const SettingsPage = () => {
+  const { goBack, swipeHandlers } = useSmartBack("/chats");
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
@@ -208,11 +209,11 @@ const SettingsPage = () => {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background" {...useSwipeBack({ fallbackPath: "/chats" })}>
+    <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
             aria-label={t("a11y.back")}
           >

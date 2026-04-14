@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Mic, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { toast } from "sonner";
 import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
 
@@ -16,7 +15,7 @@ interface VoiceProfile {
 }
 
 const VoiceRecordingsPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const { user } = useAuth();
   const { locale } = useI18n();
   const [myVoice, setMyVoice] = useState<VoiceProfile | null>(null);
@@ -68,11 +67,11 @@ const VoiceRecordingsPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background" {...useSwipeBack({ fallbackPath: "/chats" })}>
+    <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
           >
             <ArrowLeft className="w-5 h-5" />

@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
 import { Download, ArrowLeft, Smartphone, Monitor, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { subscribeToInstallPrompt, DeferredInstallPromptEvent, clearDeferredInstallPrompt } from "@/lib/installPrompt";
 
 const InstallPage = () => {
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const navigate = useNavigate();
   const [desktopUrl, setDesktopUrl] = useState<string | null>(null);
   const [checkingDesktop, setCheckingDesktop] = useState(true);
@@ -34,11 +36,11 @@ const InstallPage = () => {
   const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" {...swipeHandlers}>
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />

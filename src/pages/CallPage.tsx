@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import {
   Phone,
   PhoneOff,
@@ -27,7 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const CallPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const { goBack } = useSmartBack("/chats");
   const { user } = useAuth();
   const { activeCall, startCall, acceptCall, endCall: endCallContext } = useCallContext();
   const headphonesConnected = useHeadphoneDetection();
@@ -271,10 +272,10 @@ const CallPage = () => {
   // Auto-navigate away on ended/error
   useEffect(() => {
     if (callPhase === "ended" || callPhase === "error") {
-      const t = setTimeout(() => navigate(-1), 3000);
+      const t = setTimeout(() => goBack(), 3000);
       return () => clearTimeout(t);
     }
-  }, [callPhase, navigate]);
+  }, [callPhase, goBack]);
 
   // Also watch WebRTC callState for "ended" (remote hang-up via broadcast)
   useEffect(() => {
@@ -301,8 +302,8 @@ const CallPage = () => {
       endWebRTC();
       await endCallContext();
     }
-    navigate(-1);
-  }, [endWebRTC, endCallContext, navigate]);
+    goBack();
+  }, [endWebRTC, endCallContext, goBack]);
 
   const handleListenOnly = useCallback(() => {
     setListenOnlyMode((prev) => {

@@ -4,7 +4,7 @@ import { ArrowLeft, Phone, Video, PhoneIncoming, PhoneMissed, PhoneOff, PhoneFor
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { cn } from "@/lib/utils";
 import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 
@@ -27,10 +27,10 @@ interface CallEntry {
 }
 
 const CallHistoryPage = () => {
+  const { goBack, swipeHandlers } = useSmartBack("/chats");
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useI18n();
-  useSwipeBack({ fallbackPath: "/chats" });
 
   const [calls, setCalls] = useState<CallEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,7 +205,7 @@ const CallHistoryPage = () => {
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
         <button
-          onClick={() => navigate("/chats")}
+          onClick={goBack}
           className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
