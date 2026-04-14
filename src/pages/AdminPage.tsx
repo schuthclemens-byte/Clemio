@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
-  Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X,
+  Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
