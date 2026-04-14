@@ -247,7 +247,19 @@ const AdminPage = () => {
                     <span className="flex items-center gap-0.5">
                       <MessageSquare className="w-3 h-3" /> {p.message_count}
                     </span>
+                    <span className="flex items-center gap-0.5">
+                      {p.voice_profile ? (
+                        <><Mic className="w-3 h-3 text-primary" /> {tr("Voice", "Voice")}</>
+                      ) : (
+                        <><MicOff className="w-3 h-3" /> {tr("Keine", "None")}</>
+                      )}
+                    </span>
                   </div>
+                  {p.voice_profile && (
+                    <div className="text-[0.6rem] text-muted-foreground mt-0.5">
+                      Voice: {p.voice_profile.voice_name || "—"} · {p.voice_profile.created_at ? new Date(p.voice_profile.created_at).toLocaleDateString("de") : "—"}
+                    </div>
+                  )}
                 </div>
 
                 {!isMe && (
