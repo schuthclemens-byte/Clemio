@@ -31,8 +31,8 @@ serve(async (req) => {
 
     const audioBlob = await audioResponse.blob();
     const formData = new FormData();
-    formData.append("name", "clemio_landing_voice");
-    formData.append("description", "Landing page greeting voice for Clemio");
+    formData.append("name", "clemix_landing_voice");
+    formData.append("description", "Landing page greeting voice for Clemix");
     formData.append("files", new File([audioBlob], "sample.mp3", { type: "audio/mpeg" }));
 
     const elResponse = await fetch("https://api.elevenlabs.io/v1/voices/add", {

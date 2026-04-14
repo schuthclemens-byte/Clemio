@@ -152,12 +152,12 @@ const SettingsPage = () => {
   const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
 
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
-  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
+  const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemix_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
   const [refreshingSubscription, setRefreshingSubscription] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
-  const [defaultVoice, setDefaultVoice] = useState(() => localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9");
+  const [defaultVoice, setDefaultVoice] = useState(() => localStorage.getItem("clemix_default_voice") || "onwK4e9ZLuTAKqWW03F9");
   const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -187,7 +187,7 @@ const SettingsPage = () => {
   const toggleStayLoggedIn = () => {
     const next = !stayLoggedIn;
     setStayLoggedIn(next);
-    localStorage.setItem("clemio_stay_logged_in", next ? "true" : "false");
+    localStorage.setItem("clemix_stay_logged_in", next ? "true" : "false");
     savedToast();
   };
 
@@ -206,8 +206,8 @@ const SettingsPage = () => {
     setPreviewingVoice(voiceId);
     try {
       const sampleText = locale === "de"
-        ? `Hallo, ich bin ${name}. So klingt meine Stimme in Clemio.`
-        : `Hi, I'm ${name}. This is how my voice sounds in Clemio.`;
+        ? `Hallo, ich bin ${name}. So klingt meine Stimme in Clemix.`
+        : `Hi, I'm ${name}. This is how my voice sounds in Clemix.`;
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts`,
         { method: "POST", headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` }, body: JSON.stringify({ text: sampleText, defaultVoiceId: voiceId }) }
@@ -247,10 +247,10 @@ const SettingsPage = () => {
             <div className="space-y-2 pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <ToggleRow icon={Eye} label={t("settings.readReceipts")} description={t("settings.readReceiptsDesc")}
-                  checked={localStorage.getItem("clemio_read_receipts") !== "false"}
+                  checked={localStorage.getItem("clemix_read_receipts") !== "false"}
                   onChange={() => {
-                    const next = localStorage.getItem("clemio_read_receipts") === "false";
-                    localStorage.setItem("clemio_read_receipts", next ? "true" : "false");
+                    const next = localStorage.getItem("clemix_read_receipts") === "false";
+                    localStorage.setItem("clemix_read_receipts", next ? "true" : "false");
                     toast.success(next ? t("settings.readReceiptsOn") : t("settings.readReceiptsOff"));
                   }}
                 />
@@ -347,7 +347,7 @@ const SettingsPage = () => {
                     { id: "pFZP5JQG7iQjIQuC4Bku", name: "Lily", gender: "♀" },
                   ].map((voice) => (
                     <div key={voice.id} className="flex items-center gap-1.5">
-                      <button onClick={() => { localStorage.setItem("clemio_default_voice", voice.id); setDefaultVoice(voice.id); savedToast(); }}
+                      <button onClick={() => { localStorage.setItem("clemix_default_voice", voice.id); setDefaultVoice(voice.id); savedToast(); }}
                         className={cn("flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all active:scale-95",
                           defaultVoice === voice.id ? "gradient-primary text-primary-foreground shadow-soft" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
                         )}

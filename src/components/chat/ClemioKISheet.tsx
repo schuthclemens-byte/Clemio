@@ -20,7 +20,7 @@ interface KIResponse {
   isRefine?: boolean;
 }
 
-interface ClemioKISheetProps {
+interface ClemixKISheetProps {
   open: boolean;
   onClose: () => void;
   receivedMessage: string;
@@ -30,7 +30,7 @@ interface ClemioKISheetProps {
   onUseSuggestion: (text: string) => void;
 }
 
-const ClemioKISheet = ({
+const ClemixKISheet = ({
   open,
   onClose,
   receivedMessage,
@@ -38,7 +38,7 @@ const ClemioKISheet = ({
   chatHistory,
   isPremium,
   onUseSuggestion,
-}: ClemioKISheetProps) => {
+}: ClemixKISheetProps) => {
   const { t, locale } = useI18n();
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<KIResponse | null>(null);
@@ -52,7 +52,7 @@ const ClemioKISheet = ({
     if (!open) return;
     const checkUsage = async () => {
       try {
-        const { data } = await supabase.functions.invoke("clemio-ki", {
+        const { data } = await supabase.functions.invoke("clemix-ki", {
           body: { checkOnly: true },
         });
         if (data) {
@@ -92,7 +92,7 @@ const ClemioKISheet = ({
         body.receivedMessage = receivedMessage;
       }
 
-      const { data, error } = await supabase.functions.invoke("clemio-ki", { body });
+      const { data, error } = await supabase.functions.invoke("clemix-ki", { body });
 
       if (error) {
         try {
@@ -118,7 +118,7 @@ const ClemioKISheet = ({
         setRemaining(data.isPremium ? -1 : data.remaining);
       }
     } catch (err) {
-      console.error("Clemio-KI error:", err);
+      console.error("Clemix-KI error:", err);
       toast.error("Connection error");
     } finally {
       setLoading(false);
@@ -296,4 +296,4 @@ const ClemioKISheet = ({
   );
 };
 
-export default ClemioKISheet;
+export default ClemixKISheet;

@@ -203,7 +203,7 @@ const HeroSection = () => {
               className="flex flex-col items-center gap-5 pointer-events-none"
             >
               <span className="text-4xl sm:text-5xl font-black tracking-tight text-foreground">
-                Clemio
+                Clemix
               </span>
 
               {/* Pulsing sound ring */}
@@ -275,7 +275,7 @@ const HeroSection = () => {
         {/* Brand */}
         <motion.div variants={fadeUp} custom={0} className="mb-2">
           <span className="text-4xl sm:text-5xl font-black tracking-tight text-foreground">
-            Clemio
+            Clemix
           </span>
         </motion.div>
 

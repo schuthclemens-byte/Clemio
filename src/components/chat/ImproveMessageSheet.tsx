@@ -41,7 +41,7 @@ const ImproveMessageSheet = ({ originalText, onAccept, onSend, onClose, onPlayVo
       const session = (await supabase.auth.getSession()).data.session;
       if (!session) throw new Error("Not authenticated");
 
-      const res = await supabase.functions.invoke("clemio-ki", {
+      const res = await supabase.functions.invoke("clemix-ki", {
         body: { mode: "improve", improveText: originalText, improveStyle: style, locale },
       });
 

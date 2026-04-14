@@ -52,8 +52,8 @@ self.addEventListener("push", (event) => {
       icon: data.icon || "/icon-192.png",
       badge: data.badge || "/icon-192.png",
       tag: isIncomingCall
-        ? `incoming-call-${notificationData.conversation_id || "clemio"}`
-        : notificationData.conversation_id || "clemio-push",
+        ? `incoming-call-${notificationData.conversation_id || "clemix"}`
+        : notificationData.conversation_id || "clemix-push",
       data: notificationData,
       vibrate: isIncomingCall
         ? [300, 200, 300, 200, 300, 200, 300, 200, 300, 200, 300]
@@ -220,7 +220,7 @@ async function flushQueue() {
 // ---- IndexedDB helpers for SW (no localStorage access) ----
 function openIDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open("clemio_offline", 1);
+    const req = indexedDB.open("clemix_offline", 1);
     req.onupgradeneeded = () => {
       req.result.createObjectStore("queue");
     };

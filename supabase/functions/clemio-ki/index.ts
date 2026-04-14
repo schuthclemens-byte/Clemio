@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const FREE_DAILY_LIMIT = 3;
 
-const REPLY_SYSTEM_PROMPT = `Du bist Clemio-KI – eine KI, die direkt in Nachrichten integriert ist.
+const REPLY_SYSTEM_PROMPT = `Du bist Clemix-KI – eine KI, die direkt in Nachrichten integriert ist.
 Du hilfst Nutzern, genau die richtigen Worte zu finden – schnell, natürlich und menschlich.
 
 SCHREIBSTIL:
@@ -34,14 +34,14 @@ MENSCHLICHKEIT:
 Antworten sollen sich anfühlen, als hätte ein echter Mensch sie geschrieben.
 
 WICHTIG:
-- Clemio-KI ist Teil eines Chats
+- Clemix-KI ist Teil eines Chats
 - Antworten müssen sofort nutzbar sein
 - keine zusätzlichen Erklärungen
 - Gib die Antworten als JSON-Array zurück
 
 Du antwortest IMMER im folgenden JSON-Format, NICHTS anderes:`;
 
-const REFINE_SYSTEM_PROMPT = `Du bist Clemio-KI – eine KI, die Nutzern hilft, ihre eigenen Nachrichten zu verbessern.
+const REFINE_SYSTEM_PROMPT = `Du bist Clemix-KI – eine KI, die Nutzern hilft, ihre eigenen Nachrichten zu verbessern.
 Der Nutzer hat bereits eine Nachricht getippt, aber möchte sie besser formulieren.
 
 DEIN JOB:
@@ -78,7 +78,7 @@ Gib genau 3 verbesserte Varianten der Nachricht des Nutzers zurück als JSON:
 {"answers":[{"text":"..."},{"text":"..."},{"text":"..."}]}
 Keine Erklärung, nur die verbesserten Nachrichten.`;
 
-const IMPROVE_SYSTEM_PROMPT = `Du bist Clemio-KI – ein Assistent, der Nachrichten in einem bestimmten Stil umformuliert.
+const IMPROVE_SYSTEM_PROMPT = `Du bist Clemix-KI – ein Assistent, der Nachrichten in einem bestimmten Stil umformuliert.
 Der Nutzer gibt dir eine Nachricht und einen gewünschten Stil. Formuliere die Nachricht exakt in diesem Stil um.
 
 STILE:
@@ -153,7 +153,7 @@ serve(async (req) => {
     todayStart.setHours(0, 0, 0, 0);
 
     const { count: todayCount } = await supabaseClient
-      .from("clemio_ki_usage")
+      .from("clemix_ki_usage")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("used_at", todayStart.toISOString());
@@ -210,7 +210,7 @@ serve(async (req) => {
         throw new Error("AI improve failed");
       }
 
-      await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
+      await supabaseClient.from("clemix_ki_usage").insert({ user_id: user.id });
 
       const data = await response.json();
       let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
@@ -310,7 +310,7 @@ Generiere passende Antworten auf ${userLang}.`;
     }
 
     // Track usage AFTER successful generation
-    await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
+    await supabaseClient.from("clemix_ki_usage").insert({ user_id: user.id });
 
     const data = await response.json();
     let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
@@ -335,7 +335,7 @@ Generiere passende Antworten auf ${userLang}.`;
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
-    console.error("clemio-ki error:", e);
+    console.error("clemix-ki error:", e);
     const msg = e instanceof Error ? e.message : "Unknown error";
     return new Response(
       JSON.stringify({ error: msg }),

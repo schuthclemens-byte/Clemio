@@ -95,7 +95,7 @@ serve(async (req) => {
             body: JSON.stringify({
               subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
               payload: {
-                title: "🔔 Clemio Admin Test",
+                title: "🔔 Clemix Admin Test",
                 body: "Dies ist eine Test-Push-Benachrichtigung vom Admin.",
                 tag: "admin-test",
               },
@@ -313,7 +313,7 @@ serve(async (req) => {
       await admin.from("focus_contacts").delete().eq("user_id", targetUserId);
       await admin.from("chat_invitations").delete().eq("invited_by", targetUserId);
       await admin.from("chat_invitations").delete().eq("invited_user_id", targetUserId);
-      await admin.from("clemio_ki_usage").delete().eq("user_id", targetUserId);
+      await admin.from("clemix_ki_usage").delete().eq("user_id", targetUserId);
       await admin.from("calls").delete().eq("caller_id", targetUserId);
       await admin.from("calls").delete().eq("receiver_id", targetUserId);
       await admin.from("subscriptions").delete().eq("user_id", targetUserId);

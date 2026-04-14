@@ -3,11 +3,11 @@
  * and registers Background Sync.
  */
 
-const IDB_NAME = "clemio_offline";
+const IDB_NAME = "clemix_offline";
 const IDB_STORE = "queue";
 const IDB_KEY = "messages";
 const SYNC_TAG = "flush-offline-queue";
-const LS_KEY = "clemio_offline_queue";
+const LS_KEY = "clemix_offline_queue";
 
 // ---- IndexedDB helpers ----
 function openIDB(): Promise<IDBDatabase> {

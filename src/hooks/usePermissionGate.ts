@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 
 type PermissionName = "microphone" | "camera";
 
-const SEEN_KEY_PREFIX = "clemio_permission_seen_";
+const SEEN_KEY_PREFIX = "clemix_permission_seen_";
 
 /**
  * Hook that gates a browser permission request behind a pre-permission dialog.

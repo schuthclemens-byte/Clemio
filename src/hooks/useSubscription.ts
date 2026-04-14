@@ -58,7 +58,7 @@ export const useSubscription = () => {
     }
 
     // Client-side cache: skip if last successful check was < 5 minutes ago
-    const CACHE_KEY = "clemio_stripe_cache";
+    const CACHE_KEY = "clemix_stripe_cache";
     const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
     if (!force) {
       try {

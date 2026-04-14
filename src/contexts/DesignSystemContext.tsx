@@ -70,7 +70,7 @@ interface DesignSystemContextType {
   applyPreset: (preset: DesignPreset) => void;
 }
 
-const STORAGE_KEY = "clemio-design-system";
+const STORAGE_KEY = "clemix-design-system";
 
 const defaultState: DesignSystemState = {
   colors: { hue: 18, saturation: 90, lightness: 55 },

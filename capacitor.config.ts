@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.clemio.chat',
-  appName: 'Clemio',
+  appId: 'app.clemix.chat',
+  appName: 'Clemix',
   webDir: 'dist',
   android: {
     // Use HTTPS scheme for all web content (required for service workers, secure cookies, etc.)
