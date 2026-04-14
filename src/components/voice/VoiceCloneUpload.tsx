@@ -99,8 +99,8 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
     startRecording(() => {
       const blob = new Blob(chunksRef.current, { type: "audio/webm" });
       freeSpeechBlobRef.current = blob;
-      // Move to sentence recording
       const sentence = pickSentence();
+      verificationSentenceRef.current = sentence;
       setVerificationSentence(sentence);
       setPhase("recording_sentence");
       // Auto-start sentence recording after brief pause
