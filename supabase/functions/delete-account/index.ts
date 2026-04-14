@@ -45,14 +45,8 @@ serve(async (req) => {
       .from("voice_profiles")
       .select("elevenlabs_voice_id")
       .eq("user_id", userId);
-    const { data: contactVoices } = await admin
-      .from("contact_voice_profiles")
-      .select("elevenlabs_voice_id")
-      .eq("user_id", userId);
-
     const allVoiceIds = [
       ...(ownVoices || []).map((v: any) => v.elevenlabs_voice_id),
-      ...(contactVoices || []).map((v: any) => v.elevenlabs_voice_id),
     ];
 
     if (elevenlabsKey) {
@@ -120,11 +114,8 @@ serve(async (req) => {
       }
     }
 
-    // Voice & consent data
+    // Voice data
     await admin.from("voice_profiles").delete().eq("user_id", userId);
-    await admin.from("contact_voice_profiles").delete().eq("user_id", userId);
-    await admin.from("voice_consents").delete().eq("voice_owner_id", userId);
-    await admin.from("voice_consents").delete().eq("granted_to_user_id", userId);
 
     // Contact data
     await admin.from("contact_aliases").delete().eq("user_id", userId);
