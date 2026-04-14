@@ -224,25 +224,36 @@ const DesignSettingsPage = () => {
 
         {/* ─── Chat Background ─── */}
         <section>
+          <h2 className="text-sm font-bold text-foreground mb-3">{t("settings.changeBackground")}</h2>
           <button
             onClick={() => setBgPickerOpen(true)}
-            className="w-full flex items-center gap-3 p-3.5 bg-card rounded-2xl hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            className="w-full bg-card rounded-2xl overflow-hidden hover:shadow-md transition-all active:scale-[0.98] border border-border/40"
           >
+            {/* Visual preview strip showing current background */}
             <div
-              className="w-10 h-10 rounded-xl border-2 border-border overflow-hidden flex items-center justify-center shrink-0"
+              className="h-16 w-full relative flex items-center justify-center"
               style={
                 globalBackground.type === "gradient" || globalBackground.type === "color"
                   ? { background: globalBackground.value }
                   : globalBackground.type === "image"
-                    ? { backgroundImage: `url(${globalBackground.value})`, backgroundSize: "cover" }
-                    : { backgroundColor: "hsl(var(--background))" }
+                    ? { backgroundImage: `url(${globalBackground.value})`, backgroundSize: "cover", backgroundPosition: "center" }
+                    : { background: "linear-gradient(135deg, hsl(var(--muted)), hsl(var(--secondary)))" }
               }
             >
-              {globalBackground.type === "none" && <ImageIcon className="w-4 h-4 text-muted-foreground" />}
+              {globalBackground.type === "none" && (
+                <span className="text-xs text-muted-foreground/60 font-medium">Standard</span>
+              )}
             </div>
-            <div className="text-left flex-1">
-              <p className="font-semibold text-sm">{t("settings.changeBackground")}</p>
-              <p className="text-[0.7rem] text-muted-foreground">{t("settings.backgroundDesc")}</p>
+            {/* Label */}
+            <div className="flex items-center gap-3 px-4 py-3 border-t border-border/30">
+              <ImageIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+              <div className="text-left flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  {globalBackground.type === "none" ? "Standard" : globalBackground.type === "color" ? "Farbe" : globalBackground.type === "gradient" ? "Verlauf" : "Bild"}
+                </p>
+                <p className="text-[0.65rem] text-muted-foreground">{t("settings.backgroundDesc")}</p>
+              </div>
+              <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 -rotate-90" />
             </div>
           </button>
         </section>
