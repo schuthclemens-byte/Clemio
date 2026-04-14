@@ -542,6 +542,7 @@ const ar: Record<string, string> = {
    "privacy.s17ColCountry": "البلد",
    "privacy.s17ColBasis": "الأساس",
    "privacy.s17Adequacy": "عند نقل البيانات إلى الولايات المتحدة، نعتمد على إطار عمل خصوصية البيانات بين الاتحاد الأوروبي والولايات المتحدة (قرار كفاية المفوضية الأوروبية بتاريخ 10.07.2023) بالإضافة إلى بنود التعاقد القياسية (Art. 46 Abs. 2 lit. c DSGVO).",
+   "privacy.s17TranslationOnly": "للترجمة فقط",
    "privacy.s17WithinEu": "داخل الاتحاد الأوروبي/EEA",
    "privacy.s17ConsentScc": "الموافقة + بنود التعاقد القياسية",
    "privacy.s17AdequacyDecision": "قرار كفاية",

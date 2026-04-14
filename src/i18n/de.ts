@@ -667,6 +667,7 @@ const de: Record<string, string> = {
    "privacy.s17ColCountry": "Land",
    "privacy.s17ColBasis": "Grundlage",
    "privacy.s17Adequacy": "Bei Übermittlungen in die USA stützen wir uns auf das EU-US Data Privacy Framework (Angemessenheitsbeschluss der EU-Kommission vom 10.07.2023) sowie auf Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO).",
+   "privacy.s17TranslationOnly": "nur Übersetzung",
    "privacy.s17WithinEu": "Innerhalb EU/EWR",
    "privacy.s17ConsentScc": "Einwilligung + Standardvertragsklauseln",
    "privacy.s17AdequacyDecision": "Angemessenheitsbeschluss",

@@ -674,6 +674,7 @@ const fr: Record<string, string> = {
    "privacy.s17ColCountry": "Pays",
    "privacy.s17ColBasis": "Base",
    "privacy.s17Adequacy": "Pour les transferts vers les États-Unis, nous nous basons sur le Cadre de Confidentialité des Données UE-États-Unis (décision d'adéquation de la Commission européenne du 10.07.2023) ainsi que sur les clauses contractuelles types (Art. 46 Abs. 2 lit. c DSGVO).",
+   "privacy.s17TranslationOnly": "traduction uniquement",
    "privacy.s17WithinEu": "Dans l'UE/EEE",
    "privacy.s17ConsentScc": "Consentement + Clauses Contractuelles Types",
    "privacy.s17AdequacyDecision": "Décision d'adéquation",

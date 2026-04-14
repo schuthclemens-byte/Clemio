@@ -542,6 +542,7 @@ const tr: Record<string, string> = {
    "privacy.s17ColCountry": "Ülke",
    "privacy.s17ColBasis": "Dayanak",
    "privacy.s17Adequacy": "ABD'ye yapılan aktarımlarda, AB-ABD Veri Gizliliği Çerçevesine (AB Komisyonu'nun 10.07.2023 tarihli yeterlilik kararı) ve Standart Sözleşme Maddelerine (Art. 46 Abs. 2 lit. c DSGVO) dayanıyoruz.",
+   "privacy.s17TranslationOnly": "yalnızca çeviri",
    "privacy.s17WithinEu": "AB/AEA İçinde",
    "privacy.s17ConsentScc": "Onay + Standart Sözleşme Maddeleri",
    "privacy.s17AdequacyDecision": "Yeterlilik Kararı",
