@@ -203,10 +203,10 @@ const AdminPage = () => {
         </div>
         {/* Tabs */}
         <div className="flex px-4 pt-2 gap-1 overflow-x-auto">
-          {([
-            { key: "users" as const, icon: Users, label: tr("Nutzer", "Users") },
-            { key: "reports" as const, icon: Flag, label: "Reports" },
-            { key: "analytics" as const, icon: Activity, label: "Analytics" },
+           {([
+            { key: "users" as const, icon: Users, label: tr("Nutzer", "Users"), badge: 0 },
+            { key: "reports" as const, icon: Flag, label: "Reports", badge: openReportsCount },
+            { key: "analytics" as const, icon: Activity, label: "Analytics", badge: 0 },
           ]).map(tab => (
             <button
               key={tab.key}
@@ -216,6 +216,11 @@ const AdminPage = () => {
               }`}
             >
               <tab.icon className="w-4 h-4" /> {tab.label}
+              {tab.badge > 0 && (
+                <span className="ml-1 min-w-[1.25rem] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[0.65rem] font-bold flex items-center justify-center">
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
