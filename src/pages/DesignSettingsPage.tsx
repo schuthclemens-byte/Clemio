@@ -146,23 +146,24 @@ const DesignSettingsPage = () => {
           />
         </section>
 
-        {/* ─── Theme Toggle ─── */}
-        <section>
-          <div className="bg-card rounded-2xl overflow-hidden flex">
+        {/* ─── Theme Toggle (compact inline) ─── */}
+        <section className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium shrink-0">Theme</span>
+          <div className="flex gap-1 bg-card rounded-xl p-1 flex-1">
             {themeOptions.map(({ value, icon: Icon, label }) => (
               <button
                 key={value}
                 onClick={() => setTheme(value)}
                 className={cn(
-                  "flex-1 flex flex-col items-center gap-1.5 py-3 transition-all duration-200",
-                  "hover:bg-secondary/50 active:scale-[0.97]",
-                  theme === value && "bg-primary/10"
+                  "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
+                  "active:scale-[0.97]",
+                  theme === value
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:bg-secondary/50"
                 )}
               >
-                <Icon className={cn("w-5 h-5", theme === value ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-[0.7rem] font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
-                  {label}
-                </span>
+                <Icon className="w-3.5 h-3.5" />
+                <span>{label}</span>
               </button>
             ))}
           </div>
