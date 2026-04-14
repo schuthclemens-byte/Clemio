@@ -221,6 +221,10 @@ export const useVoiceTTS = () => {
     } catch (error: any) {
       if (error.name === "AbortError") return;
       console.error("Voice TTS error:", error);
+      const { toast } = await import("sonner");
+      toast.error("Sprachausgabe fehlgeschlagen", {
+        description: error.message || "Bitte versuche es später erneut.",
+      });
       onEnd();
     }
   }, [playingMsgId, isPlaying, isLoading, stop, playStreaming, playBlobFallback]);
