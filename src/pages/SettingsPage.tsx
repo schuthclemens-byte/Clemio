@@ -133,6 +133,48 @@ const SettingsPage = () => {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [defaultVoice, setDefaultVoice] = useState(() => localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9");
+  const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const previewVoice = useCallback(async (voiceId: string, name: string) => {
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+    }
+    if (previewingVoice === voiceId) {
+      setPreviewingVoice(null);
+      return;
+    }
+    setPreviewingVoice(voiceId);
+    try {
+      const sampleText = locale === "de"
+        ? `Hallo, ich bin ${name}. So klingt meine Stimme in Clemio.`
+        : `Hi, I'm ${name}. This is how my voice sounds in Clemio.`;
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: sampleText, defaultVoiceId: voiceId }),
+        }
+      );
+      if (!res.ok) throw new Error("TTS failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      previewAudioRef.current = audio;
+      audio.onended = () => { setPreviewingVoice(null); previewAudioRef.current = null; };
+      audio.onerror = () => { setPreviewingVoice(null); previewAudioRef.current = null; };
+      await audio.play();
+    } catch {
+      toast.error(locale === "de" ? "Vorschau fehlgeschlagen" : "Preview failed");
+      setPreviewingVoice(null);
+    }
+  }, [previewingVoice, locale]);
 
   // Searchable settings items with keywords
   const settingsIndex: { section: string; keywords: string[] }[] = [
