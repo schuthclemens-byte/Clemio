@@ -288,21 +288,21 @@ const SettingsPage = () => {
               label={t("settings.onlineStatus")}
               description={t("settings.onlineStatusDesc")}
               checked={a11y.showOnlineStatus}
-              onChange={() => a11y.toggle("showOnlineStatus")}
+              onChange={() => { a11y.toggle("showOnlineStatus"); savedToast(); }}
             />
             <ToggleRow
               icon={Type}
               label={t("settings.typingIndicator")}
               description={t("settings.typingIndicatorDesc")}
               checked={a11y.showTypingIndicator}
-              onChange={() => a11y.toggle("showTypingIndicator")}
+              onChange={() => { a11y.toggle("showTypingIndicator"); savedToast(); }}
             />
             <ToggleRow
               icon={Volume2}
               label={t("settings.autoReadMessages")}
               description={t("settings.autoReadMessagesDesc")}
               checked={a11y.autoRead}
-              onChange={() => a11y.toggle("autoRead")}
+              onChange={() => { a11y.toggle("autoRead"); savedToast(); }}
               borderBottom={false}
             />
           </div>
