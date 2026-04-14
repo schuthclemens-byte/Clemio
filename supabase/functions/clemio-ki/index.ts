@@ -128,7 +128,7 @@ serve(async (req) => {
       });
     }
 
-    const { receivedMessage, draftMessage, chatHistory, mode, checkOnly, locale } = await req.json();
+    const { receivedMessage, draftMessage, chatHistory, mode, checkOnly, locale, improveText, improveStyle } = await req.json();
 
     const langNames: Record<string, string> = {
       de: "German", en: "English", fr: "French", tr: "Turkish", es: "Spanish", ar: "Arabic",
