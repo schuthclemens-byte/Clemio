@@ -147,8 +147,6 @@ const ChatPage = () => {
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
   const [otherHasVoice, setOtherHasVoice] = useState<boolean | null>(null);
-  const [contactVoiceProfileId, setContactVoiceProfileId] = useState<string | null>(null);
-  const [contactElevenLabsId, setContactElevenLabsId] = useState<string | null>(null);
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [showEditName, setShowEditName] = useState(false);
   const [contactAlias, setContactAlias] = useState<{ firstName: string; lastName: string } | null>(null);
