@@ -279,6 +279,23 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ── Auth: only allow service_role or internal calls ──
+    const authHeader = req.headers.get("authorization") ?? "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+    // Accept if: no auth header at all (internal db trigger via net.http_post)
+    // OR if the bearer token matches the service role key
+    // Reject if: bearer token is present but is NOT the service role key
+    if (authHeader) {
+      const token = authHeader.replace(/^Bearer\s+/i, "");
+      // Reject anon key or any user JWT — only service_role allowed
+      if (token !== serviceRoleKey) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
     const VAPID_PRIVATE_KEY_B64 = Deno.env.get("VAPID_PRIVATE_KEY");
     const VAPID_PUBLIC_KEY = "BL2_0Ki93BHS5ty1Blv8Rxxw0FTgAJEBPq7TN6xk09czbSWSpnINsCBe46uv6LaiKbtkHlwmiiRSDifoFt5ZDVM";
     const VAPID_SUBJECT = "mailto:support@clemio.app";
