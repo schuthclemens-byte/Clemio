@@ -87,12 +87,17 @@ const AdminPage = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [listRes, statsRes] = await Promise.all([
+    const [listRes, statsRes, reportsRes] = await Promise.all([
       supabase.functions.invoke("admin-manage-user", { body: { action: "list", targetUserId: "dummy" } }),
       supabase.functions.invoke("admin-manage-user", { body: { action: "stats" } }),
+      supabase.functions.invoke("admin-manage-user", { body: { action: "list-reports" } }),
     ]);
     if (!listRes.error) setProfiles(listRes.data?.profiles || []);
     if (!statsRes.error) setStats(statsRes.data);
+    if (!reportsRes.error) {
+      const reports = reportsRes.data?.reports || [];
+      setOpenReportsCount(reports.filter((r: any) => r.status === "open").length);
+    }
     setLoading(false);
   };
 
