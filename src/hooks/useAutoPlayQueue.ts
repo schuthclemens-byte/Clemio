@@ -22,7 +22,7 @@ interface UseAutoPlayQueueOptions {
  * Manages a sequential auto-play queue for incoming messages.
  * Messages are played one after another with a gentle pause between them.
  */
-export const useAutoPlayQueue = ({ speak, isSpeaking, lang, enabled }: UseAutoPlayQueueOptions) => {
+export const useAutoPlayQueue = ({ speak, isSpeaking, lang, enabled, fetchTtsBlob }: UseAutoPlayQueueOptions) => {
   const queueRef = useRef<QueueItem[]>([]);
   const [currentItem, setCurrentItem] = useState<QueueItem | null>(null);
   const [queueLength, setQueueLength] = useState(0);
