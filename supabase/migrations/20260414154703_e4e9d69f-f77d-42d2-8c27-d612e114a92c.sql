@@ -1,0 +1,1 @@
+ALTER TABLE public.conversations ADD COLUMN avatar_url text;
