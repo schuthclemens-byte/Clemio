@@ -41,7 +41,7 @@ const TermsPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Nutzungsbedingungen</h1>
+          <h1 className="text-xl font-bold">{t("legal.termsTitle")}</h1>
         </div>
       </header>
 
@@ -53,175 +53,153 @@ const TermsPage = () => {
               <FileText className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Nutzungsbedingungen – Clemio</h2>
-              <p className="text-xs text-muted-foreground">Zuletzt aktualisiert: April 2026</p>
+              <h2 className="text-lg font-bold">{t("legal.termsFullTitle")}</h2>
+              <p className="text-xs text-muted-foreground">{t("legal.termsUpdated")}</p>
             </div>
           </div>
         </section>
 
-        {/* 1. Geltungsbereich */}
-        <Section title="1. Geltungsbereich" delay={0}>
-          <p>
-            Diese Nutzungsbedingungen gelten für die Nutzung der Clemio-App und aller damit verbundenen Dienste. Mit der Registrierung und Nutzung akzeptierst du diese Bedingungen.
-          </p>
-          <p>
-            Betreiber: Clemens Schuth (Privatperson), München, Deutschland.
-          </p>
+        {/* 1 */}
+        <Section title={t("legal.terms1Title")} delay={0}>
+          <p>{t("legal.terms1Text")}</p>
+          <p>{t("legal.terms1Operator")}</p>
         </Section>
 
-        {/* 2. Nutzung der App */}
-        <Section title="2. Nutzung der App" delay={60}>
-          <p>
-            Clemio ist eine Kommunikations-App mit Chat-, Anruf- und Voice-Funktionen. Die App ermöglicht:
-          </p>
+        {/* 2 */}
+        <Section title={t("legal.terms2Title")} delay={60}>
+          <p>{t("legal.terms2Text")}</p>
           <ul className="space-y-1">
-            <Bullet>Senden und Empfangen von Text-, Sprach- und Bildnachrichten</Bullet>
-            <Bullet>Audio- und Videoanrufe über WebRTC</Bullet>
-            <Bullet>Klonen und Wiedergabe von Stimmen (Voice-Cloning)</Bullet>
-            <Bullet>Echtzeit-Übersetzung von Nachrichten</Bullet>
-            <Bullet>Push-Benachrichtigungen</Bullet>
+            <Bullet>{t("legal.terms2B1")}</Bullet>
+            <Bullet>{t("legal.terms2B2")}</Bullet>
+            <Bullet>{t("legal.terms2B3")}</Bullet>
+            <Bullet>{t("legal.terms2B4")}</Bullet>
+            <Bullet>{t("legal.terms2B5")}</Bullet>
+            <Bullet>{t("legal.terms2B6")}</Bullet>
+            <Bullet>{t("legal.terms2B7")}</Bullet>
+            <Bullet>{t("legal.terms2B8")}</Bullet>
           </ul>
-          <p>
-            Du musst mindestens <strong>16 Jahre alt</strong> sein, um Clemio zu nutzen. Du bist für dein Konto, dein Passwort und alle Aktivitäten unter deinem Konto verantwortlich.
-          </p>
+          <p>{t("legal.terms2Age")}</p>
         </Section>
 
-        {/* 3. Registrierung & Konto */}
-        <Section title="3. Registrierung & Konto" delay={120}>
-          <p>Für die Nutzung ist eine Registrierung mit Telefonnummer und Passwort erforderlich. Du verpflichtest dich:</p>
+        {/* 3 */}
+        <Section title={t("legal.terms3Title")} delay={120}>
+          <p>{t("legal.terms3Text")}</p>
           <ul className="space-y-1">
-            <Bullet>Wahrheitsgemäße Angaben bei der Registrierung zu machen</Bullet>
-            <Bullet>Dein Passwort vertraulich zu behandeln</Bullet>
-            <Bullet>Unbefugte Nutzung deines Kontos unverzüglich zu melden</Bullet>
+            <Bullet>{t("legal.terms3B1")}</Bullet>
+            <Bullet>{t("legal.terms3B2")}</Bullet>
+            <Bullet>{t("legal.terms3B3")}</Bullet>
           </ul>
-          <p>
-            Du kannst deinen Anzeigenamen, Vor- und Nachnamen sowie dein Profilbild jederzeit ändern. Die Telefonnummer dient als eindeutige Identifikation und kann nicht geändert werden.
-          </p>
+          <p>{t("legal.terms3Note")}</p>
         </Section>
 
-        {/* 4. Voice-Cloning */}
-        <Section title="4. Voice-Cloning & Stimmfreigaben" delay={180}>
-          <p>Das Voice-Cloning ist eine optionale Premium-Funktion. Durch die Nutzung bestätigst du:</p>
+        {/* 4 */}
+        <Section title={t("legal.terms4Title")} delay={180}>
+          <p>{t("legal.terms4Text")}</p>
           <ul className="space-y-1">
-            <Bullet accent>Du bist die Person in der Sprachaufnahme oder hast deren ausdrückliche Genehmigung</Bullet>
-            <Bullet accent>Du nutzt die Funktion nicht für Täuschung, Betrug oder illegale Zwecke</Bullet>
-            <Bullet accent>Du akzeptierst, dass Empfänger erkennen können, dass es sich um eine synthetische Stimme handelt</Bullet>
+            <Bullet accent>{t("legal.terms4B1")}</Bullet>
+            <Bullet accent>{t("legal.terms4B2")}</Bullet>
+            <Bullet accent>{t("legal.terms4B3")}</Bullet>
           </ul>
-          <p className="font-medium text-foreground">Consent-System (Stimmfreigaben):</p>
-          <p>
-            Andere Nutzer können deine geklonte Stimme nur verwenden, wenn du ihnen über das integrierte Consent-System eine Freigabe erteilst. Du kannst Freigaben jederzeit erteilen, ablehnen oder widerrufen. Eigenstimm-Anfragen an dich selbst sind nicht möglich, und pro Nutzer-Paar ist nur eine Anfrage erlaubt.
-          </p>
-          <p>
-            Du kannst außerdem eigene Kontakt-Stimmprofile für deine Kontakte erstellen, die nur für dich sichtbar sind.
-          </p>
+          <p className="font-medium text-foreground">{t("legal.terms4ConsentTitle")}</p>
+          <p>{t("legal.terms4ConsentText")}</p>
+          <p>{t("legal.terms4ContactVoice")}</p>
         </Section>
 
-        {/* 5. Abonnement */}
-        <Section title="5. Abonnement & Zahlungen" delay={240}>
-          <p>Clemio bietet kostenlose und Premium-Funktionen:</p>
+        {/* 5 */}
+        <Section title={t("legal.terms5Title")} delay={220}>
+          <p>{t("legal.terms5Text")}</p>
           <ul className="space-y-1">
-            <Bullet>7 Tage kostenlose Testphase für alle neuen Nutzer (60 Tage für Founding User)</Bullet>
-            <Bullet>Premium: 4,99 €/Monat, verlängert sich automatisch</Bullet>
-            <Bullet>Kündigung jederzeit möglich, wirksam zum Ende des Abrechnungszeitraums</Bullet>
-            <Bullet>Zahlungen werden über Stripe abgewickelt</Bullet>
+            <Bullet>{t("legal.terms5B1")}</Bullet>
+            <Bullet>{t("legal.terms5B2")}</Bullet>
+            <Bullet>{t("legal.terms5B3")}</Bullet>
+            <Bullet>{t("legal.terms5B4")}</Bullet>
           </ul>
-          <p>
-            Es gelten die Zahlungsbedingungen von Stripe. Clemio speichert keine Kreditkartendaten.
-          </p>
         </Section>
 
-        {/* 6. Privatsphäre-Einstellungen */}
-        <Section title="6. Privatsphäre-Einstellungen" delay={300}>
-          <p>Du kannst folgende Privatsphäre-Optionen individuell konfigurieren:</p>
+        {/* 6 */}
+        <Section title={t("legal.terms6Title")} delay={260}>
+          <p>{t("legal.terms6Text")}</p>
           <ul className="space-y-1">
-            <Bullet>Lesebestätigungen (blaue Häkchen) ein-/ausschalten</Bullet>
-            <Bullet>Online-Status und Tipp-Anzeige aktivieren/deaktivieren</Bullet>
-            <Bullet>Push-Nachrichtenvorschau ein-/ausschalten</Bullet>
-            <Bullet>Fokus-Modus mit ausgewählten Kontakten aktivieren</Bullet>
+            <Bullet>{t("legal.terms6B1")}</Bullet>
+            <Bullet>{t("legal.terms6B2")}</Bullet>
+            <Bullet>{t("legal.terms6B3")}</Bullet>
+            <Bullet>{t("legal.terms6B4")}</Bullet>
           </ul>
-          <p>
-            Diese Einstellungen gelten für alle deine Kontakte gleichermaßen.
-          </p>
+          <p>{t("legal.terms6Note")}</p>
         </Section>
 
-        {/* 7. Verbotene Nutzung */}
-        <Section title="7. Verbotene Nutzung" delay={360}>
-          <p>Folgende Handlungen sind ausdrücklich untersagt:</p>
+        {/* 7 */}
+        <Section title={t("legal.terms7Title")} delay={300}>
+          <p>{t("legal.terms7Text")}</p>
+          <ul className="space-y-1">
+            <Bullet>{t("legal.terms7B1")}</Bullet>
+            <Bullet>{t("legal.terms7B2")}</Bullet>
+            <Bullet>{t("legal.terms7B3")}</Bullet>
+            <Bullet>{t("legal.terms7B4")}</Bullet>
+          </ul>
+          <p>{t("legal.terms7Note")}</p>
+        </Section>
+
+        {/* 8 */}
+        <Section title={t("legal.terms8Title")} delay={360}>
+          <p>{t("legal.terms8Text")}</p>
           <ul className="space-y-2">
-            <Forbidden>Stimmen anderer Personen ohne deren ausdrückliche Zustimmung klonen</Forbidden>
-            <Forbidden>Irreführende, betrügerische oder rechtswidrige Inhalte erstellen oder verbreiten</Forbidden>
-            <Forbidden>Die App für Spam, Belästigung, Stalking oder illegale Aktivitäten nutzen</Forbidden>
-            <Forbidden>Sicherheitsmechanismen der App umgehen oder manipulieren</Forbidden>
-            <Forbidden>Automatisierte Zugriffe (Bots, Scraping) auf die App durchführen</Forbidden>
-            <Forbidden>Falsche Identitäten vortäuschen oder andere Nutzer nachahmen</Forbidden>
+            <Forbidden>{t("legal.terms8F1")}</Forbidden>
+            <Forbidden>{t("legal.terms8F2")}</Forbidden>
+            <Forbidden>{t("legal.terms8F3")}</Forbidden>
+            <Forbidden>{t("legal.terms8F4")}</Forbidden>
+            <Forbidden>{t("legal.terms8F5")}</Forbidden>
+            <Forbidden>{t("legal.terms8F6")}</Forbidden>
           </ul>
-          <p>
-            Verstöße können zur sofortigen Sperrung deines Kontos führen.
-          </p>
+          <p>{t("legal.terms8Warn")}</p>
         </Section>
 
-        {/* 8. Inhalte & Kommunikation */}
-        <Section title="8. Inhalte & Kommunikation" delay={420}>
-          <p>
-            Du bist allein verantwortlich für die Inhalte, die du über Clemio teilst (Nachrichten, Medien, Stimmproben). Clemio übernimmt keine Haftung für nutzergenerierte Inhalte.
-          </p>
-          <p>
-            Nachrichten werden serverseitig gespeichert und mit Transportverschlüsselung (TLS) übertragen. Es findet keine Ende-zu-Ende-Verschlüsselung statt.
-          </p>
+        {/* 9 */}
+        <Section title={t("legal.terms9Title")} delay={420}>
+          <p>{t("legal.terms9Text")}</p>
+          <p>{t("legal.terms9Encryption")}</p>
         </Section>
 
-        {/* 9. Kontolöschung */}
-        <Section title="9. Kontolöschung" delay={480}>
-          <p>
-            Du kannst dein Konto jederzeit in den Profileinstellungen vollständig löschen. Bei der Löschung werden unwiderruflich entfernt:
-          </p>
+        {/* 10 */}
+        <Section title={t("legal.terms10Title")} delay={480}>
+          <p>{t("legal.terms10Text")}</p>
           <ul className="space-y-1">
-            <Bullet>Alle Nachrichten und Medien</Bullet>
-            <Bullet>Stimmprofile (auch bei ElevenLabs)</Bullet>
-            <Bullet>Kontakt-Einstellungen und Stimmfreigaben</Bullet>
-            <Bullet>Push-Subscriptions und Präsenzdaten</Bullet>
-            <Bullet>Profildaten und Authentifizierung</Bullet>
+            <Bullet>{t("legal.terms10B1")}</Bullet>
+            <Bullet>{t("legal.terms10B2")}</Bullet>
+            <Bullet>{t("legal.terms10B3")}</Bullet>
+            <Bullet>{t("legal.terms10B4")}</Bullet>
+            <Bullet>{t("legal.terms10B5")}</Bullet>
           </ul>
-          <p className="font-medium text-foreground">
-            Eine Wiederherstellung ist nach der Löschung nicht möglich.
-          </p>
+          <p className="font-medium text-foreground">{t("legal.terms10Warn")}</p>
         </Section>
 
-        {/* 10. Verfügbarkeit */}
-        <Section title="10. Verfügbarkeit & Haftung" delay={540}>
-          <p>
-            Clemio wird als Progressive Web App (PWA) bereitgestellt. Eine durchgehende Verfügbarkeit wird nicht garantiert. Wartungsarbeiten, technische Störungen oder externe Faktoren können die Nutzung temporär einschränken.
-          </p>
-          <p>
-            Clemio haftet nicht für:
-          </p>
+        {/* 11 */}
+        <Section title={t("legal.terms11Title")} delay={540}>
+          <p>{t("legal.terms11Text")}</p>
+          <p>{t("legal.terms11LiabilityText")}</p>
           <ul className="space-y-1">
-            <Bullet>Datenverluste durch technische Störungen oder Gerätedefekte</Bullet>
-            <Bullet>Missbrauch durch andere Nutzer</Bullet>
-            <Bullet>Ausfälle externer Dienste (Supabase, ElevenLabs, Stripe, Google, Apple)</Bullet>
-            <Bullet>Inhalte, die von Nutzern erstellt oder geteilt werden</Bullet>
+            <Bullet>{t("legal.terms11B1")}</Bullet>
+            <Bullet>{t("legal.terms11B2")}</Bullet>
+            <Bullet>{t("legal.terms11B3")}</Bullet>
+            <Bullet>{t("legal.terms11B4")}</Bullet>
           </ul>
         </Section>
 
-        {/* 11. Änderungen */}
-        <Section title="11. Änderungen der Nutzungsbedingungen" delay={600}>
-          <p>
-            Wir behalten uns vor, diese Nutzungsbedingungen jederzeit zu ändern. Wesentliche Änderungen werden über die App kommuniziert. Die fortgesetzte Nutzung nach einer Änderung gilt als Zustimmung.
-          </p>
+        {/* 12 */}
+        <Section title={t("legal.terms12Title")} delay={600}>
+          <p>{t("legal.terms12Text")}</p>
         </Section>
 
-        {/* 12. Anwendbares Recht */}
-        <Section title="12. Anwendbares Recht" delay={660}>
-          <p>
-            Es gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand ist München, soweit gesetzlich zulässig.
-          </p>
+        {/* 13 */}
+        <Section title={t("legal.terms13Title")} delay={660}>
+          <p>{t("legal.terms13Text")}</p>
         </Section>
 
-        {/* Kontakt */}
+        {/* Contact */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "720ms" }}>
-          <h3 className="font-semibold text-[0.938rem] mb-3">Kontakt</h3>
+          <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.termsContactTitle")}</h3>
           <p className="text-sm text-muted-foreground">
-            Bei Fragen zu diesen Nutzungsbedingungen erreichst du uns unter:{" "}
+            {t("legal.termsContactText")}{" "}
             <a href="mailto:support@clemio.app" className="text-primary font-medium hover:underline">
               support@clemio.app
             </a>
