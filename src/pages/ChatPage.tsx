@@ -1004,6 +1004,14 @@ const ChatPage = () => {
                   >
                     <ImageIcon className="w-4 h-4" /> Medien
                   </button>
+                  {!isGroup && otherUserId && (
+                    <button
+                      onClick={() => { setShowChatMenu(false); setReportTarget({ msgId: "", senderId: otherUserId, messageType: "__user__" }); }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2 text-destructive"
+                    >
+                      <Flag className="w-4 h-4" /> {locale === "de" ? "Nutzer melden" : "Report user"}
+                    </button>
+                  )}
                 </div>
               </>,
               document.body
