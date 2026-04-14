@@ -132,6 +132,7 @@ const SettingsPage = () => {
   const [refreshingSubscription, setRefreshingSubscription] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [defaultVoice, setDefaultVoice] = useState(() => localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9");
 
   // Searchable settings items with keywords
   const settingsIndex: { section: string; keywords: string[] }[] = [
