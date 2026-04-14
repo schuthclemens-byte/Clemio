@@ -160,6 +160,7 @@ const fr: Record<string, string> = {
     "landing.heroDemoText": "Hey… chaque message que je t'écris sonne comme ma vraie voix.",
     "landing.heroAutoPlay": "La voix se lance automatiquement",
     "landing.tapToStart": "Touche pour commencer",
+    "landing.heroAudioError": "L'audio n'a pas pu démarrer – utilise le bouton lecture",
     "landing.heroSubtitleNew": "Au lieu de lire – écoute simplement.",
     "landing.heroCTA": "Écouter maintenant",
     "landing.promoHeadline": "Écrire, c'est dépassé.",

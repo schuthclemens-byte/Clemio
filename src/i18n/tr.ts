@@ -160,6 +160,7 @@ const tr: Record<string, string> = {
     "landing.heroDemoText": "Hey… sana yazdığım her mesaj gerçek sesim gibi duyuluyor.",
     "landing.heroAutoPlay": "Ses otomatik çalar",
     "landing.tapToStart": "Başlamak için dokun",
+    "landing.heroAudioError": "Ses başlatılamadı – oynat düğmesini kullan",
     "landing.heroSubtitleNew": "Okumak yerine – sadece dinle.",
     "landing.heroCTA": "Şimdi dinle",
     "landing.promoHeadline": "Yazmak dünde kaldı.",
