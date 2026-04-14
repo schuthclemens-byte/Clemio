@@ -36,6 +36,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
   const [showCamera, setShowCamera] = useState(false);
   const [showMediaMenu, setShowMediaMenu] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [showImprove, setShowImprove] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaToggleRef = useRef<HTMLButtonElement>(null);
   const mediaMenuRef = useRef<HTMLDivElement>(null);
