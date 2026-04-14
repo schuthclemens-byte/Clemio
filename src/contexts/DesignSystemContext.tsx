@@ -124,12 +124,13 @@ const createTheme = (colors: DesignColors, magic: MagicModeSettings, isDark: boo
   const secondarySaturation = clamp(primarySaturation * (isDark ? 0.82 : 0.72), 18, 96);
   const secondaryLightness = clamp(primaryLightness + (isDark ? 6 : 10), isDark ? 42 : 34, isDark ? 72 : 80);
 
-  const backgroundSaturation = clamp(primarySaturation * (isDark ? 0.4 : 0.3), isDark ? 14 : 8, isDark ? 34 : 28);
+  // Dark mode: near-achromatic backgrounds to avoid muddy tones (especially warm hues)
+  const backgroundSaturation = isDark ? clamp(primarySaturation * 0.03, 0, 5) : clamp(primarySaturation * 0.3, 8, 28);
   const backgroundLightness = isDark
     ? clamp(7 + (100 - primaryLightness) * 0.04, 7, 13)
     : clamp(97 - primarySaturation * 0.05, 89, 97);
 
-  const surfaceSaturation = clamp(backgroundSaturation + (isDark ? 4 : 2), isDark ? 14 : 8, isDark ? 30 : 20);
+  const surfaceSaturation = isDark ? clamp(backgroundSaturation + 1, 0, 6) : clamp(backgroundSaturation + 2, 8, 20);
   const surfaceLightness = isDark
     ? clamp(backgroundLightness + 6, 13, 19)
     : clamp(backgroundLightness - 3, 84, 95);
@@ -167,14 +168,14 @@ const createTheme = (colors: DesignColors, magic: MagicModeSettings, isDark: boo
     secondaryForeground: hsl(secondaryHue, 18, secondaryForegroundLightness),
     backgroundColor: hsl(primaryHue, backgroundSaturation, backgroundLightness),
     surfaceColor: hsl(primaryHue, surfaceSaturation, surfaceLightness),
-    surfaceMutedColor: hsl(primaryHue, clamp(backgroundSaturation * 0.9, 6, 24), surfaceMutedLightness),
-    textPrimary: hsl(primaryHue, 18, textPrimaryLightness),
-    textSecondary: hsl(primaryHue, 12, textSecondaryLightness),
+    surfaceMutedColor: hsl(primaryHue, isDark ? clamp(backgroundSaturation, 0, 6) : clamp(backgroundSaturation * 0.9, 6, 24), surfaceMutedLightness),
+    textPrimary: hsl(primaryHue, isDark ? 6 : 18, textPrimaryLightness),
+    textSecondary: hsl(primaryHue, isDark ? 4 : 12, textSecondaryLightness),
     effectColor: hsl(effectHue, effectSaturation, effectLightness),
-    borderColor: hsl(primaryHue, clamp(backgroundSaturation * 0.75, 6, 22), borderLightness),
+    borderColor: hsl(primaryHue, isDark ? clamp(backgroundSaturation, 0, 5) : clamp(backgroundSaturation * 0.75, 6, 22), borderLightness),
     chatTheirsColor: hsl(primaryHue, surfaceSaturation, chatTheirsLightness),
-    sidebarBackgroundColor: hsl(primaryHue, clamp(backgroundSaturation + 2, 8, 30), sidebarBackgroundLightness),
-    sidebarAccentColor: hsl(primaryHue, clamp(surfaceSaturation, 8, 24), sidebarAccentLightness),
+    sidebarBackgroundColor: hsl(primaryHue, isDark ? clamp(backgroundSaturation, 0, 5) : clamp(backgroundSaturation + 2, 8, 30), sidebarBackgroundLightness),
+    sidebarAccentColor: hsl(primaryHue, isDark ? clamp(surfaceSaturation, 0, 6) : clamp(surfaceSaturation, 8, 24), sidebarAccentLightness),
     sparkleIntensity: magic.sparkleIntensity,
     magicMode: magic.enabled,
   };
