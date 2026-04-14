@@ -52,6 +52,7 @@ serve(async (req) => {
         { count: premiumUsers },
         { count: activeUsers },
         { count: voiceProfiles },
+        { count: totalAutoplayEnabled },
       ] = await Promise.all([
         admin.from("profiles").select("id", { count: "exact", head: true }),
         admin.from("blocked_users").select("id", { count: "exact", head: true }),
@@ -59,6 +60,7 @@ serve(async (req) => {
         admin.from("subscriptions").select("id", { count: "exact", head: true }).gt("premium_until", new Date().toISOString()),
         admin.from("user_presence").select("user_id", { count: "exact", head: true }).gt("last_seen", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
         admin.from("voice_profiles").select("id", { count: "exact", head: true }),
+        admin.from("contact_autoplay").select("id", { count: "exact", head: true }).eq("auto_play", true),
       ]);
       return json({
         totalUsers: totalUsers || 0,
@@ -67,7 +69,44 @@ serve(async (req) => {
         premiumUsers: premiumUsers || 0,
         activeUsers: activeUsers || 0,
         voiceProfiles: voiceProfiles || 0,
+        autoplayUsers: totalAutoplayEnabled || 0,
       });
+    }
+
+    // ── SEND TEST PUSH ──
+    if (action === "send-test-push") {
+      const { data: subs } = await admin
+        .from("push_subscriptions")
+        .select("endpoint, p256dh, auth")
+        .eq("user_id", targetUserId);
+      if (!subs?.length) return json({ error: "No push subscription for this user" }, 404);
+
+      // Call the send-push function internally
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const results = [];
+      for (const sub of subs) {
+        try {
+          const pushRes = await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${serviceRoleKey}`,
+            },
+            body: JSON.stringify({
+              subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              payload: {
+                title: "🔔 Clemio Admin Test",
+                body: "Dies ist eine Test-Push-Benachrichtigung vom Admin.",
+                tag: "admin-test",
+              },
+            }),
+          });
+          results.push({ endpoint: sub.endpoint.slice(-20), status: pushRes.status });
+        } catch (e) {
+          results.push({ endpoint: sub.endpoint.slice(-20), error: e.message });
+        }
+      }
+      return json({ success: true, action: "push-sent", results });
     }
 
     if (!targetUserId || typeof targetUserId !== "string") {

@@ -18,6 +18,7 @@ import {
 import {
   ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
   Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff, Flag,
+  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -54,6 +55,7 @@ interface Stats {
   totalMessages: number;
   premiumUsers: number;
   voiceProfiles: number;
+  autoplayUsers: number;
 }
 
 const AdminPage = () => {
@@ -68,7 +70,7 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"users" | "reports">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "analytics">("users");
 
   // Password reset dialog
   const [pwDialog, setPwDialog] = useState<{ open: boolean; userId: string; name: string }>({ open: false, userId: "", name: "" });
@@ -78,6 +80,9 @@ const AdminPage = () => {
   const [subDialog, setSubDialog] = useState<{ open: boolean; userId: string; name: string; current: UserSubscription | null }>({ open: false, userId: "", name: "", current: null });
   const [subPlan, setSubPlan] = useState("premium");
   const [subDate, setSubDate] = useState("");
+
+  // Voice detail dialog
+  const [voiceDialog, setVoiceDialog] = useState<{ open: boolean; user: UserProfile | null }>({ open: false, user: null });
 
   const fetchData = async () => {
     setLoading(true);
@@ -153,6 +158,19 @@ const AdminPage = () => {
     setSubDialog({ open: false, userId: "", name: "", current: null });
   };
 
+  const handleSendTestPush = async (targetUserId: string, name: string) => {
+    setActionLoading(targetUserId + "-push");
+    const { data, error } = await supabase.functions.invoke("admin-manage-user", {
+      body: { action: "send-test-push", targetUserId },
+    });
+    if (error || !data?.success) {
+      toast.error(data?.error || tr("Push fehlgeschlagen", "Push failed"));
+    } else {
+      toast.success(tr(`Test-Push an ${name} gesendet`, `Test push sent to ${name}`));
+    }
+    setActionLoading(null);
+  };
+
   const getSubBadge = (sub: UserSubscription | null) => {
     if (!sub) return <Badge variant="secondary" className="text-[0.6rem] px-1.5">Free</Badge>;
     const isPremium = sub.premium_until && new Date(sub.premium_until) > new Date();
@@ -160,6 +178,8 @@ const AdminPage = () => {
     if (isPremium) return <Badge className="text-[0.6rem] px-1.5 bg-primary/20 text-primary border-primary/30">Premium</Badge>;
     return <Badge variant="secondary" className="text-[0.6rem] px-1.5">Free</Badge>;
   };
+
+  const voiceUsers = profiles.filter(p => p.voice_profile);
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -176,23 +196,22 @@ const AdminPage = () => {
           </span>
         </div>
         {/* Tabs */}
-        <div className="flex px-4 pt-2 gap-1">
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
-              activeTab === "users" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Users className="w-4 h-4" /> {tr("Nutzer", "Users")}
-          </button>
-          <button
-            onClick={() => setActiveTab("reports")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
-              activeTab === "reports" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Flag className="w-4 h-4" /> Reports
-          </button>
+        <div className="flex px-4 pt-2 gap-1 overflow-x-auto">
+          {([
+            { key: "users" as const, icon: Users, label: tr("Nutzer", "Users") },
+            { key: "reports" as const, icon: Flag, label: "Reports" },
+            { key: "analytics" as const, icon: Activity, label: "Analytics" },
+          ]).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === tab.key ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <tab.icon className="w-4 h-4" /> {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -201,6 +220,81 @@ const AdminPage = () => {
           onBlockUser={(userId) => performAction("block", userId, tr("Blockieren", "Block"))}
           onDeleteVoice={(userId) => performAction("delete-voice", userId, tr("Voice gelöscht", "Voice deleted"))}
         />
+      ) : activeTab === "analytics" ? (
+        /* ── ANALYTICS TAB (Step 9) ── */
+        <div className="p-4 space-y-4">
+          {stats && (
+            <>
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                {tr("Übersicht", "Overview")}
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: Users, label: tr("Gesamt Nutzer", "Total Users"), value: stats.totalUsers, color: "text-primary" },
+                  { icon: Activity, label: tr("Aktiv (7 Tage)", "Active (7 days)"), value: stats.activeUsers, color: "text-green-500" },
+                  { icon: MessageSquare, label: tr("Nachrichten", "Messages"), value: stats.totalMessages, color: "text-blue-500" },
+                  { icon: Mic, label: tr("Voice-Profile", "Voice Profiles"), value: stats.voiceProfiles, color: "text-primary" },
+                  { icon: Crown, label: "Premium", value: stats.premiumUsers, color: "text-amber-500" },
+                  { icon: ShieldAlert, label: tr("Blockiert", "Blocked"), value: stats.blockedUsers, color: "text-destructive" },
+                  { icon: Headphones, label: tr("Anhören aktiv", "Autoplay active"), value: stats.autoplayUsers, color: "text-purple-500" },
+                ].map(({ icon: Icon, label, value, color }) => (
+                  <div key={label} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50">
+                    <Icon className={`w-5 h-5 ${color} shrink-0`} />
+                    <div>
+                      <span className="text-xl font-bold block">{value}</span>
+                      <span className="text-[0.65rem] text-muted-foreground">{label}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Voice Security Overview (Step 7) */}
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mt-6">
+                {tr("Voice-Sicherheit", "Voice Security")}
+              </h2>
+              {voiceUsers.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">{tr("Keine Voice-Profile vorhanden", "No voice profiles exist")}</p>
+              ) : (
+                <div className="space-y-2">
+                  {voiceUsers.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setVoiceDialog({ open: true, user: p })}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={p.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">{(p.display_name || "?").substring(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium block truncate">{p.display_name || p.phone_number}</span>
+                        <div className="flex items-center gap-2 text-[0.65rem] text-muted-foreground">
+                          <span className="flex items-center gap-0.5">
+                            <ShieldCheck className="w-3 h-3 text-green-500" />
+                            {tr("Verifiziert", "Verified")}
+                          </span>
+                          <span>·</span>
+                          <span className="flex items-center gap-0.5">
+                            <Calendar className="w-3 h-3" />
+                            {p.voice_profile?.created_at ? new Date(p.voice_profile.created_at).toLocaleDateString("de") : "—"}
+                          </span>
+                          <span>·</span>
+                          <span>{p.voice_profile?.voice_name || tr("Standard", "Default")}</span>
+                        </div>
+                      </div>
+                      <Mic className="w-4 h-4 text-primary shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          {!stats && (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          )}
+        </div>
       ) : (
       <>
       {/* Stats Dashboard */}
@@ -294,6 +388,20 @@ const AdminPage = () => {
 
                 {!isMe && (
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Send Test Push (Step 8) */}
+                    <Button
+                      size="sm" variant="ghost" className="h-7 w-7 p-0"
+                      title={tr("Test-Push senden", "Send test push")}
+                      disabled={actionLoading === p.id + "-push"}
+                      onClick={() => handleSendTestPush(p.id, p.display_name || p.phone_number)}
+                    >
+                      {actionLoading === p.id + "-push" ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Bell className="w-3.5 h-3.5 text-blue-500" />
+                      )}
+                    </Button>
+
                     {/* Delete Voice */}
                     {p.voice_profile && (
                       <AlertDialog>
@@ -471,6 +579,67 @@ const AdminPage = () => {
             <Button onClick={handleSetSubscription} disabled={actionLoading === subDialog.userId}>
               {tr("Speichern", "Save")}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Voice Detail Dialog (Step 7) */}
+      <Dialog open={voiceDialog.open} onOpenChange={(o) => setVoiceDialog((prev) => ({ ...prev, open: o }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mic className="w-5 h-5 text-primary" />
+              {tr("Voice-Profil Details", "Voice Profile Details")}
+            </DialogTitle>
+            <DialogDescription>{voiceDialog.user?.display_name || voiceDialog.user?.phone_number}</DialogDescription>
+          </DialogHeader>
+          {voiceDialog.user?.voice_profile && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-muted/50">
+                  <span className="text-xs text-muted-foreground block">{tr("Status", "Status")}</span>
+                  <span className="text-sm font-medium flex items-center gap-1 mt-1">
+                    <ShieldCheck className="w-4 h-4 text-green-500" />
+                    {tr("Verifiziert", "Verified")}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-muted/50">
+                  <span className="text-xs text-muted-foreground block">{tr("Erstellt am", "Created")}</span>
+                  <span className="text-sm font-medium mt-1 block">
+                    {voiceDialog.user.voice_profile.created_at
+                      ? new Date(voiceDialog.user.voice_profile.created_at).toLocaleDateString("de", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                      : "—"}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-muted/50">
+                  <span className="text-xs text-muted-foreground block">{tr("Stimme", "Voice")}</span>
+                  <span className="text-sm font-medium mt-1 block">{voiceDialog.user.voice_profile.voice_name || tr("Standard", "Default")}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-muted/50">
+                  <span className="text-xs text-muted-foreground block">ElevenLabs ID</span>
+                  <span className="text-[0.6rem] font-mono mt-1 block truncate">{voiceDialog.user.voice_profile.elevenlabs_voice_id}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVoiceDialog({ open: false, user: null })}>
+              {tr("Schließen", "Close")}
+            </Button>
+            {voiceDialog.user && voiceDialog.user.id !== user?.id && (
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (voiceDialog.user) {
+                    performAction("delete-voice", voiceDialog.user.id, tr("Voice gelöscht", "Voice deleted"));
+                    setVoiceDialog({ open: false, user: null });
+                  }
+                }}
+              >
+                <MicOff className="w-4 h-4 mr-1" />
+                {tr("Voice löschen", "Delete voice")}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
