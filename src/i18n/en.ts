@@ -794,6 +794,13 @@ const en: Record<string, string> = {
     "design.previewButton": "Primary",
     "design.previewSecondary": "Secondary",
     "design.liveHint": "💡 All changes are instantly visible across the entire app.",
+    "chat.read": "Read",
+    "onboarding.chooseTitle": "How would you like to start?",
+    "onboarding.chooseDesc": "You can change this anytime in settings.",
+    "onboarding.simpleTitle": "Simple",
+    "onboarding.simpleDesc": "Message preview, read receipts and online status are active.",
+    "onboarding.privateTitle": "Private",
+    "onboarding.privateDesc": "No previews, no read receipts, less visibility.",
 };
 
 export default en;
