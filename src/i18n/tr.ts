@@ -433,7 +433,7 @@ const tr: Record<string, string> = {
    "privacy.headerUpdated": "Son Güncelleme: Nisan 2026",
    "privacy.s1Title": "1. Veri Sorumlusu",
    "privacy.s1Text": "Genel Veri Koruma Tüzüğü (DSGVO) anlamında veri sorumlusu:",
-   "privacy.s1Contact": "Clemens Schuth (Özel Şahıs)\nMünih, Almanya\nE-posta: privacy@clemix.app",
+   "privacy.s1Contact": "Clemens Schuth (Özel Şahıs)\nMünih, Almanya\nE-posta: privacy@clemio.app",
    "privacy.s2Title": "2. Veri İşlemeye Genel Bakış",
    "privacy.s2Text": "Clemix; sohbet, arama ve sesli özelliklere sahip bir mesajlaşma uygulamasıdır. Bu hizmetleri sunmak için kişisel verileri işleriz. Bu gizlilik politikası, hangi verileri ne amaçla ve hangi yasal dayanakla topladığımız hakkında seni bilgilendirir.",
    "privacy.s2NoTracking": "Analiz veya takip araçları kullanmıyoruz.",

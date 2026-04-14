@@ -567,7 +567,7 @@ const fr: Record<string, string> = {
    "privacy.headerUpdated": "Dernière mise à jour : avril 2026",
    "privacy.s1Title": "1. Responsable du traitement",
    "privacy.s1Text": "Le responsable du traitement des données au sens du Règlement Général sur la Protection des Données (RGPD) est :",
-   "privacy.s1Contact": "Clemens Schuth (Personne physique)\nMunich, Allemagne\nE-mail : privacy@clemix.app",
+   "privacy.s1Contact": "Clemens Schuth (Personne physique)\nMunich, Allemagne\nE-mail : privacy@clemio.app",
    "privacy.s2Title": "2. Aperçu du traitement des données",
    "privacy.s2Text": "Clemix est une application de messagerie avec des fonctions de chat, d'appel et de voix. Nous traitons des données personnelles pour fournir ces services. Cette politique de confidentialité vous informe des données que nous collectons, à quelle fin et sur quelle base légale.",
    "privacy.s2NoTracking": "Nous n'utilisons aucun outil d'analyse ou de suivi.",

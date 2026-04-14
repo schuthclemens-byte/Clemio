@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
 
     const VAPID_PRIVATE_KEY_B64 = Deno.env.get("VAPID_PRIVATE_KEY");
     const VAPID_PUBLIC_KEY = "BL2_0Ki93BHS5ty1Blv8Rxxw0FTgAJEBPq7TN6xk09czbSWSpnINsCBe46uv6LaiKbtkHlwmiiRSDifoFt5ZDVM";
-    const VAPID_SUBJECT = "mailto:support@clemix.app";
+    const VAPID_SUBJECT = "mailto:support@clemio.app";
 
     // Parse FCM service account (optional — graceful if not set)
     let fcmServiceAccount: { client_email: string; private_key: string; project_id: string } | null = null;

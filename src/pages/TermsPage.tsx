@@ -200,8 +200,8 @@ const TermsPage = () => {
           <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.termsContactTitle")}</h3>
           <p className="text-sm text-muted-foreground">
             {t("legal.termsContactText")}{" "}
-            <a href="mailto:support@clemix.app" className="text-primary font-medium hover:underline">
-              support@clemix.app
+            <a href="mailto:support@clemio.app" className="text-primary font-medium hover:underline">
+              support@clemio.app
             </a>
           </p>
         </section>

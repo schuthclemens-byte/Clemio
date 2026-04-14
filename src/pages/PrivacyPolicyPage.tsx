@@ -444,8 +444,8 @@ const PrivacyPolicyPage = () => {
           <h3 className="font-semibold text-[0.938rem] mb-3">{t("privacy.contactTitle")}</h3>
           <p className="text-sm text-muted-foreground">
             {t("privacy.contactText")}{" "}
-            <a href="mailto:privacy@clemix.app" className="text-primary font-medium hover:underline">
-              privacy@clemix.app
+            <a href="mailto:privacy@clemio.app" className="text-primary font-medium hover:underline">
+              privacy@clemio.app
             </a>
           </p>
         </section>
