@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getCachedAudio, setCachedAudio } from "@/lib/ttsCache";
 
 export const useVoiceTTS = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -9,7 +10,6 @@ export const useVoiceTTS = () => {
   const abortRef = useRef<AbortController | null>(null);
 
   const stop = useCallback(() => {
-    // Abort any in-flight fetch
     abortRef.current?.abort();
     abortRef.current = null;
     audioRef.current?.pause();
@@ -19,16 +19,46 @@ export const useVoiceTTS = () => {
     setPlayingMsgId(null);
   }, []);
 
+  /** Fetch TTS blob (used for both playback and preloading) */
+  const fetchTtsBlob = useCallback(async (text: string, senderId: string, signal?: AbortSignal): Promise<Blob> => {
+    const session = (await supabase.auth.getSession()).data.session;
+    if (!session) throw new Error("Not authenticated");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts-stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          text,
+          senderId,
+          lang: "de",
+          defaultVoiceId: localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9",
+        }),
+        signal,
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || "TTS fehlgeschlagen");
+    }
+
+    return response.blob();
+  }, []);
+
   const playClonedVoice = useCallback(async (text: string, senderId: string, msgId: string, lang?: string) => {
-    // Toggle off if already playing/loading this message
+    // Toggle off
     if (playingMsgId === msgId && (isPlaying || isLoading)) {
       stop();
       return;
     }
 
-    // Stop any current playback
     stop();
-
     setIsLoading(true);
     setPlayingMsgId(msgId);
 
@@ -36,30 +66,14 @@ export const useVoiceTTS = () => {
     abortRef.current = controller;
 
     try {
-      const session = (await supabase.auth.getSession()).data.session;
-      if (!session) throw new Error("Not authenticated");
+      // Check cache first
+      let audioUrl = getCachedAudio(senderId, text);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({ text, senderId, lang: lang || "de", defaultVoiceId: localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9" }),
-          signal: controller.signal,
-        }
-      );
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || "TTS fehlgeschlagen");
+      if (!audioUrl) {
+        const audioBlob = await fetchTtsBlob(text, senderId, controller.signal);
+        audioUrl = setCachedAudio(senderId, text, audioBlob);
       }
 
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
 
@@ -67,14 +81,12 @@ export const useVoiceTTS = () => {
         setIsPlaying(false);
         setIsLoading(false);
         setPlayingMsgId(null);
-        URL.revokeObjectURL(audioUrl);
       };
 
       audio.onerror = () => {
         setIsPlaying(false);
         setIsLoading(false);
         setPlayingMsgId(null);
-        URL.revokeObjectURL(audioUrl);
       };
 
       setIsLoading(false);
@@ -87,7 +99,7 @@ export const useVoiceTTS = () => {
       setIsLoading(false);
       setPlayingMsgId(null);
     }
-  }, [playingMsgId, isPlaying, isLoading, stop]);
+  }, [playingMsgId, isPlaying, isLoading, stop, fetchTtsBlob]);
 
-  return { playClonedVoice, isPlaying, isLoading, playingMsgId, stop };
+  return { playClonedVoice, isPlaying, isLoading, playingMsgId, stop, fetchTtsBlob };
 };
