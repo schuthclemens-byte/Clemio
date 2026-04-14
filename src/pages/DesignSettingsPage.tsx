@@ -4,7 +4,7 @@ import { ArrowLeft, Sparkles, Palette, Sun, Moon, Monitor, ChevronDown, ImageIco
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useDesignSystem, type DesignPreset, type SparkleMode } from "@/contexts/DesignSystemContext";
+import { useDesignSystem, type DesignPreset, type SparkleMode, type SparkleColor } from "@/contexts/DesignSystemContext";
 import { useChatBackground } from "@/contexts/ChatBackgroundContext";
 import { cn } from "@/lib/utils";
 import ColorSurface from "@/components/design/ColorSurface";
@@ -348,18 +348,87 @@ const DesignSettingsPage = () => {
 
           {/* Intensity slider — only when magic is on */}
           {state.magic.enabled && (
-            <div className="bg-card rounded-2xl px-4 py-3 space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">{t("design.intensity")}</span>
-                <span className="font-semibold text-primary">{state.magic.sparkleIntensity}%</span>
+            <div className="bg-card rounded-2xl px-4 py-3 space-y-4">
+              {/* Intensity */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{t("design.intensity")}</span>
+                  <span className="font-semibold text-primary">{state.magic.sparkleIntensity}%</span>
+                </div>
+                <Slider
+                  value={[state.magic.sparkleIntensity]}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onValueChange={([v]) => setMagic({ sparkleIntensity: v })}
+                />
               </div>
-              <Slider
-                value={[state.magic.sparkleIntensity]}
-                min={0}
-                max={100}
-                step={1}
-                onValueChange={([v]) => setMagic({ sparkleIntensity: v })}
-              />
+
+              {/* Sparkle Color */}
+              <div className="space-y-2">
+                <span className="text-xs text-muted-foreground font-medium">Funkel-Farbe</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {([
+                    { id: "auto" as SparkleColor, label: "Automatisch", preview: `hsl(${state.colors.hue}, ${Math.min(state.colors.saturation * 0.3, 25)}%, 92%)` },
+                    { id: "warm" as SparkleColor, label: "Warm", preview: "hsl(15, 30%, 92%)" },
+                    { id: "cool" as SparkleColor, label: "Kühl", preview: "hsl(220, 25%, 93%)" },
+                    { id: "accent" as SparkleColor, label: "Akzent", preview: `hsl(${(state.colors.hue + 30) % 360}, ${Math.min(state.colors.saturation * 0.4, 35)}%, 90%)` },
+                    { id: "custom" as SparkleColor, label: "Individuell", preview: `hsl(${state.magic.sparkleCustomHue ?? 0}, 20%, 91%)` },
+                  ]).map(({ id, label, preview }) => {
+                    const isActive = (state.magic.sparkleColor ?? "auto") === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setMagic({ sparkleColor: id })}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[0.65rem] font-medium transition-all duration-200 border",
+                          isActive
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border/50 text-muted-foreground hover:border-border hover:bg-secondary/30"
+                        )}
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full shrink-0 border border-border/30"
+                          style={{ background: preview }}
+                        />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom hue slider */}
+                {(state.magic.sparkleColor ?? "auto") === "custom" && (
+                  <div className="space-y-1 pt-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Farbton</span>
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          className="w-3 h-3 rounded-full border border-border/30"
+                          style={{ background: `hsl(${state.magic.sparkleCustomHue ?? 0}, 20%, 91%)` }}
+                        />
+                        <span className="font-semibold text-primary">{state.magic.sparkleCustomHue ?? 0}°</span>
+                      </div>
+                    </div>
+                    <div className="relative h-7 flex items-center">
+                      <div
+                        className="absolute inset-x-0 h-2.5 rounded-full"
+                        style={{
+                          background: "linear-gradient(to right, hsl(0,20%,91%), hsl(60,20%,91%), hsl(120,20%,91%), hsl(180,20%,91%), hsl(240,20%,91%), hsl(300,20%,91%), hsl(360,20%,91%))",
+                        }}
+                      />
+                      <Slider
+                        value={[state.magic.sparkleCustomHue ?? 0]}
+                        min={0}
+                        max={360}
+                        step={1}
+                        onValueChange={([v]) => setMagic({ sparkleCustomHue: v })}
+                        className="relative z-10"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </section>
