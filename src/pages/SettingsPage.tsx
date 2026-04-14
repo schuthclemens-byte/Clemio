@@ -134,7 +134,7 @@ const SettingsPage = () => {
     { section: "profile", keywords: ["profil", "profile", "name", "avatar", "bild", "foto", "photo"] },
     { section: "privacy", keywords: ["privatsphäre", "privacy", "nachrichten", "messages", "vorschau", "preview", "lesebestätigung", "read", "online", "status", "tippen", "typing", "vorlesen"] },
     { section: "push", keywords: ["push", "benachrichtigung", "notification", "alert", "ton", "sound"] },
-    { section: "appearance", keywords: ["erscheinungsbild", "appearance", "theme", "design", "dunkel", "dark", "hell", "light", "farbe", "color", "hintergrund", "background", "wallpaper", "magie", "magic", "sparkle", "glitzer", "partikel", "particles", "effekte", "effects"] },
+    
     { section: "language", keywords: ["sprache", "language", "deutsch", "english", "français", "türkçe", "español", "العربية"] },
     { section: "accessibility", keywords: ["barrierefreiheit", "accessibility", "schrift", "font", "dyslexie", "groß", "large", "kontrast", "contrast", "kopfhörer", "headphone", "autokorrektur", "autocorrect", "geschwindigkeit", "speed", "rate", "ruhezeit", "quiet", "kompakt", "compact", "stumm", "mute"] },
     { section: "focus", keywords: ["fokus", "focus", "modus", "mode", "ruhe", "stille", "kontakte"] },
@@ -395,29 +395,6 @@ const SettingsPage = () => {
         </CollapsibleSection>
         </>}
 
-        {show("appearance") && <>
-        {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
-        <CollapsibleSection icon={Palette} title={t("settings.appearanceTitle")} defaultOpen={isSearching} delay="60ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
-            {themeOptions.map(({ value, icon: Icon, label }) => (
-              <button
-                key={value}
-                onClick={() => setTheme(value)}
-                className={cn(
-                  "flex-1 flex flex-col items-center gap-2 py-4 transition-all duration-200",
-                  "hover:bg-secondary/50 active:scale-[0.97]",
-                  theme === value && "bg-primary/10"
-                )}
-              >
-                <Icon className={cn("w-5 h-5", theme === value ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-xs font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </CollapsibleSection>
-        </>}
 
         {show("language") && <>
         {/* ──────────── SPRACHE ──────────── */}
