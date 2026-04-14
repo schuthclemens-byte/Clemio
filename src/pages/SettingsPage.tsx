@@ -519,19 +519,36 @@ const SettingsPage = () => {
                   { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah", gender: "♀" },
                   { id: "pFZP5JQG7iQjIQuC4Bku", name: "Lily", gender: "♀" },
                 ].map((voice) => (
-                  <button
-                    key={voice.id}
-                    onClick={() => { localStorage.setItem("clemio_default_voice", voice.id); savedToast(); setDefaultVoice(voice.id); }}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95",
-                      defaultVoice === voice.id
-                        ? "gradient-primary text-primary-foreground shadow-soft"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                    )}
-                  >
-                    <span>{voice.gender}</span>
-                    <span>{voice.name}</span>
-                  </button>
+                  <div key={voice.id} className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => { localStorage.setItem("clemio_default_voice", voice.id); savedToast(); setDefaultVoice(voice.id); }}
+                      className={cn(
+                        "flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95",
+                        defaultVoice === voice.id
+                          ? "gradient-primary text-primary-foreground shadow-soft"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      <span>{voice.gender}</span>
+                      <span>{voice.name}</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); previewVoice(voice.id, voice.name); }}
+                      className={cn(
+                        "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90",
+                        previewingVoice === voice.id
+                          ? "bg-primary text-primary-foreground animate-pulse"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      )}
+                      aria-label={`${voice.name} anhören`}
+                    >
+                      {previewingVoice === voice.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
