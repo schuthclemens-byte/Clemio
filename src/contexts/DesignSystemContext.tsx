@@ -229,7 +229,7 @@ const applyThemeToRoot = (theme: GlobalTheme) => {
   Object.entries(cssVars).forEach(([key, value]) => {
     root.style.setProperty(key, value);
   });
-  console.log('[DesignSystem] Applied theme:', { bg: theme.backgroundColor, card: theme.surfaceColor, sidebar: theme.sidebarBackgroundColor, isDark: root.classList.contains('dark') });
+  
 
   root.dataset.magicMode = theme.magicMode ? "on" : "off";
 };
