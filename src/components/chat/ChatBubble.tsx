@@ -62,7 +62,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward, transcription, onReport, onReply, onBlock }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, audioUrl, reactions = [], onToggleReaction, onDelete, onEdit, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward, transcription, onReport, onReply, onBlock }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -129,9 +129,9 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     if (!textToSpeak) return;
     
     if (hasClonedVoice && senderId && msgId && onPlayClonedVoice) {
-      requirePremium(() => onPlayClonedVoice(textToSpeak, senderId, msgId, locale));
+      requirePremium(() => onPlayClonedVoice(textToSpeak, senderId, msgId, locale, audioUrl));
     } else if (onPlayClonedVoice && senderId && msgId) {
-      onPlayClonedVoice(textToSpeak, senderId, msgId, locale);
+      onPlayClonedVoice(textToSpeak, senderId, msgId, locale, audioUrl);
     }
   };
 
