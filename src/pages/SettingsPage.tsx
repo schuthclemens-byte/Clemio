@@ -420,7 +420,7 @@ const SettingsPage = () => {
 
         {(show("accessibility") || show("focus") || show("autoplay")) && <>
         {/* ──────────── BEDIENUNG ──────────── */}
-        <CollapsibleSection icon={Sliders} title={t("settings.controlsTitle") || "Bedienung"} defaultOpen={!isSearching} delay="60ms">
+        <CollapsibleSection icon={Sliders} title={t("settings.controlsTitle") || "Bedienung"} defaultOpen delay="60ms">
           <div className="space-y-3">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
               <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => { a11y.toggle("dyslexiaFont"); savedToast(); }} />
