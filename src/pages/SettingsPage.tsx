@@ -445,7 +445,7 @@ const SettingsPage = () => {
                 <ToggleRow icon={KeyRound} label={t("settings.stayLoggedIn")} description={t("settings.stayLoggedInDesc")}
                   checked={stayLoggedIn} onChange={toggleStayLoggedIn} borderBottom={true}
                 />
-                {!window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
+                {!window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && !(window as any).Capacitor?.isNativePlatform?.() && (
                   <LinkRow icon={Download} label={t("settings.installApp")} description={t("settings.installAppDesc")} onClick={() => navigate("/install")} borderBottom={true} />
                 )}
               </div>
