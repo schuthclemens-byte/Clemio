@@ -192,6 +192,14 @@ export const useVoiceTTS = () => {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // Pre-create utterance synchronously within gesture context for mobile compatibility
+    const langMap: Record<string, string> = {
+      de: "de-DE", en: "en-US", fr: "fr-FR", es: "es-ES", tr: "tr-TR", ar: "ar-SA",
+    };
+    const fallbackUtterance = new SpeechSynthesisUtterance(text);
+    fallbackUtterance.lang = langMap[lang || "de"] || "de-DE";
+    fallbackUtterance.rate = 1.0;
+
     const onEnd = () => {
       setIsPlaying(false);
       setIsLoading(false);
@@ -222,19 +230,13 @@ export const useVoiceTTS = () => {
       if (error.name === "AbortError") return;
       console.error("Voice TTS error, falling back to browser TTS:", error);
 
-      // Fallback: use free browser speech synthesis
+      // Fallback: use free browser speech synthesis (utterance pre-created in gesture context)
       try {
-        const langMap: Record<string, string> = {
-          de: "de-DE", en: "en-US", fr: "fr-FR", es: "es-ES", tr: "tr-TR", ar: "ar-SA",
-        };
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = langMap[lang || "de"] || "de-DE";
-        utterance.rate = 1.0;
-        utterance.onend = onEnd;
-        utterance.onerror = onEnd;
+        fallbackUtterance.onend = onEnd;
+        fallbackUtterance.onerror = onEnd;
         setIsLoading(false);
         setIsPlaying(true);
-        window.speechSynthesis.speak(utterance);
+        window.speechSynthesis.speak(fallbackUtterance);
       } catch (fallbackError) {
         console.error("Browser TTS fallback also failed:", fallbackError);
         const { toast } = await import("sonner");
