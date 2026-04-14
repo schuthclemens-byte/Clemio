@@ -81,8 +81,8 @@ const ChatListPage = () => {
 
       const convIds = memberships.map((m) => m.conversation_id);
 
-      // Fetch conversations, all members, and latest messages in parallel
-      const [convosRes, allMembersRes, allMessagesRes] = await Promise.all([
+      // Fetch conversations, all members, latest messages, and blocked users in parallel
+      const [convosRes, allMembersRes, allMessagesRes, blockedRes] = await Promise.all([
         supabase
           .from("conversations")
           .select("*")
@@ -99,7 +99,16 @@ const ChatListPage = () => {
           .select("conversation_id, content, created_at, message_type, sender_id, is_read")
           .in("conversation_id", convIds)
           .order("created_at", { ascending: false }),
+        supabase
+          .from("blocked_users" as any)
+          .select("user_id")
+          .eq("blocked_by", user.id),
       ]);
+
+      // Build set of blocked user IDs
+      const blockedUserIds = new Set<string>(
+        ((blockedRes.data as any[]) || []).map((b: any) => b.user_id)
+      );
 
       const convos = convosRes.data;
       if (!convos || convos.length === 0) {
@@ -161,7 +170,14 @@ const ChatListPage = () => {
         });
       }
 
-      const items: ConversationItem[] = convos.map((conv) => {
+      const items: ConversationItem[] = convos.filter((conv) => {
+        // Hide 1:1 chats with blocked users
+        if (!conv.is_group) {
+          const otherId = otherMemberMap.get(conv.id);
+          if (otherId && blockedUserIds.has(otherId)) return false;
+        }
+        return true;
+      }).map((conv) => {
         let displayName = conv.name || "Chat";
         if (!conv.is_group) {
           const otherId = otherMemberMap.get(conv.id);

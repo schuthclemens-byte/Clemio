@@ -395,6 +395,22 @@ const ChatPage = () => {
       const conv = convRes.data;
       if (!conv) { navigate("/chats"); return; }
 
+      // Check if we're blocked by or have blocked any member in this 1:1 chat
+      if (!conv.is_group) {
+        const otherMember = membersRes.data?.find((m) => m.user_id !== user.id);
+        if (otherMember) {
+          const { data: blocked } = await supabase
+            .from("blocked_users" as any)
+            .select("id")
+            .or(`and(blocked_by.eq.${user.id},user_id.eq.${otherMember.user_id}),and(blocked_by.eq.${otherMember.user_id},user_id.eq.${user.id})`)
+            .limit(1);
+          if (blocked && (blocked as any[]).length > 0) {
+            navigate("/chats");
+            return;
+          }
+        }
+      }
+
       setIsGroup(conv.is_group ?? false);
       setCreatorId(conv.created_by || "");
       const members = membersRes.data;
@@ -1167,8 +1183,17 @@ const ChatPage = () => {
                     else if (msg.messageType === "audio" || msg.messageType === "voice") displayText = "🎤 Sprachnachricht";
                     setReplyTarget({ id: msg.id, text: displayText, senderName });
                   }}
-                  onBlock={!msg.isMine ? (userId) => {
-                    toast.success(t("chat.userBlocked") || "Nutzer blockiert");
+                  onBlock={!msg.isMine ? async (userId) => {
+                    const { error } = await supabase.from("blocked_users" as any).insert({
+                      blocked_by: user!.id,
+                      user_id: userId,
+                    });
+                    if (error) {
+                      toast.error(t("chat.blockFailed") || "Blockieren fehlgeschlagen");
+                    } else {
+                      toast.success(t("chat.userBlocked") || "Nutzer blockiert");
+                      navigate("/chats");
+                    }
                   } : undefined}
                   
                   replyToText={replyMsg ? (replyMsg.messageType === "image" ? "📷 Bild" : replyMsg.messageType === "audio" || replyMsg.messageType === "voice" ? "🎤 Sprachnachricht" : replyMsg.text) : undefined}
