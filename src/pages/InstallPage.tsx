@@ -34,6 +34,12 @@ const InstallPage = () => {
   };
 
   const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+  const isNativeApp = !!(window as any).Capacitor?.isNativePlatform?.();
+
+  // If running as native app, redirect to settings
+  useEffect(() => {
+    if (isNativeApp) navigate("/settings", { replace: true });
+  }, [isNativeApp, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col" {...swipeHandlers}>
