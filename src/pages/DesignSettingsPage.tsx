@@ -362,6 +362,23 @@ const DesignSettingsPage = () => {
                 />
               </div>
 
+              {/* Movement Speed – only for lively mode */}
+              {state.magic.sparkleMode === "lively" && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Geschwindigkeit</span>
+                    <span className="font-semibold text-primary">{state.magic.sparkleMovementSpeed ?? 30}%</span>
+                  </div>
+                  <Slider
+                    value={[state.magic.sparkleMovementSpeed ?? 30]}
+                    min={5}
+                    max={80}
+                    step={1}
+                    onValueChange={([v]) => setMagic({ sparkleMovementSpeed: v })}
+                  />
+                </div>
+              )}
+
               {/* Sparkle Color */}
               <div className="space-y-2">
                 <span className="text-xs text-muted-foreground font-medium">Funkel-Farbe</span>
