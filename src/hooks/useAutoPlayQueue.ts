@@ -48,8 +48,14 @@ export const useAutoPlayQueue = ({ speak, isSpeaking, lang, enabled, fetchTtsBlo
     // Brief pause before starting speech for a smooth transition
     pauseTimerRef.current = setTimeout(() => {
       speak(next.text, lang);
+
+      // Preload next item in queue while current plays
+      if (fetchTtsBlob && queueRef.current.length > 0) {
+        const peek = queueRef.current[0];
+        preloadAudio(peek.senderId, peek.text, () => fetchTtsBlob(peek.text, peek.senderId));
+      }
     }, 400);
-  }, [speak, lang]);
+  }, [speak, lang, fetchTtsBlob]);
 
   // Watch for speech ending to play the next item
   useEffect(() => {
