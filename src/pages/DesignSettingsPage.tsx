@@ -194,7 +194,7 @@ const DesignSettingsPage = () => {
                   )}
 
                   {/* Mini chat preview */}
-                  <ChatPreview hue={hue} sat={sat} light={light} accentHue={accentHue} />
+                  <ChatPreview hue={hue} sat={sat} light={light} accentHue={accentHue} compact />
 
                   {/* Label area */}
                   <div className="p-3 bg-card">
