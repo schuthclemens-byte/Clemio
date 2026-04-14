@@ -367,6 +367,8 @@ const en: Record<string, string> = {
     "settings.pushNotSupported": "Push not supported",
     "settings.pushAddHome": "Add app to home screen",
     "settings.appearanceTitle": "Appearance",
+    "settings.controlsTitle": "Controls",
+    "settings.accountTitle": "Account & Plan",
     "chat.searchPlaceholder": "Search by name or number...",
     "chat.groupNamePlaceholder": "Group name...",
     "chat.contactFound": "Contact found",
