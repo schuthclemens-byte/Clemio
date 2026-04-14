@@ -22,6 +22,7 @@ import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAutoPlayQueue } from "@/hooks/useAutoPlayQueue";
 import { playMessageTone, playSendTone } from "@/lib/sounds";
+import { preloadAudio } from "@/lib/ttsCache";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useMessageReactions } from "@/hooks/useMessageReactions";
 import { toast } from "sonner";
