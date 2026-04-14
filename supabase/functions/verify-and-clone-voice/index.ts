@@ -98,15 +98,23 @@ serve(async (req) => {
     }
 
     // Step 2: Speaker verification via Gemini (multimodal audio comparison)
-    const freeSpeechBytes = new Uint8Array(await freeSpeechAudio.arrayBuffer());
-    const sentenceBytes = new Uint8Array(await sentenceAudio.arrayBuffer());
-
-    const freeSpeechB64 = btoa(String.fromCharCode(...freeSpeechBytes.length > 500000 
-      ? freeSpeechBytes.slice(0, 500000) 
-      : freeSpeechBytes));
-    const sentenceB64 = btoa(String.fromCharCode(...sentenceBytes.length > 500000 
-      ? sentenceBytes.slice(0, 500000) 
-      : sentenceBytes));
+    const { encode as base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
+    
+    const freeSpeechBuffer = await freeSpeechAudio.arrayBuffer();
+    const sentenceBuffer = await sentenceAudio.arrayBuffer();
+    
+    // Limit to ~500KB for Gemini
+    const maxBytes = 500000;
+    const freeSpeechB64 = base64Encode(
+      freeSpeechBuffer.byteLength > maxBytes 
+        ? new Uint8Array(freeSpeechBuffer, 0, maxBytes) 
+        : new Uint8Array(freeSpeechBuffer)
+    );
+    const sentenceB64 = base64Encode(
+      sentenceBuffer.byteLength > maxBytes 
+        ? new Uint8Array(sentenceBuffer, 0, maxBytes) 
+        : new Uint8Array(sentenceBuffer)
+    );
 
     const mimeType = freeSpeechAudio.type || "audio/webm";
 
