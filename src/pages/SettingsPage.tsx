@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Settings2, Sliders } from "lucide-react";
@@ -133,6 +133,48 @@ const SettingsPage = () => {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [defaultVoice, setDefaultVoice] = useState(() => localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9");
+  const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const previewVoice = useCallback(async (voiceId: string, name: string) => {
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+    }
+    if (previewingVoice === voiceId) {
+      setPreviewingVoice(null);
+      return;
+    }
+    setPreviewingVoice(voiceId);
+    try {
+      const sampleText = locale === "de"
+        ? `Hallo, ich bin ${name}. So klingt meine Stimme in Clemio.`
+        : `Hi, I'm ${name}. This is how my voice sounds in Clemio.`;
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: sampleText, defaultVoiceId: voiceId }),
+        }
+      );
+      if (!res.ok) throw new Error("TTS failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      previewAudioRef.current = audio;
+      audio.onended = () => { setPreviewingVoice(null); previewAudioRef.current = null; };
+      audio.onerror = () => { setPreviewingVoice(null); previewAudioRef.current = null; };
+      await audio.play();
+    } catch {
+      toast.error(locale === "de" ? "Vorschau fehlgeschlagen" : "Preview failed");
+      setPreviewingVoice(null);
+    }
+  }, [previewingVoice, locale]);
 
   // Searchable settings items with keywords
   const settingsIndex: { section: string; keywords: string[] }[] = [
@@ -477,19 +519,36 @@ const SettingsPage = () => {
                   { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah", gender: "♀" },
                   { id: "pFZP5JQG7iQjIQuC4Bku", name: "Lily", gender: "♀" },
                 ].map((voice) => (
-                  <button
-                    key={voice.id}
-                    onClick={() => { localStorage.setItem("clemio_default_voice", voice.id); savedToast(); setDefaultVoice(voice.id); }}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95",
-                      defaultVoice === voice.id
-                        ? "gradient-primary text-primary-foreground shadow-soft"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                    )}
-                  >
-                    <span>{voice.gender}</span>
-                    <span>{voice.name}</span>
-                  </button>
+                  <div key={voice.id} className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => { localStorage.setItem("clemio_default_voice", voice.id); savedToast(); setDefaultVoice(voice.id); }}
+                      className={cn(
+                        "flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95",
+                        defaultVoice === voice.id
+                          ? "gradient-primary text-primary-foreground shadow-soft"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      <span>{voice.gender}</span>
+                      <span>{voice.name}</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); previewVoice(voice.id, voice.name); }}
+                      className={cn(
+                        "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90",
+                        previewingVoice === voice.id
+                          ? "bg-primary text-primary-foreground animate-pulse"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      )}
+                      aria-label={`${voice.name} anhören`}
+                    >
+                      {previewingVoice === voice.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
