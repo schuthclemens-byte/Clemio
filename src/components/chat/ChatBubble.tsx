@@ -1,4 +1,4 @@
-import { Languages, Loader2, CheckCheck, Volume2, Trash2, SmilePlus, Crown, Pencil, Forward } from "lucide-react";
+import { Languages, Loader2, CheckCheck, Volume2, Trash2, SmilePlus, Crown, Pencil, Forward, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
