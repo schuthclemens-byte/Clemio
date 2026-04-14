@@ -32,6 +32,7 @@ import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import ClemioKISheet from "@/components/chat/ClemioKISheet";
+import ReportDialog from "@/components/chat/ReportDialog";
 
 interface Message {
   id: string;
