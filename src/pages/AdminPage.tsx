@@ -105,6 +105,31 @@ const AdminPage = () => {
     if (!adminLoading && isAdmin) fetchData();
   }, [adminLoading, isAdmin]);
 
+  // Realtime: update badge when new reports come in
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const channel = supabase
+      .channel("admin-reports-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reports" },
+        () => {
+          // Re-fetch open reports count
+          supabase.functions.invoke("admin-manage-user", {
+            body: { action: "list-reports" },
+          }).then(({ data, error }) => {
+            if (!error && data?.reports) {
+              setOpenReportsCount(data.reports.filter((r: any) => r.status === "open").length);
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [isAdmin]);
+
   const filtered = useMemo(() => {
     if (!search.trim()) return profiles;
     const q = search.toLowerCase();
