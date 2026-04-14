@@ -22,6 +22,7 @@ import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAutoPlayQueue } from "@/hooks/useAutoPlayQueue";
 import { playMessageTone, playSendTone } from "@/lib/sounds";
+import { preloadAudio } from "@/lib/ttsCache";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useMessageReactions } from "@/hooks/useMessageReactions";
 import { toast } from "sonner";
@@ -144,7 +145,7 @@ const ChatPage = () => {
     localeSpeechCodes[locale]
   );
   const { speak, stop: stopSpeaking, isSpeaking } = useTextToSpeech();
-  const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned, isLoading: isLoadingCloned, stop: stopClonedVoice } = useVoiceTTS();
+  const { playClonedVoice, playingMsgId, isPlaying: isPlayingCloned, isLoading: isLoadingCloned, stop: stopClonedVoice, fetchTtsBlob } = useVoiceTTS();
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<Record<string, boolean>>({});
   const [otherHasVoice, setOtherHasVoice] = useState<boolean | null>(null);
@@ -480,6 +481,19 @@ const ChatPage = () => {
       }));
 
       setVoiceProfiles(profiles);
+
+      // Preload TTS for last 3 received text messages from senders with voice profiles
+      if (msgs) {
+        const receivedTexts = msgs
+          .filter((m: any) => m.sender_id !== user.id && (!m.message_type || m.message_type === "text") && m.content)
+          .slice(-3);
+        
+        receivedTexts.forEach((m: any) => {
+          if (profiles[m.sender_id]) {
+            preloadAudio(m.sender_id, m.content, () => fetchTtsBlob(m.content, m.sender_id));
+          }
+        });
+      }
     };
 
     loadChat();

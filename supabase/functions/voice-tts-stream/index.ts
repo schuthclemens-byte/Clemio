@@ -50,21 +50,17 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Scope check
-    if (user.id !== senderId) {
+    // Run scope check and voice profile lookup in parallel
+    const scopeCheckPromise = (async () => {
+      if (user.id === senderId) return true;
+
       const { data: userConvs } = await adminClient
         .from("conversation_members")
         .select("conversation_id")
         .eq("user_id", user.id);
 
       const convIds = userConvs?.map((r: any) => r.conversation_id) ?? [];
-
-      if (convIds.length === 0) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (convIds.length === 0) return false;
 
       const { count } = await adminClient
         .from("conversation_members")
@@ -72,27 +68,30 @@ serve(async (req) => {
         .eq("user_id", senderId)
         .in("conversation_id", convIds);
 
-      if (!count) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
+      return !!count;
+    })();
 
-    // Get voice ID
-    const { data: voiceProfile } = await adminClient
+    const voicePromise = adminClient
       .from("voice_profiles")
       .select("elevenlabs_voice_id")
       .eq("user_id", senderId)
       .maybeSingle();
 
+    const [hasAccess, { data: voiceProfile }] = await Promise.all([scopeCheckPromise, voicePromise]);
+
+    if (!hasAccess) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const fallbackVoice = defaultVoiceId || "onwK4e9ZLuTAKqWW03F9";
     const voiceId = voiceProfile?.elevenlabs_voice_id || fallbackVoice;
 
-    // Use streaming endpoint for faster TTFB
+    // Use streaming endpoint with max latency optimization and smaller format
     const ttsResponse = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32&optimize_streaming_latency=4`,
       {
         method: "POST",
         headers: {
