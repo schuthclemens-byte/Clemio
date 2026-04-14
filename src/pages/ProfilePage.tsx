@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2, Mic, ChevronRight, CheckCircle } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,7 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [hasVoice, setHasVoice] = useState(false);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
@@ -66,6 +67,13 @@ const ProfilePage = () => {
         setAvatarUrl(data.avatar_url);
         
       }
+      // Check voice profile
+      const { data: voiceData } = await supabase
+        .from("voice_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setHasVoice(!!voiceData);
       setLoaded(true);
     };
     load();
@@ -284,6 +292,37 @@ const ProfilePage = () => {
           </div>
         </section>
 
+        {/* Voice Profile */}
+        <section className="animate-reveal-up" style={{ animationDelay: "120ms" }}>
+          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+            {locale === "de" ? "Meine Stimme" : "My Voice"}
+          </label>
+          <button
+            onClick={() => navigate("/voice-recordings")}
+            className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+          >
+            <div className={cn(
+              "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+              hasVoice ? "gradient-primary shadow-soft" : "bg-secondary"
+            )}>
+              <Mic className={cn("w-6 h-6", hasVoice ? "text-primary-foreground" : "text-muted-foreground")} />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-[0.938rem]">
+                  {locale === "de" ? "Stimmprofil" : "Voice Profile"}
+                </p>
+                {hasVoice && <CheckCircle className="w-4 h-4 text-accent" />}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {hasVoice
+                  ? (locale === "de" ? "Aktiv – Kontakte können dich hören" : "Active – contacts can hear you")
+                  : (locale === "de" ? "Einrichten, damit andere dich hören können" : "Set up so others can hear you")}
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+          </button>
+        </section>
 
         {/* Sign Out */}
         <section className="animate-reveal-up space-y-3" style={{ animationDelay: "300ms" }}>
