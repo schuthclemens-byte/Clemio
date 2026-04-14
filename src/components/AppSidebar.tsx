@@ -1,4 +1,5 @@
-import { MessageCircle, Settings, User, Moon, Headphones, Mic, Phone, Palette } from "lucide-react";
+import { MessageCircle, Settings, User, Moon, Headphones, Mic, Phone, Palette, Shield } from "lucide-react";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
