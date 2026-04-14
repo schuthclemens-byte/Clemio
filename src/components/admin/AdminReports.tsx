@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/contexts/I18nContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Flag, CheckCircle, Eye, Ban, MicOff, MessageSquare } from "lucide-react";
+import { Loader2, Flag, CheckCircle, Eye, Ban, MicOff, MessageSquare, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Report {
