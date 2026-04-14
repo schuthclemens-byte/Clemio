@@ -32,6 +32,7 @@ import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import ClemioKISheet from "@/components/chat/ClemioKISheet";
+import ReportDialog from "@/components/chat/ReportDialog";
 
 interface Message {
   id: string;
@@ -154,6 +155,7 @@ const ChatPage = () => {
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
+  const [reportTarget, setReportTarget] = useState<{ msgId: string; senderId: string } | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const chatMenuBtnRef = useRef<HTMLDivElement>(null);
   const [showClemioKI, setShowClemioKI] = useState(false);
@@ -1148,6 +1150,7 @@ const ChatPage = () => {
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
                   onForward={(content, type) => setForwardMsg({ content, type })}
+                  onReport={(mId, sId) => setReportTarget({ msgId: mId, senderId: sId })}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
                   onEdit={msg.isMine ? handleEditMessage : undefined}
                   
@@ -1273,6 +1276,16 @@ const ChatPage = () => {
         onUseSuggestion={(text) => {
           setPendingSuggestion(text);
         }}
+      />
+
+      {/* Report Dialog */}
+      <ReportDialog
+        open={!!reportTarget}
+        onOpenChange={(o) => { if (!o) setReportTarget(null); }}
+        reportedUserId={reportTarget?.senderId || ""}
+        reportType="message"
+        messageId={reportTarget?.msgId}
+        userName={reportTarget ? (memberNames[reportTarget.senderId] || chatName) : undefined}
       />
     </div>
   );

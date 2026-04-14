@@ -1,4 +1,4 @@
-import { Languages, Loader2, CheckCheck, Volume2, Trash2, SmilePlus, Crown, Pencil, Forward } from "lucide-react";
+import { Languages, Loader2, CheckCheck, Volume2, Trash2, SmilePlus, Crown, Pencil, Forward, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -42,6 +42,7 @@ interface ChatBubbleProps {
   onForward?: (content: string, messageType: string) => void;
   /** Transcribed text for audio messages */
   transcription?: string;
+  onReport?: (msgId: string, senderId: string) => void;
 }
 
 /** Animated wave bars shown during playback */
@@ -57,7 +58,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward, transcription }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward, transcription, onReport }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -391,6 +392,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       aria-label="Weiterleiten"
                     >
                       <Forward className="w-4 h-4" />
+                    </button>
+                  )}
+                  {/* Report button - only for messages from others */}
+                  {!isMine && onReport && msgId && senderId && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onReport(msgId, senderId); }}
+                      className="p-1.5 rounded-full bg-destructive/10 text-destructive transition-colors active:scale-90"
+                      aria-label="Melden"
+                    >
+                      <Flag className="w-4 h-4" />
                     </button>
                   )}
                 </>

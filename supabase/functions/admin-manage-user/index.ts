@@ -41,7 +41,7 @@ serve(async (req) => {
 
     if (!roleRow) return json({ error: "Forbidden: admin role required" }, 403);
 
-    const { action, targetUserId, reason, plan, premiumUntil, newPassword } = await req.json();
+    const { action, targetUserId, reason, plan, premiumUntil, newPassword, reportId, status: reportStatus, adminNote } = await req.json();
 
     // ── STATS ──
     if (action === "stats") {
@@ -289,7 +289,60 @@ serve(async (req) => {
       return json({ success: true, action: "deleted" });
     }
 
-    return json({ error: "Unknown action. Use: list, stats, block, unblock, delete, set-subscription, reset-password" }, 400);
+    // ── LIST REPORTS ──
+    if (action === "list-reports") {
+      const { data: reports, error } = await admin
+        .from("reports")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) return json({ error: error.message }, 500);
+
+      // Enrich with user names
+      const userIds = new Set<string>();
+      for (const r of reports || []) {
+        userIds.add(r.reported_by);
+        userIds.add(r.reported_user_id);
+      }
+      const { data: reportProfiles } = await admin
+        .from("profiles")
+        .select("id, display_name, phone_number")
+        .in("id", Array.from(userIds));
+      const nameMap: Record<string, string> = {};
+      for (const p of reportProfiles || []) {
+        nameMap[p.id] = p.display_name || p.phone_number;
+      }
+
+      // For message reports, fetch the reported message content
+      const msgIds = (reports || []).filter((r: any) => r.message_id).map((r: any) => r.message_id);
+      const msgMap: Record<string, { content: string; message_type: string }> = {};
+      if (msgIds.length) {
+        const { data: msgs } = await admin.from("messages").select("id, content, message_type").in("id", msgIds);
+        for (const m of msgs || []) {
+          msgMap[m.id] = { content: m.content, message_type: m.message_type || "text" };
+        }
+      }
+
+      const enriched = (reports || []).map((r: any) => ({
+        ...r,
+        reported_by_name: nameMap[r.reported_by] || "Unknown",
+        reported_user_name: nameMap[r.reported_user_id] || "Unknown",
+        reported_message: r.message_id ? msgMap[r.message_id] || null : null,
+      }));
+      return json({ reports: enriched });
+    }
+
+    // ── UPDATE REPORT STATUS ──
+    if (action === "update-report") {
+      if (!reportId) return json({ error: "reportId required" }, 400);
+      const updateData: any = { updated_at: new Date().toISOString() };
+      if (reportStatus) updateData.status = reportStatus;
+      if (adminNote !== undefined) updateData.admin_note = adminNote;
+      const { error } = await admin.from("reports").update(updateData).eq("id", reportId);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true, action: "report-updated" });
+    }
+
+    return json({ error: "Unknown action" }, 400);
   } catch (err) {
     console.error("admin-manage-user error:", err);
     return json({ error: err.message }, 500);

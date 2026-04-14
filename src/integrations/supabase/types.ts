@@ -506,6 +506,48 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          description: string | null
+          id: string
+          message_id: string | null
+          reason: string
+          report_type: string
+          reported_by: string
+          reported_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          message_id?: string | null
+          reason?: string
+          report_type?: string
+          reported_by: string
+          reported_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          message_id?: string | null
+          reason?: string
+          report_type?: string
+          reported_by?: string
+          reported_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string | null

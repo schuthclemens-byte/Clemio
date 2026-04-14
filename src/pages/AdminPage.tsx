@@ -17,10 +17,11 @@ import {
 } from "@/components/ui/dialog";
 import {
   ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
-  Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff,
+  Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff, Flag,
 } from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
+import AdminReports from "@/components/admin/AdminReports";
 
 interface UserSubscription {
   plan: string;
@@ -67,6 +68,7 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"users" | "reports">("users");
 
   // Password reset dialog
   const [pwDialog, setPwDialog] = useState<{ open: boolean; userId: string; name: string }>({ open: false, userId: "", name: "" });
@@ -173,8 +175,34 @@ const AdminPage = () => {
             {profiles.length} {tr("Nutzer", "Users")}
           </span>
         </div>
+        {/* Tabs */}
+        <div className="flex px-4 pt-2 gap-1">
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
+              activeTab === "users" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="w-4 h-4" /> {tr("Nutzer", "Users")}
+          </button>
+          <button
+            onClick={() => setActiveTab("reports")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
+              activeTab === "reports" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Flag className="w-4 h-4" /> Reports
+          </button>
+        </div>
       </div>
 
+      {activeTab === "reports" ? (
+        <AdminReports
+          onBlockUser={(userId) => performAction("block", userId, tr("Blockieren", "Block"))}
+          onDeleteVoice={(userId) => performAction("delete-voice", userId, tr("Voice gelöscht", "Voice deleted"))}
+        />
+      ) : (
+      <>
       {/* Stats Dashboard */}
       {stats && (
         <div className="grid grid-cols-3 gap-2 px-4 py-3">
@@ -377,6 +405,8 @@ const AdminPage = () => {
             </p>
           )}
         </div>
+      )}
+      </>
       )}
 
       {/* Password Reset Dialog */}
