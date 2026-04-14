@@ -1,4 +1,4 @@
-import { MessageCircle, Settings, User, Moon, Headphones, Shield, Mic, Phone } from "lucide-react";
+import { MessageCircle, Settings, User, Moon, Headphones, Mic, Phone, Palette } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ export function AppSidebar() {
   const mainItems = [
     { title: t("nav.chats"), url: "/chats", icon: MessageCircle },
     { title: t("nav.calls"), url: "/call-history", icon: Phone },
+    { title: "Design", url: "/design-settings", icon: Palette },
     { title: t("nav.profile"), url: "/profile", icon: User },
     { title: t("nav.settings"), url: "/settings", icon: Settings },
   ];
