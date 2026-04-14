@@ -907,8 +907,27 @@ const ChatPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <div className="flex flex-col h-screen bg-background">
+        {/* Header skeleton */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30">
+          <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+          <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+          <div className="space-y-1.5 flex-1">
+            <div className="h-4 w-28 rounded bg-muted animate-pulse" />
+            <div className="h-3 w-16 rounded bg-muted animate-pulse" />
+          </div>
+        </div>
+        {/* Bubble skeletons */}
+        <div className="flex-1 px-4 py-6 space-y-4">
+          <div className="flex justify-start"><div className="h-10 rounded-2xl bg-muted animate-pulse" style={{ width: "55%" }} /></div>
+          <div className="flex justify-end"><div className="h-10 rounded-2xl bg-muted animate-pulse" style={{ width: "45%" }} /></div>
+          <div className="flex justify-start"><div className="h-16 rounded-2xl bg-muted animate-pulse" style={{ width: "65%" }} /></div>
+          <div className="flex justify-end"><div className="h-10 rounded-2xl bg-muted animate-pulse" style={{ width: "40%" }} /></div>
+        </div>
+        {/* Input skeleton */}
+        <div className="px-4 pb-4">
+          <div className="h-12 w-full rounded-2xl bg-muted animate-pulse" />
+        </div>
       </div>
     );
   }
