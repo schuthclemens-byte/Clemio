@@ -1150,6 +1150,7 @@ const ChatPage = () => {
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
                   onForward={(content, type) => setForwardMsg({ content, type })}
+                  onReport={(mId, sId) => setReportTarget({ msgId: mId, senderId: sId })}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
                   onEdit={msg.isMine ? handleEditMessage : undefined}
                   
