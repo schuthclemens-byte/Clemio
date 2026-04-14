@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSmartBack } from "@/hooks/useSmartBack";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2 } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -149,12 +150,12 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background" {...swipeBackProps}>
+    <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
+              onClick={goBack}
               className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
               aria-label={t("a11y.back")}
             >
