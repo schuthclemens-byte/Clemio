@@ -58,6 +58,16 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
     }
   };
 
+  const deleteReport = async (reportId: string) => {
+    const { error } = await supabase.from("reports").delete().eq("id", reportId);
+    if (error) {
+      toast.error(tr("Fehler beim Löschen", "Delete failed"));
+    } else {
+      toast.success(tr("Meldung gelöscht", "Report deleted"));
+      fetchReports();
+    }
+  };
+
   const filtered = reports.filter((r) => filter === "all" || r.status === filter);
 
   const reasonLabels: Record<string, string> = {
