@@ -283,9 +283,9 @@ const DesignSettingsPage = () => {
 
       <BackgroundPicker
         open={bgPickerOpen}
-        onOpenChange={setBgPickerOpen}
-        value={globalBackground}
-        onChange={setGlobalBackground}
+        onClose={() => setBgPickerOpen(false)}
+        current={globalBackground}
+        onSelect={setGlobalBackground}
       />
     </div>
   );
