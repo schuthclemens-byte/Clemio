@@ -29,7 +29,7 @@ const VERIFICATION_SENTENCES: Record<string, string[]> = {
   ],
 };
 
-type Phase = "idle" | "consent" | "recording_free" | "recording_sentence" | "processing" | "done" | "error";
+type Phase = "idle" | "consent" | "preparing" | "recording_free" | "recording_sentence" | "processing" | "done" | "error";
 
 const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) => {
   const { user } = useAuth();
