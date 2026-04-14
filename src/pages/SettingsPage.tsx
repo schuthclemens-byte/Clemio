@@ -398,40 +398,23 @@ const SettingsPage = () => {
         {show("appearance") && <>
         {/* ──────────── ERSCHEINUNGSBILD ──────────── */}
         <CollapsibleSection icon={Palette} title={t("settings.appearanceTitle")} defaultOpen={isSearching} delay="60ms">
-          <div className="space-y-4">
-            {/* Theme */}
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
-              {themeOptions.map(({ value, icon: Icon, label }) => (
-                <button
-                  key={value}
-                  onClick={() => setTheme(value)}
-                  className={cn(
-                    "flex-1 flex flex-col items-center gap-2 py-4 transition-all duration-200",
-                    "hover:bg-secondary/50 active:scale-[0.97]",
-                    theme === value && "bg-primary/10"
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5", theme === value ? "text-primary" : "text-muted-foreground")} />
-                  <span className={cn("text-xs font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
-                    {label}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            {/* Design & Style Link */}
-            <button
-              onClick={() => navigate("/design-settings")}
-              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-accent" />
-              </div>
-              <div className="text-left">
-                <p className="font-semibold text-[0.938rem]">{t("design.title")}</p>
-                <p className="text-xs text-muted-foreground">{t("design.settingsDesc")}</p>
-              </div>
-            </button>
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
+            {themeOptions.map(({ value, icon: Icon, label }) => (
+              <button
+                key={value}
+                onClick={() => setTheme(value)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-2 py-4 transition-all duration-200",
+                  "hover:bg-secondary/50 active:scale-[0.97]",
+                  theme === value && "bg-primary/10"
+                )}
+              >
+                <Icon className={cn("w-5 h-5", theme === value ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("text-xs font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
+                  {label}
+                </span>
+              </button>
+            ))}
           </div>
         </CollapsibleSection>
         </>}
