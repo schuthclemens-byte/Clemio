@@ -460,7 +460,39 @@ const SettingsPage = () => {
               </div>
             </div>
 
-            {/* Smart Silence */}
+            {/* Default Voice Selection */}
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden px-4 py-3.5">
+              <div className="flex items-center gap-3 mb-3">
+                <Volume2 className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block font-medium">{locale === "de" ? "Standard-Stimme" : "Default Voice"}</span>
+                  <span className="text-xs text-muted-foreground">{locale === "de" ? "Wird verwendet, wenn der Absender kein Voice-Profil hat" : "Used when sender has no voice profile"}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "onwK4e9ZLuTAKqWW03F9", name: "Daniel", gender: "♂" },
+                  { id: "TX3LPaxmHKxFdv7VOQHJ", name: "Liam", gender: "♂" },
+                  { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah", gender: "♀" },
+                  { id: "pFZP5JQG7iQjIQuC4Bku", name: "Lily", gender: "♀" },
+                ].map((voice) => (
+                  <button
+                    key={voice.id}
+                    onClick={() => { localStorage.setItem("clemio_default_voice", voice.id); savedToast(); setDefaultVoice(voice.id); }}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95",
+                      defaultVoice === voice.id
+                        ? "gradient-primary text-primary-foreground shadow-soft"
+                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                    )}
+                  >
+                    <span>{voice.gender}</span>
+                    <span>{voice.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
               <ToggleRow
                 icon={BellOff}
