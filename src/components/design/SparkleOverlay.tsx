@@ -21,62 +21,108 @@ interface SparkleParticle {
   spawnDelay: number;
 }
 
-/* ── Soft particle (slow drifting micro-dot) ── */
-interface SoftParticle {
-  x: number;
-  y: number;
-  size: number;       // 0.8 – 2.5 px
-  alpha: number;
-  life: number;
-  maxLife: number;     // long: 300–900 frames @30fps → 10–30s
-  vx: number;         // drift velocity x (very slow)
-  vy: number;         // drift velocity y (always slightly upward)
-  active: boolean;
-  spawnDelay: number;
-}
-
 const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLightness }: SparkleOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
+  const drawnRef = useRef(false);
 
   useEffect(() => {
-    if (!settings.enabled) return;
+    if (!settings.enabled) { drawnRef.current = false; return; }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Skip on very low-end devices
-    if (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 2) return;
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 2);
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const w = () => window.innerWidth;
-    const h = () => window.innerHeight;
-
     const isSparkle = settings.sparkleMode === "sparkle";
     const intensity = settings.sparkleIntensity / 100;
 
-    let lastTime = 0;
-    const frameDuration = 1000 / 30; // 30 fps cap
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    if (isSparkle) {
+    const ww = window.innerWidth;
+    const hh = window.innerHeight;
+
+    if (!isSparkle) {
+      /* ════════════════════════════════════════════
+         SOFT MODE – static particle texture
+         No animation. Drawn once. Like glitter baked into material.
+         ════════════════════════════════════════════ */
+
+      ctx.clearRect(0, 0, ww, hh);
+
+      // Density: 40 at 0% → 200 at 100%
+      const count = Math.round(40 + intensity * 160);
+
+      // Slight warm-white / pinkish tint
+      const dotSat = Math.min(effectSaturation * 0.3, 25);
+
+      for (let i = 0; i < count; i++) {
+        const x = Math.random() * ww;
+        const y = Math.random() * hh;
+        // Size: 0.6 – 2.0px with slight variation
+        const size = 0.6 + Math.random() * 1.4;
+        // Lightness varies per dot for natural look: 85–97%
+        const light = 85 + Math.random() * 12;
+        // Opacity: 8–15%, scaled by intensity
+        const baseAlpha = 0.08 + intensity * 0.07; // 8% → 15%
+        // Slight per-dot variation
+        const alpha = baseAlpha * (0.5 + Math.random() * 0.5);
+
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${effectHue}, ${dotSat}%, ${light}%, ${alpha})`;
+        ctx.fill();
+      }
+
+      drawnRef.current = true;
+
+      // Redraw on resize
+      const onResize = () => {
+        const newDpr = Math.min(window.devicePixelRatio, 2);
+        canvas.width = window.innerWidth * newDpr;
+        canvas.height = window.innerHeight * newDpr;
+        ctx.setTransform(newDpr, 0, 0, newDpr, 0, 0);
+
+        const nw = window.innerWidth;
+        const nh = window.innerHeight;
+        ctx.clearRect(0, 0, nw, nh);
+
+        const resizeCount = Math.round(40 + intensity * 160);
+        for (let i = 0; i < resizeCount; i++) {
+          const x = Math.random() * nw;
+          const y = Math.random() * nh;
+          const size = 0.6 + Math.random() * 1.4;
+          const light = 85 + Math.random() * 12;
+          const baseAlpha = 0.08 + intensity * 0.07;
+          const alpha = baseAlpha * (0.5 + Math.random() * 0.5);
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${effectHue}, ${dotSat}%, ${light}%, ${alpha})`;
+          ctx.fill();
+        }
+      };
+
+      window.addEventListener("resize", onResize);
+      return () => { window.removeEventListener("resize", onResize); };
+
+    } else {
       /* ════════════════════════════════════════════
          SPARKLE MODE – quick flashing light dots
          ════════════════════════════════════════════ */
+
+      // Skip on very low-end devices
+      if (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 2) return;
+
       const poolSize = Math.round(12 + intensity * 50);
+      let lastTime = 0;
+      const frameDuration = 1000 / 30;
 
       const createSparkle = (delayed: boolean): SparkleParticle => ({
-        x: Math.random() * w(),
-        y: Math.random() * h(),
+        x: Math.random() * ww,
+        y: Math.random() * hh,
         size: Math.random() < 0.2 ? 4 + Math.random() * 3 : 1.5 + Math.random() * 2,
         alpha: 0,
         life: 0,
@@ -90,13 +136,23 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
 
       const pool: SparkleParticle[] = Array.from({ length: poolSize }, (_, i) => createSparkle(i > 3));
 
+      const resize = () => {
+        const r = Math.min(window.devicePixelRatio, 2);
+        canvas.width = window.innerWidth * r;
+        canvas.height = window.innerHeight * r;
+        ctx.setTransform(r, 0, 0, r, 0, 0);
+      };
+      window.addEventListener("resize", resize);
+
       const render = (timestamp: number) => {
         if (timestamp - lastTime < frameDuration) {
           animRef.current = requestAnimationFrame(render);
           return;
         }
         lastTime = timestamp;
-        ctx.clearRect(0, 0, w(), h());
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        ctx.clearRect(0, 0, cw, ch);
 
         for (let i = 0; i < pool.length; i++) {
           const p = pool[i];
@@ -148,109 +204,12 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
       };
 
       animRef.current = requestAnimationFrame(render);
-    } else {
-      /* ════════════════════════════════════════════
-         SOFT MODE – very subtle drifting micro-dots
-         ════════════════════════════════════════════
-         Requirements:
-         - tiny round dots (1–2.5px)
-         - near-white / slight pink tint
-         - extremely low opacity (5–10%)
-         - slow random drift (slightly upward / diagonal)
-         - no blinking, no flashing
-         - few particles, not crowded
-         - intensity slider controls count + slight visibility
-      */
 
-      // Few particles: 6 at 0% intensity → ~22 at 100%
-      const poolSize = Math.round(6 + intensity * 16);
-
-      const createSoft = (delayed: boolean): SoftParticle => ({
-        x: Math.random() * w(),
-        y: Math.random() * h(),
-        // Very small: 0.8 – 2.5px
-        size: 0.8 + Math.random() * 1.7,
-        alpha: 0,
-        life: 0,
-        // Long life: 300–900 frames → 10–30 seconds at 30fps
-        maxLife: 300 + Math.floor(Math.random() * 600),
-        // Very slow drift: mostly upward, slight horizontal wander
-        vx: (Math.random() - 0.5) * 0.15,
-        vy: -(0.05 + Math.random() * 0.15),   // always drifts up
-        active: !delayed,
-        spawnDelay: delayed
-          ? Math.floor(Math.random() * 60)  // stagger spawns over ~2s
-          : 0,
-      });
-
-      const pool: SoftParticle[] = Array.from({ length: poolSize }, (_, i) => createSoft(i > 2));
-
-      // Slight warm-white / pinkish tint
-      const dotHue = effectHue;
-      const dotSat = Math.min(effectSaturation * 0.3, 25); // very desaturated
-      const dotLight = 92; // near white
-
-      const render = (timestamp: number) => {
-        if (timestamp - lastTime < frameDuration) {
-          animRef.current = requestAnimationFrame(render);
-          return;
-        }
-        lastTime = timestamp;
-        ctx.clearRect(0, 0, w(), h());
-
-        const ww = w();
-        const hh = h();
-
-        for (let i = 0; i < pool.length; i++) {
-          const p = pool[i];
-
-          if (!p.active) {
-            p.spawnDelay--;
-            if (p.spawnDelay <= 0) p.active = true;
-            else continue;
-          }
-
-          p.life++;
-          const lifeRatio = p.life / p.maxLife;
-
-          // Drift position
-          p.x += p.vx;
-          p.y += p.vy;
-
-          // Smooth fade envelope: slow sine fade-in/out over entire life
-          // No blinking — one smooth arc
-          const envelope = Math.sin(lifeRatio * Math.PI); // 0→1→0
-
-          // Target opacity: 5–10% range, influenced by intensity
-          const baseOpacity = 0.04 + intensity * 0.06;  // 4% → 10%
-          p.alpha = envelope * baseOpacity;
-
-          // Recycle if expired or drifted off screen
-          if (p.life >= p.maxLife || p.y < -10 || p.x < -10 || p.x > ww + 10) {
-            pool[i] = createSoft(true);
-            pool[i].spawnDelay = Math.floor(Math.random() * 30);
-            continue;
-          }
-
-          if (p.alpha < 0.005) continue;
-
-          // Simple filled circle — no gradients, no glow, just a dot
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${dotHue}, ${dotSat}%, ${dotLight}%, ${p.alpha})`;
-          ctx.fill();
-        }
-
-        animRef.current = requestAnimationFrame(render);
+      return () => {
+        cancelAnimationFrame(animRef.current);
+        window.removeEventListener("resize", resize);
       };
-
-      animRef.current = requestAnimationFrame(render);
     }
-
-    return () => {
-      cancelAnimationFrame(animRef.current);
-      window.removeEventListener("resize", resize);
-    };
   }, [settings, effectHue, effectSaturation, effectLightness]);
 
   if (!settings.enabled) return null;
