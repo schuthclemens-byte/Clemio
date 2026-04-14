@@ -64,7 +64,10 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
     abuse: tr("Missbrauch", "Abuse"),
     wrong_voice: tr("Falsche Stimme", "Wrong voice"),
     spam: "Spam",
-    other: tr("Anderes", "Other"),
+    harassment: tr("Belästigung", "Harassment"),
+    fake_account: "Fake Account",
+    inappropriate: tr("Unangemessen", "Inappropriate"),
+    other: tr("Sonstiges", "Other"),
   };
 
   const typeIcons: Record<string, any> = {
