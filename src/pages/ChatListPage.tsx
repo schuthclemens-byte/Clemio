@@ -170,7 +170,14 @@ const ChatListPage = () => {
         });
       }
 
-      const items: ConversationItem[] = convos.map((conv) => {
+      const items: ConversationItem[] = convos.filter((conv) => {
+        // Hide 1:1 chats with blocked users
+        if (!conv.is_group) {
+          const otherId = otherMemberMap.get(conv.id);
+          if (otherId && blockedUserIds.has(otherId)) return false;
+        }
+        return true;
+      }).map((conv) => {
         let displayName = conv.name || "Chat";
         if (!conv.is_group) {
           const otherId = otherMemberMap.get(conv.id);
