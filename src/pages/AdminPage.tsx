@@ -52,6 +52,7 @@ interface Stats {
   blockedUsers: number;
   totalMessages: number;
   premiumUsers: number;
+  voiceProfiles: number;
 }
 
 const AdminPage = () => {
