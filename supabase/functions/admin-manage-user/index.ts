@@ -313,7 +313,7 @@ serve(async (req) => {
       await admin.from("focus_contacts").delete().eq("user_id", targetUserId);
       await admin.from("chat_invitations").delete().eq("invited_by", targetUserId);
       await admin.from("chat_invitations").delete().eq("invited_user_id", targetUserId);
-      await admin.from("clemix_ki_usage").delete().eq("user_id", targetUserId);
+      await admin.from("clemio_ki_usage").delete().eq("user_id", targetUserId);
       await admin.from("calls").delete().eq("caller_id", targetUserId);
       await admin.from("calls").delete().eq("receiver_id", targetUserId);
       await admin.from("subscriptions").delete().eq("user_id", targetUserId);

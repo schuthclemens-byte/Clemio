@@ -52,7 +52,7 @@ const ClemixKISheet = ({
     if (!open) return;
     const checkUsage = async () => {
       try {
-        const { data } = await supabase.functions.invoke("clemix-ki", {
+        const { data } = await supabase.functions.invoke("clemio-ki", {
           body: { checkOnly: true },
         });
         if (data) {
@@ -92,7 +92,7 @@ const ClemixKISheet = ({
         body.receivedMessage = receivedMessage;
       }
 
-      const { data, error } = await supabase.functions.invoke("clemix-ki", { body });
+      const { data, error } = await supabase.functions.invoke("clemio-ki", { body });
 
       if (error) {
         try {

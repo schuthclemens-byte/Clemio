@@ -153,7 +153,7 @@ serve(async (req) => {
     todayStart.setHours(0, 0, 0, 0);
 
     const { count: todayCount } = await supabaseClient
-      .from("clemix_ki_usage")
+      .from("clemio_ki_usage")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("used_at", todayStart.toISOString());
@@ -210,7 +210,7 @@ serve(async (req) => {
         throw new Error("AI improve failed");
       }
 
-      await supabaseClient.from("clemix_ki_usage").insert({ user_id: user.id });
+      await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
 
       const data = await response.json();
       let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
@@ -310,7 +310,7 @@ Generiere passende Antworten auf ${userLang}.`;
     }
 
     // Track usage AFTER successful generation
-    await supabaseClient.from("clemix_ki_usage").insert({ user_id: user.id });
+    await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
 
     const data = await response.json();
     let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
