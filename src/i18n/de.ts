@@ -155,6 +155,7 @@ const de: Record<string, string> = {
     "landing.heroDemoText": "Hey… jede Nachricht, die ich dir schreibe, klingt wie meine echte Stimme.",
     "landing.heroAutoPlay": "Voice startet automatisch",
     "landing.tapToStart": "Tippe zum Starten",
+    "landing.heroAudioError": "Audio konnte nicht gestartet werden – nutze den Play-Button",
     "landing.heroSubtitleNew": "Statt lesen – einfach zuhören.",
     "landing.heroCTA": "Jetzt hören",
     "landing.promoHeadline": "Schreiben war gestern.",
