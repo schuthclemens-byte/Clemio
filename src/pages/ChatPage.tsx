@@ -1209,6 +1209,7 @@ const ChatPage = () => {
                   createdAt={msg.createdAt}
                   isEdited={msg.isEdited}
                   hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
+                  audioUrl={msg.audioUrl}
                   onPlayClonedVoice={playClonedVoice}
                   isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
                   isLoadingCloned={playingMsgId === msg.id && isLoadingCloned}
