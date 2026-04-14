@@ -49,6 +49,7 @@ interface Message {
   uploadProgress?: number;
   createdAt: string;
   isEdited: boolean;
+  audioUrl?: string;
 }
 
 interface ReplyTarget {
@@ -182,6 +183,7 @@ const ChatPage = () => {
     replyTo: m.reply_to || undefined,
     createdAt: m.created_at,
     isEdited: m.is_edited ?? false,
+    audioUrl: (m as any).audio_url || undefined,
   }), [user?.id]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
