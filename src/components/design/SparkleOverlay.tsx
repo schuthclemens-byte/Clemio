@@ -8,16 +8,16 @@ interface SparkleOverlayProps {
   effectLightness: number;
 }
 
-interface SparkleParticle {
+interface DriftParticle {
   x: number;
   y: number;
   size: number;
   alpha: number;
-  life: number;
-  maxLife: number;
-  peakTime: number;
-  active: boolean;
-  spawnDelay: number;
+  vx: number;
+  vy: number;
+  type: "dot" | "glow" | "star";
+  light: number;
+  sat: number;
 }
 
 function resolveSparkleColor(
@@ -55,7 +55,7 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const isSparkle = settings.sparkleMode === "sparkle";
+    const isLively = settings.sparkleMode === "lively";
     const intensity = settings.sparkleIntensity / 100;
     const colorMode = settings.sparkleColor ?? "auto";
     const customHue = settings.sparkleCustomHue ?? 0;
@@ -76,7 +76,7 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
     const { w: ww, h: hh } = setupCanvas();
     const resolved = resolveSparkleColor(colorMode, customHue, effectHue, effectSaturation);
 
-    if (!isSparkle) {
+    if (!isLively) {
       /* ════════════════════════════════════════════
          SOFT MODE – static particle texture
          White-ish dots rendered with screen blend mode
