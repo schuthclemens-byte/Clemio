@@ -34,17 +34,11 @@ export const usePushCapability = (): PushCapability => {
     let canUsePush = swSupported && notificationSupported && pushSupported;
     let reason: string | null = null;
 
-    if (!swSupported) {
-      reason = "Service Worker wird von diesem Browser nicht unterstützt.";
-      canUsePush = false;
-    } else if (!notificationSupported) {
-      reason = "Benachrichtigungen werden von diesem Browser nicht unterstützt.";
-      canUsePush = false;
-    } else if (!pushSupported) {
-      reason = "Push API wird von diesem Browser nicht unterstützt.";
+    if (!swSupported || !notificationSupported || !pushSupported) {
+      reason = "Dein Browser unterstützt leider keine Benachrichtigungen.";
       canUsePush = false;
     } else if (isIOSBrowserOnly) {
-      reason = "Auf iOS funktionieren Push-Benachrichtigungen nur, wenn die App zum Home-Bildschirm hinzugefügt wurde.";
+      reason = "Füge die App zum Home-Bildschirm hinzu, um Benachrichtigungen zu erhalten.";
       canUsePush = false;
     }
 
