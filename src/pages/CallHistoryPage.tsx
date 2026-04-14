@@ -27,10 +27,10 @@ interface CallEntry {
 }
 
 const CallHistoryPage = () => {
+  const { goBack, swipeHandlers } = useSmartBack("/chats");
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useI18n();
-  useSwipeBack({ fallbackPath: "/chats" });
 
   const [calls, setCalls] = useState<CallEntry[]>([]);
   const [loading, setLoading] = useState(true);

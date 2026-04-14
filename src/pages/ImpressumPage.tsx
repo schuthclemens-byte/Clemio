@@ -3,7 +3,7 @@ import { useSmartBack } from "@/hooks/useSmartBack";
 import { useI18n } from "@/contexts/I18nContext";
 
 const ImpressumPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const { t } = useI18n();
 
   return (

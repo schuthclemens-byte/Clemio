@@ -15,7 +15,7 @@ interface VoiceProfile {
 }
 
 const VoiceRecordingsPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const { user } = useAuth();
   const { locale } = useI18n();
   const [myVoice, setMyVoice] = useState<VoiceProfile | null>(null);

@@ -16,7 +16,7 @@ interface FocusContact {
 }
 
 const FocusModePage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const { user } = useAuth();
   const { focusMode, toggle } = useAccessibility();
   const [contacts, setContacts] = useState<FocusContact[]>([]);

@@ -20,7 +20,7 @@ const Bullet = ({ children, accent = false }: { children: React.ReactNode; accen
 );
 
 const PrivacyPolicyPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const { t } = useI18n();
 
   return (

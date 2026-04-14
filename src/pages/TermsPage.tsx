@@ -27,7 +27,7 @@ const Forbidden = ({ children }: { children: React.ReactNode }) => (
 );
 
 const TermsPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const { t } = useI18n();
 
   return (

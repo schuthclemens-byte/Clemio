@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { subscribeToInstallPrompt, DeferredInstallPromptEvent, clearDeferredInstallPrompt } from "@/lib/installPrompt";
 
 const InstallPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const [desktopUrl, setDesktopUrl] = useState<string | null>(null);
   const [checkingDesktop, setCheckingDesktop] = useState(true);
   const [installPrompt, setInstallPrompt] = useState<DeferredInstallPromptEvent | null>(null);

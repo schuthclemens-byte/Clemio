@@ -102,7 +102,7 @@ const ChatPreview = ({ hue, sat, light, accentHue, compact = false }: { hue: num
 };
 
 const DesignSettingsPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/chats");
   const { t } = useI18n();
   const { theme, setTheme } = useTheme();
   const { state, setColors, setMagic, applyPreset } = useDesignSystem();

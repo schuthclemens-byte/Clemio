@@ -16,7 +16,7 @@ interface Contact {
 }
 
 const ContactAutoplayPage = () => {
-  const navigate = useNavigate();
+  const { goBack, swipeHandlers } = useSmartBack("/settings");
   const { user } = useAuth();
   const { locale } = useI18n();
   const [contacts, setContacts] = useState<Contact[]>([]);
