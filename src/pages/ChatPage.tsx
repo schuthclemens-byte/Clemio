@@ -155,7 +155,7 @@ const ChatPage = () => {
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
-  const [reportTarget, setReportTarget] = useState<{ msgId: string; senderId: string } | null>(null);
+  const [reportTarget, setReportTarget] = useState<{ msgId: string; senderId: string; messageType?: string } | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const chatMenuBtnRef = useRef<HTMLDivElement>(null);
   const [showClemioKI, setShowClemioKI] = useState(false);
@@ -1150,7 +1150,7 @@ const ChatPage = () => {
                   reactions={reactions[msg.id] || []}
                   onToggleReaction={toggleReaction}
                   onForward={(content, type) => setForwardMsg({ content, type })}
-                  onReport={(mId, sId) => setReportTarget({ msgId: mId, senderId: sId })}
+                  onReport={(mId, sId) => setReportTarget({ msgId: mId, senderId: sId, messageType: msg.messageType })}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
                   onEdit={msg.isMine ? handleEditMessage : undefined}
                   
@@ -1283,7 +1283,7 @@ const ChatPage = () => {
         open={!!reportTarget}
         onOpenChange={(o) => { if (!o) setReportTarget(null); }}
         reportedUserId={reportTarget?.senderId || ""}
-        reportType="message"
+        reportType={reportTarget?.messageType === "audio" || reportTarget?.messageType === "voice" ? "voice" : "message"}
         messageId={reportTarget?.msgId}
         userName={reportTarget ? (memberNames[reportTarget.senderId] || chatName) : undefined}
       />
