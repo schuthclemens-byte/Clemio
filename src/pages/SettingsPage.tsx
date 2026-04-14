@@ -113,7 +113,7 @@ const StatusRow = ({ ok, label }: { ok: boolean; label: string }) => (
 
 
 /** Brief "saved" feedback – not intrusive */
-const savedToast = () => toast("Gespeichert ✓", { duration: 1200, position: "bottom-center" });
+const savedToast = () => toast("Gespeichert ✓", { duration: 2000 });
 
 const SettingsPage = () => {
   const navigate = useNavigate();
