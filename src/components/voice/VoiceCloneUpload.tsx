@@ -124,7 +124,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
       const formData = new FormData();
       formData.append("free_speech", freeSpeechFile);
       formData.append("sentence_audio", sentenceFile);
-      formData.append("expected_sentence", verificationSentence);
+      formData.append("expected_sentence", verificationSentenceRef.current);
       formData.append("name", user.user_metadata?.display_name || "Meine Stimme");
 
       const response = await fetch(
