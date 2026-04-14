@@ -41,12 +41,36 @@ serve(async (req) => {
 
     if (!roleRow) return json({ error: "Forbidden: admin role required" }, 403);
 
-    const { action, targetUserId, reason } = await req.json();
+    const { action, targetUserId, reason, plan, premiumUntil, newPassword } = await req.json();
+
+    // ── STATS ──
+    if (action === "stats") {
+      const [
+        { count: totalUsers },
+        { count: blockedUsers },
+        { count: totalMessages },
+        { count: premiumUsers },
+        { count: activeUsers },
+      ] = await Promise.all([
+        admin.from("profiles").select("id", { count: "exact", head: true }),
+        admin.from("blocked_users").select("id", { count: "exact", head: true }),
+        admin.from("messages").select("id", { count: "exact", head: true }),
+        admin.from("subscriptions").select("id", { count: "exact", head: true }).gt("premium_until", new Date().toISOString()),
+        admin.from("user_presence").select("user_id", { count: "exact", head: true }).gt("last_seen", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+      ]);
+      return json({
+        totalUsers: totalUsers || 0,
+        blockedUsers: blockedUsers || 0,
+        totalMessages: totalMessages || 0,
+        premiumUsers: premiumUsers || 0,
+        activeUsers: activeUsers || 0,
+      });
+    }
 
     if (!targetUserId || typeof targetUserId !== "string") {
       return json({ error: "targetUserId required" }, 400);
     }
-    if (targetUserId === user.id) {
+    if (targetUserId === user.id && action !== "list") {
       return json({ error: "Cannot perform admin action on yourself" }, 400);
     }
 
@@ -62,24 +86,38 @@ serve(async (req) => {
       const { data: blocked } = await admin.from("blocked_users").select("user_id");
       const blockedIds = new Set((blocked || []).map((b: any) => b.user_id));
 
+      // Get message counts per user
+      const { data: allMessages } = await admin.from("messages").select("sender_id");
+      const msgCounts: Record<string, number> = {};
+      for (const m of allMessages || []) {
+        msgCounts[m.sender_id] = (msgCounts[m.sender_id] || 0) + 1;
+      }
+
+      // Get subscriptions
+      const { data: subs } = await admin.from("subscriptions").select("user_id, plan, premium_until, is_founding_user");
+      const subMap: Record<string, any> = {};
+      for (const s of subs || []) {
+        subMap[s.user_id] = s;
+      }
+
       const result = (profiles || []).map((p: any) => ({
         ...p,
         is_blocked: blockedIds.has(p.id),
+        message_count: msgCounts[p.id] || 0,
+        subscription: subMap[p.id] || null,
       }));
       return json({ profiles: result });
     }
 
     // ── BLOCK USER ──
     if (action === "block") {
-      // Insert into blocked_users
       await admin.from("blocked_users").insert({
         user_id: targetUserId,
         blocked_by: user.id,
         reason: reason || null,
       });
-      // Ban in auth
       await admin.auth.admin.updateUserById(targetUserId, {
-        ban_duration: "876600h", // ~100 years
+        ban_duration: "876600h",
       });
       return json({ success: true, action: "blocked" });
     }
@@ -93,11 +131,40 @@ serve(async (req) => {
       return json({ success: true, action: "unblocked" });
     }
 
+    // ── SET SUBSCRIPTION ──
+    if (action === "set-subscription") {
+      if (!plan || !premiumUntil) {
+        return json({ error: "plan and premiumUntil required" }, 400);
+      }
+      const { error: subError } = await admin
+        .from("subscriptions")
+        .update({
+          plan,
+          premium_until: premiumUntil,
+          is_founding_user: plan === "founding",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", targetUserId);
+      if (subError) return json({ error: subError.message }, 500);
+      return json({ success: true, action: "subscription-updated" });
+    }
+
+    // ── RESET PASSWORD ──
+    if (action === "reset-password") {
+      if (!newPassword || typeof newPassword !== "string" || newPassword.length < 8) {
+        return json({ error: "Password must be at least 8 characters" }, 400);
+      }
+      const { error: pwError } = await admin.auth.admin.updateUserById(targetUserId, {
+        password: newPassword,
+      });
+      if (pwError) return json({ error: pwError.message }, 500);
+      return json({ success: true, action: "password-reset" });
+    }
+
     // ── DELETE USER ──
     if (action === "delete") {
       const elevenlabsKey = Deno.env.get("ELEVENLABS_API_KEY");
 
-      // Delete ElevenLabs voices
       const { data: ownVoices } = await admin
         .from("voice_profiles")
         .select("elevenlabs_voice_id")
@@ -113,7 +180,6 @@ serve(async (req) => {
         }
       }
 
-      // Delete storage
       for (const bucket of ["avatars", "voice-samples"]) {
         const { data: files } = await admin.storage.from(bucket).list(targetUserId);
         if (files?.length) {
@@ -121,14 +187,12 @@ serve(async (req) => {
         }
       }
 
-      // Get conversations
       const { data: memberships } = await admin
         .from("conversation_members")
         .select("conversation_id")
         .eq("user_id", targetUserId);
       const convIds = (memberships || []).map((m: any) => m.conversation_id);
 
-      // Delete reactions on user's messages
       if (convIds.length) {
         const { data: userMsgs } = await admin
           .from("messages")
@@ -176,13 +240,12 @@ serve(async (req) => {
       await admin.from("user_roles").delete().eq("user_id", targetUserId);
       await admin.from("profiles").delete().eq("id", targetUserId);
 
-      // Delete auth user
       await admin.auth.admin.deleteUser(targetUserId);
 
       return json({ success: true, action: "deleted" });
     }
 
-    return json({ error: "Unknown action. Use: list, block, unblock, delete" }, 400);
+    return json({ error: "Unknown action. Use: list, stats, block, unblock, delete, set-subscription, reset-password" }, 400);
   } catch (err) {
     console.error("admin-manage-user error:", err);
     return json({ error: err.message }, 500);
