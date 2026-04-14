@@ -335,7 +335,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
             <Mic className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <p className="font-semibold text-lg">{tr("Lass dich hören", "Let yourself be heard")}</p>
+            <p className="font-bold text-xl">{tr("Meine Stimme", "My Voice")}</p>
             <p className="text-sm text-muted-foreground mt-1">
               {tr("Bitte bestätige die Einwilligung, um fortzufahren", "Please confirm consent to continue")}
             </p>
@@ -344,8 +344,10 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         <VoiceConsentPopup
           open={true}
           onAccept={() => {
-            setPhase("idle");
-            beginFreeSpeech();
+            setPhase("preparing");
+            setTimeout(() => {
+              beginFreeSpeech();
+            }, 800);
           }}
           onCancel={() => setPhase("idle")}
         />
@@ -353,7 +355,27 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
     );
   }
 
-  // Idle – CTA with explanation
+  // Preparing – brief transition before recording starts
+  if (phase === "preparing") {
+    return (
+      <div className="bg-card rounded-2xl p-8 shadow-sm border border-border text-center space-y-4 animate-reveal-up">
+        <div className="relative w-16 h-16 mx-auto">
+          <div className="absolute inset-0 rounded-2xl gradient-primary opacity-30 animate-pulse" />
+          <div className="relative w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-soft">
+            <Mic className="w-8 h-8 text-primary-foreground" />
+          </div>
+        </div>
+        <div>
+          <p className="font-bold text-base">{tr("Wird vorbereitet…", "Preparing…")}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {tr("Mikrofon wird aktiviert", "Activating microphone")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Idle – CTA
   return (
     <div className="bg-card rounded-2xl p-6 shadow-sm border border-border text-center space-y-4">
       <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-soft">
@@ -378,7 +400,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
       </div>
       <button
         onClick={() => setPhase("consent")}
-        className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all active:scale-[0.97]"
+        className="w-full h-14 rounded-2xl gradient-primary text-primary-foreground font-bold text-base shadow-soft hover:shadow-elevated transition-all duration-200 active:scale-[0.95]"
       >
         {tr("Stimmprofil einrichten", "Set up voice profile")}
       </button>
