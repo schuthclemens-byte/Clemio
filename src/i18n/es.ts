@@ -50,6 +50,7 @@ const es: Record<string, string> = {
     "chat.offline": "Sin conexión",
     "chat.showMore": "Mostrar más",
     "chat.tapToListen": "Toca para escuchar · Doble toque para más",
+    "chat.listen": "Escuchar",
     "chat.speaking": "hablando…",
     "chat.readingAloud": "Leyendo en voz alta…",
     "chat.contact": "Contacto",

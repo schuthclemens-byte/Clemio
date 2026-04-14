@@ -51,6 +51,7 @@ const de: Record<string, string> = {
     "chat.offline": "Offline",
     "chat.showMore": "Mehr anzeigen",
     "chat.tapToListen": "Tippen zum Anhören · Doppeltippen für mehr",
+    "chat.listen": "Anhören",
     "chat.speaking": "spricht…",
     "chat.readingAloud": "Wird vorgelesen…",
     "chat.contact": "Kontakt",
