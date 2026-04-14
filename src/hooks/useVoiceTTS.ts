@@ -144,7 +144,7 @@ export const useVoiceTTS = () => {
           await pump();
 
           // Cache the full blob for future instant playback
-          const fullBlob = new Blob(chunks, { type: "audio/mpeg" });
+          const fullBlob = new Blob(chunks as BlobPart[], { type: "audio/mpeg" });
           setCachedAudio(senderId, text, fullBlob);
 
           resolve();
