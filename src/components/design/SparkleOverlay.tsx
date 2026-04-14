@@ -1,5 +1,5 @@
 import { useEffect, useRef, memo } from "react";
-import type { MagicModeSettings } from "@/contexts/DesignSystemContext";
+import type { MagicModeSettings, SparkleColor } from "@/contexts/DesignSystemContext";
 
 interface SparkleOverlayProps {
   settings: MagicModeSettings;
@@ -21,13 +21,41 @@ interface SparkleParticle {
   spawnDelay: number;
 }
 
+/**
+ * Resolve sparkle color to { hue, saturation, lightness } based on mode.
+ * Always desaturates to keep particles harmonious and non-dominant.
+ */
+function resolveSparkleColor(
+  colorMode: SparkleColor,
+  customHue: number,
+  themeHue: number,
+  themeSat: number,
+): { hue: number; sat: number; light: number } {
+  switch (colorMode) {
+    case "warm":
+      // Warm rose / peach tones
+      return { hue: 15, sat: Math.min(themeSat * 0.35, 30), light: 92 };
+    case "cool":
+      // Cool blue / silver tones
+      return { hue: 220, sat: Math.min(themeSat * 0.3, 25), light: 93 };
+    case "accent":
+      // Theme accent but desaturated
+      return { hue: (themeHue + 30) % 360, sat: Math.min(themeSat * 0.4, 35), light: 90 };
+    case "custom":
+      return { hue: customHue, sat: 20, light: 91 };
+    case "auto":
+    default:
+      // Auto: derive from theme hue, keep very desaturated
+      return { hue: themeHue, sat: Math.min(themeSat * 0.3, 25), light: 92 };
+  }
+}
+
 const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLightness }: SparkleOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
-  const drawnRef = useRef(false);
 
   useEffect(() => {
-    if (!settings.enabled) { drawnRef.current = false; return; }
+    if (!settings.enabled) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -36,6 +64,8 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
 
     const isSparkle = settings.sparkleMode === "sparkle";
     const intensity = settings.sparkleIntensity / 100;
+    const colorMode = settings.sparkleColor ?? "auto";
+    const customHue = settings.sparkleCustomHue ?? 0;
 
     const dpr = Math.min(window.devicePixelRatio, 2);
     canvas.width = window.innerWidth * dpr;
@@ -45,64 +75,43 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
     const ww = window.innerWidth;
     const hh = window.innerHeight;
 
+    const resolved = resolveSparkleColor(colorMode, customHue, effectHue, effectSaturation);
+
     if (!isSparkle) {
       /* ════════════════════════════════════════════
          SOFT MODE – static particle texture
-         No animation. Drawn once. Like glitter baked into material.
          ════════════════════════════════════════════ */
 
-      ctx.clearRect(0, 0, ww, hh);
+      const drawParticles = (cw: number, ch: number) => {
+        ctx.clearRect(0, 0, cw, ch);
+        const count = Math.round(40 + intensity * 160);
 
-      // Density: 40 at 0% → 200 at 100%
-      const count = Math.round(40 + intensity * 160);
+        for (let i = 0; i < count; i++) {
+          const x = Math.random() * cw;
+          const y = Math.random() * ch;
+          const size = 0.6 + Math.random() * 1.4;
+          // Per-dot lightness variation for natural look
+          const light = resolved.light - 7 + Math.random() * 12;
+          // Per-dot saturation variation
+          const sat = Math.max(0, resolved.sat - 5 + Math.random() * 10);
+          const baseAlpha = 0.08 + intensity * 0.07;
+          const alpha = baseAlpha * (0.5 + Math.random() * 0.5);
 
-      // Slight warm-white / pinkish tint
-      const dotSat = Math.min(effectSaturation * 0.3, 25);
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${resolved.hue}, ${sat}%, ${light}%, ${alpha})`;
+          ctx.fill();
+        }
+      };
 
-      for (let i = 0; i < count; i++) {
-        const x = Math.random() * ww;
-        const y = Math.random() * hh;
-        // Size: 0.6 – 2.0px with slight variation
-        const size = 0.6 + Math.random() * 1.4;
-        // Lightness varies per dot for natural look: 85–97%
-        const light = 85 + Math.random() * 12;
-        // Opacity: 8–15%, scaled by intensity
-        const baseAlpha = 0.08 + intensity * 0.07; // 8% → 15%
-        // Slight per-dot variation
-        const alpha = baseAlpha * (0.5 + Math.random() * 0.5);
+      drawParticles(ww, hh);
 
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${effectHue}, ${dotSat}%, ${light}%, ${alpha})`;
-        ctx.fill();
-      }
-
-      drawnRef.current = true;
-
-      // Redraw on resize
       const onResize = () => {
         const newDpr = Math.min(window.devicePixelRatio, 2);
         canvas.width = window.innerWidth * newDpr;
         canvas.height = window.innerHeight * newDpr;
         ctx.setTransform(newDpr, 0, 0, newDpr, 0, 0);
-
-        const nw = window.innerWidth;
-        const nh = window.innerHeight;
-        ctx.clearRect(0, 0, nw, nh);
-
-        const resizeCount = Math.round(40 + intensity * 160);
-        for (let i = 0; i < resizeCount; i++) {
-          const x = Math.random() * nw;
-          const y = Math.random() * nh;
-          const size = 0.6 + Math.random() * 1.4;
-          const light = 85 + Math.random() * 12;
-          const baseAlpha = 0.08 + intensity * 0.07;
-          const alpha = baseAlpha * (0.5 + Math.random() * 0.5);
-          ctx.beginPath();
-          ctx.arc(x, y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${effectHue}, ${dotSat}%, ${light}%, ${alpha})`;
-          ctx.fill();
-        }
+        drawParticles(window.innerWidth, window.innerHeight);
       };
 
       window.addEventListener("resize", onResize);
@@ -113,7 +122,6 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
          SPARKLE MODE – quick flashing light dots
          ════════════════════════════════════════════ */
 
-      // Skip on very low-end devices
       if (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 2) return;
 
       const poolSize = Math.round(12 + intensity * 50);
@@ -185,8 +193,8 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
           const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, outerR);
           grad.addColorStop(0, `rgba(255, 255, 255, ${p.alpha * 0.95})`);
           grad.addColorStop(0.15, `rgba(255, 255, 255, ${p.alpha * 0.6})`);
-          grad.addColorStop(0.4, `hsla(${effectHue}, ${Math.min(effectSaturation, 40)}%, 85%, ${p.alpha * 0.25})`);
-          grad.addColorStop(1, `hsla(${effectHue}, ${effectSaturation}%, 70%, 0)`);
+          grad.addColorStop(0.4, `hsla(${resolved.hue}, ${Math.min(resolved.sat + 10, 40)}%, 85%, ${p.alpha * 0.25})`);
+          grad.addColorStop(1, `hsla(${resolved.hue}, ${resolved.sat}%, 70%, 0)`);
           ctx.beginPath();
           ctx.arc(p.x, p.y, outerR, 0, Math.PI * 2);
           ctx.fillStyle = grad;
