@@ -291,6 +291,22 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             />
           </div>
 
+          {/* Improve button – only when text has content */}
+          {currentText.trim() && !isListening && (
+            <button
+              onClick={() => setShowImprove(!showImprove)}
+              className={cn(
+                "flex items-center justify-center w-11 h-11 rounded-full shrink-0 transition-all duration-200 active:scale-90",
+                showImprove
+                  ? "gradient-primary text-primary-foreground shadow-soft"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+              aria-label={locale === "de" ? "Nachricht verbessern" : "Improve message"}
+            >
+              <Wand2 className="w-4.5 h-4.5" />
+            </button>
+          )}
+
           {/* Send or Voice Record */}
           {hasContent ? (
             <button
@@ -328,6 +344,17 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             </button>
           )}
         </div>
+
+        {/* Improve message sheet */}
+        {showImprove && currentText.trim() && (
+          <ImproveMessageSheet
+            originalText={currentText.trim()}
+            onAccept={(improved) => { setText(improved); setShowImprove(false); }}
+            onSend={(improved) => { onSend(improved); setText(""); setShowImprove(false); onStopTyping?.(); }}
+            onClose={() => setShowImprove(false)}
+            onPlayVoice={onPlayVoice}
+          />
+        )}
       </div>
 
       <CameraCapture
