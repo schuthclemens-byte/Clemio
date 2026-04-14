@@ -7,6 +7,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+/** Deterministic cache key from voiceId + text */
+async function cacheKey(voiceId: string, text: string): Promise<string> {
+  const data = new TextEncoder().encode(`${voiceId}::${text}`);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hex = [...new Uint8Array(hash)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `${hex.slice(0, 16)}.mp3`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -89,7 +99,26 @@ serve(async (req) => {
     const fallbackVoice = defaultVoiceId || "onwK4e9ZLuTAKqWW03F9";
     const voiceId = voiceProfile?.elevenlabs_voice_id || fallbackVoice;
 
-    // Use streaming endpoint with max latency optimization and smaller format
+    // --- Server-side cache check ---
+    const key = await cacheKey(voiceId, text);
+
+    const { data: cachedFile } = await adminClient.storage
+      .from("tts-cache")
+      .download(key);
+
+    if (cachedFile) {
+      // Cache HIT – return stored audio directly
+      const arrayBuf = await cachedFile.arrayBuffer();
+      return new Response(arrayBuf, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "audio/mpeg",
+          "X-TTS-Cache": "HIT",
+        },
+      });
+    }
+
+    // --- Cache MISS – generate via ElevenLabs ---
     const ttsResponse = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32&optimize_streaming_latency=4`,
       {
@@ -120,12 +149,27 @@ serve(async (req) => {
       });
     }
 
-    // Stream the response body directly
-    return new Response(ttsResponse.body, {
+    // Read full response body to cache it
+    const audioBytes = await ttsResponse.arrayBuffer();
+    const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
+
+    // Store in cache (fire-and-forget, don't block response)
+    adminClient.storage
+      .from("tts-cache")
+      .upload(key, audioBlob, {
+        contentType: "audio/mpeg",
+        upsert: false,
+      })
+      .then(({ error }) => {
+        if (error) console.error("Cache upload error:", error.message);
+        else console.log("Cached TTS audio:", key);
+      });
+
+    return new Response(audioBytes, {
       headers: {
         ...corsHeaders,
         "Content-Type": "audio/mpeg",
-        "Transfer-Encoding": "chunked",
+        "X-TTS-Cache": "MISS",
       },
     });
   } catch (error) {
