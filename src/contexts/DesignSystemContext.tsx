@@ -124,12 +124,12 @@ const createTheme = (colors: DesignColors, magic: MagicModeSettings, isDark: boo
   const secondarySaturation = clamp(primarySaturation * (isDark ? 0.82 : 0.72), 18, 96);
   const secondaryLightness = clamp(primaryLightness + (isDark ? 6 : 10), isDark ? 42 : 34, isDark ? 72 : 80);
 
-  const backgroundSaturation = clamp(primarySaturation * (isDark ? 0.4 : 0.3), isDark ? 14 : 8, isDark ? 34 : 28);
+  const backgroundSaturation = clamp(primarySaturation * (isDark ? 0.12 : 0.3), isDark ? 4 : 8, isDark ? 14 : 28);
   const backgroundLightness = isDark
     ? clamp(7 + (100 - primaryLightness) * 0.04, 7, 13)
     : clamp(97 - primarySaturation * 0.05, 89, 97);
 
-  const surfaceSaturation = clamp(backgroundSaturation + (isDark ? 4 : 2), isDark ? 14 : 8, isDark ? 30 : 20);
+  const surfaceSaturation = clamp(backgroundSaturation + (isDark ? 2 : 2), isDark ? 5 : 8, isDark ? 16 : 20);
   const surfaceLightness = isDark
     ? clamp(backgroundLightness + 6, 13, 19)
     : clamp(backgroundLightness - 3, 84, 95);
