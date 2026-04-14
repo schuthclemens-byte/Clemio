@@ -117,14 +117,11 @@ const SettingsPage = () => {
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
   const { theme, setTheme } = useTheme();
-  const { state: designState, applyPreset } = useDesignSystem();
-  const { globalBackground, setGlobalBackground } = useChatBackground();
   const { user } = useAuth();
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const pushCap = usePushCapability();
   const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
-  const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
@@ -202,12 +199,8 @@ const SettingsPage = () => {
   };
 
   const languages = Object.entries(localeNames) as [Locale, string][];
-  const designPresets: { id: DesignPreset; label: string; colors: string[] }[] = [
-    { id: "softMagic", label: "Soft Magic", colors: ["hsl(328,56%,62%)", "hsl(300,40%,70%)", "hsl(350,50%,65%)"] },
-    { id: "galaxy", label: "Galaxy", colors: ["hsl(248,78%,58%)", "hsl(260,70%,50%)", "hsl(230,60%,55%)"] },
-    { id: "elegant", label: "Elegant", colors: ["hsl(214,20%,48%)", "hsl(220,15%,55%)", "hsl(200,18%,50%)"] },
-    { id: "neon", label: "Neon", colors: ["hsl(168,94%,52%)", "hsl(180,90%,48%)", "hsl(150,80%,50%)"] },
-  ];
+
+
 
   const themeOptions = [
     { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
@@ -729,12 +722,6 @@ const SettingsPage = () => {
         )}
       </div>
 
-      <BackgroundPicker
-        open={bgPickerOpen}
-        onClose={() => setBgPickerOpen(false)}
-        current={globalBackground}
-        onSelect={setGlobalBackground}
-      />
     </div>
   );
 };
