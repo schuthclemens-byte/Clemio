@@ -46,23 +46,35 @@ const MediaGallerySheet = ({ open, onClose, conversationId }: MediaGallerySheetP
     if (!open) return;
     setLoading(true);
     (async () => {
-      const { data } = await supabase
+      // Get media messages first
+      const { data: messagesData } = await supabase
         .from("messages")
         .select("id, content, message_type, created_at")
         .eq("conversation_id", conversationId)
         .in("message_type", ["image", "video", "audio", "voice"])
         .order("created_at", { ascending: false });
 
-      if (data) {
+      if (messagesData) {
         const mapped: MediaItem[] = await Promise.all(
-          data.map(async (m) => {
+          messagesData.map(async (m) => {
             let mediaUrl = m.content;
-            // If content is a storage path, create signed URL
+            // If content is a storage path, get signed URL via edge function
             if (!m.content.startsWith("http")) {
-              const { data: signed } = await supabase.storage
-                .from("chat-media")
-                .createSignedUrl(m.content, 7 * 24 * 60 * 60);
-              if (signed?.signedUrl) mediaUrl = signed.signedUrl;
+              try {
+                const { data: signedData, error } = await supabase.functions.invoke(
+                  "get-chat-media",
+                  {
+                    body: { path: m.content },
+                  }
+                );
+                if (signedData?.signedUrl) {
+                  mediaUrl = signedData.signedUrl;
+                } else {
+                  console.error("Failed to get signed URL:", error);
+                }
+              } catch (err) {
+                console.error("Error invoking get-chat-media:", err);
+              }
             }
             return {
               id: m.id,
