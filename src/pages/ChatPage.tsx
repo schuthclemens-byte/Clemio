@@ -1161,6 +1161,15 @@ const ChatPage = () => {
                   onReport={(mId, sId) => setReportTarget({ msgId: mId, senderId: sId, messageType: msg.messageType })}
                   onDelete={msg.isMine ? handleDeleteMessage : undefined}
                   onEdit={msg.isMine ? handleEditMessage : undefined}
+                  onReply={() => {
+                    let displayText = msg.text.slice(0, 100);
+                    if (msg.messageType === "image") displayText = "📷 Bild";
+                    else if (msg.messageType === "audio" || msg.messageType === "voice") displayText = "🎤 Sprachnachricht";
+                    setReplyTarget({ id: msg.id, text: displayText, senderName });
+                  }}
+                  onBlock={!msg.isMine ? (userId) => {
+                    toast.success(t("chat.userBlocked") || "Nutzer blockiert");
+                  } : undefined}
                   
                   replyToText={replyMsg ? (replyMsg.messageType === "image" ? "📷 Bild" : replyMsg.messageType === "audio" || replyMsg.messageType === "voice" ? "🎤 Sprachnachricht" : replyMsg.text) : undefined}
                   replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
