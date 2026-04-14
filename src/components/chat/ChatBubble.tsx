@@ -394,6 +394,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       <Forward className="w-4 h-4" />
                     </button>
                   )}
+                  {/* Report button - only for messages from others */}
+                  {!isMine && onReport && msgId && senderId && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onReport(msgId, senderId); }}
+                      className="p-1.5 rounded-full bg-destructive/10 text-destructive transition-colors active:scale-90"
+                      aria-label="Melden"
+                    >
+                      <Flag className="w-4 h-4" />
+                    </button>
+                  )}
                 </>
               )}
             </div>
