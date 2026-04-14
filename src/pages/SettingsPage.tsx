@@ -445,7 +445,7 @@ const SettingsPage = () => {
                 {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
                   <button
                     key={rate}
-                    onClick={() => a11y.setSpeechRate(rate)}
+                    onClick={() => { a11y.setSpeechRate(rate); savedToast(); }}
                     className={cn(
                       "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
                       a11y.speechRate === rate
@@ -466,7 +466,7 @@ const SettingsPage = () => {
                 label={t("settings.smartSilence")}
                 description={t("settings.smartSilenceDesc")}
                 checked={a11y.smartSilence}
-                onChange={() => a11y.toggle("smartSilence")}
+                onChange={() => { a11y.toggle("smartSilence"); savedToast(); }}
                 borderBottom={false}
               />
               {a11y.smartSilence && (
