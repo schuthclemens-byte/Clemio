@@ -1,48 +1,31 @@
 
 
-## Plan: Admin-Features erweitern
+## Schritt 7: Push-Benachrichtigungen vereinfachen
 
-Fünf neue Admin-Funktionen werden hinzugefügt.
+### Ziel
+Push in den Einstellungen auf einen simplen Toggle reduzieren – kein technischer Jargon, kein separater Aktivieren-Button. Nur: An/Aus + kurzer Hinweis.
 
----
+### Änderungen
 
-### 1. User-Suche & Filter
+**1. `src/pages/SettingsPage.tsx` – Push-Bereich vereinfachen (Zeilen 268-291)**
+- Den gesamten Push-Block (Card mit Button/Dot) durch eine einfache `ToggleRow` ersetzen
+- Toggle AN = Push aktiv (ruft `subscribe()` auf wenn nötig)
+- Toggle AUS = zeigt Info-Toast dass Push in Browser-Einstellungen deaktiviert werden muss
+- Einzeiliger Beschreibungstext: "Erhalte Benachrichtigungen bei neuen Nachrichten"
+- Kein Status-Text "Aktiv/Inaktiv", kein separater Aktivieren-Button
 
-In `AdminPage.tsx` ein Suchfeld oben einbauen, das nach Name und Telefonnummer filtert (clientseitig, da die Nutzerzahl überschaubar ist).
+**2. `src/components/PushPromptSheet.tsx` – Texte vereinfachen**
+- "Nicht unterstützt"-State: Kürzerer Text ohne technische Details (Service Worker, Push API etc.)
+- "Aktivieren"-State: Einfacher Satz statt Erklärung
+- "Abgelehnt"-State: Kurzer Hinweis auf Browser-Einstellungen, keine technischen Begriffe
 
-### 2. Subscription verwalten
+**3. `src/hooks/usePushCapability.ts` – Reason-Texte vereinfachen**
+- Statt "Service Worker wird von diesem Browser nicht unterstützt" → "Dein Browser unterstützt keine Benachrichtigungen"
+- Statt "Push API wird nicht unterstützt" → gleicher einfacher Text
+- iOS-Text: "Füge die App zum Home-Bildschirm hinzu, um Benachrichtigungen zu erhalten"
 
-**Edge Function** (`admin-manage-user`): Neue Action `set-subscription` — setzt `premium_until` und `plan` für einen User via Service-Role.
-
-**Admin UI**: Pro User ein kleines Badge (Free/Premium/Founding) + Button "Premium gewähren" / "Premium entziehen" mit Datums-Auswahl.
-
-### 3. Admin-Dashboard/Stats
-
-Oben auf der Admin-Seite eine Statistik-Leiste mit:
-- Gesamtzahl User
-- Aktive User (letzte 7 Tage, basierend auf `user_presence.last_seen`)
-- Blockierte User
-- Nachrichten gesamt
-- Premium-User
-
-Die Daten kommen über eine neue Action `stats` in der Edge Function, die per Service-Role die Counts abfragt.
-
-### 4. Passwort zurücksetzen
-
-**Edge Function**: Neue Action `reset-password` — ruft `admin.auth.admin.updateUserById(targetUserId, { password: newPassword })` auf.
-
-**Admin UI**: Button "Passwort zurücksetzen" → Dialog mit Passwort-Eingabe.
-
-### 5. Nachrichtenanzahl pro User
-
-In der `list`-Action der Edge Function zusätzlich die Anzahl gesendeter Nachrichten pro User mitliefern (ein COUNT-Query auf `messages` gruppiert nach `sender_id`). Wird als kleine Zahl neben dem Usernamen angezeigt.
-
----
-
-### Dateien
-
-| Datei | Änderung |
-|---|---|
-| `supabase/functions/admin-manage-user/index.ts` | Actions `stats`, `set-subscription`, `reset-password` + Message-Count bei `list` |
-| `src/pages/AdminPage.tsx` | Suchfeld, Stats-Dashboard, Subscription-Badge/Buttons, Passwort-Dialog, Nachrichten-Count |
+### Ergebnis
+- Settings: Ein Toggle "Benachrichtigungen" mit Bell-Icon – fertig
+- PushPromptSheet: Klare, kurze Texte ohne Fachbegriffe
+- Capability-Reasons: Nutzerfreundliche Sprache
 
