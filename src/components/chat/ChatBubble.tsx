@@ -42,6 +42,7 @@ interface ChatBubbleProps {
   onForward?: (content: string, messageType: string) => void;
   /** Transcribed text for audio messages */
   transcription?: string;
+  onReport?: (msgId: string, senderId: string) => void;
 }
 
 /** Animated wave bars shown during playback */
