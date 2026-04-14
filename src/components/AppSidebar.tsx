@@ -23,6 +23,7 @@ export function AppSidebar() {
   const location = useLocation();
   const missedCalls = useMissedCallsCount();
   const { t } = useI18n();
+  const { isAdmin } = useAdminRole();
 
   const mainItems = [
     { title: t("nav.chats"), url: "/chats", icon: MessageCircle },
