@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, Palette, Sun, Moon, Monitor, Wand2 } from "lucide-react";
+import { ArrowLeft, Sparkles, Palette, Sun, Moon, Monitor, Wand2, ImageIcon } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDesignSystem, type DesignPreset, type SparkleMode } from "@/contexts/DesignSystemContext";
+import { useChatBackground } from "@/contexts/ChatBackgroundContext";
 import { cn } from "@/lib/utils";
 import ColorSurface from "@/components/design/ColorSurface";
+import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import { Slider } from "@/components/ui/slider";
 
 const presetConfigs: { id: DesignPreset; label: string; colors: string[]; icon: string }[] = [
@@ -20,6 +23,8 @@ const DesignSettingsPage = () => {
   const { t } = useI18n();
   const { theme, setTheme } = useTheme();
   const { state, setColors, setMagic, applyPreset } = useDesignSystem();
+  const { globalBackground, setGlobalBackground } = useChatBackground();
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
 
   const themeOptions = [
     { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
@@ -77,7 +82,6 @@ const DesignSettingsPage = () => {
             {t("design.colorsSection")}
           </h2>
           <div className="bg-card rounded-2xl shadow-sm p-4 space-y-5">
-            {/* Large Color Surface */}
             <ColorSurface
               hue={state.colors.hue}
               saturation={state.colors.saturation}
@@ -167,6 +171,35 @@ const DesignSettingsPage = () => {
           </div>
         </section>
 
+        {/* ─── Chat Background ─── */}
+        <section className="animate-reveal-up" style={{ animationDelay: "75ms" }}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
+            <ImageIcon className="w-4 h-4" />
+            {t("settings.changeBackground")}
+          </h2>
+          <button
+            onClick={() => setBgPickerOpen(true)}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+          >
+            <div
+              className="w-12 h-12 rounded-2xl border-2 border-border overflow-hidden flex items-center justify-center"
+              style={
+                globalBackground.type === "gradient" || globalBackground.type === "color"
+                  ? { background: globalBackground.value }
+                  : globalBackground.type === "image"
+                    ? { backgroundImage: `url(${globalBackground.value})`, backgroundSize: "cover" }
+                    : { backgroundColor: "hsl(var(--background))" }
+              }
+            >
+              {globalBackground.type === "none" && <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-[0.938rem]">{t("settings.changeBackground")}</p>
+              <p className="text-xs text-muted-foreground">{t("settings.backgroundDesc")}</p>
+            </div>
+          </button>
+        </section>
+
         {/* ─── Sparkle / Effects ─── */}
         <section className="animate-reveal-up" style={{ animationDelay: "90ms" }}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
@@ -201,7 +234,7 @@ const DesignSettingsPage = () => {
 
             {state.magic.enabled && (
               <div className="p-4 space-y-5">
-                {/* Sparkle Mode: sparkle vs soft */}
+                {/* Sparkle Mode */}
                 <div className="space-y-2">
                   <span className="text-sm text-muted-foreground">{t("design.sparkleMode") || "Modus"}</span>
                   <div className="flex gap-2">
@@ -247,6 +280,13 @@ const DesignSettingsPage = () => {
           {t("design.liveHint")}
         </div>
       </div>
+
+      <BackgroundPicker
+        open={bgPickerOpen}
+        onOpenChange={setBgPickerOpen}
+        value={globalBackground}
+        onChange={setGlobalBackground}
+      />
     </div>
   );
 };
