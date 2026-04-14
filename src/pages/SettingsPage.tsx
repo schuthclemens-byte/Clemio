@@ -5,7 +5,7 @@ import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, Use
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useDesignSystem } from "@/contexts/DesignSystemContext";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PremiumBadge from "@/components/PremiumBadge";
