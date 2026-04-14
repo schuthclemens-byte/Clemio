@@ -155,7 +155,7 @@ const ChatPage = () => {
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null);
-  const [reportTarget, setReportTarget] = useState<{ msgId: string; senderId: string } | null>(null);
+  const [reportTarget, setReportTarget] = useState<{ msgId: string; senderId: string; messageType?: string } | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const chatMenuBtnRef = useRef<HTMLDivElement>(null);
   const [showClemioKI, setShowClemioKI] = useState(false);
