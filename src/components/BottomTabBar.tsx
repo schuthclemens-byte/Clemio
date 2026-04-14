@@ -1,4 +1,4 @@
-import { MessageCircle, Phone, Settings, User } from "lucide-react";
+import { MessageCircle, Phone, Palette, User, Settings } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMissedCallsCount } from "@/hooks/useMissedCallsCount";
@@ -16,6 +16,7 @@ const BottomTabBar = () => {
   const tabs = [
     { label: t("chat.chats"), path: "/chats", icon: MessageCircle },
     { label: tr("Anrufe", "Calls"), path: "/call-history", icon: Phone },
+    { label: "Design", path: "/design-settings", icon: Palette },
     { label: tr("Profil", "Profile"), path: "/profile", icon: User },
     { label: t("settings.title"), path: "/settings", icon: Settings },
   ];
@@ -29,7 +30,7 @@ const BottomTabBar = () => {
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50 pb-[env(safe-area-inset-bottom)]">
       <div className="floating-nav rounded-2xl mx-auto max-w-md">
-        <div className="flex items-center justify-around h-16 px-2">
+        <div className="flex items-center justify-around h-16 px-1">
           {tabs.map((tab) => {
             const isActive =
               location.pathname === tab.path ||
@@ -40,7 +41,7 @@ const BottomTabBar = () => {
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 h-12 px-4 rounded-xl transition-all duration-300 relative",
+                  "flex flex-col items-center justify-center gap-1 h-12 px-3 rounded-xl transition-all duration-300 relative",
                   isActive
                     ? "gradient-primary text-primary-foreground shadow-soft scale-105"
                     : "text-muted-foreground hover:text-foreground"
@@ -60,7 +61,7 @@ const BottomTabBar = () => {
                   )}
                 </div>
                 <span className={cn(
-                  "text-[0.6rem] font-semibold leading-tight transition-all",
+                  "text-[0.55rem] font-semibold leading-tight transition-all",
                   isActive ? "opacity-100" : "opacity-70"
                 )}>{tab.label}</span>
               </button>

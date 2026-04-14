@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, Palette, Sun, Moon, Monitor, Wand2, ImageIcon } from "lucide-react";
+import { ArrowLeft, Sparkles, Palette, Sun, Moon, Monitor, ChevronDown, ImageIcon, Check } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -11,12 +11,47 @@ import ColorSurface from "@/components/design/ColorSurface";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import { Slider } from "@/components/ui/slider";
 
-const presetConfigs: { id: DesignPreset; label: string; colors: string[]; icon: string }[] = [
-  { id: "softMagic", label: "Soft Magic", colors: ["hsl(328,56%,62%)", "hsl(300,40%,70%)", "hsl(350,50%,65%)"], icon: "✨" },
-  { id: "galaxy", label: "Galaxy", colors: ["hsl(248,78%,58%)", "hsl(240,65%,45%)", "hsl(270,60%,52%)"], icon: "🌌" },
-  { id: "elegant", label: "Elegant", colors: ["hsl(214,20%,48%)", "hsl(220,15%,55%)", "hsl(200,18%,50%)"], icon: "🪶" },
-  { id: "neon", label: "Neon", colors: ["hsl(168,94%,52%)", "hsl(180,90%,48%)", "hsl(150,80%,50%)"], icon: "⚡" },
+const presetConfigs: { id: DesignPreset; label: string; hue: number; sat: number; light: number; accentHue: number; icon: string; desc: string }[] = [
+  { id: "softMagic", label: "Soft Magic", hue: 328, sat: 56, light: 62, accentHue: 370, icon: "✨", desc: "Weich & magisch" },
+  { id: "elegant", label: "Elegant", hue: 214, sat: 20, light: 48, accentHue: 244, icon: "🪶", desc: "Schlicht & edel" },
+  { id: "neon", label: "Neon", hue: 168, sat: 94, light: 52, accentHue: 198, icon: "⚡", desc: "Lebendig & hell" },
+  { id: "galaxy", label: "Galaxy", hue: 248, sat: 78, light: 58, accentHue: 290, icon: "🌌", desc: "Tief & kosmisch" },
 ];
+
+/** Mini chat preview showing how bubbles look with a given color */
+const ChatPreview = ({ hue, sat, light, accentHue }: { hue: number; sat: number; light: number; accentHue: number }) => {
+  const isDark = document.documentElement.classList.contains("dark");
+  const primary = `hsl(${hue}, ${sat}%, ${light}%)`;
+  const accent = `hsl(${accentHue % 360}, ${Math.max(sat * 0.7, 18)}%, ${Math.min(light + 10, 80)}%)`;
+  const bgColor = isDark ? "hsl(0, 0%, 10%)" : `hsl(${hue}, ${Math.max(sat * 0.3, 8)}%, 95%)`;
+  const theirsBg = isDark ? "hsl(0, 0%, 16%)" : `hsl(${hue}, ${Math.max(sat * 0.2, 6)}%, 92%)`;
+  const theirsFg = isDark ? "hsl(0, 0%, 85%)" : "hsl(0, 0%, 15%)";
+
+  return (
+    <div className="rounded-xl overflow-hidden h-[100px] w-full" style={{ background: bgColor }}>
+      <div className="flex flex-col gap-1.5 p-2.5 h-full justify-center">
+        {/* Their bubble */}
+        <div className="flex justify-start">
+          <div className="rounded-2xl rounded-tl-md px-3 py-1.5 max-w-[75%]" style={{ background: theirsBg, color: theirsFg }}>
+            <span className="text-[0.6rem] leading-tight block">Hey, wie geht's? 👋</span>
+          </div>
+        </div>
+        {/* My bubble */}
+        <div className="flex justify-end">
+          <div className="rounded-2xl rounded-tr-md px-3 py-1.5 max-w-[75%]" style={{ background: `linear-gradient(135deg, ${primary}, ${accent})`, color: "white" }}>
+            <span className="text-[0.6rem] leading-tight block">Mir geht's super! 🎉</span>
+          </div>
+        </div>
+        {/* Their second bubble */}
+        <div className="flex justify-start">
+          <div className="rounded-2xl rounded-tl-md px-3 py-1.5 max-w-[75%]" style={{ background: theirsBg, color: theirsFg }}>
+            <span className="text-[0.6rem] leading-tight block">Cool, treffen wir uns?</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const DesignSettingsPage = () => {
   const navigate = useNavigate();
@@ -25,6 +60,7 @@ const DesignSettingsPage = () => {
   const { state, setColors, setMagic, applyPreset } = useDesignSystem();
   const { globalBackground, setGlobalBackground } = useChatBackground();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const themeOptions = [
     { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
@@ -33,7 +69,7 @@ const DesignSettingsPage = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background" {...useSwipeBack({ fallbackPath: "/settings" })}>
+    <div className="flex flex-col min-h-screen bg-background" {...useSwipeBack({ fallbackPath: "/chats" })}>
       {/* Header */}
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
@@ -44,30 +80,38 @@ const DesignSettingsPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold flex-1">{t("design.title")}</h1>
+          <Palette className="w-5 h-5 text-primary" />
+          <h1 className="text-xl font-bold flex-1">Design</h1>
         </div>
       </header>
 
-      <div className="flex-1 p-4 space-y-6 pb-24">
-        {/* ─── Theme (Light/Dark/System) ─── */}
-        <section className="animate-reveal-up">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
-            <Palette className="w-4 h-4" />
-            {t("design.themeSection")}
-          </h2>
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden flex">
+      <div className="flex-1 p-4 space-y-5 pb-28">
+
+        {/* ─── Live Preview ─── */}
+        <section>
+          <ChatPreview
+            hue={state.colors.hue}
+            sat={state.colors.saturation}
+            light={state.colors.lightness}
+            accentHue={state.colors.hue + 42}
+          />
+        </section>
+
+        {/* ─── Theme Toggle ─── */}
+        <section>
+          <div className="bg-card rounded-2xl overflow-hidden flex">
             {themeOptions.map(({ value, icon: Icon, label }) => (
               <button
                 key={value}
                 onClick={() => setTheme(value)}
                 className={cn(
-                  "flex-1 flex flex-col items-center gap-2 py-4 transition-all duration-200",
+                  "flex-1 flex flex-col items-center gap-1.5 py-3 transition-all duration-200",
                   "hover:bg-secondary/50 active:scale-[0.97]",
                   theme === value && "bg-primary/10"
                 )}
               >
                 <Icon className={cn("w-5 h-5", theme === value ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("text-xs font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
+                <span className={cn("text-[0.7rem] font-medium", theme === value ? "text-primary" : "text-muted-foreground")}>
                   {label}
                 </span>
               </button>
@@ -75,114 +119,58 @@ const DesignSettingsPage = () => {
           </div>
         </section>
 
-        {/* ─── Color Surface ─── */}
-        <section className="animate-reveal-up" style={{ animationDelay: "30ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
-            <Palette className="w-4 h-4" />
-            {t("design.colorsSection")}
-          </h2>
-          <div className="bg-card rounded-2xl shadow-sm p-4 space-y-5">
-            <ColorSurface
-              hue={state.colors.hue}
-              saturation={state.colors.saturation}
-              lightness={state.colors.lightness}
-              onColorChange={(hue, saturation, lightness) => setColors({ hue, saturation, lightness })}
-              height={260}
-            />
+        {/* ─── Presets (MAIN FEATURE) ─── */}
+        <section>
+          <h2 className="text-sm font-bold text-foreground mb-3">Wähle dein Design</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {presetConfigs.map(({ id, label, hue, sat, light, accentHue, icon, desc }) => {
+              const isActive = state.preset === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => applyPreset(id)}
+                  className={cn(
+                    "relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 active:scale-[0.97]",
+                    "border-2",
+                    isActive
+                      ? "border-primary shadow-soft"
+                      : "border-border/50 hover:border-border"
+                  )}
+                >
+                  {/* Check badge */}
+                  {isActive && (
+                    <div className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full gradient-primary flex items-center justify-center">
+                      <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                    </div>
+                  )}
 
-            {/* Saturation Slider */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{t("design.saturation")}</span>
-                <span className="font-semibold text-primary">{state.colors.saturation}%</span>
-              </div>
-              <div className="relative h-8 flex items-center">
-                <div
-                  className="absolute inset-x-0 h-3 rounded-full"
-                  style={{
-                    background: `linear-gradient(to right, hsl(${state.colors.hue}, 0%, ${state.colors.lightness}%), hsl(${state.colors.hue}, 100%, ${state.colors.lightness}%))`,
-                  }}
-                />
-                <Slider
-                  value={[state.colors.saturation]}
-                  min={0}
-                  max={100}
-                  step={1}
-                  onValueChange={([v]) => setColors({ saturation: v })}
-                  className="relative z-10"
-                />
-              </div>
-            </div>
+                  {/* Mini chat preview */}
+                  <ChatPreview hue={hue} sat={sat} light={light} accentHue={accentHue} />
 
-            {/* Brightness Slider */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{t("design.brightness")}</span>
-                <span className="font-semibold text-primary">{state.colors.lightness}%</span>
-              </div>
-              <div className="relative h-8 flex items-center">
-                <div
-                  className="absolute inset-x-0 h-3 rounded-full"
-                  style={{
-                    background: `linear-gradient(to right, hsl(${state.colors.hue}, ${state.colors.saturation}%, 15%), hsl(${state.colors.hue}, ${state.colors.saturation}%, 50%), hsl(${state.colors.hue}, ${state.colors.saturation}%, 85%))`,
-                  }}
-                />
-                <Slider
-                  value={[state.colors.lightness]}
-                  min={15}
-                  max={85}
-                  step={1}
-                  onValueChange={([v]) => setColors({ lightness: v })}
-                  className="relative z-10"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── Presets ─── */}
-        <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
-            <Wand2 className="w-4 h-4" />
-            {t("design.presets")}
-          </h2>
-          <div className="grid grid-cols-4 gap-3">
-            {presetConfigs.map(({ id, label, colors, icon }) => (
-              <button
-                key={id}
-                onClick={() => applyPreset(id)}
-                className={cn(
-                  "flex flex-col items-center gap-2 p-3 rounded-2xl bg-card shadow-sm transition-all duration-200",
-                  "hover:bg-secondary/50 active:scale-[0.97]",
-                  state.preset === id && "ring-2 ring-primary bg-primary/10"
-                )}
-              >
-                <span className="text-xl">{icon}</span>
-                <div className="flex gap-0.5">
-                  {colors.map((c, i) => (
-                    <div key={i} className="w-4 h-4 rounded-full" style={{ backgroundColor: c }} />
-                  ))}
-                </div>
-                <span className={cn("text-[0.688rem] font-medium", state.preset === id ? "text-primary" : "text-muted-foreground")}>
-                  {label}
-                </span>
-              </button>
-            ))}
+                  {/* Label area */}
+                  <div className="p-3 bg-card">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{icon}</span>
+                      <div className="text-left">
+                        <p className={cn("text-sm font-semibold", isActive ? "text-primary" : "text-foreground")}>{label}</p>
+                        <p className="text-[0.65rem] text-muted-foreground">{desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
 
         {/* ─── Chat Background ─── */}
-        <section className="animate-reveal-up" style={{ animationDelay: "75ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
-            <ImageIcon className="w-4 h-4" />
-            {t("settings.changeBackground")}
-          </h2>
+        <section>
           <button
             onClick={() => setBgPickerOpen(true)}
-            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            className="w-full flex items-center gap-3 p-3.5 bg-card rounded-2xl hover:bg-secondary/50 transition-colors active:scale-[0.98]"
           >
             <div
-              className="w-12 h-12 rounded-2xl border-2 border-border overflow-hidden flex items-center justify-center"
+              className="w-10 h-10 rounded-xl border-2 border-border overflow-hidden flex items-center justify-center shrink-0"
               style={
                 globalBackground.type === "gradient" || globalBackground.type === "color"
                   ? { background: globalBackground.value }
@@ -191,94 +179,156 @@ const DesignSettingsPage = () => {
                     : { backgroundColor: "hsl(var(--background))" }
               }
             >
-              {globalBackground.type === "none" && <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+              {globalBackground.type === "none" && <ImageIcon className="w-4 h-4 text-muted-foreground" />}
             </div>
-            <div className="text-left">
-              <p className="font-semibold text-[0.938rem]">{t("settings.changeBackground")}</p>
-              <p className="text-xs text-muted-foreground">{t("settings.backgroundDesc")}</p>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-sm">{t("settings.changeBackground")}</p>
+              <p className="text-[0.7rem] text-muted-foreground">{t("settings.backgroundDesc")}</p>
             </div>
           </button>
         </section>
 
-        {/* ─── Sparkle / Effects ─── */}
-        <section className="animate-reveal-up" style={{ animationDelay: "90ms" }}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4" />
-            {t("design.effectsSection")}
-          </h2>
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            {/* Enable toggle */}
-            <button
-              onClick={() => setMagic({ enabled: !state.magic.enabled })}
-              className="w-full flex items-center justify-between px-4 py-4 text-left transition-colors hover:bg-secondary/50 active:scale-[0.99] border-b border-border"
-              role="switch"
-              aria-checked={state.magic.enabled}
-            >
-              <span className="flex items-start gap-3 flex-1 min-w-0">
-                <Sparkles className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-                <div className="min-w-0">
-                  <span className="text-[0.938rem] block font-medium">{t("design.magicMode")}</span>
-                  <span className="text-xs text-muted-foreground leading-relaxed">{t("design.magicModeDesc")}</span>
-                </div>
-              </span>
-              <div className={cn(
-                "w-11 h-6 rounded-full relative transition-colors duration-200 shrink-0 ml-3",
-                state.magic.enabled ? "bg-primary" : "bg-border"
-              )}>
-                <div className={cn(
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                  state.magic.enabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
-                )} />
+        {/* ─── Effects (Magic Mode) ─── */}
+        <section className="bg-card rounded-2xl overflow-hidden">
+          <button
+            onClick={() => setMagic({ enabled: !state.magic.enabled })}
+            className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50 active:scale-[0.99]"
+            role="switch"
+            aria-checked={state.magic.enabled}
+          >
+            <span className="flex items-center gap-3 flex-1 min-w-0">
+              <Sparkles className={cn("w-5 h-5 shrink-0", state.magic.enabled ? "text-primary" : "text-muted-foreground")} />
+              <div className="min-w-0">
+                <span className="text-sm block font-semibold">{t("design.magicMode")}</span>
+                <span className="text-[0.7rem] text-muted-foreground">{t("design.magicModeDesc")}</span>
               </div>
-            </button>
+            </span>
+            <div className={cn(
+              "w-11 h-6 rounded-full relative transition-colors duration-200 shrink-0 ml-3",
+              state.magic.enabled ? "bg-primary" : "bg-border"
+            )}>
+              <div className={cn(
+                "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
+                state.magic.enabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
+              )} />
+            </div>
+          </button>
 
-            {state.magic.enabled && (
-              <div className="p-4 space-y-5">
-                {/* Sparkle Mode */}
-                <div className="space-y-2">
-                  <span className="text-sm text-muted-foreground">{t("design.sparkleMode") || "Modus"}</span>
-                  <div className="flex gap-2">
-                    {(["sparkle", "soft"] as SparkleMode[]).map((mode) => (
-                      <button
-                        key={mode}
-                        onClick={() => setMagic({ sparkleMode: mode })}
-                        className={cn(
-                          "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-sm font-medium transition-all active:scale-95",
-                          state.magic.sparkleMode === mode
-                            ? "gradient-primary text-primary-foreground shadow-soft"
-                            : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                        )}
-                      >
-                        <span className="text-lg">{mode === "sparkle" ? "✨" : "🌙"}</span>
-                        <span>{mode === "sparkle" ? (t("design.modeSparkle") || "Funkeln") : (t("design.modeSoft") || "Sanft")}</span>
-                      </button>
-                    ))}
-                  </div>
+          {state.magic.enabled && (
+            <div className="px-4 pb-4 space-y-4 border-t border-border">
+              <div className="flex gap-2 pt-3">
+                {(["sparkle", "soft"] as SparkleMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setMagic({ sparkleMode: mode })}
+                    className={cn(
+                      "flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95",
+                      state.magic.sparkleMode === mode
+                        ? "gradient-primary text-primary-foreground shadow-soft"
+                        : "bg-secondary text-muted-foreground"
+                    )}
+                  >
+                    <span className="text-base">{mode === "sparkle" ? "✨" : "🌙"}</span>
+                    <span className="text-xs">{mode === "sparkle" ? "Funkeln" : "Sanft"}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{t("design.intensity")}</span>
+                  <span className="font-semibold text-primary">{state.magic.sparkleIntensity}%</span>
                 </div>
+                <Slider
+                  value={[state.magic.sparkleIntensity]}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onValueChange={([v]) => setMagic({ sparkleIntensity: v })}
+                />
+              </div>
+            </div>
+          )}
+        </section>
 
-                {/* Intensity */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{t("design.intensity")}</span>
-                    <span className="font-semibold text-primary">{state.magic.sparkleIntensity}%</span>
-                  </div>
+        {/* ─── Advanced (Collapsible Color Editor) ─── */}
+        <section>
+          <button
+            onClick={() => setAdvancedOpen(!advancedOpen)}
+            className="w-full flex items-center justify-between py-2"
+          >
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Palette className="w-4 h-4 text-muted-foreground" />
+              Erweitert
+            </h2>
+            <ChevronDown className={cn(
+              "w-4 h-4 text-muted-foreground transition-transform duration-200",
+              advancedOpen && "rotate-180"
+            )} />
+          </button>
+
+          <div className={cn(
+            "overflow-hidden transition-all duration-300",
+            advancedOpen ? "max-h-[600px] opacity-100 mt-3" : "max-h-0 opacity-0"
+          )}>
+            <div className="bg-card rounded-2xl p-4 space-y-4">
+              <ColorSurface
+                hue={state.colors.hue}
+                saturation={state.colors.saturation}
+                lightness={state.colors.lightness}
+                onColorChange={(hue, saturation, lightness) => setColors({ hue, saturation, lightness })}
+                height={200}
+              />
+
+              {/* Saturation */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{t("design.saturation")}</span>
+                  <span className="font-semibold text-primary">{state.colors.saturation}%</span>
+                </div>
+                <div className="relative h-7 flex items-center">
+                  <div
+                    className="absolute inset-x-0 h-2.5 rounded-full"
+                    style={{
+                      background: `linear-gradient(to right, hsl(${state.colors.hue}, 0%, ${state.colors.lightness}%), hsl(${state.colors.hue}, 100%, ${state.colors.lightness}%))`,
+                    }}
+                  />
                   <Slider
-                    value={[state.magic.sparkleIntensity]}
+                    value={[state.colors.saturation]}
                     min={0}
                     max={100}
                     step={1}
-                    onValueChange={([v]) => setMagic({ sparkleIntensity: v })}
+                    onValueChange={([v]) => setColors({ saturation: v })}
+                    className="relative z-10"
                   />
                 </div>
               </div>
-            )}
+
+              {/* Brightness */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{t("design.brightness")}</span>
+                  <span className="font-semibold text-primary">{state.colors.lightness}%</span>
+                </div>
+                <div className="relative h-7 flex items-center">
+                  <div
+                    className="absolute inset-x-0 h-2.5 rounded-full"
+                    style={{
+                      background: `linear-gradient(to right, hsl(${state.colors.hue}, ${state.colors.saturation}%, 15%), hsl(${state.colors.hue}, ${state.colors.saturation}%, 50%), hsl(${state.colors.hue}, ${state.colors.saturation}%, 85%))`,
+                    }}
+                  />
+                  <Slider
+                    value={[state.colors.lightness]}
+                    min={15}
+                    max={85}
+                    step={1}
+                    onValueChange={([v]) => setColors({ lightness: v })}
+                    className="relative z-10"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
-
-        {/* ─── Hint ─── */}
-        <div className="text-center text-xs text-muted-foreground py-4 opacity-70">
-          {t("design.liveHint")}
-        </div>
       </div>
 
       <BackgroundPicker
