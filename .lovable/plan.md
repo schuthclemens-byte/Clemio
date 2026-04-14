@@ -1,37 +1,37 @@
 
 
-## Plan: Blockierte Nutzer verwalten in Einstellungen
+## Plan: TTS-Wiedergabe sofort starten (Streaming-Playback)
 
-### Übersicht
-Im Konto-Bereich der Einstellungen einen neuen Link "Blockierte Nutzer" hinzufügen, der eine eigene Seite öffnet. Dort werden alle blockierten Nutzer mit Name/Avatar aufgelistet, und man kann sie per Button entblocken.
+### Problem
+Aktuell wartet der Client auf den **kompletten** Audio-Download (`response.blob()`), bevor die Wiedergabe startet. Bei längeren Nachrichten dauert das mehrere Sekunden. Zusätzlich laufen die DB-Abfragen im Edge Function nacheinander statt parallel.
 
-### Änderungen
+### Lösung: 3 Optimierungen
 
-**1. Neue Seite `src/pages/BlockedUsersPage.tsx`**
-- Lädt alle Einträge aus `blocked_users` wo `blocked_by = auth.uid()`
-- Für jeden blockierten User: Profil-Daten (Name, Avatar) über `profiles` laden (braucht RPC oder separate Query, da Profiles nur eigenes Profil lesen können)
-- Liste mit Avatar, Name und "Entblocken"-Button
-- Entblocken: DELETE aus `blocked_users`, Toast-Bestätigung
-- Leerer Zustand: "Keine blockierten Nutzer"
+**1. Edge Function: Parallele DB-Abfragen + Latenz-Optimierung**
+- Scope-Check und Voice-Profile-Lookup gleichzeitig ausführen (`Promise.all`) statt nacheinander → spart ~100-200ms
+- ElevenLabs API-Parameter `optimize_streaming_latency=4` hinzufügen (maximale Latenz-Optimierung)
+- Kleineres Ausgabeformat: `mp3_22050_32` statt `mp3_44100_128` → schnellere Generierung, kleinere Datei
 
-**2. Neue RPC-Funktion (Migration)**
-- `get_blocked_profiles`: SECURITY DEFINER Funktion die für den aktuellen User die blockierten User-IDs holt und deren `display_name`, `first_name`, `avatar_url` aus `profiles` zurückgibt — damit umgehen wir die RLS-Einschränkung auf Profiles
+**2. Client: Streaming-Playback mit MediaSource**
+- Statt `response.blob()` abzuwarten, die Chunks via `ReadableStream` lesen
+- `MediaSource` API nutzen um Audio abzuspielen sobald die ersten Bytes ankommen
+- Fallback für Safari (kein MediaSource für MP3): Blob-basierte Wiedergabe beibehalten
+- Ergebnis: Wiedergabe startet nach ~200-500ms statt nach dem kompletten Download
 
-**3. `src/pages/SettingsPage.tsx`**
-- Im Konto-Accordion nach "Angemeldet bleiben" einen neuen `LinkRow` einfügen: Icon `Ban`, Label "Blockierte Nutzer" → navigiert zu `/blocked-users`
+**3. Client: Preload sichtbarer Nachrichten**
+- Wenn der Chat geöffnet wird, im Hintergrund TTS für die letzten 2-3 empfangenen Nachrichten vorladen
+- Nutzt den bestehenden `ttsCache` → bei Tap ist das Audio sofort da
 
-**4. `src/App.tsx`**
-- Neue Route `/blocked-users` → `BlockedUsersPage` (geschützt)
+### Technische Änderungen
 
-**5. i18n-Dateien** (`de.ts`, `en.ts` etc.)
-- Keys: `settings.blockedUsers`, `blocked.empty`, `blocked.unblock`, `blocked.unblocked`
-
-### Dateien
 | Datei | Änderung |
 |---|---|
-| Migration (SQL) | RPC `get_blocked_profiles` |
-| `src/pages/BlockedUsersPage.tsx` | Neue Seite |
-| `src/pages/SettingsPage.tsx` | LinkRow hinzufügen |
-| `src/App.tsx` | Route hinzufügen |
-| `src/i18n/de.ts`, `en.ts` | Neue Übersetzungs-Keys |
+| `supabase/functions/voice-tts-stream/index.ts` | `Promise.all` für DB-Queries, `optimize_streaming_latency=4`, Format auf `mp3_22050_32` |
+| `src/hooks/useVoiceTTS.ts` | Neue `playStreaming()` Methode mit MediaSource + ReadableStream, Feature-Detection für Fallback |
+| `src/pages/ChatPage.tsx` | Preload-Logik: letzte empfangene Nachrichten beim Chat-Öffnen im Hintergrund laden |
+
+### Erwartetes Ergebnis
+- Erste Audiowiedergabe: **unter 1 Sekunde** statt 2-4 Sekunden
+- Cached Nachrichten: **sofort** (wie bisher)
+- Spürbar flüssigeres Erlebnis beim Vorlesen
 
