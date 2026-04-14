@@ -166,8 +166,10 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
       if (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 2) return;
 
       const count = Math.round(60 + intensity * 180);
-      const speedFactor = (settings.sparkleMovementSpeed ?? 30) / 100; // 0–1
-      const baseSpeed = 0.08 + speedFactor * 0.35; // px per frame (very slow → moderate)
+      // Speed: slider 0-100 → speedFactor 0-1
+      // At 0: ~5 px/s, at 50: ~40 px/s, at 100: ~120 px/s
+      const speedFactor = (settings.sparkleMovementSpeed ?? 30) / 100;
+      const pxPerSecond = 5 + speedFactor * speedFactor * 115; // quadratic for better feel
 
       const createDrift = (): DriftParticle => {
         const roll = Math.random();
@@ -176,14 +178,15 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
         const baseAlpha = 0.20 + intensity * 0.30;
         const alpha = baseAlpha * (0.5 + Math.random() * 0.5);
         const angle = Math.random() * Math.PI * 2;
-        const speed = baseSpeed * (0.4 + Math.random() * 0.6);
+        // Store normalized direction + individual speed multiplier
+        const speedMul = 0.4 + Math.random() * 0.6;
         return {
           x: Math.random() * ww,
           y: Math.random() * hh,
           size: roll < 0.12 ? 2.5 + Math.random() * 2 : roll < 0.4 ? 0.7 + Math.random() * 0.8 : 0.5 + Math.random() * 1.2,
           alpha,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
+          vx: Math.cos(angle) * speedMul, // normalized direction * multiplier
+          vy: Math.sin(angle) * speedMul,
           type: roll < 0.12 ? "star" : roll < 0.4 ? "glow" : "dot",
           light,
           sat,
@@ -193,25 +196,24 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
       const particles: DriftParticle[] = Array.from({ length: count }, () => createDrift());
 
       let lastTime = 0;
-      const frameDuration = 1000 / 30;
 
       const onResize = () => { setupCanvas(); };
       window.addEventListener("resize", onResize);
 
       const render = (timestamp: number) => {
-        if (timestamp - lastTime < frameDuration) {
-          animRef.current = requestAnimationFrame(render);
-          return;
-        }
+        // deltaTime in seconds, capped at 100ms to avoid jumps
+        const dt = lastTime === 0 ? 0.016 : Math.min((timestamp - lastTime) / 1000, 0.1);
         lastTime = timestamp;
         const cw = window.innerWidth;
         const ch = window.innerHeight;
         ctx.clearRect(0, 0, cw, ch);
 
+        const framePx = pxPerSecond * dt; // pixels to move this frame
+
         for (const p of particles) {
-          // Move
-          p.x += p.vx;
-          p.y += p.vy;
+          // Move using deltaTime-based speed
+          p.x += p.vx * framePx;
+          p.y += p.vy * framePx;
           // Wrap around edges
           if (p.x < -10) p.x = cw + 10;
           if (p.x > cw + 10) p.x = -10;
