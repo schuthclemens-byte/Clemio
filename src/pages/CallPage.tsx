@@ -272,10 +272,10 @@ const CallPage = () => {
   // Auto-navigate away on ended/error
   useEffect(() => {
     if (callPhase === "ended" || callPhase === "error") {
-      const t = setTimeout(() => navigate(-1), 3000);
+      const t = setTimeout(() => goBack(), 3000);
       return () => clearTimeout(t);
     }
-  }, [callPhase, navigate]);
+  }, [callPhase, goBack]);
 
   // Also watch WebRTC callState for "ended" (remote hang-up via broadcast)
   useEffect(() => {
@@ -302,8 +302,8 @@ const CallPage = () => {
       endWebRTC();
       await endCallContext();
     }
-    navigate(-1);
-  }, [endWebRTC, endCallContext, navigate]);
+    goBack();
+  }, [endWebRTC, endCallContext, goBack]);
 
   const handleListenOnly = useCallback(() => {
     setListenOnlyMode((prev) => {
