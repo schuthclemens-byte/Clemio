@@ -691,32 +691,6 @@ const SettingsPage = () => {
             </div>
           </CollapsibleSection>
         )}
-        {show("legal") && (
-          <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen={isSearching} delay="110ms">
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <button
-                onClick={() => navigate("/privacy")}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors border-b border-border"
-              >
-                <Shield className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <span className="text-[0.938rem] block">{t("settings.privacy")}</span>
-                  <span className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</span>
-                </div>
-              </button>
-              <button
-                onClick={() => navigate("/terms")}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
-              >
-                <FileText className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <span className="text-[0.938rem] block">{t("settings.terms")}</span>
-                  <span className="text-xs text-muted-foreground">{t("settings.termsDesc")}</span>
-                </div>
-              </button>
-            </div>
-          </CollapsibleSection>
-        )}
       </div>
 
     </div>
