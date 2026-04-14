@@ -25,12 +25,13 @@ interface ChatBubbleProps {
   messageType?: string;
   mediaUrl?: string;
   senderId?: string;
-  onPlayClonedVoice?: (text: string, senderId: string, msgId: string, lang?: string) => void;
+  onPlayClonedVoice?: (text: string, senderId: string, msgId: string, lang?: string, audioUrl?: string) => void;
   isPlayingCloned?: boolean;
   isLoadingCloned?: boolean;
   msgId?: string;
   createdAt?: string;
   hasClonedVoice?: boolean;
+  audioUrl?: string;
   reactions?: Reaction[];
   onToggleReaction?: (msgId: string, emoji: string) => void;
   onDelete?: (msgId: string) => void;
