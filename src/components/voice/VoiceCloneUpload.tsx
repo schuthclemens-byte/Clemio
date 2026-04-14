@@ -38,6 +38,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
   const [seconds, setSeconds] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [verificationSentence, setVerificationSentence] = useState("");
+  const verificationSentenceRef = useRef("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
