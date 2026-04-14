@@ -1277,6 +1277,16 @@ const ChatPage = () => {
           setPendingSuggestion(text);
         }}
       />
+
+      {/* Report Dialog */}
+      <ReportDialog
+        open={!!reportTarget}
+        onOpenChange={(o) => { if (!o) setReportTarget(null); }}
+        reportedUserId={reportTarget?.senderId || ""}
+        reportType="message"
+        messageId={reportTarget?.msgId}
+        userName={reportTarget ? (memberNames[reportTarget.senderId] || chatName) : undefined}
+      />
     </div>
   );
 };
