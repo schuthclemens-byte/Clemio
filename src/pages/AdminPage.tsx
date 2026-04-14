@@ -71,6 +71,7 @@ const AdminPage = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "reports" | "analytics">("users");
+  const [openReportsCount, setOpenReportsCount] = useState(0);
 
   // Password reset dialog
   const [pwDialog, setPwDialog] = useState<{ open: boolean; userId: string; name: string }>({ open: false, userId: "", name: "" });
@@ -86,12 +87,17 @@ const AdminPage = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [listRes, statsRes] = await Promise.all([
+    const [listRes, statsRes, reportsRes] = await Promise.all([
       supabase.functions.invoke("admin-manage-user", { body: { action: "list", targetUserId: "dummy" } }),
       supabase.functions.invoke("admin-manage-user", { body: { action: "stats" } }),
+      supabase.functions.invoke("admin-manage-user", { body: { action: "list-reports" } }),
     ]);
     if (!listRes.error) setProfiles(listRes.data?.profiles || []);
     if (!statsRes.error) setStats(statsRes.data);
+    if (!reportsRes.error) {
+      const reports = reportsRes.data?.reports || [];
+      setOpenReportsCount(reports.filter((r: any) => r.status === "open").length);
+    }
     setLoading(false);
   };
 
@@ -197,10 +203,10 @@ const AdminPage = () => {
         </div>
         {/* Tabs */}
         <div className="flex px-4 pt-2 gap-1 overflow-x-auto">
-          {([
-            { key: "users" as const, icon: Users, label: tr("Nutzer", "Users") },
-            { key: "reports" as const, icon: Flag, label: "Reports" },
-            { key: "analytics" as const, icon: Activity, label: "Analytics" },
+           {([
+            { key: "users" as const, icon: Users, label: tr("Nutzer", "Users"), badge: 0 },
+            { key: "reports" as const, icon: Flag, label: "Reports", badge: openReportsCount },
+            { key: "analytics" as const, icon: Activity, label: "Analytics", badge: 0 },
           ]).map(tab => (
             <button
               key={tab.key}
@@ -210,6 +216,11 @@ const AdminPage = () => {
               }`}
             >
               <tab.icon className="w-4 h-4" /> {tab.label}
+              {tab.badge > 0 && (
+                <span className="ml-1 min-w-[1.25rem] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[0.65rem] font-bold flex items-center justify-center">
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
