@@ -229,6 +229,7 @@ const applyThemeToRoot = (theme: GlobalTheme) => {
   Object.entries(cssVars).forEach(([key, value]) => {
     root.style.setProperty(key, value);
   });
+  
 
   root.dataset.magicMode = theme.magicMode ? "on" : "off";
 };
