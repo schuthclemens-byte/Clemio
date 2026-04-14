@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ImageIcon, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Sparkles } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useDesignSystem, type DesignPreset } from "@/contexts/DesignSystemContext";
-import { useChatBackground } from "@/contexts/ChatBackgroundContext";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import PremiumBadge from "@/components/PremiumBadge";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
@@ -119,14 +117,11 @@ const SettingsPage = () => {
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
   const { theme, setTheme } = useTheme();
-  const { state: designState, applyPreset } = useDesignSystem();
-  const { globalBackground, setGlobalBackground } = useChatBackground();
   const { user } = useAuth();
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const pushCap = usePushCapability();
   const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
-  const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
@@ -204,12 +199,8 @@ const SettingsPage = () => {
   };
 
   const languages = Object.entries(localeNames) as [Locale, string][];
-  const designPresets: { id: DesignPreset; label: string; colors: string[] }[] = [
-    { id: "softMagic", label: "Soft Magic", colors: ["hsl(328,56%,62%)", "hsl(300,40%,70%)", "hsl(350,50%,65%)"] },
-    { id: "galaxy", label: "Galaxy", colors: ["hsl(248,78%,58%)", "hsl(260,70%,50%)", "hsl(230,60%,55%)"] },
-    { id: "elegant", label: "Elegant", colors: ["hsl(214,20%,48%)", "hsl(220,15%,55%)", "hsl(200,18%,50%)"] },
-    { id: "neon", label: "Neon", colors: ["hsl(168,94%,52%)", "hsl(180,90%,48%)", "hsl(150,80%,50%)"] },
-  ];
+
+
 
   const themeOptions = [
     { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
@@ -428,56 +419,7 @@ const SettingsPage = () => {
               ))}
             </div>
 
-            {/* Design Presets */}
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-4">
-              <div className="grid grid-cols-4 gap-3">
-                {designPresets.map(({ id, label, colors }) => (
-                  <button
-                    key={id}
-                    onClick={() => applyPreset(id)}
-                    className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
-                      "hover:bg-secondary/50 active:scale-[0.95]",
-                      designState.preset === id && "ring-2 ring-primary bg-primary/10"
-                    )}
-                  >
-                    <div className="flex gap-0.5">
-                      {colors.map((color, i) => (
-                        <div key={i} className="w-5 h-5 rounded-full" style={{ backgroundColor: color }} />
-                      ))}
-                    </div>
-                    <span className={cn("text-xs font-medium", designState.preset === id ? "text-primary" : "text-muted-foreground")}>
-                      {label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Chat Background */}
-            <button
-              onClick={() => setBgPickerOpen(true)}
-              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-            >
-              <div
-                className="w-12 h-12 rounded-2xl border-2 border-border overflow-hidden flex items-center justify-center"
-                style={
-                  globalBackground.type === "gradient" || globalBackground.type === "color"
-                    ? { background: globalBackground.value }
-                    : globalBackground.type === "image"
-                      ? { backgroundImage: `url(${globalBackground.value})`, backgroundSize: "cover" }
-                      : { backgroundColor: "hsl(var(--background))" }
-                }
-              >
-                {globalBackground.type === "none" && <ImageIcon className="w-5 h-5 text-muted-foreground" />}
-              </div>
-              <div className="text-left">
-                <p className="font-semibold text-[0.938rem]">{t("settings.changeBackground")}</p>
-                <p className="text-xs text-muted-foreground">{t("settings.backgroundDesc")}</p>
-              </div>
-            </button>
-
-            {/* Design System Link */}
+            {/* Design & Style Link */}
             <button
               onClick={() => navigate("/design-settings")}
               className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
@@ -780,12 +722,6 @@ const SettingsPage = () => {
         )}
       </div>
 
-      <BackgroundPicker
-        open={bgPickerOpen}
-        onClose={() => setBgPickerOpen(false)}
-        current={globalBackground}
-        onSelect={setGlobalBackground}
-      />
     </div>
   );
 };
