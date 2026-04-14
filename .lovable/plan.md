@@ -1,58 +1,41 @@
 
 
-## Plan: Admin-System für Account-Verwaltung
+## Plan: Admin-Features erweitern
 
-Dein Account (Clemens, `49a49e20-...`) bekommt Admin-Rechte, mit denen du andere Accounts löschen und blockieren kannst.
+Fünf neue Admin-Funktionen werden hinzugefügt.
 
 ---
 
-### 1. Datenbank: Admin-Rolle & Blocked-Tabelle
+### 1. User-Suche & Filter
 
-**user_roles** Tabelle (Best Practice für Rollen):
-```sql
-CREATE TYPE public.app_role AS ENUM ('admin', 'user');
+In `AdminPage.tsx` ein Suchfeld oben einbauen, das nach Name und Telefonnummer filtert (clientseitig, da die Nutzerzahl überschaubar ist).
 
-CREATE TABLE public.user_roles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  role app_role NOT NULL,
-  UNIQUE (user_id, role)
-);
+### 2. Subscription verwalten
 
--- Dich als Admin eintragen
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('49a49e20-3c9f-4728-8672-46a3b7a6465a', 'admin');
-```
+**Edge Function** (`admin-manage-user`): Neue Action `set-subscription` — setzt `premium_until` und `plan` für einen User via Service-Role.
 
-**Security-Definer Funktion** `has_role()` für sichere Prüfung ohne RLS-Rekursion.
+**Admin UI**: Pro User ein kleines Badge (Free/Premium/Founding) + Button "Premium gewähren" / "Premium entziehen" mit Datums-Auswahl.
 
-**blocked_users** Tabelle:
-```sql
-CREATE TABLE public.blocked_users (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  blocked_by uuid NOT NULL,
-  reason text,
-  created_at timestamptz DEFAULT now()
-);
-```
+### 3. Admin-Dashboard/Stats
 
-### 2. Edge Function: `admin-manage-user`
+Oben auf der Admin-Seite eine Statistik-Leiste mit:
+- Gesamtzahl User
+- Aktive User (letzte 7 Tage, basierend auf `user_presence.last_seen`)
+- Blockierte User
+- Nachrichten gesamt
+- Premium-User
 
-- **DELETE**: Ruft dieselbe Logik wie `delete-account` auf, aber für beliebige User (nur wenn Anfragender Admin ist)
-- **BLOCK**: Setzt Eintrag in `blocked_users`, deaktiviert den Auth-User via `admin.updateUserById(userId, { banned_until: 'forever' })`
-- **UNBLOCK**: Entfernt Block und hebt Ban auf
+Die Daten kommen über eine neue Action `stats` in der Edge Function, die per Service-Role die Counts abfragt.
 
-### 3. Admin-Seite: `/admin`
+### 4. Passwort zurücksetzen
 
-- Nur sichtbar/erreichbar für Admins
-- Liste aller registrierten Nutzer (Name, Nummer, Registrierungsdatum)
-- Buttons: **Blockieren** / **Entblockieren** / **Account löschen**
-- Bestätigungs-Dialog vor destruktiven Aktionen
+**Edge Function**: Neue Action `reset-password` — ruft `admin.auth.admin.updateUserById(targetUserId, { password: newPassword })` auf.
 
-### 4. Login-Schutz für blockierte User
+**Admin UI**: Button "Passwort zurücksetzen" → Dialog mit Passwort-Eingabe.
 
-In `AuthContext.tsx` nach erfolgreichem Login prüfen, ob der User in `blocked_users` steht → Fehlermeldung anzeigen und Session beenden.
+### 5. Nachrichtenanzahl pro User
+
+In der `list`-Action der Edge Function zusätzlich die Anzahl gesendeter Nachrichten pro User mitliefern (ein COUNT-Query auf `messages` gruppiert nach `sender_id`). Wird als kleine Zahl neben dem Usernamen angezeigt.
 
 ---
 
@@ -60,11 +43,6 @@ In `AuthContext.tsx` nach erfolgreichem Login prüfen, ob der User in `blocked_u
 
 | Datei | Änderung |
 |---|---|
-| Migration | `user_roles`, `blocked_users` Tabellen + `has_role()` Funktion + RLS |
-| `supabase/functions/admin-manage-user/index.ts` | Neue Edge Function für Delete/Block/Unblock |
-| `src/pages/AdminPage.tsx` | Neue Admin-Übersichtsseite |
-| `src/hooks/useAdminRole.ts` | Hook zur Admin-Prüfung |
-| `src/App.tsx` | Route `/admin` hinzufügen (geschützt) |
-| `src/contexts/AuthContext.tsx` | Block-Check nach Login |
-| `src/components/BottomTabBar.tsx` | Admin-Link für Admins |
+| `supabase/functions/admin-manage-user/index.ts` | Actions `stats`, `set-subscription`, `reset-password` + Message-Count bei `list` |
+| `src/pages/AdminPage.tsx` | Suchfeld, Stats-Dashboard, Subscription-Badge/Buttons, Passwort-Dialog, Nachrichten-Count |
 
