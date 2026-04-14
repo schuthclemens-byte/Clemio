@@ -182,6 +182,50 @@ serve(async (req) => {
       );
     }
 
+    // ─── IMPROVE MODE: single styled rewrite ───
+    const isImprove = mode === "improve" && improveText;
+    if (isImprove) {
+      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+      if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+
+      const styleLabel = improveStyle || "clearer";
+      const userPrompt = `Stil: "${styleLabel}"\nNachricht: "${improveText}"\n\nFormuliere die Nachricht auf ${userLang} um.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: IMPROVE_SYSTEM_PROMPT }] },
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            generationConfig: { temperature: 0.7 },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const t = await response.text();
+        console.error("Gemini improve error:", response.status, t);
+        throw new Error("AI improve failed");
+      }
+
+      await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
+
+      const data = await response.json();
+      let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+      raw = raw.replace(/^```json\s*/i, "").replace(/\s*```$/, "").trim();
+
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch { parsed = { improved: raw }; }
+
+      const newRemaining = isPremium ? -1 : Math.max(0, FREE_DAILY_LIMIT - usedToday - 1);
+      return new Response(
+        JSON.stringify({ improved: parsed.improved || raw, remaining: newRemaining, limit: FREE_DAILY_LIMIT, isPremium }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Determine mode: refine (user's draft) vs reply (answer to received message)
     const isRefine = !!draftMessage;
     const isStrategy = mode === "strategy" && !isRefine;
