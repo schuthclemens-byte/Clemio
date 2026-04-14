@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Send, Plus, Camera, ImagePlus, Mic, Sparkles } from "lucide-react";
+import { Send, Plus, Camera, ImagePlus, Mic, Sparkles, Wand2 } from "lucide-react";
+import ImproveMessageSheet from "./ImproveMessageSheet";
 import VoiceButton from "./VoiceButton";
 import MediaPreview from "./MediaPreview";
 import CameraCapture from "./CameraCapture";
