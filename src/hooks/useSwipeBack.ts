@@ -14,9 +14,8 @@ export function useSwipeBack({ threshold = 80, fallbackPath = "/chats" }: UseSwi
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
-    const screenWidth = window.innerWidth;
-    // Only trigger from right edge (last 30px)
-    if (touch.clientX >= screenWidth - 30) {
+    // Trigger from left edge (first 25px)
+    if (touch.clientX <= 25) {
       touchStartX.current = touch.clientX;
       touchStartY.current = touch.clientY;
       swiping.current = true;
@@ -28,12 +27,15 @@ export function useSwipeBack({ threshold = 80, fallbackPath = "/chats" }: UseSwi
     swiping.current = false;
 
     const touch = e.changedTouches[0];
-    const dx = touchStartX.current - touch.clientX; // right to left = positive
+    const dx = touch.clientX - touchStartX.current; // left→right = positive
     const dy = Math.abs(touch.clientY - touchStartY.current);
 
-    // Swipe left from right edge, more horizontal than vertical
     if (dx > threshold && dy < dx * 0.5) {
-      navigate(fallbackPath);
+      if (window.history.length > 2) {
+        navigate(-1);
+      } else {
+        navigate(fallbackPath);
+      }
     }
   }, [navigate, threshold, fallbackPath]);
 

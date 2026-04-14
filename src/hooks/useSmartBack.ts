@@ -4,14 +4,12 @@ import { useNavigate } from "react-router-dom";
 /**
  * Smart back navigation: uses browser history if available,
  * otherwise falls back to a logical parent route.
- * Also provides swipe-back touch handlers (right-edge swipe left).
+ * Also provides swipe-back touch handlers (left-edge swipe right = back).
  */
 export function useSmartBack(fallbackPath = "/chats") {
   const navigate = useNavigate();
 
   const goBack = useCallback(() => {
-    // window.history.length > 2 means there's a real previous page
-    // (1 = initial blank, 2 = first navigation)
     if (window.history.length > 2) {
       navigate(-1);
     } else {
@@ -19,12 +17,13 @@ export function useSmartBack(fallbackPath = "/chats") {
     }
   }, [navigate, fallbackPath]);
 
-  // Swipe-back from right edge (right→left gesture)
+  // Swipe-back from left edge (left→right gesture, like iOS)
   const touchRef = { startX: 0, startY: 0, active: false };
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
-    if (touch.clientX >= window.innerWidth - 30) {
+    // Trigger from left edge (first 25px)
+    if (touch.clientX <= 25) {
       touchRef.startX = touch.clientX;
       touchRef.startY = touch.clientY;
       touchRef.active = true;
@@ -35,7 +34,7 @@ export function useSmartBack(fallbackPath = "/chats") {
     if (!touchRef.active) return;
     touchRef.active = false;
     const touch = e.changedTouches[0];
-    const dx = touchRef.startX - touch.clientX;
+    const dx = touch.clientX - touchRef.startX; // left→right = positive
     const dy = Math.abs(touch.clientY - touchRef.startY);
     if (dx > 80 && dy < dx * 0.5) {
       goBack();
