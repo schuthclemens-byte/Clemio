@@ -46,7 +46,7 @@ serve(async (req) => {
       });
     }
 
-    const { text, senderId, lang, defaultVoiceId } = await req.json();
+    const { text, senderId, lang, defaultVoiceId, messageId } = await req.json();
 
     if (!text || !senderId) {
       return new Response(JSON.stringify({ error: "Missing text or senderId" }), {
@@ -109,11 +109,25 @@ serve(async (req) => {
     if (cachedFile) {
       // Cache HIT – return stored audio directly
       const arrayBuf = await cachedFile.arrayBuffer();
+
+      // Persist audio_url on message if provided and not yet set (fire-and-forget)
+      if (messageId) {
+        adminClient
+          .from("messages")
+          .update({ audio_url: key })
+          .eq("id", messageId)
+          .is("audio_url", null)
+          .then(({ error }) => {
+            if (error) console.error("Failed to set audio_url:", error.message);
+          });
+      }
+
       return new Response(arrayBuf, {
         headers: {
           ...corsHeaders,
           "Content-Type": "audio/mpeg",
           "X-TTS-Cache": "HIT",
+          "X-TTS-Cache-Key": key,
         },
       });
     }
@@ -153,7 +167,7 @@ serve(async (req) => {
     const audioBytes = await ttsResponse.arrayBuffer();
     const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
 
-    // Store in cache (fire-and-forget, don't block response)
+    // Store in cache AND persist audio_url on message (fire-and-forget)
     adminClient.storage
       .from("tts-cache")
       .upload(key, audioBlob, {
@@ -165,11 +179,23 @@ serve(async (req) => {
         else console.log("Cached TTS audio:", key);
       });
 
+    // Persist audio_url on message if provided
+    if (messageId) {
+      adminClient
+        .from("messages")
+        .update({ audio_url: key })
+        .eq("id", messageId)
+        .then(({ error }) => {
+          if (error) console.error("Failed to set audio_url:", error.message);
+        });
+    }
+
     return new Response(audioBytes, {
       headers: {
         ...corsHeaders,
         "Content-Type": "audio/mpeg",
         "X-TTS-Cache": "MISS",
+        "X-TTS-Cache-Key": key,
       },
     });
   } catch (error) {
