@@ -22,7 +22,7 @@ export const useNotifications = () => {
       body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: conversationId || "clemix-message",
+      tag: conversationId || "clemio-message",
     };
 
     const notification = new Notification(title, options);

@@ -235,7 +235,7 @@ async function sendFcmPush(
         android: {
           priority: "high" as const,
           notification: {
-            channel_id: "clemix_messages",
+            channel_id: "clemio_messages",
             icon: "ic_launcher",
             sound: "default",
           },

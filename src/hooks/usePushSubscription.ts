@@ -6,9 +6,9 @@ const VAPID_PUBLIC_KEY =
   "BFbpN0lfxPol0eL75dZcjzg_sgY7ExryL-Y7PNga9HnQ8yhExA9poi8tAATb2UQiWy9-W5gBgvy_CLP_0pNeSqs";
 
 /** localStorage key: set to "true" once push is fully saved */
-const PUSH_SAVED_KEY = "clemix_push_saved";
+const PUSH_SAVED_KEY = "clemio_push_saved";
 /** localStorage key: set to "denied" if user declined permission */
-const PUSH_DENIED_KEY = "clemix_push_denied";
+const PUSH_DENIED_KEY = "clemio_push_denied";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);

@@ -20,7 +20,7 @@ interface KIResponse {
   isRefine?: boolean;
 }
 
-interface ClemixKISheetProps {
+interface ClemioKISheetProps {
   open: boolean;
   onClose: () => void;
   receivedMessage: string;
@@ -30,7 +30,7 @@ interface ClemixKISheetProps {
   onUseSuggestion: (text: string) => void;
 }
 
-const ClemixKISheet = ({
+const ClemioKISheet = ({
   open,
   onClose,
   receivedMessage,
@@ -38,7 +38,7 @@ const ClemixKISheet = ({
   chatHistory,
   isPremium,
   onUseSuggestion,
-}: ClemixKISheetProps) => {
+}: ClemioKISheetProps) => {
   const { t, locale } = useI18n();
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<KIResponse | null>(null);
@@ -118,7 +118,7 @@ const ClemixKISheet = ({
         setRemaining(data.isPremium ? -1 : data.remaining);
       }
     } catch (err) {
-      console.error("Clemix-KI error:", err);
+      console.error("Clemio-KI error:", err);
       toast.error("Connection error");
     } finally {
       setLoading(false);
@@ -296,4 +296,4 @@ const ClemixKISheet = ({
   );
 };
 
-export default ClemixKISheet;
+export default ClemioKISheet;

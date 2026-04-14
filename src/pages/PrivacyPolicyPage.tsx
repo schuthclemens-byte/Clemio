@@ -292,7 +292,7 @@ const PrivacyPolicyPage = () => {
           <p><strong>{t("privacy.s13Legal")}</strong></p>
         </Section>
 
-        {/* 14. Clemix-KI */}
+        {/* 14. Clemio-KI */}
         <Section title={t("privacy.s14Title")} delay={560}>
           <p>{t("privacy.s14Text")}</p>
           <p className="font-medium text-foreground">{t("privacy.s14DataTitle")}</p>
@@ -364,7 +364,7 @@ const PrivacyPolicyPage = () => {
                 <tr><td className="py-2 pr-3">Stripe</td><td className="py-2 pr-3">USA</td><td className="py-2">EU-US Data Privacy Framework</td></tr>
                 <tr><td className="py-2 pr-3">Metered.ca</td><td className="py-2 pr-3">{t("privacy.s17AdequacyDecision") === "Angemessenheitsbeschluss" ? "Kanada" : "Canada"}</td><td className="py-2">{t("privacy.s17AdequacyDecision")}</td></tr>
                 <tr><td className="py-2 pr-3">Lovable AI Gateway ({t("privacy.s17TranslationOnly")})</td><td className="py-2 pr-3">{t("privacy.s17WithinEu") === "Innerhalb EU/EWR" ? "Schweden (EU)" : "Sweden (EU)"}</td><td className="py-2">{t("privacy.s17WithinEu")}</td></tr>
-                <tr><td className="py-2 pr-3">Google Gemini (Clemix-KI)</td><td className="py-2 pr-3">USA</td><td className="py-2">EU-US Data Privacy Framework</td></tr>
+                <tr><td className="py-2 pr-3">Google Gemini (Clemio-KI)</td><td className="py-2 pr-3">USA</td><td className="py-2">EU-US Data Privacy Framework</td></tr>
               </tbody>
             </table>
           </div>
