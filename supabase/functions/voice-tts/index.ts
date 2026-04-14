@@ -85,21 +85,15 @@ serve(async (req) => {
     };
     const languageCode = langMap[lang] || "de";
 
-    // Only use the sender's own voice profile
+    // Use sender's own voice profile, fall back to default voice
     const { data: voiceProfile } = await adminClient
       .from("voice_profiles")
       .select("elevenlabs_voice_id")
       .eq("user_id", senderId)
       .maybeSingle();
 
-    if (!voiceProfile) {
-      return new Response(JSON.stringify({ error: "No voice profile for this user" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const voiceId = voiceProfile.elevenlabs_voice_id;
+    // Default voice (Daniel) when sender has no cloned voice
+    const voiceId = voiceProfile?.elevenlabs_voice_id || "onwK4e9ZLuTAKqWW03F9";
 
     // Generate TTS
     const ttsResponse = await fetch(
