@@ -264,6 +264,39 @@ const AdminPage = () => {
 
                 {!isMe && (
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Delete Voice */}
+                    {p.voice_profile && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+                            title={tr("Voice-Profil löschen", "Delete voice profile")}
+                            disabled={actionLoading === p.id}
+                          >
+                            <MicOff className="w-3.5 h-3.5 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{tr("Voice-Profil löschen?", "Delete voice profile?")}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {tr(
+                                `Das Voice-Profil von "${p.display_name || p.phone_number}" wird gelöscht. Der User muss es neu erstellen.`,
+                                `The voice profile of "${p.display_name || p.phone_number}" will be deleted. The user must re-create it.`
+                              )}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{tr("Abbrechen", "Cancel")}</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => performAction("delete-voice", p.id, tr("Voice gelöscht", "Voice deleted"))}
+                            >
+                              {tr("Voice löschen", "Delete voice")}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                     {/* Subscription */}
                     <Button
                       size="sm" variant="ghost" className="h-7 w-7 p-0"
