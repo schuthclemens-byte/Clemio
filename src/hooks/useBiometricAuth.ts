@@ -54,15 +54,16 @@ function textToBuffer(text: string): ArrayBuffer {
 
 async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
   const seed = `${window.location.origin}|${navigator.userAgent}|clemio-biometric-v3`;
+  const encoded = new TextEncoder().encode(seed);
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(seed),
+    encoded.buffer as ArrayBuffer,
     "PBKDF2",
     false,
     ["deriveKey"]
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+    { name: "PBKDF2", salt: salt.buffer as ArrayBuffer, iterations: 100000, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,
