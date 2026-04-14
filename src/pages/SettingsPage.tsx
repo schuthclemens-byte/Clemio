@@ -648,7 +648,7 @@ const SettingsPage = () => {
         </>}
 
         {show("legal") && (
-          <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen={isSearching} delay="90ms">
+          <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen delay="90ms">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
               <button
                 onClick={() => navigate("/privacy")}
