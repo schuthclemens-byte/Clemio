@@ -38,6 +38,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
   const [seconds, setSeconds] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [verificationSentence, setVerificationSentence] = useState("");
+  const verificationSentenceRef = useRef("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -98,8 +99,8 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
     startRecording(() => {
       const blob = new Blob(chunksRef.current, { type: "audio/webm" });
       freeSpeechBlobRef.current = blob;
-      // Move to sentence recording
       const sentence = pickSentence();
+      verificationSentenceRef.current = sentence;
       setVerificationSentence(sentence);
       setPhase("recording_sentence");
       // Auto-start sentence recording after brief pause
@@ -123,7 +124,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
       const formData = new FormData();
       formData.append("free_speech", freeSpeechFile);
       formData.append("sentence_audio", sentenceFile);
-      formData.append("expected_sentence", verificationSentence);
+      formData.append("expected_sentence", verificationSentenceRef.current);
       formData.append("name", user.user_metadata?.display_name || "Meine Stimme");
 
       const response = await fetch(
