@@ -1,6 +1,6 @@
 import { Languages, Loader2, CheckCheck, Volume2, Trash2, SmilePlus, Crown, Pencil, Forward, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useI18n } from "@/contexts/I18nContext";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaMessage } from "./MediaPreview";
@@ -9,7 +9,9 @@ import { usePremiumGate } from "@/hooks/usePremiumGate";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { playStartListenPop } from "@/lib/sounds";
 import EmojiReactions from "./EmojiReactions";
+import MessageContextMenu from "./MessageContextMenu";
 import type { Reaction } from "@/hooks/useMessageReactions";
+import { toast } from "sonner";
 
 interface ChatBubbleProps {
   message: string;
@@ -40,9 +42,10 @@ interface ChatBubbleProps {
   uploadProgress?: number;
   isEdited?: boolean;
   onForward?: (content: string, messageType: string) => void;
-  /** Transcribed text for audio messages */
   transcription?: string;
   onReport?: (msgId: string, senderId: string) => void;
+  onReply?: () => void;
+  onBlock?: (userId: string) => void;
 }
 
 /** Animated wave bars shown during playback */
@@ -58,7 +61,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward, transcription, onReport }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward, transcription, onReport, onReply, onBlock }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -66,15 +69,16 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const { isPremium, requirePremium, PaywallGate } = usePremiumGate();
   const { compactMode } = useAccessibility();
   const [expanded, setExpanded] = useState(false);
-  const [showActions, setShowActions] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(message);
   const prevSpeaking = useRef(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
 
   const isUploading = typeof uploadProgress === "number";
 
-  // Check if message can still be edited/deleted (within 15 min and unread)
   const canModify = isMine && !isRead && createdAt
     ? (Date.now() - new Date(createdAt).getTime()) < 15 * 60 * 1000
     : false;
@@ -82,12 +86,10 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const isMedia = messageType === "image" || messageType === "video";
   const isAudio = messageType === "audio";
   
-  // For audio messages, show transcription as text; otherwise show original message
   const textContent = isAudio ? (transcription || message) : message;
   const displayText = showTranslation && translated ? translated : textContent;
   const isActive = isSpeaking || isPlayingCloned || isLoadingCloned;
 
-  // Play subtle pop when speech starts
   useEffect(() => {
     if (isActive && !prevSpeaking.current) {
       playStartListenPop();
@@ -95,17 +97,39 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     prevSpeaking.current = !!isActive;
   }, [isActive]);
 
-  // "Anhören" button handler — uses TTS with sender's voice if available
+  // Long press handlers
+  const handleTouchStart = useCallback(() => {
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      setShowContextMenu(true);
+      // Haptic feedback if available
+      if (navigator.vibrate) navigator.vibrate(20);
+    }, 500);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
   const handleListen = (e: React.MouseEvent) => {
     e.stopPropagation();
     const textToSpeak = displayText;
     if (!textToSpeak) return;
     
     if (hasClonedVoice && senderId && msgId && onPlayClonedVoice) {
-      // Use sender's cloned voice
       requirePremium(() => onPlayClonedVoice(textToSpeak, senderId, msgId, locale));
     } else if (onPlayClonedVoice && senderId && msgId) {
-      // Use default voice (still via TTS)
       onPlayClonedVoice(textToSpeak, senderId, msgId, locale);
     }
   };
@@ -130,9 +154,12 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     }
   };
 
-  const handleTranslate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    requirePremium(doTranslate);
+  const handleCopy = () => {
+    if (textContent) {
+      navigator.clipboard.writeText(textContent).then(() => {
+        toast.success(t("chat.copied") || "Kopiert ✓");
+      });
+    }
   };
 
   const speakingLabel = isLoadingCloned
@@ -145,14 +172,20 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     <>
     <PaywallGate />
     <div className={cn("flex w-full mb-3", isMine ? "justify-end" : "justify-start")}>
-      <div data-msg-id={msgId} className={cn("max-w-[80%] animate-bubble-in")}>
+      <div
+        data-msg-id={msgId}
+        className={cn("max-w-[80%] animate-bubble-in")}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
+        onContextMenu={(e) => { e.preventDefault(); setShowContextMenu(true); }}
+      >
         {!isMine && senderName && (
           <span className="text-xs font-medium text-muted-foreground ml-3 mb-0.5 block">
             {senderName}
           </span>
         )}
         <div
-          onDoubleClick={() => textContent && setShowActions(!showActions)}
           className={cn(
             "select-none transition-all duration-200",
             isMedia ? "rounded-2xl overflow-hidden cursor-pointer" : "px-4 py-3",
@@ -204,7 +237,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             />
           )}
 
-          {/* Audio content — show player AND transcribed text */}
+          {/* Audio content */}
           {isAudio && message && (
             <div>
               {isUploading ? (
@@ -236,7 +269,6 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               ) : (
                 <>
                   <AudioPlayer url={message} isMine={isMine} />
-                  {/* Show transcription below audio player */}
                   {transcription && (
                     <p className={cn(
                       "text-[0.813rem] leading-relaxed mt-2 opacity-80",
@@ -315,10 +347,10 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             </p>
           )}
 
-          {/* Footer: time + actions */}
+          {/* Footer: time + listen button */}
           <div className={cn("flex items-center justify-between mt-1.5", isMedia && "px-4 pb-2")}>
             <div className="flex items-center gap-1.5">
-              {/* "Anhören" button — always visible for text/audio messages */}
+              {/* "Anhören" button */}
               {textContent && !isMedia && !isEditing && senderId && msgId && onPlayClonedVoice && !isActive && (
                 <button
                   onClick={handleListen}
@@ -332,79 +364,6 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                   <Volume2 className="w-3 h-3" />
                   {t("chat.listen") || "Anhören"}
                 </button>
-              )}
-
-              {showActions && (
-                <>
-                  {/* Emoji picker trigger */}
-                  {msgId && onToggleReaction && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); }}
-                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
-                      aria-label="Emoji-Reaktion"
-                    >
-                      <SmilePlus className="w-4 h-4" />
-                    </button>
-                  )}
-                  {!isMine && textContent && (
-                    <button
-                      onClick={handleTranslate}
-                      disabled={isTranslating}
-                      className={cn(
-                        "p-1.5 rounded-full transition-colors active:scale-90",
-                        showTranslation ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
-                      )}
-                      aria-label={t("chat.translate")}
-                    >
-                      {isTranslating ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <span className="relative">
-                          <Languages className="w-4 h-4" />
-                          {!isPremium && <Crown className="w-2.5 h-2.5 text-accent absolute -top-1 -right-1.5" />}
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  {canModify && msgId && onEdit && messageType !== "audio" && messageType !== "image" && messageType !== "video" && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setIsEditing(true); setEditText(message); }}
-                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
-                      aria-label="Nachricht bearbeiten"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                  )}
-                  {canModify && msgId && onDelete && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onDelete(msgId); }}
-                      className="p-1.5 rounded-full bg-destructive/10 text-destructive transition-colors active:scale-90"
-                      aria-label="Nachricht löschen"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                  {/* Forward button */}
-                  {onForward && textContent && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onForward(message, messageType || "text"); }}
-                      className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
-                      aria-label="Weiterleiten"
-                    >
-                      <Forward className="w-4 h-4" />
-                    </button>
-                  )}
-                  {/* Report button - only for messages from others */}
-                  {!isMine && onReport && msgId && senderId && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onReport(msgId, senderId); }}
-                      className="p-1.5 rounded-full bg-destructive/10 text-destructive transition-colors active:scale-90"
-                      aria-label="Melden"
-                    >
-                      <Flag className="w-4 h-4" />
-                    </button>
-                  )}
-                </>
               )}
             </div>
 
@@ -448,15 +407,29 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             />
           )}
         </div>
-
-        {/* Tap hint */}
-        {textContent && !isMedia && !isActive && (
-          <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
-            {isMine ? "Doppeltippen für Aktionen" : "Doppeltippen für Aktionen"}
-          </p>
-        )}
       </div>
     </div>
+
+    {/* Long-press context menu */}
+    <MessageContextMenu
+      open={showContextMenu}
+      onClose={() => setShowContextMenu(false)}
+      isMine={isMine}
+      textContent={textContent}
+      onReply={onReply}
+      onCopy={textContent ? handleCopy : undefined}
+      onReport={onReport && msgId && senderId ? () => onReport(msgId!, senderId!) : undefined}
+      onBlock={onBlock && senderId && !isMine ? () => onBlock(senderId!) : undefined}
+      onReaction={msgId && onToggleReaction ? () => setShowEmojiPicker(true) : undefined}
+      onTranslate={textContent && !isMine ? () => requirePremium(doTranslate) : undefined}
+      canTranslate={!!textContent && !isMine}
+      onEdit={canModify && onEdit && msgId && messageType !== "audio" && messageType !== "image" && messageType !== "video"
+        ? () => { setIsEditing(true); setEditText(message); }
+        : undefined}
+      onDelete={canModify && onDelete && msgId ? () => onDelete(msgId!) : undefined}
+      onForward={onForward && textContent ? () => onForward(message, messageType || "text") : undefined}
+      canModify={canModify}
+    />
     </>
    );
 };
