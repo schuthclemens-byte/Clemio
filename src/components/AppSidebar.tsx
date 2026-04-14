@@ -1,4 +1,5 @@
-import { MessageCircle, Settings, User, Moon, Headphones, Mic, Phone, Palette } from "lucide-react";
+import { MessageCircle, Settings, User, Moon, Headphones, Mic, Phone, Palette, Shield } from "lucide-react";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ export function AppSidebar() {
   const location = useLocation();
   const missedCalls = useMissedCallsCount();
   const { t } = useI18n();
+  const { isAdmin } = useAdminRole();
 
   const mainItems = [
     { title: t("nav.chats"), url: "/chats", icon: MessageCircle },
@@ -99,6 +101,28 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/admin"
+                      className="hover:bg-muted/50"
+                      activeClassName="bg-primary/10 text-primary font-medium"
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Admin</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );
