@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Mic, Loader2, CheckCircle, RotateCcw } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Mic, Loader2, CheckCircle, AlertTriangle, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
@@ -12,53 +12,73 @@ interface VoiceCloneUploadProps {
   onCloned: () => void;
 }
 
+const VERIFICATION_SENTENCES: Record<string, string[]> = {
+  de: [
+    "Die Sonne scheint heute besonders hell und ich genieße den Spaziergang durch den Park.",
+    "Mein Lieblingsbuch handelt von einer Reise um die ganze Welt in achtzig Tagen.",
+    "Am Wochenende backe ich gerne frischen Kuchen für meine Familie und Freunde.",
+    "Der Zug fährt pünktlich um halb neun vom Hauptbahnhof in Richtung München ab.",
+    "Im Sommer fahren wir ans Meer und sammeln bunte Muscheln am Strand.",
+  ],
+  en: [
+    "The sun is shining especially bright today and I am enjoying my walk through the park.",
+    "My favorite book is about a journey around the whole world in eighty days.",
+    "On weekends I like to bake fresh cake for my family and friends.",
+    "The train departs punctually at half past eight from the main station heading to the city.",
+    "In summer we drive to the sea and collect colorful shells on the beach.",
+  ],
+};
+
+type Phase = "idle" | "consent" | "recording_free" | "recording_sentence" | "processing" | "done" | "error";
+
 const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) => {
   const { user } = useAuth();
   const { locale } = useI18n();
-  const [phase, setPhase] = useState<"idle" | "consent" | "recording" | "processing" | "done">("idle");
+  const [phase, setPhase] = useState<Phase>("idle");
   const [seconds, setSeconds] = useState(0);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [verificationSentence, setVerificationSentence] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const freeSpeechBlobRef = useRef<Blob | null>(null);
+
+  const tr = useCallback((de: string, en: string) => (locale === "de" ? de : en), [locale]);
 
   useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
-  const tr = (de: string, en: string) => (locale === "de" ? de : en);
+  const pickSentence = () => {
+    const lang = locale === "de" ? "de" : "en";
+    const sentences = VERIFICATION_SENTENCES[lang] || VERIFICATION_SENTENCES.en;
+    return sentences[Math.floor(Math.random() * sentences.length)];
+  };
 
-  const startRecording = async () => {
+  const startRecording = async (onStop: () => void) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const recorder = new MediaRecorder(stream);
       chunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (e) => {
+      recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
-      mediaRecorder.onstop = () => {
+      recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         if (timerRef.current) clearInterval(timerRef.current);
-        handleUpload();
+        onStop();
       };
 
-      mediaRecorder.start();
-      mediaRecorderRef.current = mediaRecorder;
-      setPhase("recording");
+      recorder.start();
+      mediaRecorderRef.current = recorder;
       setSeconds(0);
-
-      timerRef.current = setInterval(() => {
-        setSeconds((s) => s + 1);
-      }, 1000);
+      timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
     } catch (err: any) {
       const name = err?.name || "";
       if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-        toast.error(tr("Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff in deinen Geräteeinstellungen.", "Microphone access denied. Please allow access in your device settings."));
-      } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-        toast.error(tr("Kein Mikrofon gefunden. Bitte schließe ein Mikrofon an.", "No microphone found. Please connect a microphone."));
+        toast.error(tr("Mikrofon-Zugriff verweigert.", "Microphone access denied."));
       } else {
         toast.error(tr("Mikrofon konnte nicht aktiviert werden.", "Microphone could not be activated."));
       }
@@ -72,20 +92,42 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
     }
   };
 
+  // Phase: Start free speech recording
+  const beginFreeSpeech = () => {
+    setPhase("recording_free");
+    startRecording(() => {
+      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+      freeSpeechBlobRef.current = blob;
+      // Move to sentence recording
+      const sentence = pickSentence();
+      setVerificationSentence(sentence);
+      setPhase("recording_sentence");
+      // Auto-start sentence recording after brief pause
+      setTimeout(() => {
+        startRecording(() => {
+          handleUpload();
+        });
+      }, 500);
+    });
+  };
+
   const handleUpload = async () => {
-    if (!user) return;
+    if (!user || !freeSpeechBlobRef.current) return;
     setPhase("processing");
 
     try {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      const file = new File([blob], "voice-sample.webm", { type: "audio/webm" });
+      const sentenceBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+      const freeSpeechFile = new File([freeSpeechBlobRef.current], "free-speech.webm", { type: "audio/webm" });
+      const sentenceFile = new File([sentenceBlob], "sentence.webm", { type: "audio/webm" });
 
       const formData = new FormData();
-      formData.append("audio", file);
+      formData.append("free_speech", freeSpeechFile);
+      formData.append("sentence_audio", sentenceFile);
+      formData.append("expected_sentence", verificationSentence);
       formData.append("name", user.user_metadata?.display_name || "Meine Stimme");
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-clone`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-and-clone-voice`,
         {
           method: "POST",
           headers: {
@@ -97,6 +139,22 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
 
       if (!response.ok) {
         const err = await response.json();
+        if (err.error === "sentence_mismatch") {
+          setErrorMsg(tr(
+            "Der gesprochene Satz stimmt nicht überein. Bitte lies den Satz genau vor.",
+            "The spoken sentence doesn't match. Please read the sentence exactly."
+          ));
+          setPhase("error");
+          return;
+        }
+        if (err.error === "speaker_mismatch") {
+          setErrorMsg(tr(
+            "Die Stimmen in den beiden Aufnahmen scheinen nicht übereinzustimmen. Bitte versuche es erneut.",
+            "The voices in the two recordings don't seem to match. Please try again."
+          ));
+          setPhase("error");
+          return;
+        }
         throw new Error(err.error || tr("Fehler", "Error"));
       }
 
@@ -104,8 +162,8 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
       toast.success(tr("Deine Stimme ist bereit! 🎉", "Your voice is ready! 🎉"));
       onCloned();
     } catch (error: any) {
-      toast.error(error.message || tr("Etwas ist schiefgelaufen", "Something went wrong"));
-      setPhase("idle");
+      setErrorMsg(error.message || tr("Etwas ist schiefgelaufen", "Something went wrong"));
+      setPhase("error");
     }
   };
 
@@ -116,6 +174,12 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
   };
 
   const minSeconds = 30;
+
+  const reset = () => {
+    freeSpeechBlobRef.current = null;
+    setErrorMsg("");
+    setPhase("idle");
+  };
 
   // Already has a voice
   if (existingVoice || phase === "done") {
@@ -136,6 +200,28 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
     );
   }
 
+  // Error state
+  if (phase === "error") {
+    return (
+      <div className="bg-card rounded-2xl p-6 shadow-sm border border-destructive/30 text-center space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto">
+          <AlertTriangle className="w-8 h-8 text-destructive" />
+        </div>
+        <div>
+          <p className="font-semibold text-[0.938rem]">{tr("Verifizierung fehlgeschlagen", "Verification failed")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{errorMsg}</p>
+        </div>
+        <button
+          onClick={reset}
+          className="w-full h-14 rounded-2xl bg-secondary text-foreground font-semibold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+        >
+          <RotateCcw className="w-4 h-4" />
+          {tr("Erneut versuchen", "Try again")}
+        </button>
+      </div>
+    );
+  }
+
   // Processing
   if (phase === "processing") {
     return (
@@ -144,21 +230,59 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
         </div>
         <div>
-          <p className="font-semibold text-[0.938rem]">{tr("Einen Moment...", "One moment...")}</p>
+          <p className="font-semibold text-[0.938rem]">{tr("Stimme wird verifiziert & erstellt...", "Verifying & creating voice...")}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            {tr("Deine Stimme wird gerade eingerichtet", "Your voice is being prepared")}
+            {tr("Das kann bis zu 30 Sekunden dauern", "This may take up to 30 seconds")}
           </p>
         </div>
       </div>
     );
   }
 
-  // Recording
-  if (phase === "recording") {
+  // Recording sentence (step 2)
+  if (phase === "recording_sentence") {
+    return (
+      <div className="bg-card rounded-2xl p-6 shadow-sm border border-border text-center space-y-4">
+        <div className="relative mx-auto w-20 h-20">
+          <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+          <div className="relative w-20 h-20 rounded-full gradient-primary flex items-center justify-center">
+            <Mic className="w-8 h-8 text-primary-foreground" />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
+            {tr("Schritt 2 – Satz vorlesen", "Step 2 – Read the sentence")}
+          </p>
+          <p className="text-2xl font-bold tabular-nums">{formatTime(seconds)}</p>
+        </div>
+
+        <div className="bg-muted/50 rounded-xl p-4 border border-border">
+          <p className="text-xs text-muted-foreground mb-1">{tr("Bitte lies vor:", "Please read aloud:")}</p>
+          <p className="text-sm font-medium text-foreground leading-relaxed">„{verificationSentence}"</p>
+        </div>
+
+        <button
+          onClick={stopRecording}
+          disabled={seconds < 3}
+          className={cn(
+            "w-full h-14 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.97]",
+            seconds >= 3
+              ? "gradient-primary text-primary-foreground shadow-soft hover:shadow-elevated"
+              : "bg-secondary text-muted-foreground cursor-not-allowed"
+          )}
+        >
+          {seconds >= 3 ? tr("Fertig", "Done") : tr("Spreche den Satz...", "Read the sentence...")}
+        </button>
+      </div>
+    );
+  }
+
+  // Recording free speech (step 1)
+  if (phase === "recording_free") {
     const canStop = seconds >= minSeconds;
     return (
       <div className="bg-card rounded-2xl p-6 shadow-sm border border-border text-center space-y-4">
-        {/* Pulsing mic */}
         <div className="relative mx-auto w-20 h-20">
           <div className="absolute inset-0 rounded-full bg-destructive/20 animate-ping" />
           <div className="relative w-20 h-20 rounded-full bg-destructive flex items-center justify-center">
@@ -167,22 +291,20 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         </div>
 
         <div>
+          <p className="text-xs font-semibold text-destructive uppercase tracking-wide mb-2">
+            {tr("Schritt 1 – Frei sprechen", "Step 1 – Free speech")}
+          </p>
           <p className="text-2xl font-bold tabular-nums">{formatTime(seconds)}</p>
           <p className="text-xs text-muted-foreground mt-1">
             {canStop
               ? tr("Du kannst jetzt aufhören – oder weitersprechen für bessere Qualität", "You can stop now — or keep talking for better quality")
-              : tr("Erzähl einfach etwas über deinen Tag...", "Just talk a little about your day...")
-            }
+              : tr("Erzähl einfach etwas über deinen Tag...", "Just talk a little about your day...")}
           </p>
         </div>
 
-        {/* Progress bar to 30s */}
         <div className="w-full h-1.5 rounded-full bg-border overflow-hidden">
           <div
-            className={cn(
-              "h-full rounded-full transition-all duration-1000",
-              canStop ? "bg-accent" : "bg-primary"
-            )}
+            className={cn("h-full rounded-full transition-all duration-1000", canStop ? "bg-accent" : "bg-primary")}
             style={{ width: `${Math.min(100, (seconds / minSeconds) * 100)}%` }}
           />
         </div>
@@ -197,7 +319,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
               : "bg-secondary text-muted-foreground cursor-not-allowed"
           )}
         >
-            {canStop ? tr("Fertig", "Done") : tr(`Noch ${minSeconds - seconds} Sekunden...`, `${minSeconds - seconds} seconds left...`)}
+          {canStop ? tr("Weiter zu Schritt 2", "Continue to step 2") : tr(`Noch ${minSeconds - seconds} Sekunden...`, `${minSeconds - seconds} seconds left...`)}
         </button>
       </div>
     );
@@ -222,7 +344,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           open={true}
           onAccept={() => {
             setPhase("idle");
-            startRecording();
+            beginFreeSpeech();
           }}
           onCancel={() => setPhase("idle")}
         />
@@ -230,7 +352,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
     );
   }
 
-  // Idle – single CTA
+  // Idle – CTA with explanation
   return (
     <div className="bg-card rounded-2xl p-6 shadow-sm border border-border text-center space-y-4">
       <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-soft">
@@ -239,7 +361,10 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
       <div>
         <p className="font-semibold text-lg">{tr("Lass dich hören", "Let yourself be heard")}</p>
         <p className="text-sm text-muted-foreground mt-1">
-          {tr("Sprich 30 Sekunden – und deine Kontakte hören Nachrichten in deiner Stimme", "Speak for 30 seconds — and your contacts can hear messages in your voice")}
+          {tr(
+            "Erstelle dein Stimmprofil in 2 Schritten: 30 Sekunden frei sprechen, dann einen Satz vorlesen.",
+            "Create your voice profile in 2 steps: 30 seconds of free speech, then read a sentence aloud."
+          )}
         </p>
       </div>
       <button
@@ -249,7 +374,10 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         {tr("Eigene Stimme erstellen", "Create your own voice")}
       </button>
       <p className="text-[0.688rem] text-muted-foreground">
-        {tr("🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.", "🔐 Voices are only used with your consent and can be deleted at any time.")}
+        {tr(
+          "🔐 Stimmen werden nur mit deiner Zustimmung verwendet und können jederzeit gelöscht werden.",
+          "🔐 Voices are only used with your consent and can be deleted at any time."
+        )}
       </p>
     </div>
   );
