@@ -85,26 +85,66 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
 
       const drawParticles = (cw: number, ch: number) => {
         ctx.clearRect(0, 0, cw, ch);
-        // 80 at 0% → 300 at 100%
-        const count = Math.round(80 + intensity * 220);
+        const count = Math.round(100 + intensity * 250);
 
         for (let i = 0; i < count; i++) {
           const x = Math.random() * cw;
           const y = Math.random() * ch;
-          // Size: 1–2.5px
-          const size = 1 + Math.random() * 1.5;
-          // Per-dot lightness variation: 88–100
-          const light = resolved.light - 7 + Math.random() * 12;
-          // Per-dot saturation variation
+          const light = resolved.light - 5 + Math.random() * 10;
           const sat = Math.max(0, resolved.sat + (Math.random() * 14 - 7));
-          // Alpha: 20–45% — much more visible
-          const baseAlpha = 0.20 + intensity * 0.25;
-          const alpha = baseAlpha * (0.6 + Math.random() * 0.4);
+          const baseAlpha = 0.25 + intensity * 0.30;
+          const alpha = baseAlpha * (0.5 + Math.random() * 0.5);
+          const roll = Math.random();
 
-          ctx.beginPath();
-          ctx.arc(x, y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${resolved.hue}, ${sat}%, ${light}%, ${alpha})`;
-          ctx.fill();
+          if (roll < 0.12) {
+            // ── Star-cross sparkle (rare, ~12%) ──
+            const armLen = 2.5 + Math.random() * 2.5;
+            const coreR = 0.8 + Math.random() * 0.6;
+            // soft glow halo
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, armLen * 2.5);
+            grad.addColorStop(0, `hsla(${resolved.hue}, ${sat}%, ${light}%, ${alpha * 0.5})`);
+            grad.addColorStop(1, `hsla(${resolved.hue}, ${sat}%, ${light}%, 0)`);
+            ctx.beginPath();
+            ctx.arc(x, y, armLen * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            // cross arms
+            ctx.strokeStyle = `hsla(${resolved.hue}, ${Math.min(sat + 8, 50)}%, ${Math.min(light + 3, 100)}%, ${alpha * 0.9})`;
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(x - armLen, y); ctx.lineTo(x + armLen, y);
+            ctx.moveTo(x, y - armLen); ctx.lineTo(x, y + armLen);
+            ctx.stroke();
+            // bright core
+            ctx.beginPath();
+            ctx.arc(x, y, coreR, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${resolved.hue}, ${Math.min(sat + 5, 40)}%, ${Math.min(light + 5, 100)}%, ${Math.min(alpha * 1.4, 1)})`;
+            ctx.fill();
+          } else if (roll < 0.40) {
+            // ── Glowing dot (~28%) – dot with radial glow ──
+            const coreR = 0.7 + Math.random() * 0.8;
+            const glowR = coreR * (3 + Math.random() * 2);
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+            grad.addColorStop(0, `hsla(${resolved.hue}, ${sat}%, ${Math.min(light + 3, 100)}%, ${alpha * 0.9})`);
+            grad.addColorStop(0.35, `hsla(${resolved.hue}, ${sat}%, ${light}%, ${alpha * 0.35})`);
+            grad.addColorStop(1, `hsla(${resolved.hue}, ${sat}%, ${light}%, 0)`);
+            ctx.beginPath();
+            ctx.arc(x, y, glowR, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            // bright center
+            ctx.beginPath();
+            ctx.arc(x, y, coreR, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${resolved.hue}, ${Math.min(sat + 5, 45)}%, ${Math.min(light + 4, 100)}%, ${Math.min(alpha * 1.2, 1)})`;
+            ctx.fill();
+          } else {
+            // ── Simple tiny dot (~60%) ──
+            const size = 0.5 + Math.random() * 1.2;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${resolved.hue}, ${sat}%, ${light}%, ${alpha * 0.7})`;
+            ctx.fill();
+          }
         }
       };
 
