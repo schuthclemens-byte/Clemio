@@ -13,7 +13,7 @@ interface BlockedProfile {
 }
 
 const BlockedUsersPage = () => {
-  const goBack = useSmartBack();
+  const { goBack } = useSmartBack();
   const { t } = useI18n();
   const [blocked, setBlocked] = useState<BlockedProfile[]>([]);
   const [loading, setLoading] = useState(true);
