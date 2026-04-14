@@ -177,13 +177,14 @@ const AdminPage = () => {
 
       {/* Stats Dashboard */}
       {stats && (
-        <div className="grid grid-cols-5 gap-2 px-4 py-3">
+        <div className="grid grid-cols-3 gap-2 px-4 py-3">
           {[
             { icon: Users, label: tr("Gesamt", "Total"), value: stats.totalUsers, color: "text-primary" },
             { icon: Activity, label: tr("Aktiv 7T", "Active 7d"), value: stats.activeUsers, color: "text-green-500" },
             { icon: ShieldAlert, label: tr("Blockiert", "Blocked"), value: stats.blockedUsers, color: "text-destructive" },
             { icon: MessageSquare, label: tr("Nachr.", "Msgs"), value: stats.totalMessages, color: "text-blue-500" },
             { icon: Crown, label: "Premium", value: stats.premiumUsers, color: "text-amber-500" },
+            { icon: Mic, label: "Voice", value: stats.voiceProfiles, color: "text-primary" },
           ].map(({ icon: Icon, label, value, color }) => (
             <div key={label} className="flex flex-col items-center p-2 rounded-xl bg-muted/50 gap-1">
               <Icon className={`w-4 h-4 ${color}`} />
