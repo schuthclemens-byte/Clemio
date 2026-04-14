@@ -35,8 +35,9 @@ export function useMissedCallsCount() {
 
     fetchCountRaw();
 
+    const channelName = `missed-calls-badge-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel("missed-calls-badge")
+      .channel(channelName)
       .on("postgres_changes", { event: "*", schema: "public", table: "calls" }, () => {
         fetchCountRaw();
       })
