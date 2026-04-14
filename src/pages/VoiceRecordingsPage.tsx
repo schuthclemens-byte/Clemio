@@ -67,7 +67,16 @@ const VoiceRecordingsPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
+    <div className="flex flex-col min-h-screen bg-background relative overflow-hidden" {...swipeHandlers}>
+      {/* Subtle static background accent – no animation */}
+      <div
+        className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-[0.07] pointer-events-none"
+        style={{ background: "radial-gradient(circle, hsl(var(--primary)), transparent 70%)" }}
+      />
+      <div
+        className="absolute bottom-20 left-0 w-56 h-56 rounded-full opacity-[0.05] pointer-events-none"
+        style={{ background: "radial-gradient(circle, hsl(var(--accent)), transparent 70%)" }}
+      />
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
