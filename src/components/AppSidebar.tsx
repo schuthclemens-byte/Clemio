@@ -1,5 +1,4 @@
-import { MessageCircle, Settings, User, Moon, Headphones, Phone, Palette, Shield } from "lucide-react";
-import { useAdminRole } from "@/hooks/useAdminRole";
+import { MessageCircle, Settings, User, Phone } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -28,14 +27,8 @@ export function AppSidebar() {
   const mainItems = [
     { title: t("nav.chats"), url: "/chats", icon: MessageCircle },
     { title: t("nav.calls"), url: "/call-history", icon: Phone },
-    { title: "Design", url: "/design-settings", icon: Palette },
     { title: t("nav.profile"), url: "/profile", icon: User },
     { title: t("nav.settings"), url: "/settings", icon: Settings },
-  ];
-
-  const extraItems = [
-    { title: t("sidebar.focusMode"), url: "/focus-mode", icon: Moon },
-    { title: t("sidebar.autoPlay"), url: "/contact-autoplay", icon: Headphones },
   ];
 
   return (
@@ -79,49 +72,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>{t("sidebar.extras")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {extraItems.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className="hover:bg-muted/50"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/admin"
-                      className="hover:bg-muted/50"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
-                      <Shield className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>Admin</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
     </Sidebar>
   );
