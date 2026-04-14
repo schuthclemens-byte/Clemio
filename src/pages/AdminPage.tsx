@@ -406,6 +406,8 @@ const AdminPage = () => {
           )}
         </div>
       )}
+      </>
+      )}
 
       {/* Password Reset Dialog */}
       <Dialog open={pwDialog.open} onOpenChange={(o) => setPwDialog((prev) => ({ ...prev, open: o }))}>
