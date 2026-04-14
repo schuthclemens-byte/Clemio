@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { playStartListenPop } from "@/lib/sounds";
+import { preloadAudio } from "@/lib/ttsCache";
 
 interface QueueItem {
   id: string;
@@ -13,6 +14,8 @@ interface UseAutoPlayQueueOptions {
   isSpeaking: boolean;
   lang: string;
   enabled: boolean;
+  /** Optional: fetch function for preloading next items */
+  fetchTtsBlob?: (text: string, senderId: string) => Promise<Blob>;
 }
 
 /**
