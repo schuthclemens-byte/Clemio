@@ -112,6 +112,9 @@ const StatusRow = ({ ok, label }: { ok: boolean; label: string }) => (
 );
 
 
+/** Brief "saved" feedback – not intrusive */
+const savedToast = () => toast("Gespeichert ✓", { duration: 1200, position: "bottom-center" });
+
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
@@ -165,7 +168,7 @@ const SettingsPage = () => {
     if (!user) return;
     const next = !previewEnabled;
     const { error } = await supabase.from("profiles").update({ push_preview_enabled: next } as any).eq("id", user.id);
-    if (!error) setPreviewEnabled(next);
+    if (!error) { setPreviewEnabled(next); savedToast(); }
   };
 
   const handleLogout = async () => {
@@ -177,6 +180,7 @@ const SettingsPage = () => {
     const next = !stayLoggedIn;
     setStayLoggedIn(next);
     localStorage.setItem("clemio_stay_logged_in", next ? "true" : "false");
+    savedToast();
   };
 
   const handleRefreshSubscription = async () => {
@@ -284,21 +288,21 @@ const SettingsPage = () => {
               label={t("settings.onlineStatus")}
               description={t("settings.onlineStatusDesc")}
               checked={a11y.showOnlineStatus}
-              onChange={() => a11y.toggle("showOnlineStatus")}
+              onChange={() => { a11y.toggle("showOnlineStatus"); savedToast(); }}
             />
             <ToggleRow
               icon={Type}
               label={t("settings.typingIndicator")}
               description={t("settings.typingIndicatorDesc")}
               checked={a11y.showTypingIndicator}
-              onChange={() => a11y.toggle("showTypingIndicator")}
+              onChange={() => { a11y.toggle("showTypingIndicator"); savedToast(); }}
             />
             <ToggleRow
               icon={Volume2}
               label={t("settings.autoReadMessages")}
               description={t("settings.autoReadMessagesDesc")}
               checked={a11y.autoRead}
-              onChange={() => a11y.toggle("autoRead")}
+              onChange={() => { a11y.toggle("autoRead"); savedToast(); }}
               borderBottom={false}
             />
           </div>
@@ -398,7 +402,7 @@ const SettingsPage = () => {
             {languages.map(([code, name]) => (
               <button
                 key={code}
-                onClick={() => setLocale(code)}
+                onClick={() => { setLocale(code); savedToast(); }}
                 className={cn(
                   "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
                   "hover:bg-secondary/50 active:scale-[0.99]",
@@ -419,13 +423,13 @@ const SettingsPage = () => {
         <CollapsibleSection icon={Sliders} title={t("settings.controlsTitle") || "Bedienung"} defaultOpen={!isSearching} delay="60ms">
           <div className="space-y-3">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => a11y.toggle("dyslexiaFont")} />
-              <ToggleRow icon={Eye} label={t("settings.largeText")} checked={a11y.largeText} onChange={() => a11y.toggle("largeText")} />
-              <ToggleRow icon={Contrast} label={t("settings.highContrast")} checked={a11y.highContrast} onChange={() => a11y.toggle("highContrast")} />
-              <ToggleRow icon={Headphones} label={t("settings.headphoneAutoPlay")} checked={a11y.headphoneAutoPlay} onChange={() => a11y.toggle("headphoneAutoPlay")} />
-              <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} checked={a11y.autoCorrect} onChange={() => a11y.toggle("autoCorrect")} />
-              <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")} checked={a11y.compactMode} onChange={() => a11y.toggle("compactMode")} />
-              <ToggleRow icon={VolumeX} label={t("settings.muteSounds")} description={t("settings.muteSoundsDesc")} checked={a11y.muteSounds} onChange={() => a11y.toggle("muteSounds")} borderBottom={false} />
+              <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => { a11y.toggle("dyslexiaFont"); savedToast(); }} />
+              <ToggleRow icon={Eye} label={t("settings.largeText")} checked={a11y.largeText} onChange={() => { a11y.toggle("largeText"); savedToast(); }} />
+              <ToggleRow icon={Contrast} label={t("settings.highContrast")} checked={a11y.highContrast} onChange={() => { a11y.toggle("highContrast"); savedToast(); }} />
+              <ToggleRow icon={Headphones} label={t("settings.headphoneAutoPlay")} checked={a11y.headphoneAutoPlay} onChange={() => { a11y.toggle("headphoneAutoPlay"); savedToast(); }} />
+              <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} checked={a11y.autoCorrect} onChange={() => { a11y.toggle("autoCorrect"); savedToast(); }} />
+              <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")} checked={a11y.compactMode} onChange={() => { a11y.toggle("compactMode"); savedToast(); }} />
+              <ToggleRow icon={VolumeX} label={t("settings.muteSounds")} description={t("settings.muteSoundsDesc")} checked={a11y.muteSounds} onChange={() => { a11y.toggle("muteSounds"); savedToast(); }} borderBottom={false} />
             </div>
 
             {/* Speech Rate */}
@@ -441,7 +445,7 @@ const SettingsPage = () => {
                 {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
                   <button
                     key={rate}
-                    onClick={() => a11y.setSpeechRate(rate)}
+                    onClick={() => { a11y.setSpeechRate(rate); savedToast(); }}
                     className={cn(
                       "flex-1 h-10 rounded-xl text-sm font-medium transition-all active:scale-95",
                       a11y.speechRate === rate
@@ -462,7 +466,7 @@ const SettingsPage = () => {
                 label={t("settings.smartSilence")}
                 description={t("settings.smartSilenceDesc")}
                 checked={a11y.smartSilence}
-                onChange={() => a11y.toggle("smartSilence")}
+                onChange={() => { a11y.toggle("smartSilence"); savedToast(); }}
                 borderBottom={false}
               />
               {a11y.smartSilence && (
@@ -522,28 +526,6 @@ const SettingsPage = () => {
         </CollapsibleSection>
         </>}
 
-        {show("language") && <>
-        {/* ──────────── SPRACHE ──────────── */}
-        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen={isSearching} delay="70ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            {languages.map(([code, name]) => (
-              <button
-                key={code}
-                onClick={() => setLocale(code)}
-                className={cn(
-                  "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
-                  "hover:bg-secondary/50 active:scale-[0.99]",
-                  "border-b border-border last:border-b-0",
-                  locale === code && "bg-primary/5"
-                )}
-              >
-                <span className="text-[0.938rem]">{name}</span>
-                {locale === code && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-              </button>
-            ))}
-          </div>
-        </CollapsibleSection>
-        </>}
 
         {(show("session") || show("subscription") || show("install") || show("logout")) && <>
         {/* ──────────── KONTO & ABO ──────────── */}
