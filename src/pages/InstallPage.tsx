@@ -7,6 +7,7 @@ import { subscribeToInstallPrompt, DeferredInstallPromptEvent, clearDeferredInst
 
 const InstallPage = () => {
   const { goBack, swipeHandlers } = useSmartBack("/settings");
+  const navigate = useNavigate();
   const [desktopUrl, setDesktopUrl] = useState<string | null>(null);
   const [checkingDesktop, setCheckingDesktop] = useState(true);
   const [installPrompt, setInstallPrompt] = useState<DeferredInstallPromptEvent | null>(null);
