@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, Trash2, Play, Square, User } from "lucide-react";
+import { ArrowLeft, Mic, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
 
 interface VoiceProfile {
@@ -15,137 +13,57 @@ interface VoiceProfile {
   voice_name: string | null;
   elevenlabs_voice_id: string;
   created_at: string | null;
-  sample_url: string | null;
-}
-
-interface ContactVoiceProfile {
-  id: string;
-  contact_user_id: string;
-  voice_name: string | null;
-  elevenlabs_voice_id: string;
-  created_at: string | null;
-  sample_url: string | null;
-  contactName?: string;
 }
 
 const VoiceRecordingsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { locale } = useI18n();
   const [myVoice, setMyVoice] = useState<VoiceProfile | null>(null);
-  const [contactVoices, setContactVoices] = useState<ContactVoiceProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
+
+  const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
-
-    const [myRes, contactRes] = await Promise.all([
-      supabase
-        .from("voice_profiles")
-        .select("id, voice_name, elevenlabs_voice_id, created_at, sample_url")
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase
-        .from("contact_voice_profiles")
-        .select("id, contact_user_id, voice_name, elevenlabs_voice_id, created_at, sample_url")
-        .eq("user_id", user.id),
-    ]);
-
-    if (myRes.data) setMyVoice(myRes.data);
-    else setMyVoice(null);
-
-    if (contactRes.data && contactRes.data.length > 0) {
-      // Load contact names
-      const contactIds = contactRes.data.map((c) => c.contact_user_id);
-      const profiles = await fetchAccessibleProfiles(contactIds);
-
-      const nameMap = new Map<string, string>(profiles?.map((p) => [p.id, p.display_name || "Unbekannt"]) || []);
-
-      setContactVoices(
-        contactRes.data.map((c) => ({
-          ...c,
-          contactName: nameMap.get(c.contact_user_id) || "Unbekannt",
-        }))
-      );
-    } else {
-      setContactVoices([]);
-    }
-
+    const { data } = await supabase
+      .from("voice_profiles")
+      .select("id, voice_name, elevenlabs_voice_id, created_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setMyVoice(data);
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
-
-  const callDeleteVoice = async (body: Record<string, string>) => {
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
-    if (!response.ok) throw new Error("Delete failed");
-  };
+  useEffect(() => { loadData(); }, [user]);
 
   const handleDeleteMyVoice = async () => {
     if (!user || !myVoice) return;
     try {
-      await callDeleteVoice({
-        elevenlabs_voice_id: myVoice.elevenlabs_voice_id,
-        type: "own",
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({ elevenlabs_voice_id: myVoice.elevenlabs_voice_id }),
+        }
+      );
+      if (!response.ok) throw new Error("Delete failed");
       setMyVoice(null);
-      toast.success("Stimmprofil gelöscht");
+      toast.success(tr("Stimmprofil gelöscht", "Voice profile deleted"));
     } catch {
-      toast.error("Fehler beim Löschen");
+      toast.error(tr("Fehler beim Löschen", "Error deleting"));
     }
-  };
-
-  const handleDeleteContactVoice = async (id: string) => {
-    const voice = contactVoices.find((c) => c.id === id);
-    if (!voice) return;
-    try {
-      await callDeleteVoice({
-        elevenlabs_voice_id: voice.elevenlabs_voice_id,
-        type: "contact",
-        contact_voice_id: id,
-      });
-      setContactVoices((prev) => prev.filter((c) => c.id !== id));
-      toast.success("Kontakt-Stimme gelöscht");
-    } catch {
-      toast.error("Fehler beim Löschen");
-    }
-  };
-
-  const playAudio = (url: string, id: string) => {
-    if (playingId === id) {
-      audioEl?.pause();
-      setPlayingId(null);
-      return;
-    }
-    audioEl?.pause();
-    const audio = new Audio(url);
-    audio.onended = () => setPlayingId(null);
-    audio.play();
-    setAudioEl(audio);
-    setPlayingId(id);
   };
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
+    return new Date(dateStr).toLocaleDateString(locale === "de" ? "de-DE" : "en-US", {
+      day: "2-digit", month: "2-digit", year: "numeric",
     });
   };
 
@@ -159,7 +77,7 @@ const VoiceRecordingsPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Stimmaufnahmen</h1>
+          <h1 className="text-xl font-bold">{tr("Stimmprofil", "Voice Profile")}</h1>
         </div>
       </header>
 
@@ -170,10 +88,9 @@ const VoiceRecordingsPage = () => {
           </div>
         ) : (
           <>
-            {/* My Voice Section */}
             <section className="animate-reveal-up">
               <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">
-                Meine Stimme
+                {tr("Meine Stimme", "My Voice")}
               </label>
               {myVoice ? (
                 <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
@@ -183,10 +100,10 @@ const VoiceRecordingsPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[0.938rem] truncate">
-                        {myVoice.voice_name || "Meine Stimme"}
+                        {myVoice.voice_name || tr("Meine Stimme", "My Voice")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Erstellt am {formatDate(myVoice.created_at)}
+                        {tr("Erstellt am", "Created on")} {formatDate(myVoice.created_at)}
                       </p>
                     </div>
                     <button
@@ -202,75 +119,13 @@ const VoiceRecordingsPage = () => {
               )}
             </section>
 
-            {/* Contact Voices Section */}
             <section className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
-              <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">
-                Kontakt-Stimmen ({contactVoices.length})
-              </label>
-              {contactVoices.length === 0 ? (
-                <div className="bg-card rounded-2xl p-6 shadow-sm border border-border text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
-                    <User className="w-7 h-7 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Noch keine Kontakt-Stimmen gespeichert.
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Tippe im Chat auf „Eigene Stimme erstellen" bei einer Sprachnachricht.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {contactVoices.map((cv) => (
-                    <div
-                      key={cv.id}
-                      className="bg-card rounded-2xl p-4 shadow-sm border border-border"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                          <User className="w-5 h-5 text-accent" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate">
-                            {cv.contactName}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {cv.voice_name || "Stimmprobe"} · {formatDate(cv.created_at)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {cv.sample_url && (
-                            <button
-                              onClick={() => playAudio(cv.sample_url!, cv.id)}
-                              className="w-9 h-9 rounded-full flex items-center justify-center text-primary hover:bg-primary/10 transition-colors"
-                            >
-                              {playingId === cv.id ? (
-                                <Square className="w-4 h-4" />
-                              ) : (
-                                <Play className="w-4 h-4" />
-                              )}
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteContactVoice(cv.id)}
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Info */}
-            <section className="animate-reveal-up" style={{ animationDelay: "200ms" }}>
               <div className="bg-secondary/50 rounded-2xl p-4 text-center">
                 <p className="text-xs text-muted-foreground">
-                  🔐 Alle Stimmprofile werden sicher gespeichert und können jederzeit gelöscht werden.
-                  Sprachnachrichten im Chat werden im verschlüsselten Speicher abgelegt.
+                  {tr(
+                    "🔐 Dein Stimmprofil ist nur an dein Konto gebunden. Andere können Nachrichten in deiner Stimme hören, aber deine Stimme nicht herunterladen oder kopieren.",
+                    "🔐 Your voice profile is bound to your account only. Others can hear messages in your voice, but cannot download or copy it."
+                  )}
                 </p>
               </div>
             </section>

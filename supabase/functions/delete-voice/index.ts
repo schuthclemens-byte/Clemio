@@ -36,7 +36,7 @@ serve(async (req) => {
       });
     }
 
-    const { elevenlabs_voice_id, type, contact_voice_id } = await req.json();
+    const { elevenlabs_voice_id } = await req.json();
 
     if (!elevenlabs_voice_id) {
       return new Response(JSON.stringify({ error: "No voice ID provided" }), {
@@ -57,34 +57,18 @@ serve(async (req) => {
     if (!elResponse.ok && elResponse.status !== 404) {
       const errBody = await elResponse.text();
       console.error("ElevenLabs delete error:", errBody);
-      // Continue with DB deletion even if ElevenLabs fails
     }
 
-    // Delete from database using service role
+    // Delete own voice profile only
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    if (type === "contact") {
-      // Delete contact voice profile
-      await adminClient
-        .from("contact_voice_profiles")
-        .delete()
-        .eq("id", contact_voice_id)
-        .eq("user_id", user.id);
-    } else {
-      // Delete own voice profile + consents
-      await adminClient
-        .from("voice_profiles")
-        .delete()
-        .eq("user_id", user.id);
-
-      await adminClient
-        .from("voice_consents")
-        .delete()
-        .eq("voice_owner_id", user.id);
-    }
+    await adminClient
+      .from("voice_profiles")
+      .delete()
+      .eq("user_id", user.id);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
