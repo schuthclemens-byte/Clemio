@@ -71,6 +71,7 @@ const AdminPage = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "reports" | "analytics">("users");
+  const [openReportsCount, setOpenReportsCount] = useState(0);
 
   // Password reset dialog
   const [pwDialog, setPwDialog] = useState<{ open: boolean; userId: string; name: string }>({ open: false, userId: "", name: "" });
