@@ -51,12 +51,14 @@ serve(async (req) => {
         { count: totalMessages },
         { count: premiumUsers },
         { count: activeUsers },
+        { count: voiceProfiles },
       ] = await Promise.all([
         admin.from("profiles").select("id", { count: "exact", head: true }),
         admin.from("blocked_users").select("id", { count: "exact", head: true }),
         admin.from("messages").select("id", { count: "exact", head: true }),
         admin.from("subscriptions").select("id", { count: "exact", head: true }).gt("premium_until", new Date().toISOString()),
         admin.from("user_presence").select("user_id", { count: "exact", head: true }).gt("last_seen", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        admin.from("voice_profiles").select("id", { count: "exact", head: true }),
       ]);
       return json({
         totalUsers: totalUsers || 0,
@@ -64,6 +66,7 @@ serve(async (req) => {
         totalMessages: totalMessages || 0,
         premiumUsers: premiumUsers || 0,
         activeUsers: activeUsers || 0,
+        voiceProfiles: voiceProfiles || 0,
       });
     }
 
@@ -100,11 +103,19 @@ serve(async (req) => {
         subMap[s.user_id] = s;
       }
 
+      // Get voice profiles
+      const { data: voices } = await admin.from("voice_profiles").select("user_id, voice_name, created_at, elevenlabs_voice_id");
+      const voiceMap: Record<string, any> = {};
+      for (const v of voices || []) {
+        voiceMap[v.user_id] = { voice_name: v.voice_name, created_at: v.created_at, elevenlabs_voice_id: v.elevenlabs_voice_id };
+      }
+
       const result = (profiles || []).map((p: any) => ({
         ...p,
         is_blocked: blockedIds.has(p.id),
         message_count: msgCounts[p.id] || 0,
         subscription: subMap[p.id] || null,
+        voice_profile: voiceMap[p.id] || null,
       }));
       return json({ profiles: result });
     }
@@ -159,6 +170,39 @@ serve(async (req) => {
       });
       if (pwError) return json({ error: pwError.message }, 500);
       return json({ success: true, action: "password-reset" });
+    }
+
+    // ── DELETE VOICE PROFILE ──
+    if (action === "delete-voice") {
+      const elevenlabsKey = Deno.env.get("ELEVENLABS_API_KEY");
+      const { data: voiceProfiles } = await admin
+        .from("voice_profiles")
+        .select("elevenlabs_voice_id")
+        .eq("user_id", targetUserId);
+      
+      if (elevenlabsKey) {
+        for (const v of voiceProfiles || []) {
+          try {
+            await fetch(`https://api.elevenlabs.io/v1/voices/${v.elevenlabs_voice_id}`, {
+              method: "DELETE",
+              headers: { "xi-api-key": elevenlabsKey },
+            });
+          } catch { /* best effort */ }
+        }
+      }
+
+      // Delete voice samples from storage
+      const { data: files } = await admin.storage.from("voice-samples").list(targetUserId);
+      if (files?.length) {
+        await admin.storage.from("voice-samples").remove(files.map((f: any) => `${targetUserId}/${f.name}`));
+      }
+
+      await admin.from("voice_profiles").delete().eq("user_id", targetUserId);
+      await admin.from("voice_consents").delete().eq("voice_owner_id", targetUserId);
+      // Also delete contact voice profiles that reference this user's voice
+      await admin.from("contact_voice_profiles").delete().eq("contact_user_id", targetUserId);
+
+      return json({ success: true, action: "voice-deleted" });
     }
 
     // ── DELETE USER ──

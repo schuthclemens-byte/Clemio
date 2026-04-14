@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
-  Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X,
+  Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -26,6 +26,12 @@ interface UserSubscription {
   plan: string;
   premium_until: string | null;
   is_founding_user: boolean;
+}
+
+interface VoiceProfile {
+  voice_name: string | null;
+  created_at: string | null;
+  elevenlabs_voice_id: string;
 }
 
 interface UserProfile {
@@ -37,6 +43,7 @@ interface UserProfile {
   is_blocked: boolean;
   message_count: number;
   subscription: UserSubscription | null;
+  voice_profile: VoiceProfile | null;
 }
 
 interface Stats {
@@ -45,6 +52,7 @@ interface Stats {
   blockedUsers: number;
   totalMessages: number;
   premiumUsers: number;
+  voiceProfiles: number;
 }
 
 const AdminPage = () => {
@@ -169,13 +177,14 @@ const AdminPage = () => {
 
       {/* Stats Dashboard */}
       {stats && (
-        <div className="grid grid-cols-5 gap-2 px-4 py-3">
+        <div className="grid grid-cols-3 gap-2 px-4 py-3">
           {[
             { icon: Users, label: tr("Gesamt", "Total"), value: stats.totalUsers, color: "text-primary" },
             { icon: Activity, label: tr("Aktiv 7T", "Active 7d"), value: stats.activeUsers, color: "text-green-500" },
             { icon: ShieldAlert, label: tr("Blockiert", "Blocked"), value: stats.blockedUsers, color: "text-destructive" },
             { icon: MessageSquare, label: tr("Nachr.", "Msgs"), value: stats.totalMessages, color: "text-blue-500" },
             { icon: Crown, label: "Premium", value: stats.premiumUsers, color: "text-amber-500" },
+            { icon: Mic, label: "Voice", value: stats.voiceProfiles, color: "text-primary" },
           ].map(({ icon: Icon, label, value, color }) => (
             <div key={label} className="flex flex-col items-center p-2 rounded-xl bg-muted/50 gap-1">
               <Icon className={`w-4 h-4 ${color}`} />
@@ -240,11 +249,56 @@ const AdminPage = () => {
                     <span className="flex items-center gap-0.5">
                       <MessageSquare className="w-3 h-3" /> {p.message_count}
                     </span>
+                    <span className="flex items-center gap-0.5">
+                      {p.voice_profile ? (
+                        <><Mic className="w-3 h-3 text-primary" /> {tr("Voice", "Voice")}</>
+                      ) : (
+                        <><MicOff className="w-3 h-3" /> {tr("Keine", "None")}</>
+                      )}
+                    </span>
                   </div>
+                  {p.voice_profile && (
+                    <div className="text-[0.6rem] text-muted-foreground mt-0.5">
+                      Voice: {p.voice_profile.voice_name || "—"} · {p.voice_profile.created_at ? new Date(p.voice_profile.created_at).toLocaleDateString("de") : "—"}
+                    </div>
+                  )}
                 </div>
 
                 {!isMe && (
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Delete Voice */}
+                    {p.voice_profile && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+                            title={tr("Voice-Profil löschen", "Delete voice profile")}
+                            disabled={actionLoading === p.id}
+                          >
+                            <MicOff className="w-3.5 h-3.5 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{tr("Voice-Profil löschen?", "Delete voice profile?")}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {tr(
+                                `Das Voice-Profil von "${p.display_name || p.phone_number}" wird gelöscht. Der User muss es neu erstellen.`,
+                                `The voice profile of "${p.display_name || p.phone_number}" will be deleted. The user must re-create it.`
+                              )}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{tr("Abbrechen", "Cancel")}</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => performAction("delete-voice", p.id, tr("Voice gelöscht", "Voice deleted"))}
+                            >
+                              {tr("Voice löschen", "Delete voice")}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                     {/* Subscription */}
                     <Button
                       size="sm" variant="ghost" className="h-7 w-7 p-0"
