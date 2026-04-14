@@ -45,9 +45,9 @@ const MessageContextMenu = ({
     { icon: Forward, label: t("chat.forward") || "Weiterleiten", onClick: () => { onForward?.(); onClose(); }, show: !!onForward && !!textContent },
     { icon: Languages, label: t("chat.translate") || "Übersetzen", onClick: () => { onTranslate?.(); onClose(); }, show: !!canTranslate && !isMine },
     { icon: Pencil, label: t("chat.edit") || "Bearbeiten", onClick: () => { onEdit?.(); onClose(); }, show: !!canModify && !!onEdit },
-    { icon: Trash2, label: t("chat.delete") || "Löschen", onClick: () => { onDelete?.(); onClose(); }, variant: "destructive", show: !!canModify && !!onDelete },
-    { icon: Flag, label: t("chat.report") || "Melden", onClick: () => { onReport?.(); onClose(); }, variant: "destructive", show: !!onReport },
-    { icon: Ban, label: t("chat.block") || "Blockieren", onClick: () => { onBlock?.(); onClose(); }, variant: "destructive", show: !!onBlock && !isMine },
+    { icon: Trash2, label: t("chat.delete") || "Löschen", onClick: () => { onDelete?.(); onClose(); }, variant: "destructive" as const, show: !!canModify && !!onDelete },
+    { icon: Flag, label: t("chat.report") || "Melden", onClick: () => { onReport?.(); onClose(); }, variant: "destructive" as const, show: !!onReport },
+    { icon: Ban, label: t("chat.block") || "Blockieren", onClick: () => { onBlock?.(); onClose(); }, variant: "destructive" as const, show: !!onBlock && !isMine },
   ].filter(a => a.show !== false);
 
   return (
