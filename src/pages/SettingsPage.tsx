@@ -402,7 +402,7 @@ const SettingsPage = () => {
             {languages.map(([code, name]) => (
               <button
                 key={code}
-                onClick={() => setLocale(code)}
+                onClick={() => { setLocale(code); savedToast(); }}
                 className={cn(
                   "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
                   "hover:bg-secondary/50 active:scale-[0.99]",
@@ -423,13 +423,13 @@ const SettingsPage = () => {
         <CollapsibleSection icon={Sliders} title={t("settings.controlsTitle") || "Bedienung"} defaultOpen={!isSearching} delay="60ms">
           <div className="space-y-3">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => a11y.toggle("dyslexiaFont")} />
-              <ToggleRow icon={Eye} label={t("settings.largeText")} checked={a11y.largeText} onChange={() => a11y.toggle("largeText")} />
-              <ToggleRow icon={Contrast} label={t("settings.highContrast")} checked={a11y.highContrast} onChange={() => a11y.toggle("highContrast")} />
-              <ToggleRow icon={Headphones} label={t("settings.headphoneAutoPlay")} checked={a11y.headphoneAutoPlay} onChange={() => a11y.toggle("headphoneAutoPlay")} />
-              <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} checked={a11y.autoCorrect} onChange={() => a11y.toggle("autoCorrect")} />
-              <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")} checked={a11y.compactMode} onChange={() => a11y.toggle("compactMode")} />
-              <ToggleRow icon={VolumeX} label={t("settings.muteSounds")} description={t("settings.muteSoundsDesc")} checked={a11y.muteSounds} onChange={() => a11y.toggle("muteSounds")} borderBottom={false} />
+              <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => { a11y.toggle("dyslexiaFont"); savedToast(); }} />
+              <ToggleRow icon={Eye} label={t("settings.largeText")} checked={a11y.largeText} onChange={() => { a11y.toggle("largeText"); savedToast(); }} />
+              <ToggleRow icon={Contrast} label={t("settings.highContrast")} checked={a11y.highContrast} onChange={() => { a11y.toggle("highContrast"); savedToast(); }} />
+              <ToggleRow icon={Headphones} label={t("settings.headphoneAutoPlay")} checked={a11y.headphoneAutoPlay} onChange={() => { a11y.toggle("headphoneAutoPlay"); savedToast(); }} />
+              <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} checked={a11y.autoCorrect} onChange={() => { a11y.toggle("autoCorrect"); savedToast(); }} />
+              <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")} checked={a11y.compactMode} onChange={() => { a11y.toggle("compactMode"); savedToast(); }} />
+              <ToggleRow icon={VolumeX} label={t("settings.muteSounds")} description={t("settings.muteSoundsDesc")} checked={a11y.muteSounds} onChange={() => { a11y.toggle("muteSounds"); savedToast(); }} borderBottom={false} />
             </div>
 
             {/* Speech Rate */}
