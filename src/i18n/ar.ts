@@ -645,6 +645,9 @@ const ar: Record<string, string> = {
     "design.previewButton": "أساسي",
     "design.previewSecondary": "ثانوي",
     "design.liveHint": "💡 جميع التغييرات مرئية فوراً في التطبيق بالكامل.",
+    "design.sparkleMode": "الوضع",
+    "design.modeSparkle": "بريق",
+    "design.modeSoft": "ناعم",
 };
 
 export default ar;
