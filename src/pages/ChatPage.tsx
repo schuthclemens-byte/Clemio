@@ -1283,7 +1283,7 @@ const ChatPage = () => {
         open={!!reportTarget}
         onOpenChange={(o) => { if (!o) setReportTarget(null); }}
         reportedUserId={reportTarget?.senderId || ""}
-        reportType="message"
+        reportType={reportTarget?.messageType === "audio" || reportTarget?.messageType === "voice" ? "voice" : "message"}
         messageId={reportTarget?.msgId}
         userName={reportTarget ? (memberNames[reportTarget.senderId] || chatName) : undefined}
       />
