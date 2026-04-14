@@ -175,8 +175,34 @@ const AdminPage = () => {
             {profiles.length} {tr("Nutzer", "Users")}
           </span>
         </div>
+        {/* Tabs */}
+        <div className="flex px-4 pt-2 gap-1">
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
+              activeTab === "users" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="w-4 h-4" /> {tr("Nutzer", "Users")}
+          </button>
+          <button
+            onClick={() => setActiveTab("reports")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
+              activeTab === "reports" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Flag className="w-4 h-4" /> Reports
+          </button>
+        </div>
       </div>
 
+      {activeTab === "reports" ? (
+        <AdminReports
+          onBlockUser={(userId) => performAction("block", userId, tr("Blockieren", "Block"))}
+          onDeleteVoice={(userId) => performAction("delete-voice", userId, tr("Voice gelöscht", "Voice deleted"))}
+        />
+      ) : (
+      <>
       {/* Stats Dashboard */}
       {stats && (
         <div className="grid grid-cols-3 gap-2 px-4 py-3">
