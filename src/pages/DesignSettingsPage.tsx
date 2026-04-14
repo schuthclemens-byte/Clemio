@@ -173,8 +173,9 @@ const DesignSettingsPage = () => {
         <section>
           <h2 className="text-sm font-bold text-foreground mb-3">Wähle dein Design</h2>
           <div className="grid grid-cols-2 gap-3">
-            {presetConfigs.map(({ id, label, hue, sat, light, accentHue, icon, desc }) => {
+            {presetConfigs.map(({ id, label, hue, sat, light, accentHue, icon, desc, gradient, vibe }) => {
               const isActive = state.preset === id;
+              const primary = `hsl(${hue}, ${sat}%, ${light}%)`;
               return (
                 <button
                   key={id}
@@ -183,27 +184,35 @@ const DesignSettingsPage = () => {
                     "relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 active:scale-[0.97]",
                     "border-2",
                     isActive
-                      ? "border-primary shadow-soft"
-                      : "border-border/50 hover:border-border"
+                      ? "border-primary ring-2 ring-primary/20 shadow-lg"
+                      : "border-border/40 hover:border-border hover:shadow-md"
                   )}
                 >
-                  {/* Check badge */}
+                  {/* Active badge */}
                   {isActive && (
-                    <div className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full gradient-primary flex items-center justify-center">
-                      <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                    <div className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: gradient }}>
+                      <Check className="w-3.5 h-3.5 text-white drop-shadow-sm" />
                     </div>
                   )}
+
+                  {/* Gradient color band — gives each preset a unique visual signature */}
+                  <div className="h-3 w-full" style={{ background: gradient }} />
 
                   {/* Mini chat preview */}
                   <ChatPreview hue={hue} sat={sat} light={light} accentHue={accentHue} compact />
 
                   {/* Label area */}
-                  <div className="p-3 bg-card">
+                  <div className="p-3 bg-card border-t border-border/30">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">{icon}</span>
-                      <div className="text-left">
-                        <p className={cn("text-sm font-semibold", isActive ? "text-primary" : "text-foreground")}>{label}</p>
-                        <p className="text-[0.65rem] text-muted-foreground">{desc}</p>
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm"
+                        style={{ background: `${primary}20` }}
+                      >
+                        {icon}
+                      </div>
+                      <div className="text-left min-w-0">
+                        <p className={cn("text-sm font-bold", isActive ? "text-primary" : "text-foreground")}>{label}</p>
+                        <p className="text-[0.6rem] text-muted-foreground leading-tight truncate">{desc}</p>
                       </div>
                     </div>
                   </div>
