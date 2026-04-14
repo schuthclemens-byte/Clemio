@@ -50,6 +50,7 @@ const tr: Record<string, string> = {
     "chat.offline": "Çevrimdışı",
     "chat.showMore": "Daha fazla göster",
     "chat.tapToListen": "Dinlemek için dokun · Daha fazlası için çift dokun",
+    "chat.listen": "Dinle",
     "chat.speaking": "konuşuyor…",
     "chat.readingAloud": "Sesli okunuyor…",
     "chat.contact": "Kişi",

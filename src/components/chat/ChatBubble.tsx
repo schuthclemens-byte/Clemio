@@ -1,4 +1,4 @@
-import { Languages, Loader2, CheckCheck, Headphones, Lock, Trash2, SmilePlus, Crown, Mic2, Pencil, Forward } from "lucide-react";
+import { Languages, Loader2, CheckCheck, Volume2, Trash2, SmilePlus, Crown, Pencil, Forward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "@/contexts/I18nContext";
@@ -10,7 +10,6 @@ import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { playStartListenPop } from "@/lib/sounds";
 import EmojiReactions from "./EmojiReactions";
 import type { Reaction } from "@/hooks/useMessageReactions";
-import SaveVoiceSampleDialog from "./SaveVoiceSampleDialog";
 
 interface ChatBubbleProps {
   message: string;
@@ -34,7 +33,6 @@ interface ChatBubbleProps {
   onToggleReaction?: (msgId: string, emoji: string) => void;
   onDelete?: (msgId: string) => void;
   onEdit?: (msgId: string, newContent: string) => void;
-  onSaveAsVoiceSample?: (audioUrl: string, senderId: string) => void;
   replyToText?: string;
   replyToSender?: string;
   replyToId?: string;
@@ -42,6 +40,8 @@ interface ChatBubbleProps {
   uploadProgress?: number;
   isEdited?: boolean;
   onForward?: (content: string, messageType: string) => void;
+  /** Transcribed text for audio messages */
+  transcription?: string;
 }
 
 /** Animated wave bars shown during playback */
@@ -57,7 +57,7 @@ const WaveIndicator = ({ color }: { color: string }) => (
   </span>
 );
 
-const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, onSaveAsVoiceSample, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward }: ChatBubbleProps) => {
+const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeaking, isRead, readAt, messageType, mediaUrl, senderId, onPlayClonedVoice, isPlayingCloned, isLoadingCloned, msgId, createdAt, hasClonedVoice, reactions = [], onToggleReaction, onDelete, onEdit, replyToText, replyToSender, replyToId, onScrollToMessage, uploadProgress, isEdited, onForward, transcription }: ChatBubbleProps) => {
   const { locale, t } = useI18n();
   const [translated, setTranslated] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -67,7 +67,6 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const [expanded, setExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showVoiceSaveConfirm, setShowVoiceSaveConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(message);
   const prevSpeaking = useRef(false);
@@ -81,7 +80,10 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
 
   const isMedia = messageType === "image" || messageType === "video";
   const isAudio = messageType === "audio";
-  const displayText = showTranslation && translated ? translated : message;
+  
+  // For audio messages, show transcription as text; otherwise show original message
+  const textContent = isAudio ? (transcription || message) : message;
+  const displayText = showTranslation && translated ? translated : textContent;
   const isActive = isSpeaking || isPlayingCloned || isLoadingCloned;
 
   // Play subtle pop when speech starts
@@ -92,16 +94,18 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     prevSpeaking.current = !!isActive;
   }, [isActive]);
 
-  // 1-Click: tap bubble to listen
-  const handleBubbleTap = () => {
-    if (!message || isMedia) return;
-    // Only play with cloned voice – no generic TTS
-    if (!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice) {
-      requirePremium(() => onPlayClonedVoice(displayText, senderId, msgId, locale));
-    } else if (!isMine && !hasClonedVoice) {
-      import("sonner").then(({ toast }) =>
-        toast.info("Speichere zuerst eine Stimmprobe, um Nachrichten in dieser Stimme anzuhören.")
-      );
+  // "Anhören" button handler — uses TTS with sender's voice if available
+  const handleListen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const textToSpeak = displayText;
+    if (!textToSpeak) return;
+    
+    if (hasClonedVoice && senderId && msgId && onPlayClonedVoice) {
+      // Use sender's cloned voice
+      requirePremium(() => onPlayClonedVoice(textToSpeak, senderId, msgId, locale));
+    } else if (onPlayClonedVoice && senderId && msgId) {
+      // Use default voice (still via TTS)
+      onPlayClonedVoice(textToSpeak, senderId, msgId, locale);
     }
   };
 
@@ -113,7 +117,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     setIsTranslating(true);
     try {
       const { data, error } = await supabase.functions.invoke("translate", {
-        body: { text: message, targetLang: locale },
+        body: { text: textContent, targetLang: locale },
       });
       if (error) throw error;
       setTranslated(data.translated);
@@ -128,16 +132,6 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
   const handleTranslate = (e: React.MouseEvent) => {
     e.stopPropagation();
     requirePremium(doTranslate);
-  };
-
-  const handlePlayCloned = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    requirePremium(() => onPlayClonedVoice?.(message, senderId!, msgId!, locale));
-  };
-
-  const handleConfirmVoiceSave = () => {
-    setShowVoiceSaveConfirm(false);
-    requirePremium(() => onSaveAsVoiceSample?.(message, senderId!));
   };
 
   const speakingLabel = isLoadingCloned
@@ -157,11 +151,10 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
           </span>
         )}
         <div
-          onClick={handleBubbleTap}
-          onDoubleClick={() => message && setShowActions(!showActions)}
+          onDoubleClick={() => textContent && setShowActions(!showActions)}
           className={cn(
-            "cursor-pointer select-none transition-all duration-200",
-            isMedia ? "rounded-2xl overflow-hidden" : "px-4 py-3",
+            "select-none transition-all duration-200",
+            isMedia ? "rounded-2xl overflow-hidden cursor-pointer" : "px-4 py-3",
             isMine
               ? "bubble-glass-mine text-chat-mine-foreground rounded-[1.25rem] rounded-br-sm"
               : "bubble-glass-theirs text-chat-theirs-foreground rounded-[1.25rem] rounded-bl-sm",
@@ -210,7 +203,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             />
           )}
 
-          {/* Audio content */}
+          {/* Audio content — show player AND transcribed text */}
           {isAudio && message && (
             <div>
               {isUploading ? (
@@ -240,22 +233,17 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                   </div>
                 </div>
               ) : (
-                <AudioPlayer url={message} isMine={isMine} />
-              )}
-              {/* Save voice sample button - always visible on received audio */}
-              {!isMine && !isUploading && senderId && onSaveAsVoiceSample && (
                 <>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowVoiceSaveConfirm(true); }}
-                    className={cn(
-                      "flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors active:scale-95",
-                      "bg-primary/10 text-primary hover:bg-primary/20"
-                    )}
-                    aria-label="Eigene Stimme erstellen"
-                  >
-                    {isPremium ? <Mic2 className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                    Eigene Stimme erstellen
-                  </button>
+                  <AudioPlayer url={message} isMine={isMine} />
+                  {/* Show transcription below audio player */}
+                  {transcription && (
+                    <p className={cn(
+                      "text-[0.813rem] leading-relaxed mt-2 opacity-80",
+                      isMine ? "text-chat-mine-foreground/80" : "text-chat-theirs-foreground/80"
+                    )} style={{ overflowWrap: "anywhere" }}>
+                      {transcription}
+                    </p>
+                  )}
                 </>
               )}
             </div>
@@ -296,7 +284,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
           )}
 
           {/* Text */}
-          {message && !isMedia && !isAudio && !isEditing && (() => {
+          {textContent && !isMedia && !isAudio && !isEditing && (() => {
             const isLong = compactMode && displayText.length > 120 && !expanded;
             const truncated = isLong ? displayText.slice(0, 120) + "…" : displayText;
             return (
@@ -326,9 +314,25 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             </p>
           )}
 
-          {/* Footer: time + minimal actions */}
+          {/* Footer: time + actions */}
           <div className={cn("flex items-center justify-between mt-1.5", isMedia && "px-4 pb-2")}>
             <div className="flex items-center gap-1.5">
+              {/* "Anhören" button — always visible for text/audio messages */}
+              {textContent && !isMedia && !isEditing && senderId && msgId && onPlayClonedVoice && !isActive && (
+                <button
+                  onClick={handleListen}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.688rem] font-medium transition-colors active:scale-95",
+                    isMine
+                      ? "bg-chat-mine-foreground/15 text-chat-mine-foreground/80 hover:bg-chat-mine-foreground/25"
+                      : "bg-primary/10 text-primary hover:bg-primary/20"
+                  )}
+                >
+                  <Volume2 className="w-3 h-3" />
+                  {t("chat.listen") || "Anhören"}
+                </button>
+              )}
+
               {showActions && (
                 <>
                   {/* Emoji picker trigger */}
@@ -341,16 +345,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       <SmilePlus className="w-4 h-4" />
                     </button>
                   )}
-                  {!isMine && hasClonedVoice && senderId && msgId && onPlayClonedVoice && message && (
-                    <button
-                      onClick={handlePlayCloned}
-                      className="p-1.5 rounded-full bg-accent/10 text-accent transition-colors active:scale-90"
-                      aria-label={t("chat.listenClonedVoice") || "Mit geklonter Stimme anhören"}
-                    >
-                      {isPremium ? <Headphones className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                    </button>
-                  )}
-                  {!isMine && message && (
+                  {!isMine && textContent && (
                     <button
                       onClick={handleTranslate}
                       disabled={isTranslating}
@@ -389,24 +384,13 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                     </button>
                   )}
                   {/* Forward button */}
-                  {onForward && message && (
+                  {onForward && textContent && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onForward(message, messageType || "text"); }}
                       className="p-1.5 rounded-full bg-secondary text-muted-foreground transition-colors active:scale-90"
                       aria-label="Weiterleiten"
                     >
                       <Forward className="w-4 h-4" />
-                    </button>
-                  )}
-                  {/* Save voice message as voice sample for this contact */}
-                  {!isMine && isAudio && senderId && onSaveAsVoiceSample && message && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowVoiceSaveConfirm(true); }}
-                      className="p-1.5 rounded-full bg-primary/10 text-primary transition-colors active:scale-90"
-                      aria-label="Eigene Stimme erstellen"
-                      title="Eigene Stimme erstellen"
-                    >
-                      {isPremium ? <Mic2 className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     </button>
                   )}
                 </>
@@ -452,32 +436,12 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               onTogglePicker={() => setShowEmojiPicker(!showEmojiPicker)}
             />
           )}
-
-          {senderId && onSaveAsVoiceSample && message && (
-            <SaveVoiceSampleDialog
-              open={showVoiceSaveConfirm}
-              onOpenChange={setShowVoiceSaveConfirm}
-              onConfirm={handleConfirmVoiceSave}
-              senderName={senderName}
-              isPremium={isPremium}
-            />
-          )}
         </div>
 
-        {/* Tap hint for non-own messages */}
-        {!isMine && message && !isMedia && !isActive && hasClonedVoice && (
+        {/* Tap hint */}
+        {textContent && !isMedia && !isActive && (
           <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
-            {t("chat.tapToListen") || "Tippen zum Anhören · Doppeltippen für Aktionen"}
-          </p>
-        )}
-        {!isMine && message && !isMedia && !isActive && !hasClonedVoice && (
-          <p className="text-[0.625rem] text-muted-foreground/50 ml-3 mt-0.5">
-            Doppeltippen für Aktionen
-          </p>
-        )}
-        {isMine && message && !isMedia && !isActive && (
-          <p className="text-[0.625rem] text-muted-foreground/50 mr-3 mt-0.5 text-right">
-            Doppeltippen für Aktionen
+            {isMine ? "Doppeltippen für Aktionen" : "Doppeltippen für Aktionen"}
           </p>
         )}
       </div>
