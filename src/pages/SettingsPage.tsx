@@ -116,7 +116,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
-  const { theme, setTheme } = useTheme();
+  
   const { user } = useAuth();
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
@@ -202,11 +202,6 @@ const SettingsPage = () => {
 
 
 
-  const themeOptions = [
-    { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
-    { value: "light" as const, icon: Sun, label: t("settings.themeLight") },
-    { value: "dark" as const, icon: Moon, label: t("settings.themeDark") },
-  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-background" {...useSwipeBack({ fallbackPath: "/chats" })}>
