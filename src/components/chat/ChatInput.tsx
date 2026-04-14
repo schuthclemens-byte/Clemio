@@ -30,7 +30,7 @@ interface ChatInputProps {
   onPlayVoice?: (text: string) => void;
 }
 
-const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages, externalText }: ChatInputProps) => {
+const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages, externalText, onPlayVoice }: ChatInputProps) => {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
