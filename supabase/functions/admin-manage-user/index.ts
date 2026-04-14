@@ -51,12 +51,14 @@ serve(async (req) => {
         { count: totalMessages },
         { count: premiumUsers },
         { count: activeUsers },
+        { count: voiceProfiles },
       ] = await Promise.all([
         admin.from("profiles").select("id", { count: "exact", head: true }),
         admin.from("blocked_users").select("id", { count: "exact", head: true }),
         admin.from("messages").select("id", { count: "exact", head: true }),
         admin.from("subscriptions").select("id", { count: "exact", head: true }).gt("premium_until", new Date().toISOString()),
         admin.from("user_presence").select("user_id", { count: "exact", head: true }).gt("last_seen", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        admin.from("voice_profiles").select("id", { count: "exact", head: true }),
       ]);
       return json({
         totalUsers: totalUsers || 0,
@@ -64,6 +66,7 @@ serve(async (req) => {
         totalMessages: totalMessages || 0,
         premiumUsers: premiumUsers || 0,
         activeUsers: activeUsers || 0,
+        voiceProfiles: voiceProfiles || 0,
       });
     }
 
