@@ -1,55 +1,58 @@
 
 
-## Plan: Sicherheitslücken automatisch beheben
+## Plan: Admin-System für Account-Verwaltung
 
-Zwei Findings aus dem Security-Scan werden behoben:
+Dein Account (Clemens, `49a49e20-...`) bekommt Admin-Rechte, mit denen du andere Accounts löschen und blockieren kannst.
 
 ---
 
-### Fix 1: Voice-TTS Scope-Check (Mittel)
+### 1. Datenbank: Admin-Rolle & Blocked-Tabelle
 
-**Problem:** Jeder authentifizierte User kann mit beliebiger `senderId` die Stimme eines fremden Users nutzen – ohne Prüfung, ob sie in einem gemeinsamen Chat sind.
+**user_roles** Tabelle (Best Practice für Rollen):
+```sql
+CREATE TYPE public.app_role AS ENUM ('admin', 'user');
 
-**Lösung:** In `supabase/functions/voice-tts/index.ts` vor dem TTS-Aufruf prüfen, ob der anfragende User und der `senderId` mindestens eine gemeinsame Conversation haben:
+CREATE TABLE public.user_roles (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  role app_role NOT NULL,
+  UNIQUE (user_id, role)
+);
 
-```typescript
-// Prüfe ob User und Sender in einer gemeinsamen Conversation sind
-const { data: userConvs } = await adminClient
-  .from("conversation_members")
-  .select("conversation_id")
-  .eq("user_id", user.id);
-
-const convIds = userConvs?.map(r => r.conversation_id) ?? [];
-
-if (convIds.length === 0) {
-  return 403 Forbidden;
-}
-
-const { count } = await adminClient
-  .from("conversation_members")
-  .select("id", { count: "exact", head: true })
-  .eq("user_id", senderId)
-  .in("conversation_id", convIds);
-
-if (!count) {
-  return 403 Forbidden;
-}
+-- Dich als Admin eintragen
+INSERT INTO public.user_roles (user_id, role)
+VALUES ('49a49e20-3c9f-4728-8672-46a3b7a6465a', 'admin');
 ```
 
----
+**Security-Definer Funktion** `has_role()` für sichere Prüfung ohne RLS-Rekursion.
 
-### Fix 2: Biometric-Credentials sicher verschlüsseln (Schwer)
+**blocked_users** Tabelle:
+```sql
+CREATE TABLE public.blocked_users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  blocked_by uuid NOT NULL,
+  reason text,
+  created_at timestamptz DEFAULT now()
+);
+```
 
-**Problem:** Passwort wird mit vorhersagbarem XOR in localStorage gespeichert. Jedes Script mit localStorage-Zugriff kann es entschlüsseln.
+### 2. Edge Function: `admin-manage-user`
 
-**Lösung:** XOR-Obfuscation durch **AES-GCM via WebCrypto** ersetzen. Der Schlüssel wird aus einem zufälligen Salt + festem Seed per PBKDF2 abgeleitet. Der Salt wird zusammen mit dem Ciphertext gespeichert. Das macht Brute-Force deutlich schwieriger, da der Salt pro Gerät einzigartig ist.
+- **DELETE**: Ruft dieselbe Logik wie `delete-account` auf, aber für beliebige User (nur wenn Anfragender Admin ist)
+- **BLOCK**: Setzt Eintrag in `blocked_users`, deaktiviert den Auth-User via `admin.updateUserById(userId, { banned_until: 'forever' })`
+- **UNBLOCK**: Entfernt Block und hebt Ban auf
 
-Änderungen in `src/hooks/useBiometricAuth.ts`:
-- `obfuscate()` → `encrypt()` mit AES-GCM (WebCrypto)
-- `deobfuscate()` → `decrypt()` mit AES-GCM
-- Zufälliger 16-Byte-Salt + 12-Byte-IV pro Verschlüsselung
-- PBKDF2 Key-Derivation statt direktem SHA-256
-- Bestehende v2-Credentials werden beim nächsten Login automatisch migriert (Fallback auf alte Methode, dann neu verschlüsseln als v3)
+### 3. Admin-Seite: `/admin`
+
+- Nur sichtbar/erreichbar für Admins
+- Liste aller registrierten Nutzer (Name, Nummer, Registrierungsdatum)
+- Buttons: **Blockieren** / **Entblockieren** / **Account löschen**
+- Bestätigungs-Dialog vor destruktiven Aktionen
+
+### 4. Login-Schutz für blockierte User
+
+In `AuthContext.tsx` nach erfolgreichem Login prüfen, ob der User in `blocked_users` steht → Fehlermeldung anzeigen und Session beenden.
 
 ---
 
@@ -57,6 +60,11 @@ if (!count) {
 
 | Datei | Änderung |
 |---|---|
-| `supabase/functions/voice-tts/index.ts` | Conversation-Membership-Check hinzufügen |
-| `src/hooks/useBiometricAuth.ts` | XOR → AES-GCM Verschlüsselung |
+| Migration | `user_roles`, `blocked_users` Tabellen + `has_role()` Funktion + RLS |
+| `supabase/functions/admin-manage-user/index.ts` | Neue Edge Function für Delete/Block/Unblock |
+| `src/pages/AdminPage.tsx` | Neue Admin-Übersichtsseite |
+| `src/hooks/useAdminRole.ts` | Hook zur Admin-Prüfung |
+| `src/App.tsx` | Route `/admin` hinzufügen (geschützt) |
+| `src/contexts/AuthContext.tsx` | Block-Check nach Login |
+| `src/components/BottomTabBar.tsx` | Admin-Link für Admins |
 
