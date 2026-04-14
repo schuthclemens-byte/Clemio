@@ -34,7 +34,6 @@ export function AppSidebar() {
   ];
 
   const extraItems = [
-    { title: t("sidebar.voices"), url: "/voice-recordings", icon: Mic },
     { title: t("sidebar.focusMode"), url: "/focus-mode", icon: Moon },
     { title: t("sidebar.autoPlay"), url: "/contact-autoplay", icon: Headphones },
   ];

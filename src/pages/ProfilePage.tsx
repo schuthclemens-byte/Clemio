@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2, Mic, ChevronRight, CheckCircle } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,7 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [hasVoice, setHasVoice] = useState(false);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
@@ -66,6 +67,13 @@ const ProfilePage = () => {
         setAvatarUrl(data.avatar_url);
         
       }
+      // Check voice profile
+      const { data: voiceData } = await supabase
+        .from("voice_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setHasVoice(!!voiceData);
       setLoaded(true);
     };
     load();
