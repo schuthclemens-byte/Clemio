@@ -28,7 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const CallPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const { goBack } = useSmartBack("/chats");
   const { user } = useAuth();
   const { activeCall, startCall, acceptCall, endCall: endCallContext } = useCallContext();
   const headphonesConnected = useHeadphoneDetection();
