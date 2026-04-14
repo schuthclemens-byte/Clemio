@@ -100,11 +100,19 @@ serve(async (req) => {
         subMap[s.user_id] = s;
       }
 
+      // Get voice profiles
+      const { data: voices } = await admin.from("voice_profiles").select("user_id, voice_name, created_at, elevenlabs_voice_id");
+      const voiceMap: Record<string, any> = {};
+      for (const v of voices || []) {
+        voiceMap[v.user_id] = { voice_name: v.voice_name, created_at: v.created_at, elevenlabs_voice_id: v.elevenlabs_voice_id };
+      }
+
       const result = (profiles || []).map((p: any) => ({
         ...p,
         is_blocked: blockedIds.has(p.id),
         message_count: msgCounts[p.id] || 0,
         subscription: subMap[p.id] || null,
+        voice_profile: voiceMap[p.id] || null,
       }));
       return json({ profiles: result });
     }
