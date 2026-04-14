@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Settings2, Sliders } from "lucide-react";
