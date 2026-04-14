@@ -169,6 +169,39 @@ serve(async (req) => {
       return json({ success: true, action: "password-reset" });
     }
 
+    // ── DELETE VOICE PROFILE ──
+    if (action === "delete-voice") {
+      const elevenlabsKey = Deno.env.get("ELEVENLABS_API_KEY");
+      const { data: voiceProfiles } = await admin
+        .from("voice_profiles")
+        .select("elevenlabs_voice_id")
+        .eq("user_id", targetUserId);
+      
+      if (elevenlabsKey) {
+        for (const v of voiceProfiles || []) {
+          try {
+            await fetch(`https://api.elevenlabs.io/v1/voices/${v.elevenlabs_voice_id}`, {
+              method: "DELETE",
+              headers: { "xi-api-key": elevenlabsKey },
+            });
+          } catch { /* best effort */ }
+        }
+      }
+
+      // Delete voice samples from storage
+      const { data: files } = await admin.storage.from("voice-samples").list(targetUserId);
+      if (files?.length) {
+        await admin.storage.from("voice-samples").remove(files.map((f: any) => `${targetUserId}/${f.name}`));
+      }
+
+      await admin.from("voice_profiles").delete().eq("user_id", targetUserId);
+      await admin.from("voice_consents").delete().eq("voice_owner_id", targetUserId);
+      // Also delete contact voice profiles that reference this user's voice
+      await admin.from("contact_voice_profiles").delete().eq("contact_user_id", targetUserId);
+
+      return json({ success: true, action: "voice-deleted" });
+    }
+
     // ── DELETE USER ──
     if (action === "delete") {
       const elevenlabsKey = Deno.env.get("ELEVENLABS_API_KEY");
