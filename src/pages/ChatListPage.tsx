@@ -450,8 +450,19 @@ const ChatListPage = () => {
 
       <div className="flex-1" role="list" aria-label={t("chat.chats")}>
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <div className="px-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-3.5 animate-pulse">
+                <div className="h-12 w-12 rounded-full bg-muted shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 rounded bg-muted" style={{ width: `${60 + (i % 3) * 20}px` }} />
+                    <div className="h-3 w-10 rounded bg-muted" />
+                  </div>
+                  <div className="h-3 rounded bg-muted" style={{ width: `${120 + (i % 4) * 30}px` }} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <>
