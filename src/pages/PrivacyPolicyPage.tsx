@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { ArrowLeft, Shield } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 

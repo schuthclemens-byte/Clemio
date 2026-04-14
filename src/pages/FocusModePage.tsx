@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Shield, UserPlus, Trash2, Search } from "lucide-react";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { supabase } from "@/integrations/supabase/client";

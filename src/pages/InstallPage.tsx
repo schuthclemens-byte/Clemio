@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { Download, ArrowLeft, Smartphone, Monitor, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { subscribeToInstallPrompt, DeferredInstallPromptEvent, clearDeferredInstallPrompt } from "@/lib/installPrompt";

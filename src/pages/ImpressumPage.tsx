@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Building2 } from "lucide-react";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { useI18n } from "@/contexts/I18nContext";
 
 const ImpressumPage = () => {

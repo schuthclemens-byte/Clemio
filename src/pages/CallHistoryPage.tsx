@@ -4,7 +4,7 @@ import { ArrowLeft, Phone, Video, PhoneIncoming, PhoneMissed, PhoneOff, PhoneFor
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { cn } from "@/lib/utils";
 import { fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
 

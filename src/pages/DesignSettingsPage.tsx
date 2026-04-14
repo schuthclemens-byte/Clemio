@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, Palette, Sun, Moon, Monitor, ChevronDown, ImageIcon, Check } from "lucide-react";
-import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDesignSystem, type DesignPreset, type SparkleMode, type SparkleColor } from "@/contexts/DesignSystemContext";

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSwipeBack } from "@/hooks/useSwipeBack";
-import { useNavigate } from "react-router-dom";
+import { useSmartBack } from "@/hooks/useSmartBack";
 import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Settings2, Sliders } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
