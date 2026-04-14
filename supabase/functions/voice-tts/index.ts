@@ -45,7 +45,6 @@ serve(async (req) => {
       });
     }
 
-    // Map short locale codes to ElevenLabs language codes
     const langMap: Record<string, string> = {
       de: "de", en: "en", fr: "fr", es: "es", tr: "tr", ar: "ar",
     };
@@ -56,51 +55,24 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Priority 1: Check if the requesting user has a contact voice profile for this sender
-    const { data: contactVoice } = await adminClient
-      .from("contact_voice_profiles")
+    // Only use the sender's own voice profile — no contact voices, no consent needed
+    // Voice profiles are public for TTS: if a user created one, anyone in their chats can hear it
+    const { data: voiceProfile } = await adminClient
+      .from("voice_profiles")
       .select("elevenlabs_voice_id")
-      .eq("user_id", user.id)
-      .eq("contact_user_id", senderId)
+      .eq("user_id", senderId)
       .maybeSingle();
 
-    let voiceId: string | null = contactVoice?.elevenlabs_voice_id ?? null;
-
-    // Priority 2: Fall back to sender's own voice profile (with consent check)
-    if (!voiceId) {
-      const { data: voiceProfile } = await adminClient
-        .from("voice_profiles")
-        .select("elevenlabs_voice_id")
-        .eq("user_id", senderId)
-        .maybeSingle();
-
-      if (!voiceProfile) {
-        return new Response(JSON.stringify({ error: "No voice profile for this user" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Check consent for sender's own voice
-      const { data: consent } = await adminClient
-        .from("voice_consents")
-        .select("status")
-        .eq("voice_owner_id", senderId)
-        .eq("granted_to_user_id", user.id)
-        .eq("status", "granted")
-        .maybeSingle();
-
-      if (!consent) {
-        return new Response(JSON.stringify({ error: "No consent granted" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      voiceId = voiceProfile.elevenlabs_voice_id;
+    if (!voiceProfile) {
+      return new Response(JSON.stringify({ error: "No voice profile for this user" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Generate TTS with the resolved voice
+    const voiceId = voiceProfile.elevenlabs_voice_id;
+
+    // Generate TTS
     const ttsResponse = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
