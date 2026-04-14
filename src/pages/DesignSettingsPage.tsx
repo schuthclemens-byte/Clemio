@@ -292,34 +292,7 @@ const DesignSettingsPage = () => {
               )}
             </button>
 
-            {/* Sparkle card */}
-            <button
-              onClick={() => setMagic({ enabled: true, sparkleMode: "sparkle" })}
-              className={cn(
-                "relative flex flex-col items-center rounded-2xl overflow-hidden border-2 transition-all duration-200 active:scale-[0.96]",
-                state.magic.enabled && state.magic.sparkleMode === "sparkle"
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "border-border/40 hover:border-border"
-              )}
-            >
-              <div className="h-16 w-full bg-gradient-to-br from-card to-secondary/50 flex items-center justify-center relative overflow-hidden">
-                {/* Simulated sparkle dots */}
-                <div className="absolute w-1.5 h-1.5 rounded-full bg-primary/80 top-3 left-3 animate-pulse" />
-                <div className="absolute w-1 h-1 rounded-full bg-primary/60 top-8 right-4 animate-pulse" style={{ animationDelay: "0.3s" }} />
-                <div className="absolute w-2 h-2 rounded-full bg-primary/40 bottom-3 left-1/2 animate-pulse" style={{ animationDelay: "0.7s" }} />
-                <span className="text-2xl relative z-10">✨</span>
-              </div>
-              <div className="py-2 px-1 bg-card border-t border-border/30 w-full">
-                <p className={cn("text-[0.65rem] font-semibold text-center", state.magic.enabled && state.magic.sparkleMode === "sparkle" ? "text-primary" : "text-muted-foreground")}>Funkeln</p>
-              </div>
-              {state.magic.enabled && state.magic.sparkleMode === "sparkle" && (
-                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                  <Check className="w-3 h-3 text-primary-foreground" />
-                </div>
-              )}
-            </button>
-
-            {/* Soft card */}
+            {/* Soft (static) card */}
             <button
               onClick={() => setMagic({ enabled: true, sparkleMode: "soft" })}
               className={cn(
@@ -330,7 +303,6 @@ const DesignSettingsPage = () => {
               )}
             >
               <div className="h-16 w-full flex items-center justify-center relative overflow-hidden" style={{ background: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.12), hsl(var(--card)))" }}>
-                {/* Simulated soft glow */}
                 <div className="absolute w-10 h-10 rounded-full bg-primary/10 blur-lg" />
                 <div className="absolute w-6 h-6 rounded-full bg-primary/15 blur-md top-2 right-3" />
                 <span className="text-2xl relative z-10">🌙</span>
@@ -339,6 +311,32 @@ const DesignSettingsPage = () => {
                 <p className={cn("text-[0.65rem] font-semibold text-center", state.magic.enabled && state.magic.sparkleMode === "soft" ? "text-primary" : "text-muted-foreground")}>Sanft</p>
               </div>
               {state.magic.enabled && state.magic.sparkleMode === "soft" && (
+                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="w-3 h-3 text-primary-foreground" />
+                </div>
+              )}
+            </button>
+
+            {/* Lively (moving) card */}
+            <button
+              onClick={() => setMagic({ enabled: true, sparkleMode: "lively" })}
+              className={cn(
+                "relative flex flex-col items-center rounded-2xl overflow-hidden border-2 transition-all duration-200 active:scale-[0.96]",
+                state.magic.enabled && state.magic.sparkleMode === "lively"
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border/40 hover:border-border"
+              )}
+            >
+              <div className="h-16 w-full bg-gradient-to-br from-card to-secondary/50 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute w-1.5 h-1.5 rounded-full bg-primary/80 top-3 left-3 animate-pulse" />
+                <div className="absolute w-1 h-1 rounded-full bg-primary/60 top-8 right-4 animate-pulse" style={{ animationDelay: "0.3s" }} />
+                <div className="absolute w-2 h-2 rounded-full bg-primary/40 bottom-3 left-1/2 animate-pulse" style={{ animationDelay: "0.7s" }} />
+                <span className="text-2xl relative z-10">✨</span>
+              </div>
+              <div className="py-2 px-1 bg-card border-t border-border/30 w-full">
+                <p className={cn("text-[0.65rem] font-semibold text-center", state.magic.enabled && state.magic.sparkleMode === "lively" ? "text-primary" : "text-muted-foreground")}>Lebendig</p>
+              </div>
+              {state.magic.enabled && state.magic.sparkleMode === "lively" && (
                 <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                   <Check className="w-3 h-3 text-primary-foreground" />
                 </div>
@@ -363,6 +361,23 @@ const DesignSettingsPage = () => {
                   onValueChange={([v]) => setMagic({ sparkleIntensity: v })}
                 />
               </div>
+
+              {/* Movement Speed – only for lively mode */}
+              {state.magic.sparkleMode === "lively" && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Geschwindigkeit</span>
+                    <span className="font-semibold text-primary">{state.magic.sparkleMovementSpeed ?? 30}%</span>
+                  </div>
+                  <Slider
+                    value={[state.magic.sparkleMovementSpeed ?? 30]}
+                    min={5}
+                    max={80}
+                    step={1}
+                    onValueChange={([v]) => setMagic({ sparkleMovementSpeed: v })}
+                  />
+                </div>
+              )}
 
               {/* Sparkle Color */}
               <div className="space-y-2">
