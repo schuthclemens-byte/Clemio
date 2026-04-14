@@ -245,7 +245,7 @@ const HeroSection = () => {
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border shadow-elevated text-sm text-muted-foreground"
           >
             <VolumeX className="w-4 h-4 text-destructive shrink-0" />
-            <span>Audio konnte nicht gestartet werden – nutze den Play-Button</span>
+            <span>{t("landing.heroAudioError")}</span>
           </motion.div>
         )}
       </AnimatePresence>
