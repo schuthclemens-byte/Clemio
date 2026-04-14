@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2, MoreVertical } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2, MoreVertical, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -1004,6 +1004,14 @@ const ChatPage = () => {
                   >
                     <ImageIcon className="w-4 h-4" /> Medien
                   </button>
+                  {!isGroup && otherUserId && (
+                    <button
+                      onClick={() => { setShowChatMenu(false); setReportTarget({ msgId: "", senderId: otherUserId, messageType: "__user__" }); }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2 text-destructive"
+                    >
+                      <Flag className="w-4 h-4" /> {locale === "de" ? "Nutzer melden" : "Report user"}
+                    </button>
+                  )}
                 </div>
               </>,
               document.body
@@ -1283,8 +1291,8 @@ const ChatPage = () => {
         open={!!reportTarget}
         onOpenChange={(o) => { if (!o) setReportTarget(null); }}
         reportedUserId={reportTarget?.senderId || ""}
-        reportType={reportTarget?.messageType === "audio" || reportTarget?.messageType === "voice" ? "voice" : "message"}
-        messageId={reportTarget?.msgId}
+        reportType={reportTarget?.messageType === "__user__" ? "user" : reportTarget?.messageType === "audio" || reportTarget?.messageType === "voice" ? "voice" : "message"}
+        messageId={reportTarget?.messageType === "__user__" ? undefined : (reportTarget?.msgId || undefined)}
         userName={reportTarget ? (memberNames[reportTarget.senderId] || chatName) : undefined}
       />
     </div>
