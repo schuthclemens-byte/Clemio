@@ -259,63 +259,107 @@ const DesignSettingsPage = () => {
         </section>
 
         {/* ─── Effects (Magic Mode) ─── */}
-        <section className="bg-card rounded-2xl overflow-hidden">
-          <button
-            onClick={() => setMagic({ enabled: !state.magic.enabled })}
-            className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50 active:scale-[0.99]"
-            role="switch"
-            aria-checked={state.magic.enabled}
-          >
-            <span className="flex items-center gap-3 flex-1 min-w-0">
-              <Sparkles className={cn("w-5 h-5 shrink-0", state.magic.enabled ? "text-primary" : "text-muted-foreground")} />
-              <div className="min-w-0">
-                <span className="text-sm block font-semibold">{t("design.magicMode")}</span>
-                <span className="text-[0.7rem] text-muted-foreground">{t("design.magicModeDesc")}</span>
-              </div>
-            </span>
-            <div className={cn(
-              "w-11 h-6 rounded-full relative transition-colors duration-200 shrink-0 ml-3",
-              state.magic.enabled ? "bg-primary" : "bg-border"
-            )}>
-              <div className={cn(
-                "absolute top-0.5 w-5 h-5 rounded-full bg-card shadow-sm transition-transform duration-200",
-                state.magic.enabled ? "translate-x-[1.375rem]" : "translate-x-0.5"
-              )} />
-            </div>
-          </button>
+        <section>
+          <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            {t("design.magicMode")}
+          </h2>
 
-          {state.magic.enabled && (
-            <div className="px-4 pb-4 space-y-4 border-t border-border">
-              <div className="flex gap-2 pt-3">
-                {(["sparkle", "soft"] as SparkleMode[]).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setMagic({ sparkleMode: mode })}
-                    className={cn(
-                      "flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95",
-                      state.magic.sparkleMode === mode
-                        ? "gradient-primary text-primary-foreground shadow-soft"
-                        : "bg-secondary text-muted-foreground"
-                    )}
-                  >
-                    <span className="text-base">{mode === "sparkle" ? "✨" : "🌙"}</span>
-                    <span className="text-xs">{mode === "sparkle" ? "Funkeln" : "Sanft"}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">{t("design.intensity")}</span>
-                  <span className="font-semibold text-primary">{state.magic.sparkleIntensity}%</span>
+          {/* Visual mode cards with animated preview */}
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {/* OFF card */}
+            <button
+              onClick={() => setMagic({ enabled: false })}
+              className={cn(
+                "relative flex flex-col items-center rounded-2xl overflow-hidden border-2 transition-all duration-200 active:scale-[0.96]",
+                !state.magic.enabled
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border/40 hover:border-border"
+              )}
+            >
+              <div className="h-16 w-full bg-card flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <span className="text-muted-foreground text-lg">○</span>
                 </div>
-                <Slider
-                  value={[state.magic.sparkleIntensity]}
-                  min={0}
-                  max={100}
-                  step={1}
-                  onValueChange={([v]) => setMagic({ sparkleIntensity: v })}
-                />
               </div>
+              <div className="py-2 px-1 bg-card border-t border-border/30 w-full">
+                <p className={cn("text-[0.65rem] font-semibold text-center", !state.magic.enabled ? "text-primary" : "text-muted-foreground")}>Aus</p>
+              </div>
+              {!state.magic.enabled && (
+                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="w-3 h-3 text-primary-foreground" />
+                </div>
+              )}
+            </button>
+
+            {/* Sparkle card */}
+            <button
+              onClick={() => setMagic({ enabled: true, sparkleMode: "sparkle" })}
+              className={cn(
+                "relative flex flex-col items-center rounded-2xl overflow-hidden border-2 transition-all duration-200 active:scale-[0.96]",
+                state.magic.enabled && state.magic.sparkleMode === "sparkle"
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border/40 hover:border-border"
+              )}
+            >
+              <div className="h-16 w-full bg-gradient-to-br from-card to-secondary/50 flex items-center justify-center relative overflow-hidden">
+                {/* Simulated sparkle dots */}
+                <div className="absolute w-1.5 h-1.5 rounded-full bg-primary/80 top-3 left-3 animate-pulse" />
+                <div className="absolute w-1 h-1 rounded-full bg-primary/60 top-8 right-4 animate-pulse" style={{ animationDelay: "0.3s" }} />
+                <div className="absolute w-2 h-2 rounded-full bg-primary/40 bottom-3 left-1/2 animate-pulse" style={{ animationDelay: "0.7s" }} />
+                <span className="text-2xl relative z-10">✨</span>
+              </div>
+              <div className="py-2 px-1 bg-card border-t border-border/30 w-full">
+                <p className={cn("text-[0.65rem] font-semibold text-center", state.magic.enabled && state.magic.sparkleMode === "sparkle" ? "text-primary" : "text-muted-foreground")}>Funkeln</p>
+              </div>
+              {state.magic.enabled && state.magic.sparkleMode === "sparkle" && (
+                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="w-3 h-3 text-primary-foreground" />
+                </div>
+              )}
+            </button>
+
+            {/* Soft card */}
+            <button
+              onClick={() => setMagic({ enabled: true, sparkleMode: "soft" })}
+              className={cn(
+                "relative flex flex-col items-center rounded-2xl overflow-hidden border-2 transition-all duration-200 active:scale-[0.96]",
+                state.magic.enabled && state.magic.sparkleMode === "soft"
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border/40 hover:border-border"
+              )}
+            >
+              <div className="h-16 w-full flex items-center justify-center relative overflow-hidden" style={{ background: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.12), hsl(var(--card)))" }}>
+                {/* Simulated soft glow */}
+                <div className="absolute w-10 h-10 rounded-full bg-primary/10 blur-lg" />
+                <div className="absolute w-6 h-6 rounded-full bg-primary/15 blur-md top-2 right-3" />
+                <span className="text-2xl relative z-10">🌙</span>
+              </div>
+              <div className="py-2 px-1 bg-card border-t border-border/30 w-full">
+                <p className={cn("text-[0.65rem] font-semibold text-center", state.magic.enabled && state.magic.sparkleMode === "soft" ? "text-primary" : "text-muted-foreground")}>Sanft</p>
+              </div>
+              {state.magic.enabled && state.magic.sparkleMode === "soft" && (
+                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="w-3 h-3 text-primary-foreground" />
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* Intensity slider — only when magic is on */}
+          {state.magic.enabled && (
+            <div className="bg-card rounded-2xl px-4 py-3 space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">{t("design.intensity")}</span>
+                <span className="font-semibold text-primary">{state.magic.sparkleIntensity}%</span>
+              </div>
+              <Slider
+                value={[state.magic.sparkleIntensity]}
+                min={0}
+                max={100}
+                step={1}
+                onValueChange={([v]) => setMagic({ sparkleIntensity: v })}
+              />
             </div>
           )}
         </section>
