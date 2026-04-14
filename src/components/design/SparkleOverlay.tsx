@@ -25,24 +25,21 @@ function resolveSparkleColor(
   customHue: number,
   themeHue: number,
   themeSat: number,
-  isDark: boolean,
 ): { hue: number; sat: number; light: number } {
-  // In dark mode, particles should be lighter; in light mode, darker
-  // This ensures contrast against both backgrounds
-  const baseLightness = isDark ? 90 : 40;
-
+  // Always use high lightness — particles are white-ish dots
+  // Visibility is controlled by alpha, not lightness
   switch (colorMode) {
     case "warm":
-      return { hue: 15, sat: Math.min(themeSat * 0.4, 35), light: baseLightness };
+      return { hue: 15, sat: 35, light: 95 };
     case "cool":
-      return { hue: 220, sat: Math.min(themeSat * 0.35, 30), light: baseLightness };
+      return { hue: 220, sat: 30, light: 95 };
     case "accent":
-      return { hue: (themeHue + 30) % 360, sat: Math.min(themeSat * 0.45, 40), light: baseLightness };
+      return { hue: (themeHue + 30) % 360, sat: Math.min(themeSat * 0.4, 40), light: 93 };
     case "custom":
-      return { hue: customHue, sat: 25, light: baseLightness };
+      return { hue: customHue, sat: 25, light: 94 };
     case "auto":
     default:
-      return { hue: themeHue, sat: Math.min(themeSat * 0.35, 30), light: baseLightness };
+      return { hue: themeHue, sat: Math.min(themeSat * 0.35, 30), light: 95 };
   }
 }
 
@@ -62,7 +59,6 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
     const intensity = settings.sparkleIntensity / 100;
     const colorMode = settings.sparkleColor ?? "auto";
     const customHue = settings.sparkleCustomHue ?? 0;
-    const isDark = document.documentElement.classList.contains("dark");
 
     const dpr = Math.min(window.devicePixelRatio, 2);
 
@@ -78,33 +74,31 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
     };
 
     const { w: ww, h: hh } = setupCanvas();
-
-    const resolved = resolveSparkleColor(colorMode, customHue, effectHue, effectSaturation, isDark);
+    const resolved = resolveSparkleColor(colorMode, customHue, effectHue, effectSaturation);
 
     if (!isSparkle) {
       /* ════════════════════════════════════════════
          SOFT MODE – static particle texture
-         Particles need contrast against background:
-         - Dark mode: light/white particles
-         - Light mode: darker, slightly tinted particles
+         White-ish dots rendered with screen blend mode
+         so they glow subtly on any background.
          ════════════════════════════════════════════ */
 
       const drawParticles = (cw: number, ch: number) => {
         ctx.clearRect(0, 0, cw, ch);
-        // 60 at 0% intensity → 250 at 100%
-        const count = Math.round(60 + intensity * 190);
+        // 80 at 0% → 300 at 100%
+        const count = Math.round(80 + intensity * 220);
 
         for (let i = 0; i < count; i++) {
           const x = Math.random() * cw;
           const y = Math.random() * ch;
-          // Size: 1–3px for visibility
-          const size = 1 + Math.random() * 2;
-          // Per-dot lightness variation
-          const light = resolved.light + (Math.random() * 16 - 8);
+          // Size: 1–2.5px
+          const size = 1 + Math.random() * 1.5;
+          // Per-dot lightness variation: 88–100
+          const light = resolved.light - 7 + Math.random() * 12;
           // Per-dot saturation variation
           const sat = Math.max(0, resolved.sat + (Math.random() * 14 - 7));
-          // Opacity: 12–25% base, scaled by intensity
-          const baseAlpha = 0.12 + intensity * 0.13; // 12% → 25%
+          // Alpha: 20–45% — much more visible
+          const baseAlpha = 0.20 + intensity * 0.25;
           const alpha = baseAlpha * (0.6 + Math.random() * 0.4);
 
           ctx.beginPath();
@@ -112,8 +106,6 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
           ctx.fillStyle = `hsla(${resolved.hue}, ${sat}%, ${light}%, ${alpha})`;
           ctx.fill();
         }
-
-        console.log(`[SparkleOverlay] Soft mode drew ${count} particles on ${cw}x${ch}, isDark=${isDark}, hue=${resolved.hue}, light=${resolved.light}, baseAlpha=${(0.12 + intensity * 0.13).toFixed(2)}`);
       };
 
       drawParticles(ww, hh);
@@ -226,6 +218,8 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
 
   if (!settings.enabled) return null;
 
+  // screen blend: light particles glow on dark bg
+  // soft-light: subtle on light bg
   return (
     <canvas
       ref={canvasRef}
@@ -237,7 +231,7 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
         width: "100%",
         height: "100%",
         zIndex: 5,
-        mixBlendMode: settings.sparkleMode === "soft" ? "multiply" : "screen",
+        mixBlendMode: "screen",
       }}
     />
   );
