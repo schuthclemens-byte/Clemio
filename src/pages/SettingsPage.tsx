@@ -168,7 +168,7 @@ const SettingsPage = () => {
     if (!user) return;
     const next = !previewEnabled;
     const { error } = await supabase.from("profiles").update({ push_preview_enabled: next } as any).eq("id", user.id);
-    if (!error) setPreviewEnabled(next);
+    if (!error) { setPreviewEnabled(next); savedToast(); }
   };
 
   const handleLogout = async () => {
@@ -180,6 +180,7 @@ const SettingsPage = () => {
     const next = !stayLoggedIn;
     setStayLoggedIn(next);
     localStorage.setItem("clemio_stay_logged_in", next ? "true" : "false");
+    savedToast();
   };
 
   const handleRefreshSubscription = async () => {
