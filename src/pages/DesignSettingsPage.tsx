@@ -18,35 +18,84 @@ const presetConfigs: { id: DesignPreset; label: string; hue: number; sat: number
   { id: "galaxy", label: "Galaxy", hue: 248, sat: 78, light: 58, accentHue: 290, icon: "🌌", desc: "Tief & kosmisch" },
 ];
 
-/** Mini chat preview showing how bubbles look with a given color */
-const ChatPreview = ({ hue, sat, light, accentHue }: { hue: number; sat: number; light: number; accentHue: number }) => {
+/** Polished mini chat preview card that looks like a real chat interface */
+const ChatPreview = ({ hue, sat, light, accentHue, compact = false }: { hue: number; sat: number; light: number; accentHue: number; compact?: boolean }) => {
   const isDark = document.documentElement.classList.contains("dark");
   const primary = `hsl(${hue}, ${sat}%, ${light}%)`;
   const accent = `hsl(${accentHue % 360}, ${Math.max(sat * 0.7, 18)}%, ${Math.min(light + 10, 80)}%)`;
-  const bgColor = isDark ? "hsl(0, 0%, 10%)" : `hsl(${hue}, ${Math.max(sat * 0.3, 8)}%, 95%)`;
-  const theirsBg = isDark ? "hsl(0, 0%, 16%)" : `hsl(${hue}, ${Math.max(sat * 0.2, 6)}%, 92%)`;
+  const bgColor = isDark ? "hsl(0, 0%, 8%)" : `hsl(${hue}, ${Math.max(sat * 0.3, 8)}%, 96%)`;
+  const headerBg = isDark ? "hsl(0, 0%, 12%)" : `hsl(${hue}, ${Math.max(sat * 0.2, 6)}%, 93%)`;
+  const theirsBg = isDark ? "hsl(0, 0%, 16%)" : `hsl(${hue}, ${Math.max(sat * 0.2, 6)}%, 91%)`;
   const theirsFg = isDark ? "hsl(0, 0%, 85%)" : "hsl(0, 0%, 15%)";
+  const inputBg = isDark ? "hsl(0, 0%, 14%)" : `hsl(${hue}, ${Math.max(sat * 0.15, 4)}%, 92%)`;
+
+  if (compact) {
+    return (
+      <div className="rounded-xl overflow-hidden h-[80px] w-full" style={{ background: bgColor }}>
+        <div className="flex flex-col gap-1 p-2 h-full justify-center">
+          <div className="flex justify-start">
+            <div className="rounded-2xl rounded-tl-md px-2.5 py-1 max-w-[75%]" style={{ background: theirsBg, color: theirsFg }}>
+              <span className="text-[0.55rem] leading-tight block">Hey! 👋</span>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <div className="rounded-2xl rounded-tr-md px-2.5 py-1 max-w-[75%]" style={{ background: `linear-gradient(135deg, ${primary}, ${accent})`, color: "white" }}>
+              <span className="text-[0.55rem] leading-tight block">Alles klar! 🎉</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-xl overflow-hidden h-[100px] w-full" style={{ background: bgColor }}>
-      <div className="flex flex-col gap-1.5 p-2.5 h-full justify-center">
-        {/* Their bubble */}
+    <div className="rounded-2xl overflow-hidden border border-border/50 shadow-sm" style={{ background: bgColor }}>
+      {/* Chat header bar */}
+      <div className="flex items-center gap-2.5 px-3.5 py-2" style={{ background: headerBg }}>
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[0.6rem] font-bold shrink-0"
+          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+        >
+          A
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[0.7rem] font-semibold truncate" style={{ color: theirsFg }}>Anna</p>
+          <p className="text-[0.5rem]" style={{ color: isDark ? "hsl(0,0%,50%)" : "hsl(0,0%,60%)" }}>online</p>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex flex-col gap-1.5 px-3 py-3">
         <div className="flex justify-start">
-          <div className="rounded-2xl rounded-tl-md px-3 py-1.5 max-w-[75%]" style={{ background: theirsBg, color: theirsFg }}>
-            <span className="text-[0.6rem] leading-tight block">Hey, wie geht's? 👋</span>
+          <div className="rounded-2xl rounded-tl-md px-3 py-1.5 max-w-[80%]" style={{ background: theirsBg, color: theirsFg }}>
+            <span className="text-[0.65rem] leading-snug block">Hey, wie geht's dir? 👋</span>
+            <span className="text-[0.45rem] block text-right mt-0.5 opacity-50">14:22</span>
           </div>
         </div>
-        {/* My bubble */}
         <div className="flex justify-end">
-          <div className="rounded-2xl rounded-tr-md px-3 py-1.5 max-w-[75%]" style={{ background: `linear-gradient(135deg, ${primary}, ${accent})`, color: "white" }}>
-            <span className="text-[0.6rem] leading-tight block">Mir geht's super! 🎉</span>
+          <div className="rounded-2xl rounded-tr-md px-3 py-1.5 max-w-[80%]" style={{ background: `linear-gradient(135deg, ${primary}, ${accent})`, color: "white" }}>
+            <span className="text-[0.65rem] leading-snug block">Mir geht's super, danke! 🎉</span>
+            <span className="text-[0.45rem] block text-right mt-0.5 opacity-60">14:23</span>
           </div>
         </div>
-        {/* Their second bubble */}
         <div className="flex justify-start">
-          <div className="rounded-2xl rounded-tl-md px-3 py-1.5 max-w-[75%]" style={{ background: theirsBg, color: theirsFg }}>
-            <span className="text-[0.6rem] leading-tight block">Cool, treffen wir uns?</span>
+          <div className="rounded-2xl rounded-tl-md px-3 py-1.5 max-w-[80%]" style={{ background: theirsBg, color: theirsFg }}>
+            <span className="text-[0.65rem] leading-snug block">Hast du Lust, was zu unternehmen?</span>
+            <span className="text-[0.45rem] block text-right mt-0.5 opacity-50">14:24</span>
           </div>
+        </div>
+      </div>
+
+      {/* Input bar */}
+      <div className="flex items-center gap-2 px-3 pb-2.5">
+        <div className="flex-1 h-7 rounded-full px-3 flex items-center" style={{ background: inputBg }}>
+          <span className="text-[0.55rem]" style={{ color: isDark ? "hsl(0,0%,40%)" : "hsl(0,0%,65%)" }}>Nachricht…</span>
+        </div>
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+        >
+          <span className="text-white text-[0.55rem]">▶</span>
         </div>
       </div>
     </div>
