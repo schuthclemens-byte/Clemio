@@ -50,13 +50,67 @@ function textToBuffer(text: string): ArrayBuffer {
   return new TextEncoder().encode(text).buffer as ArrayBuffer;
 }
 
+// --- AES-GCM encryption helpers ---
+
+async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
+  const seed = `${window.location.origin}|${navigator.userAgent}|clemio-biometric-v3`;
+  const encoded = new TextEncoder().encode(seed);
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoded.buffer as ArrayBuffer,
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: salt.buffer as ArrayBuffer, iterations: 100000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function encrypt(plaintext: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(salt);
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    new TextEncoder().encode(plaintext)
+  );
+  // Pack: salt (16) + iv (12) + ciphertext
+  const packed = new Uint8Array(salt.length + iv.length + new Uint8Array(ciphertext).length);
+  packed.set(salt, 0);
+  packed.set(iv, salt.length);
+  packed.set(new Uint8Array(ciphertext), salt.length + iv.length);
+  return bufferToBase64Url(packed.buffer as ArrayBuffer);
+}
+
+async function decrypt(encoded: string): Promise<string> {
+  const packed = new Uint8Array(base64UrlToBuffer(encoded));
+  const salt = packed.slice(0, 16);
+  const iv = packed.slice(16, 28);
+  const ciphertext = packed.slice(28);
+  const key = await deriveKey(salt);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    ciphertext
+  );
+  return new TextDecoder().decode(decrypted);
+}
+
+// --- Legacy v2 XOR helpers (for migration only) ---
+
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 }
 
-async function deriveDeviceKey(): Promise<string> {
+async function legacyDeriveDeviceKey(): Promise<string> {
   const seed = `${window.location.origin}|${navigator.userAgent}|clemio-biometric-v2`;
   const digest = await crypto.subtle.digest("SHA-256", textToBuffer(seed));
   return bytesToHex(new Uint8Array(digest));
@@ -70,13 +124,8 @@ function xorTransform(text: string, key: string): string {
   return result;
 }
 
-async function obfuscate(text: string): Promise<string> {
-  const key = await deriveDeviceKey();
-  return btoa(xorTransform(text, key));
-}
-
-async function deobfuscate(encoded: string): Promise<string> {
-  const key = await deriveDeviceKey();
+async function legacyDeobfuscate(encoded: string): Promise<string> {
+  const key = await legacyDeriveDeviceKey();
   return xorTransform(atob(encoded), key);
 }
 
@@ -131,10 +180,10 @@ export function useBiometricAuth() {
       if (!credential) return false;
 
       const data = {
-        version: 2,
+        version: 3,
         credentialId: bufferToBase64Url(credential.rawId),
-        phone: await obfuscate(phone.trim()),
-        password: await obfuscate(password),
+        phone: await encrypt(phone.trim()),
+        password: await encrypt(password),
         createdAt: Date.now(),
       };
 
@@ -178,10 +227,30 @@ export function useBiometricAuth() {
 
       if (!assertion) return null;
 
-      const phone = await deobfuscate(data.phone);
-      const password = await deobfuscate(data.password ?? data.token ?? "");
-      if (!phone || !password) return null;
+      let phone: string;
+      let password: string;
 
+      if (data.version === 3) {
+        // Current AES-GCM format
+        phone = await decrypt(data.phone);
+        password = await decrypt(data.password);
+      } else {
+        // Legacy v2 XOR — migrate to v3
+        phone = await legacyDeobfuscate(data.phone);
+        password = await legacyDeobfuscate(data.password ?? data.token ?? "");
+
+        // Re-encrypt with AES-GCM and save
+        const migrated = {
+          version: 3,
+          credentialId: data.credentialId,
+          phone: await encrypt(phone),
+          password: await encrypt(password),
+          createdAt: data.createdAt || Date.now(),
+        };
+        localStorage.setItem(BIOMETRIC_CRED_KEY, JSON.stringify(migrated));
+      }
+
+      if (!phone || !password) return null;
       return { phone, password };
     } catch (err) {
       console.error("Biometric authentication failed:", err);
@@ -209,4 +278,3 @@ export function useBiometricAuth() {
     hasStoredCredential,
   };
 }
-

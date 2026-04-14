@@ -45,18 +45,47 @@ serve(async (req) => {
       });
     }
 
-    const langMap: Record<string, string> = {
-      de: "de", en: "en", fr: "fr", es: "es", tr: "tr", ar: "ar",
-    };
-    const languageCode = langMap[lang] || "de";
-
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Only use the sender's own voice profile — no contact voices, no consent needed
-    // Voice profiles are public for TTS: if a user created one, anyone in their chats can hear it
+    // Scope check: verify requesting user shares a conversation with senderId
+    if (user.id !== senderId) {
+      const { data: userConvs } = await adminClient
+        .from("conversation_members")
+        .select("conversation_id")
+        .eq("user_id", user.id);
+
+      const convIds = userConvs?.map((r: any) => r.conversation_id) ?? [];
+
+      if (convIds.length === 0) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { count } = await adminClient
+        .from("conversation_members")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", senderId)
+        .in("conversation_id", convIds);
+
+      if (!count) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const langMap: Record<string, string> = {
+      de: "de", en: "en", fr: "fr", es: "es", tr: "tr", ar: "ar",
+    };
+    const languageCode = langMap[lang] || "de";
+
+    // Only use the sender's own voice profile
     const { data: voiceProfile } = await adminClient
       .from("voice_profiles")
       .select("elevenlabs_voice_id")
