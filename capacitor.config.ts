@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.clemix.chat',
+  appId: 'app.clemio.chat',
   appName: 'Clemix',
   webDir: 'dist',
   android: {
