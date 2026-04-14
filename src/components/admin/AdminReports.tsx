@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/contexts/I18nContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Flag, CheckCircle, Eye, Ban, MicOff, MessageSquare } from "lucide-react";
+import { Loader2, Flag, CheckCircle, Eye, Ban, MicOff, MessageSquare, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Report {
@@ -58,13 +58,26 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
     }
   };
 
+  const deleteReport = async (reportId: string) => {
+    const { error } = await supabase.from("reports").delete().eq("id", reportId);
+    if (error) {
+      toast.error(tr("Fehler beim Löschen", "Delete failed"));
+    } else {
+      toast.success(tr("Meldung gelöscht", "Report deleted"));
+      fetchReports();
+    }
+  };
+
   const filtered = reports.filter((r) => filter === "all" || r.status === filter);
 
   const reasonLabels: Record<string, string> = {
     abuse: tr("Missbrauch", "Abuse"),
     wrong_voice: tr("Falsche Stimme", "Wrong voice"),
     spam: "Spam",
-    other: tr("Anderes", "Other"),
+    harassment: tr("Belästigung", "Harassment"),
+    fake_account: "Fake Account",
+    inappropriate: tr("Unangemessen", "Inappropriate"),
+    other: tr("Sonstiges", "Other"),
   };
 
   const typeIcons: Record<string, any> = {
@@ -182,6 +195,11 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
                       <MicOff className="w-3 h-3" /> {tr("Voice löschen", "Delete voice")}
                     </Button>
                   )}
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-muted-foreground"
+                    onClick={() => deleteReport(r.id)}
+                  >
+                    <Trash2 className="w-3 h-3" /> {tr("Löschen", "Delete")}
+                  </Button>
                 </div>
               </div>
             );
