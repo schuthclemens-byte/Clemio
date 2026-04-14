@@ -28,11 +28,6 @@ export const useVoiceTTS = () => {
     abortRef.current = null;
     if (audioRef.current) {
       audioRef.current.pause();
-      // Revoke object URL if it was a streaming blob
-      const src = audioRef.current.src;
-      if (src.startsWith("blob:")) {
-        // Don't revoke cached URLs – they're managed by ttsCache
-      }
       audioRef.current = null;
     }
     setIsPlaying(false);
@@ -40,12 +35,66 @@ export const useVoiceTTS = () => {
     setPlayingMsgId(null);
   }, []);
 
+  /** Download audio directly from storage (no edge function call) */
+  const playFromStorage = useCallback(async (
+    cacheKey: string,
+    senderId: string,
+    text: string,
+    onEnd: () => void
+  ): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("tts-cache")
+        .download(cacheKey);
+
+      if (error || !data) return false;
+
+      const audioUrl = setCachedAudio(senderId, text, data);
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onended = onEnd;
+      audio.onerror = onEnd;
+      setIsLoading(false);
+      setIsPlaying(true);
+      await audio.play();
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   /** Build the fetch request for TTS */
-  const buildTtsRequest = useCallback(async (text: string, senderId: string, signal?: AbortSignal) => {
+  const buildTtsRequest = useCallback(async (text: string, senderId: string, msgId: string, signal?: AbortSignal) => {
     const session = (await supabase.auth.getSession()).data.session;
     if (!session) throw new Error("Not authenticated");
 
     return fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts-stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          text,
+          senderId,
+          messageId: msgId,
+          lang: "de",
+          defaultVoiceId: localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9",
+        }),
+        signal,
+      }
+    );
+  }, []);
+
+  /** Fetch TTS blob (used for preloading and fallback playback) */
+  const fetchTtsBlob = useCallback(async (text: string, senderId: string, signal?: AbortSignal): Promise<Blob> => {
+    const session = (await supabase.auth.getSession()).data.session;
+    if (!session) throw new Error("Not authenticated");
+
+    const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts-stream`,
       {
         method: "POST",
@@ -63,11 +112,6 @@ export const useVoiceTTS = () => {
         signal,
       }
     );
-  }, []);
-
-  /** Fetch TTS blob (used for preloading and fallback playback) */
-  const fetchTtsBlob = useCallback(async (text: string, senderId: string, signal?: AbortSignal): Promise<Blob> => {
-    const response = await buildTtsRequest(text, senderId, signal);
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -75,16 +119,17 @@ export const useVoiceTTS = () => {
     }
 
     return response.blob();
-  }, [buildTtsRequest]);
+  }, []);
 
   /** Play using MediaSource streaming – audio starts as soon as first chunks arrive */
   const playStreaming = useCallback(async (
     text: string,
     senderId: string,
+    msgId: string,
     signal: AbortSignal,
     onEnd: () => void
   ) => {
-    const response = await buildTtsRequest(text, senderId, signal);
+    const response = await buildTtsRequest(text, senderId, msgId, signal);
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -113,7 +158,6 @@ export const useVoiceTTS = () => {
               }
 
               if (done) {
-                // Wait for sourceBuffer to finish updating before ending
                 if (sourceBuffer.updating) {
                   await new Promise<void>(r => sourceBuffer.addEventListener("updateend", () => r(), { once: true }));
                 }
@@ -125,13 +169,11 @@ export const useVoiceTTS = () => {
 
               chunks.push(value);
 
-              // Append chunk – wait if buffer is busy
               if (sourceBuffer.updating) {
                 await new Promise<void>(r => sourceBuffer.addEventListener("updateend", () => r(), { once: true }));
               }
               sourceBuffer.appendBuffer(value);
 
-              // Start playback after first chunk
               if (!started) {
                 started = true;
                 setIsLoading(false);
@@ -143,7 +185,6 @@ export const useVoiceTTS = () => {
 
           await pump();
 
-          // Cache the full blob for future instant playback
           const fullBlob = new Blob(chunks as BlobPart[], { type: "audio/mpeg" });
           setCachedAudio(senderId, text, fullBlob);
 
@@ -162,10 +203,18 @@ export const useVoiceTTS = () => {
   const playBlobFallback = useCallback(async (
     text: string,
     senderId: string,
+    msgId: string,
     signal: AbortSignal,
     onEnd: () => void
   ) => {
-    const audioBlob = await fetchTtsBlob(text, senderId, signal);
+    const response = await buildTtsRequest(text, senderId, msgId, signal);
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || "TTS fehlgeschlagen");
+    }
+
+    const audioBlob = await response.blob();
     const audioUrl = setCachedAudio(senderId, text, audioBlob);
 
     const audio = new Audio(audioUrl);
@@ -176,9 +225,9 @@ export const useVoiceTTS = () => {
     setIsLoading(false);
     setIsPlaying(true);
     await audio.play();
-  }, [fetchTtsBlob]);
+  }, [buildTtsRequest]);
 
-  const playClonedVoice = useCallback(async (text: string, senderId: string, msgId: string, lang?: string) => {
+  const playClonedVoice = useCallback(async (text: string, senderId: string, msgId: string, lang?: string, audioUrl?: string) => {
     // Toggle off
     if (playingMsgId === msgId && (isPlaying || isLoading)) {
       stop();
@@ -207,7 +256,7 @@ export const useVoiceTTS = () => {
     };
 
     try {
-      // Check cache first – instant playback
+      // 1. Check in-memory LRU cache first – instant playback
       const cachedUrl = getCachedAudio(senderId, text);
       if (cachedUrl) {
         const audio = new Audio(cachedUrl);
@@ -220,17 +269,24 @@ export const useVoiceTTS = () => {
         return;
       }
 
-      // Stream if supported, otherwise blob fallback
+      // 2. If audio_url exists on message, download directly from storage (NO edge function call)
+      if (audioUrl) {
+        const success = await playFromStorage(audioUrl, senderId, text, onEnd);
+        if (success) return;
+        // If storage download fails, fall through to edge function
+      }
+
+      // 3. Call edge function (generates via ElevenLabs if needed, caches, and sets audio_url)
       if (canStreamMp3) {
-        await playStreaming(text, senderId, controller.signal, onEnd);
+        await playStreaming(text, senderId, msgId, controller.signal, onEnd);
       } else {
-        await playBlobFallback(text, senderId, controller.signal, onEnd);
+        await playBlobFallback(text, senderId, msgId, controller.signal, onEnd);
       }
     } catch (error: any) {
       if (error.name === "AbortError") return;
       console.error("Voice TTS error, falling back to browser TTS:", error);
 
-      // Fallback: use free browser speech synthesis (utterance pre-created in gesture context)
+      // Fallback: use free browser speech synthesis
       try {
         fallbackUtterance.onend = onEnd;
         fallbackUtterance.onerror = onEnd;
@@ -246,7 +302,7 @@ export const useVoiceTTS = () => {
         onEnd();
       }
     }
-  }, [playingMsgId, isPlaying, isLoading, stop, playStreaming, playBlobFallback]);
+  }, [playingMsgId, isPlaying, isLoading, stop, playFromStorage, playStreaming, playBlobFallback]);
 
   return { playClonedVoice, isPlaying, isLoading, playingMsgId, stop, fetchTtsBlob };
 };
