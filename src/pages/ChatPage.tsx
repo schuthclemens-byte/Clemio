@@ -32,7 +32,7 @@ import MediaGallerySheet from "@/components/chat/MediaGallerySheet";
 import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
 import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
-import ClemixKISheet from "@/components/chat/ClemixKISheet";
+import ClemioKISheet from "@/components/chat/ClemioKISheet";
 import ReportDialog from "@/components/chat/ReportDialog";
 
 interface Message {
@@ -123,7 +123,7 @@ const ChatPage = () => {
   // Pre-populate chat name from cached conversations for instant display
   const cachedName = (() => {
     try {
-      const cached = localStorage.getItem("clemix_conversations");
+      const cached = localStorage.getItem("clemio_conversations");
       if (cached) {
         const convs = JSON.parse(cached) as { id: string; name: string }[];
         return convs.find((c) => c.id === conversationId)?.name || "...";
@@ -159,9 +159,9 @@ const ChatPage = () => {
   const [reportTarget, setReportTarget] = useState<{ msgId: string; senderId: string; messageType?: string } | null>(null);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const chatMenuBtnRef = useRef<HTMLDivElement>(null);
-  const [showClemixKI, setShowClemixKI] = useState(false);
+  const [showClemioKI, setShowClemioKI] = useState(false);
   const [groupAvatarUrl, setGroupAvatarUrl] = useState<string | null>(null);
-  const [clemixKIDraft, setClemixKIDraft] = useState("");
+  const [clemioKIDraft, setClemioKIDraft] = useState("");
   const [pendingSuggestion, setPendingSuggestion] = useState("");
 
   const mapDbMessage = useCallback((m: any): Message => ({
@@ -1288,7 +1288,7 @@ const ChatPage = () => {
           transcript={transcript}
           onTyping={showTypingIndicator ? sendTyping : undefined}
           onStopTyping={showTypingIndicator ? clearTyping : undefined}
-          onOpenClemixKI={(draft) => { setClemixKIDraft(draft); setShowClemixKI(true); }}
+          onOpenClemioKI={(draft) => { setClemioKIDraft(draft); setShowClemioKI(true); }}
           hasReceivedMessages={messages.some(m => !m.isMine) || true}
           externalText={pendingSuggestion}
         />
@@ -1348,14 +1348,14 @@ const ChatPage = () => {
         messageType={forwardMsg?.type}
       />
 
-      {/* Clemix-KI Sheet */}
-      <ClemixKISheet
-        open={showClemixKI}
-        onClose={() => { setShowClemixKI(false); setClemixKIDraft(""); }}
+      {/* Clemio-KI Sheet */}
+      <ClemioKISheet
+        open={showClemioKI}
+        onClose={() => { setShowClemioKI(false); setClemioKIDraft(""); }}
         receivedMessage={
           messages.filter(m => !m.isMine).slice(-1)[0]?.text || ""
         }
-        draftMessage={clemixKIDraft}
+        draftMessage={clemioKIDraft}
         chatHistory={messages.slice(-10).map(m => ({ text: m.text, isMine: m.isMine }))}
         isPremium={isPremium}
         onUseSuggestion={(text) => {

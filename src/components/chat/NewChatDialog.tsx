@@ -92,7 +92,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
       setSearching(false);
 
       if (found.length === 0) {
-        setError("Nutzer nicht gefunden – ist die Person bei Clemix registriert?");
+        setError("Nutzer nicht gefunden – ist die Person bei Clemio registriert?");
       } else {
         setResults(found);
       }
@@ -320,7 +320,7 @@ const NewChatDialog = ({ open, onClose }: NewChatDialogProps) => {
           {/* iOS hint – only show when no results and no error */}
           {!isContactPickerSupported && results.length === 0 && !error && !result && (
             <p className="text-xs text-muted-foreground text-center px-2">
-              Gib die Telefonnummer deines Kontakts ein, um ihn auf Clemix zu finden.
+              Gib die Telefonnummer deines Kontakts ein, um ihn auf Clemio zu finden.
             </p>
           )}
 

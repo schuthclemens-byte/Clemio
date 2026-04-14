@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 
 /** localStorage: permanently dismissed after denial or manual close */
-const DISMISSED_KEY = "clemix_push_prompt_dismissed";
+const DISMISSED_KEY = "clemio_push_prompt_dismissed";
 /** localStorage: timestamp of last prompt shown — throttle to once per 7 days */
-const LAST_PROMPT_KEY = "clemix_push_prompt_last_shown";
+const LAST_PROMPT_KEY = "clemio_push_prompt_last_shown";
 const PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 const ALLOWED_ROUTES = ["/chats", "/chat/", "/settings", "/profile", "/focus-mode", "/contact-autoplay", "/voice-recordings"];

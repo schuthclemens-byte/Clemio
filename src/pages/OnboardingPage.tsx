@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const ONBOARDING_KEY = "clemix_onboarding_done";
+const ONBOARDING_KEY = "clemio_onboarding_done";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();

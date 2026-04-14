@@ -10,14 +10,14 @@ const corsHeaders = {
 const ONBOARDING_VOICE_ID = "8CYuycxIONSFhKXKhsfw";
 
 const onboardingTexts: Record<string, string> = {
-  de: "Willkommen bei Clemix. Hier kannst du Nachrichten nicht nur lesen, sondern auch hören – in der echten Stimme deiner Kontakte. Probier es aus!",
-  en: "Welcome to Clemix. Here you can not only read messages, but also listen to them – in the real voice of your contacts. Try it out!",
-  fr: "Bienvenue sur Clemix. Ici, tu peux non seulement lire tes messages, mais aussi les écouter – avec la vraie voix de tes contacts. Essaie !",
+  de: "Willkommen bei Clemio. Hier kannst du Nachrichten nicht nur lesen, sondern auch hören – in der echten Stimme deiner Kontakte. Probier es aus!",
+  en: "Welcome to Clemio. Here you can not only read messages, but also listen to them – in the real voice of your contacts. Try it out!",
+  fr: "Bienvenue sur Clemio. Ici, tu peux non seulement lire tes messages, mais aussi les écouter – avec la vraie voix de tes contacts. Essaie !",
 };
 const onboardingTextsExtra: Record<string, string> = {
-  tr: "Clemix'ya hoş geldin. Burada mesajları sadece okumakla kalmaz, aynı zamanda kişilerinin gerçek sesiyle dinleyebilirsin. Hemen dene!",
+  tr: "Clemio'ya hoş geldin. Burada mesajları sadece okumakla kalmaz, aynı zamanda kişilerinin gerçek sesiyle dinleyebilirsin. Hemen dene!",
   ar: "مرحبًا بك في كليميو. هنا يمكنك ليس فقط قراءة الرسائل، بل أيضًا الاستماع إليها بصوت جهات اتصالك الحقيقي. جرّبها الآن!",
-  es: "Bienvenido a Clemix. Aquí no solo puedes leer mensajes, sino también escucharlos con la voz real de tus contactos. ¡Pruébalo!",
+  es: "Bienvenido a Clemio. Aquí no solo puedes leer mensajes, sino también escucharlos con la voz real de tus contactos. ¡Pruébalo!",
 };
 
 const allTexts: Record<string, string> = { ...onboardingTexts, ...onboardingTextsExtra };

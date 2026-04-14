@@ -95,7 +95,7 @@ serve(async (req) => {
             body: JSON.stringify({
               subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
               payload: {
-                title: "🔔 Clemix Admin Test",
+                title: "🔔 Clemio Admin Test",
                 body: "Dies ist eine Test-Push-Benachrichtigung vom Admin.",
                 tag: "admin-test",
               },

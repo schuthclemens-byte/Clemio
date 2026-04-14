@@ -50,14 +50,14 @@ serve(async (req) => {
 
     const isContactVoice = !!contactUserId;
     const cloneName = isContactVoice
-      ? `clemix_contact_${user.id.slice(0, 8)}_${contactUserId!.slice(0, 8)}`
-      : `clemix_${user.id.slice(0, 8)}_${voiceName}`;
+      ? `clemio_contact_${user.id.slice(0, 8)}_${contactUserId!.slice(0, 8)}`
+      : `clemio_${user.id.slice(0, 8)}_${voiceName}`;
 
     // Clone voice via ElevenLabs
     const elFormData = new FormData();
     elFormData.append("name", cloneName);
     elFormData.append("files", audioFile);
-    elFormData.append("description", isContactVoice ? "Contact voice clone for Clemix" : "Voice clone for Clemix user");
+    elFormData.append("description", isContactVoice ? "Contact voice clone for Clemio" : "Voice clone for Clemio user");
 
     const elResponse = await fetch("https://api.elevenlabs.io/v1/voices/add", {
       method: "POST",

@@ -21,7 +21,7 @@ if (isInIframe) {
 }
 
 // One-time push system reset: unsubscribe push + unregister SW + clear local state
-const PUSH_RESET_KEY = "clemix_push_reset_v1";
+const PUSH_RESET_KEY = "clemio_push_reset_v1";
 if (!localStorage.getItem(PUSH_RESET_KEY) && "serviceWorker" in navigator) {
   (async () => {
     try {
@@ -31,7 +31,7 @@ if (!localStorage.getItem(PUSH_RESET_KEY) && "serviceWorker" in navigator) {
         if (sub) await sub.unsubscribe();
         await reg.unregister();
       }
-      localStorage.removeItem("clemix_push_vapid_public_key");
+      localStorage.removeItem("clemio_push_vapid_public_key");
       localStorage.setItem(PUSH_RESET_KEY, "done");
       console.log("[Push Reset] Service Worker + Push Subscription entfernt");
     } catch (e) {
@@ -49,7 +49,7 @@ window.addEventListener("error", (event) => {
     event.message?.includes("Loading chunk") ||
     event.message?.includes("Loading CSS chunk")
   ) {
-    const reloadKey = "clemix_chunk_reload";
+    const reloadKey = "clemio_chunk_reload";
     const lastReload = sessionStorage.getItem(reloadKey);
     // Only auto-reload once per session to avoid infinite loops
     if (!lastReload) {

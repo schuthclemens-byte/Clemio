@@ -58,7 +58,7 @@ export const useVoiceTTS = () => {
           text,
           senderId,
           lang: "de",
-          defaultVoiceId: localStorage.getItem("clemix_default_voice") || "onwK4e9ZLuTAKqWW03F9",
+          defaultVoiceId: localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9",
         }),
         signal,
       }

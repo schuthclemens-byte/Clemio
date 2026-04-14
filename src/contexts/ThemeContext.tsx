@@ -21,14 +21,14 @@ const getSystemTheme = (): "light" | "dark" =>
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    return (localStorage.getItem("clemix-theme") as Theme) || "system";
+    return (localStorage.getItem("clemio-theme") as Theme) || "system";
   });
 
   const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
-    localStorage.setItem("clemix-theme", t);
+    localStorage.setItem("clemio-theme", t);
   }, []);
 
   useEffect(() => {

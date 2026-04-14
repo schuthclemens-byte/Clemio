@@ -26,7 +26,7 @@ const PermissionDialog = ({ open, type, onAllow, onCancel }: PermissionDialogPro
     microphone: {
       icon: Mic,
       title: tr("Mikrofon-Zugriff erlauben", "Allow microphone access"),
-      description: tr("Um Sprachnachrichten aufzunehmen oder Anrufe zu tätigen, braucht Clemix Zugriff auf dein Mikrofon.", "Clemix needs access to your microphone to record voice messages or make calls."),
+      description: tr("Um Sprachnachrichten aufzunehmen oder Anrufe zu tätigen, braucht Clemio Zugriff auf dein Mikrofon.", "Clemio needs access to your microphone to record voice messages or make calls."),
       benefit: tr("Du kannst dann Sprachnachrichten aufnehmen und an Audio- und Videoanrufen teilnehmen.", "You can record voice messages and join audio and video calls."),
       warning: tr("Ohne Mikrofon-Zugriff kannst du nur Text- und Bildnachrichten senden.", "Without microphone access, you can only send text and image messages."),
       allowLabel: tr("Mikrofon erlauben", "Allow microphone"),
@@ -34,7 +34,7 @@ const PermissionDialog = ({ open, type, onAllow, onCancel }: PermissionDialogPro
     camera: {
       icon: Camera,
       title: tr("Kamera-Zugriff erlauben", "Allow camera access"),
-      description: tr("Um Fotos und Videos aufzunehmen oder Videoanrufe zu starten, braucht Clemix Zugriff auf deine Kamera.", "Clemix needs access to your camera to take photos, record videos, or start video calls."),
+      description: tr("Um Fotos und Videos aufzunehmen oder Videoanrufe zu starten, braucht Clemio Zugriff auf deine Kamera.", "Clemio needs access to your camera to take photos, record videos, or start video calls."),
       benefit: tr("Du kannst dann Fotos direkt aus dem Chat aufnehmen und per Video telefonieren.", "You can take photos directly from the chat and make video calls."),
       warning: tr("Ohne Kamera-Zugriff kannst du nur Bilder aus deiner Galerie senden.", "Without camera access, you can only send images from your gallery."),
       allowLabel: tr("Kamera erlauben", "Allow camera"),
@@ -42,7 +42,7 @@ const PermissionDialog = ({ open, type, onAllow, onCancel }: PermissionDialogPro
     push: {
       icon: Bell,
       title: tr("Benachrichtigungen erlauben", "Allow notifications"),
-      description: tr("Damit du keine Nachricht verpasst, möchte Clemix dir Push-Benachrichtigungen senden.", "Clemix would like to send push notifications so you don't miss any messages."),
+      description: tr("Damit du keine Nachricht verpasst, möchte Clemio dir Push-Benachrichtigungen senden.", "Clemio would like to send push notifications so you don't miss any messages."),
       benefit: tr("Du wirst über neue Nachrichten und Anrufe informiert – auch wenn die App geschlossen ist.", "You'll be notified about new messages and calls even when the app is closed."),
       warning: tr("Ohne Benachrichtigungen siehst du neue Nachrichten erst beim nächsten Öffnen der App.", "Without notifications, you'll only see new messages the next time you open the app."),
       allowLabel: tr("Benachrichtigungen erlauben", "Allow notifications"),
