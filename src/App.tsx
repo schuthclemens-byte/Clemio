@@ -41,6 +41,7 @@ const VoiceRecordingsPage = lazy(() => import("./pages/VoiceRecordingsPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const ImpressumPage = lazy(() => import("./pages/ImpressumPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -111,6 +112,7 @@ const App = () => (
                             <Route path="/voice-recordings" element={<ProtectedRoute><VoiceRecordingsPage /></ProtectedRoute>} />
                             <Route path="/call-history" element={<ProtectedRoute><CallHistoryPage /></ProtectedRoute>} />
                             <Route path="/call/:id" element={<ProtectedRoute><CallPage /></ProtectedRoute>} />
+                            <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
                             <Route path="/install" element={<InstallPage />} />
                             <Route path="/privacy" element={<PrivacyPolicyPage />} />
                             <Route path="/terms" element={<TermsPage />} />

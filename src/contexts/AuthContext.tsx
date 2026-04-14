@@ -149,6 +149,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     applySession(activeSession);
     await syncProfile(activeSession, { force: true, phone: cleanPhone, displayName });
+
+    // Check if newly registered user is somehow blocked
+    const { data: blocked } = await supabase
+      .from("blocked_users" as any)
+      .select("id")
+      .eq("user_id", data?.user?.id)
+      .maybeSingle();
+    if (blocked) {
+      await supabase.auth.signOut();
+      applySession(null);
+      return { error: "Dein Account wurde gesperrt." };
+    }
+
     console.log("[Auth] signUp success:", { userId: data?.user?.id, confirmed: data?.user?.confirmed_at });
     return { error: null };
   };
@@ -211,6 +224,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     applySession(data.session);
     await syncProfile(data.session, { force: true, phone: cleanPhone });
+
+    // Check if user is blocked
+    const { data: blocked } = await supabase
+      .from("blocked_users" as any)
+      .select("id")
+      .eq("user_id", data.session?.user?.id)
+      .maybeSingle();
+    if (blocked) {
+      await supabase.auth.signOut();
+      applySession(null);
+      return { error: "Dein Account wurde gesperrt." };
+    }
+
     return { error: null };
   };
 
