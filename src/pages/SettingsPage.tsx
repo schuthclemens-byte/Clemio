@@ -263,7 +263,7 @@ const SettingsPage = () => {
 
         {show("privacy") && <>
         {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
-        <CollapsibleSection icon={Shield} title={t("settings.privacyMessages")} defaultOpen={!isSearching} delay="30ms">
+        <CollapsibleSection icon={Shield} title={t("settings.privacyMessages")} defaultOpen delay="30ms">
            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <ToggleRow
               icon={MessageSquareText}
@@ -312,7 +312,7 @@ const SettingsPage = () => {
 
         {show("push") && <>
         {/* ──────────── PUSH-BENACHRICHTIGUNGEN ──────────── */}
-        <CollapsibleSection icon={Bell} title={t("settings.pushTitle")} defaultOpen={!isSearching} delay="45ms">
+        <CollapsibleSection icon={Bell} title={t("settings.pushTitle")} defaultOpen delay="45ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {pushCap.canUsePush ? (
               <>
@@ -397,7 +397,7 @@ const SettingsPage = () => {
 
         {show("language") && <>
         {/* ──────────── SPRACHE ──────────── */}
-        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen={isSearching} delay="70ms">
+        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen delay="70ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {languages.map(([code, name]) => (
               <button
@@ -420,7 +420,7 @@ const SettingsPage = () => {
 
         {(show("accessibility") || show("focus") || show("autoplay")) && <>
         {/* ──────────── BEDIENUNG ──────────── */}
-        <CollapsibleSection icon={Sliders} title={t("settings.controlsTitle") || "Bedienung"} defaultOpen={!isSearching} delay="60ms">
+        <CollapsibleSection icon={Sliders} title={t("settings.controlsTitle") || "Bedienung"} defaultOpen delay="60ms">
           <div className="space-y-3">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
               <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => { a11y.toggle("dyslexiaFont"); savedToast(); }} />
@@ -529,7 +529,7 @@ const SettingsPage = () => {
 
         {(show("session") || show("subscription") || show("install") || show("logout")) && <>
         {/* ──────────── KONTO & ABO ──────────── */}
-        <CollapsibleSection icon={Settings2} title={t("settings.accountTitle") || "Konto & Abo"} defaultOpen={!isSearching} delay="80ms">
+        <CollapsibleSection icon={Settings2} title={t("settings.accountTitle") || "Konto & Abo"} defaultOpen delay="80ms">
           <div className="space-y-3">
             {show("session") && (
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
@@ -648,7 +648,7 @@ const SettingsPage = () => {
         </>}
 
         {show("legal") && (
-          <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen={isSearching} delay="90ms">
+          <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen delay="90ms">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
               <button
                 onClick={() => navigate("/privacy")}
