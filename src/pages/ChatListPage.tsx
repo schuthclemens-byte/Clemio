@@ -18,6 +18,7 @@ interface ConversationItem {
   lastMessage: string;
   time: string;
   unread: number;
+  avatar?: string;
 }
 
 interface MessageSearchResult {
@@ -211,6 +212,7 @@ const ChatListPage = () => {
             ? new Date(lastMsg.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })
             : "",
           unread: unreadMap.get(conv.id) || 0,
+          avatar: (conv as any).avatar_url || undefined,
         };
       });
 
@@ -490,6 +492,7 @@ const ChatListPage = () => {
                         lastMessage={chat.lastMessage}
                         time={chat.time}
                         unread={chat.unread}
+                        avatar={chat.avatar}
                         onClick={() => navigate(`/chat/${chat.id}`)}
                       />
                     </div>
