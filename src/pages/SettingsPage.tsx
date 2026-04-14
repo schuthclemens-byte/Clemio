@@ -112,6 +112,9 @@ const StatusRow = ({ ok, label }: { ok: boolean; label: string }) => (
 );
 
 
+/** Brief "saved" feedback – not intrusive */
+const savedToast = () => toast("Gespeichert ✓", { duration: 1200, position: "bottom-center" });
+
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
