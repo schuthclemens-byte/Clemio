@@ -265,30 +265,25 @@ const SettingsPage = () => {
                 />
               </div>
 
-              {/* Push – compact */}
-              {pushCap.canUsePush && (
-                <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-                  <div className="px-4 py-3.5 flex items-center justify-between">
-                    <span className="flex items-center gap-3">
-                      <Bell className="w-5 h-5 text-muted-foreground" />
-                      <div>
-                        <span className="text-[0.938rem] font-medium block">{t("settings.pushTitle")}</span>
-                        <span className="text-xs text-muted-foreground">{pushStatus.savedToBackend ? t("settings.pushActive") : t("settings.pushInactive")}</span>
-                      </div>
-                    </span>
-                    {!pushStatus.savedToBackend ? (
-                      <button onClick={async () => { const ok = await pushSubscribe(); ok ? toast.success(t("settings.pushActivated")) : toast.error(t("settings.pushFailed")); }}
-                        disabled={pushStatus.loading}
-                        className="px-3 py-1.5 rounded-xl gradient-primary text-primary-foreground text-xs font-semibold shrink-0 ml-3 disabled:opacity-60"
-                      >
-                        {pushStatus.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : t("settings.pushActivate")}
-                      </button>
-                    ) : (
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 ml-3" />
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Push – simple toggle */}
+              <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <ToggleRow icon={Bell} label={t("settings.pushTitle")} description={t("settings.pushDesc")}
+                  checked={pushStatus.savedToBackend}
+                  onChange={async () => {
+                    if (pushStatus.savedToBackend) {
+                      toast.info(t("settings.pushDisableHint"));
+                      return;
+                    }
+                    if (!pushCap.canUsePush) {
+                      toast.error(pushCap.reason || t("settings.pushNotSupported"));
+                      return;
+                    }
+                    const ok = await pushSubscribe();
+                    ok ? toast.success(t("settings.pushActivated")) : toast.error(t("settings.pushFailed"));
+                  }}
+                  borderBottom={false}
+                />
+              </div>
             </div>
           </AccordionBody>
         </section>
