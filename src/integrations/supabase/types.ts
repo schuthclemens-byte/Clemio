@@ -743,6 +743,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_blocked_profiles: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          display_name: string
+          first_name: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
