@@ -164,10 +164,10 @@ serve(async (req) => {
 
     // Step 3: Clone voice using both audio files combined
     const elFormData = new FormData();
-    elFormData.append("name", `clemio_${user.id.slice(0, 8)}_${voiceName}`);
+    elFormData.append("name", `clemix_${user.id.slice(0, 8)}_${voiceName}`);
     elFormData.append("files", freeSpeechAudio);
     elFormData.append("files", sentenceAudio);
-    elFormData.append("description", "Voice clone for Clemio user - verified");
+    elFormData.append("description", "Voice clone for Clemix user - verified");
 
     const elResponse = await fetch("https://api.elevenlabs.io/v1/voices/add", {
       method: "POST",

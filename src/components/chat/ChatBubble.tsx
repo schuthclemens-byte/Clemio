@@ -378,7 +378,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
               )}
               {timestamp}
               {isMine && (() => {
-                const showReceipts = localStorage.getItem("clemio_read_receipts") !== "false";
+                const showReceipts = localStorage.getItem("clemix_read_receipts") !== "false";
                 if (!showReceipts) return null;
                 if (isRead) {
                   const readTime = readAt ? new Date(readAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : null;

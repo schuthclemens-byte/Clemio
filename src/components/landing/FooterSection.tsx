@@ -14,7 +14,7 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
           <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
             <MessageCircle className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
-          <span className="font-bold text-sm text-foreground">Clemio</span>
+          <span className="font-bold text-sm text-foreground">Clemix</span>
         </div>
         <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap justify-center">
           <button onClick={() => navigate("/privacy")} className="hover:text-foreground transition-colors">
@@ -30,7 +30,7 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
           </button>
         </div>
         <p className="text-[0.688rem] text-muted-foreground/50">
-          © {new Date().getFullYear()} Clemio
+          © {new Date().getFullYear()} Clemix
         </p>
       </div>
     </footer>

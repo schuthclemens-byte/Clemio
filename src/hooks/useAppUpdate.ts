@@ -13,7 +13,7 @@ interface UpdateInfo {
   storeUrl: string | null;
 }
 
-const DISMISSED_KEY = "clemio_update_dismissed";
+const DISMISSED_KEY = "clemix_update_dismissed";
 const DISMISS_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24h
 
 /**

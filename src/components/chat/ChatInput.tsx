@@ -24,13 +24,13 @@ interface ChatInputProps {
   transcript: string;
   onTyping?: () => void;
   onStopTyping?: () => void;
-  onOpenClemioKI?: (draftText: string) => void;
+  onOpenClemixKI?: (draftText: string) => void;
   hasReceivedMessages?: boolean;
   externalText?: string;
   onPlayVoice?: (text: string) => void;
 }
 
-const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemioKI, hasReceivedMessages, externalText, onPlayVoice }: ChatInputProps) => {
+const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggle, transcript, onTyping, onStopTyping, onOpenClemixKI, hasReceivedMessages, externalText, onPlayVoice }: ChatInputProps) => {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
@@ -253,10 +253,10 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
             onChange={handleFileSelect}
           />
 
-          {/* Clemio-KI button */}
-          {onOpenClemioKI && hasReceivedMessages && (
+          {/* Clemix-KI button */}
+          {onOpenClemixKI && hasReceivedMessages && (
             <button
-              onClick={() => onOpenClemioKI(currentText)}
+              onClick={() => onOpenClemixKI(currentText)}
               className="flex items-center justify-center w-11 h-11 rounded-full gradient-primary text-primary-foreground shadow-soft hover:shadow-elevated transition-all duration-200 active:scale-90 relative overflow-hidden"
               aria-label={t("ki.aiSuggestions")}
             >
