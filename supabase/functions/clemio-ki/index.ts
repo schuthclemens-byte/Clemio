@@ -78,6 +78,24 @@ Gib genau 3 verbesserte Varianten der Nachricht des Nutzers zurück als JSON:
 {"answers":[{"text":"..."},{"text":"..."},{"text":"..."}]}
 Keine Erklärung, nur die verbesserten Nachrichten.`;
 
+const IMPROVE_SYSTEM_PROMPT = `Du bist Clemio-KI – ein Assistent, der Nachrichten in einem bestimmten Stil umformuliert.
+Der Nutzer gibt dir eine Nachricht und einen gewünschten Stil. Formuliere die Nachricht exakt in diesem Stil um.
+
+STILE:
+- "clearer" = klarer, direkter, auf den Punkt
+- "calmer" = ruhiger, gelassener, deeskalierend  
+- "friendlier" = freundlicher, herzlicher, wärmer
+
+REGELN:
+- Behalte den Inhalt und die Intention bei
+- Passe NUR den Ton an
+- Schreibe wie eine echte WhatsApp-Nachricht
+- Kurz und natürlich
+- Keine KI-Floskeln
+
+Du antwortest IMMER im folgenden JSON-Format, NICHTS anderes:
+{"improved":"die verbesserte Nachricht"}`;
+
 const STRATEGY_FORMAT = `MODUS STRATEGIE:
 Gib eine kurze Einschätzung und 3 Antworten mit Wirkung zurück als JSON:
 {"assessment":"...(max 1 Satz)","answers":[{"text":"...","effect":"...(max 1 Satz)"},{"text":"...","effect":"..."},{"text":"...","effect":"..."}]}`;
