@@ -263,7 +263,7 @@ const SettingsPage = () => {
 
         {show("privacy") && <>
         {/* ──────────── PRIVATSPHÄRE & NACHRICHTEN ──────────── */}
-        <CollapsibleSection icon={Shield} title={t("settings.privacyMessages")} defaultOpen={!isSearching} delay="30ms">
+        <CollapsibleSection icon={Shield} title={t("settings.privacyMessages")} defaultOpen delay="30ms">
            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <ToggleRow
               icon={MessageSquareText}
@@ -312,7 +312,7 @@ const SettingsPage = () => {
 
         {show("push") && <>
         {/* ──────────── PUSH-BENACHRICHTIGUNGEN ──────────── */}
-        <CollapsibleSection icon={Bell} title={t("settings.pushTitle")} defaultOpen={!isSearching} delay="45ms">
+        <CollapsibleSection icon={Bell} title={t("settings.pushTitle")} defaultOpen delay="45ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {pushCap.canUsePush ? (
               <>
@@ -397,7 +397,7 @@ const SettingsPage = () => {
 
         {show("language") && <>
         {/* ──────────── SPRACHE ──────────── */}
-        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen={isSearching} delay="70ms">
+        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen delay="70ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             {languages.map(([code, name]) => (
               <button
