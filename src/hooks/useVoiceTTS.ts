@@ -48,7 +48,7 @@ export const useVoiceTTS = () => {
             Authorization: `Bearer ${session.access_token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ text, senderId, lang: lang || "de" }),
+          body: JSON.stringify({ text, senderId, lang: lang || "de", defaultVoiceId: localStorage.getItem("clemio_default_voice") || "onwK4e9ZLuTAKqWW03F9" }),
           signal: controller.signal,
         }
       );

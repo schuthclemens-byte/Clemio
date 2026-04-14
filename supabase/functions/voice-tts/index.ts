@@ -36,7 +36,7 @@ serve(async (req) => {
       });
     }
 
-    const { text, senderId, lang } = await req.json();
+    const { text, senderId, lang, defaultVoiceId } = await req.json();
 
     if (!text || !senderId) {
       return new Response(JSON.stringify({ error: "Missing text or senderId" }), {
@@ -92,8 +92,9 @@ serve(async (req) => {
       .eq("user_id", senderId)
       .maybeSingle();
 
-    // Default voice (Daniel) when sender has no cloned voice
-    const voiceId = voiceProfile?.elevenlabs_voice_id || "onwK4e9ZLuTAKqWW03F9";
+    // Use user-selected default voice, or fallback to Daniel
+    const fallbackVoice = defaultVoiceId || "onwK4e9ZLuTAKqWW03F9";
+    const voiceId = voiceProfile?.elevenlabs_voice_id || fallbackVoice;
 
     // Generate TTS
     const ttsResponse = await fetch(
