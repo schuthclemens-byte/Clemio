@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Check, LogOut, Crown, Trash2, Mic, ChevronRight, CheckCircle } from "lucide-react";
+import { ArrowLeft, Camera, Crown, Trash2, Mic, ChevronRight, CheckCircle, LogOut } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,21 +14,17 @@ import { Badge } from "@/components/ui/badge";
 const splitDisplayName = (value: string) => {
   const trimmedValue = value.trim();
   if (!trimmedValue) return { firstName: "", lastName: "" };
-
   const [derivedFirstName = "", ...rest] = trimmedValue.split(/\s+/);
-
-  return {
-    firstName: derivedFirstName,
-    lastName: rest.join(" "),
-  };
+  return { firstName: derivedFirstName, lastName: rest.join(" ") };
 };
 
 const ProfilePage = () => {
-  const { goBack, swipeHandlers } = useSmartBack("/settings");
+  const { goBack, swipeHandlers } = useSmartBack("/chats");
   const navigate = useNavigate();
-  const { locale, setLocale, t } = useI18n();
+  const { locale, t } = useI18n();
   const { user, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [displayName, setDisplayName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -36,12 +32,10 @@ const ProfilePage = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [hasVoice, setHasVoice] = useState(false);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
-
 
   useEffect(() => {
     if (!user) return;
@@ -51,7 +45,6 @@ const ProfilePage = () => {
         .select("display_name, phone_number, avatar_url, language, first_name, last_name")
         .eq("id", user.id)
         .maybeSingle();
-
       if (data) {
         const storedDisplayName = data.display_name?.trim() || "";
         const storedFirstName = (data as any).first_name?.trim() || "";
@@ -59,15 +52,12 @@ const ProfilePage = () => {
         const derivedName = !storedFirstName && !storedLastName
           ? splitDisplayName(storedDisplayName)
           : { firstName: storedFirstName, lastName: storedLastName };
-
         setDisplayName(storedDisplayName);
         setFirstName(derivedName.firstName);
         setLastName(derivedName.lastName);
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
-        
       }
-      // Check voice profile
       const { data: voiceData } = await supabase
         .from("voice_profiles")
         .select("id")
@@ -77,77 +67,52 @@ const ProfilePage = () => {
       setLoaded(true);
     };
     load();
-    
   }, [user]);
+
+  // Auto-save name with debounce
+  const autoSaveName = useCallback((fn: string, ln: string) => {
+    if (!user || !loaded) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      const nextFirst = fn.trim();
+      const nextLast = ln.trim();
+      const nextDisplay = [nextFirst, nextLast].filter(Boolean).join(" ") || "Nutzer";
+      const { error } = await supabase
+        .from("profiles")
+        .update({ display_name: nextDisplay, first_name: nextFirst || null, last_name: nextLast || null, language: locale })
+        .eq("id", user.id);
+      if (!error) {
+        setDisplayName(nextDisplay);
+        toast("Gespeichert ✓", { duration: 2000 });
+      }
+    }, 1200);
+  }, [user, loaded, locale]);
+
+  // Cleanup timer
+  useEffect(() => () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); }, []);
+
+  const updateFirstName = (val: string) => { setFirstName(val); autoSaveName(val, lastName); };
+  const updateLastName = (val: string) => { setLastName(val); autoSaveName(firstName, val); };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${user.id}/avatar.${ext}`;
-
-    const { error: uploadErr } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true });
-
-    if (uploadErr) {
-      toast.error(t("profile.uploadFailed"));
-      setUploading(false);
-      return;
-    }
-
+    const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (uploadErr) { toast.error(t("profile.uploadFailed")); setUploading(false); return; }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
     const newUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
     await supabase.from("profiles").update({ avatar_url: newUrl }).eq("id", user.id);
     setAvatarUrl(newUrl);
     setUploading(false);
     toast.success(t("profile.avatarUpdated"));
   };
 
-  const handleSave = async () => {
-    if (!user) return;
-    setSaving(true);
+  const handleSignOut = async () => { await signOut(); navigate("/login"); };
 
-    const nextFirstName = firstName.trim();
-    const nextLastName = lastName.trim();
-    const nextDisplayName = [nextFirstName, nextLastName].filter(Boolean).join(" ") || displayName.trim() || "Nutzer";
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: nextDisplayName,
-        first_name: nextFirstName || null,
-        last_name: nextLastName || null,
-        language: locale,
-      })
-      .eq("id", user.id);
-
-    setSaving(false);
-    if (error) {
-      toast.error(t("profile.saveFailed"));
-    } else {
-      setDisplayName(nextDisplayName);
-      toast.success(t("profile.saved"));
-    }
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/login");
-  };
-
-
-  const initials = [firstName, lastName]
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "?";
-
-  
+  const initials = [firstName, lastName].filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
 
   if (!loaded) {
     return (
@@ -160,76 +125,17 @@ const ProfilePage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={goBack}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95"
-              aria-label={t("a11y.back")}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold">{t("settings.profile") || "Profil"}</h1>
-          </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="h-9 px-4 rounded-xl gradient-primary text-primary-foreground text-sm font-medium shadow-soft hover:shadow-elevated transition-all disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {saving ? (
-              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-            ) : (
-              <>
-                <Check className="w-4 h-4" />
-                {t("settings.save") || "Speichern"}
-              </>
-            )}
+        <div className="flex items-center gap-3 px-4 py-3">
+          <button onClick={goBack} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95" aria-label={t("a11y.back")}>
+            <ArrowLeft className="w-5 h-5" />
           </button>
+          <h1 className="text-xl font-bold flex-1">{t("settings.profile") || "Profil"}</h1>
         </div>
       </header>
 
       <PaywallGate />
-      <div className="flex-1 p-4 space-y-6">
-        {/* Subscription Status */}
-        <section className="animate-reveal-up">
-          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-            {t("profile.subStatus")}
-          </label>
-          <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center",
-                isPremium ? "gradient-primary" : "bg-secondary"
-              )}>
-                <Crown className={cn("w-6 h-6", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-[0.938rem]">{planLabel}</p>
-                  {isFoundingUser && (
-                    <Badge variant="default" className="text-[0.625rem]">{t("profile.foundingUser")}</Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {isPremium
-                    ? (daysRemaining > 0 && !isFoundingUser && daysRemaining !== -1)
-                      ? t("profile.daysRemaining").replace("{n}", String(daysRemaining))
-                      : t("profile.premiumActive")
-                    : t("profile.upgradeHint")
-                  }
-                </p>
-              </div>
-              {!isPremium && (
-                <button
-                  onClick={() => requirePremium(() => {})}
-                  className="h-9 px-4 rounded-xl gradient-primary text-primary-foreground text-sm font-medium shadow-soft hover:shadow-elevated transition-all"
-                >
-                  {t("profile.upgrade")}
-                </button>
-              )}
-            </div>
-          </div>
-        </section>
+      <div className="flex-1 p-4 space-y-6 pb-28">
+        {/* Avatar */}
         <section className="flex flex-col items-center animate-reveal-up">
           <div className="relative">
             <div className="w-28 h-28 rounded-3xl overflow-hidden shadow-elevated">
@@ -241,114 +147,109 @@ const ProfilePage = () => {
                 </div>
               )}
             </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+            <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
               className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-card border-2 border-border flex items-center justify-center shadow-soft hover:bg-secondary transition-colors active:scale-95"
             >
-              {uploading ? (
-                <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              ) : (
-                <Camera className="w-4.5 h-4.5 text-muted-foreground" />
-              )}
+              {uploading ? <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /> : <Camera className="w-4.5 h-4.5 text-muted-foreground" />}
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
           </div>
           <p className="text-sm text-muted-foreground mt-3">{phoneNumber}</p>
         </section>
 
-        {/* Name */}
+        {/* Subscription */}
+        <section className="animate-reveal-up" style={{ animationDelay: "30ms" }}>
+          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3">
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", isPremium ? "gradient-primary" : "bg-secondary")}>
+              <Crown className={cn("w-5 h-5", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-[0.938rem]">{planLabel}</p>
+                {isFoundingUser && <Badge variant="default" className="text-[0.625rem]">{t("profile.foundingUser")}</Badge>}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isPremium
+                  ? (daysRemaining > 0 && !isFoundingUser && daysRemaining !== -1)
+                    ? t("profile.daysRemaining").replace("{n}", String(daysRemaining))
+                    : t("profile.premiumActive")
+                  : t("profile.upgradeHint")}
+              </p>
+            </div>
+            {!isPremium && (
+              <button onClick={() => requirePremium(() => {})}
+                className="h-8 px-3 rounded-xl gradient-primary text-primary-foreground text-xs font-medium shadow-soft transition-all"
+              >
+                {t("profile.upgrade")}
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* Name – auto-saves */}
         <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
-          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block px-1">
             {t("settings.displayName") || "Name"}
           </label>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block ml-1">Vorname</label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Vorname eingeben…"
-                className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block ml-1">Nachname</label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Nachname eingeben… (optional)"
-                className="w-full h-14 rounded-2xl bg-card px-5 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-              />
-            </div>
+          <div className="space-y-2.5">
+            <input type="text" value={firstName} onChange={(e) => updateFirstName(e.target.value)}
+              placeholder={locale === "de" ? "Vorname eingeben…" : "First name…"}
+              className="w-full h-12 rounded-2xl bg-card px-4 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+            />
+            <input type="text" value={lastName} onChange={(e) => updateLastName(e.target.value)}
+              placeholder={locale === "de" ? "Nachname (optional)" : "Last name (optional)"}
+              className="w-full h-12 rounded-2xl bg-card px-4 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+            />
           </div>
         </section>
 
         {/* Voice Profile */}
-        <section className="animate-reveal-up" style={{ animationDelay: "120ms" }}>
-          <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+        <section className="animate-reveal-up" style={{ animationDelay: "90ms" }}>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block px-1">
             {locale === "de" ? "Meine Stimme" : "My Voice"}
           </label>
-          <button
-            onClick={() => navigate("/voice-recordings")}
+          <button onClick={() => navigate("/voice-recordings")}
             className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
           >
-            <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-              hasVoice ? "gradient-primary shadow-soft" : "bg-secondary"
-            )}>
-              <Mic className={cn("w-6 h-6", hasVoice ? "text-primary-foreground" : "text-muted-foreground")} />
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", hasVoice ? "gradient-primary shadow-soft" : "bg-secondary")}>
+              <Mic className={cn("w-5 h-5", hasVoice ? "text-primary-foreground" : "text-muted-foreground")} />
             </div>
             <div className="flex-1 text-left">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-[0.938rem]">
-                  {locale === "de" ? "Stimmprofil" : "Voice Profile"}
-                </p>
+                <p className="font-semibold text-[0.938rem]">{locale === "de" ? "Stimmprofil" : "Voice Profile"}</p>
                 {hasVoice && <CheckCircle className="w-4 h-4 text-accent" />}
               </div>
               <p className="text-xs text-muted-foreground">
                 {hasVoice
                   ? (locale === "de" ? "Aktiv – Kontakte können dich hören" : "Active – contacts can hear you")
-                  : (locale === "de" ? "Einrichten, damit andere dich hören können" : "Set up so others can hear you")}
+                  : (locale === "de" ? "Einrichten, damit andere dich hören" : "Set up so others can hear you")}
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
           </button>
         </section>
 
-        {/* Sign Out */}
-        <section className="animate-reveal-up space-y-3" style={{ animationDelay: "300ms" }}>
-          <button
-            onClick={handleSignOut}
-            className="w-full h-14 rounded-2xl bg-destructive/10 text-destructive font-semibold text-base flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors active:scale-[0.97]"
+        {/* Sign Out & Delete */}
+        <section className="animate-reveal-up space-y-3 pt-2" style={{ animationDelay: "120ms" }}>
+          <button onClick={handleSignOut}
+            className="w-full h-12 rounded-2xl bg-destructive/10 text-destructive font-semibold text-sm flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors active:scale-[0.97]"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
             {t("settings.signOut") || "Abmelden"}
           </button>
-
           <button
             onClick={async () => {
               if (!window.confirm(t("profile.deleteAccountConfirm"))) return;
               if (!user) return;
               try {
-                const { data, error } = await supabase.functions.invoke("delete-account");
+                const { error } = await supabase.functions.invoke("delete-account");
                 if (error) throw error;
                 await signOut();
                 navigate("/login");
                 toast.success(t("profile.accountDeleted"));
-              } catch {
-                toast.error(t("profile.deleteAccountError"));
-              }
+              } catch { toast.error(t("profile.deleteAccountError")); }
             }}
-            className="w-full h-11 rounded-xl text-destructive/60 text-sm font-medium hover:text-destructive transition-colors active:scale-[0.97]"
+            className="w-full h-10 rounded-xl text-destructive/50 text-xs font-medium hover:text-destructive transition-colors active:scale-[0.97]"
           >
             {t("profile.deleteAccount")}
           </button>
