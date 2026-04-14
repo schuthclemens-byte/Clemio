@@ -414,16 +414,18 @@ const SettingsPage = () => {
         </CollapsibleSection>
         </>}
 
-        {show("accessibility") && <>
-        {/* ──────────── BARRIEREFREIHEIT ──────────── */}
-        <CollapsibleSection icon={Eye} title={t("settings.accessibility")} defaultOpen={isSearching} delay="80ms">
+        {(show("accessibility") || show("focus") || show("autoplay")) && <>
+        {/* ──────────── BEDIENUNG ──────────── */}
+        <CollapsibleSection icon={Sliders} title={t("settings.controlsTitle") || "Bedienung"} defaultOpen={!isSearching} delay="60ms">
           <div className="space-y-3">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
               <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => a11y.toggle("dyslexiaFont")} />
               <ToggleRow icon={Eye} label={t("settings.largeText")} checked={a11y.largeText} onChange={() => a11y.toggle("largeText")} />
               <ToggleRow icon={Contrast} label={t("settings.highContrast")} checked={a11y.highContrast} onChange={() => a11y.toggle("highContrast")} />
               <ToggleRow icon={Headphones} label={t("settings.headphoneAutoPlay")} checked={a11y.headphoneAutoPlay} onChange={() => a11y.toggle("headphoneAutoPlay")} />
-              <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} checked={a11y.autoCorrect} onChange={() => a11y.toggle("autoCorrect")} borderBottom={false} />
+              <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} checked={a11y.autoCorrect} onChange={() => a11y.toggle("autoCorrect")} />
+              <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")} checked={a11y.compactMode} onChange={() => a11y.toggle("compactMode")} />
+              <ToggleRow icon={VolumeX} label={t("settings.muteSounds")} description={t("settings.muteSoundsDesc")} checked={a11y.muteSounds} onChange={() => a11y.toggle("muteSounds")} borderBottom={false} />
             </div>
 
             {/* Speech Rate */}
@@ -487,17 +489,7 @@ const SettingsPage = () => {
               )}
             </div>
 
-            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")} checked={a11y.compactMode} onChange={() => a11y.toggle("compactMode")} />
-              <ToggleRow icon={VolumeX} label={t("settings.muteSounds")} description={t("settings.muteSoundsDesc")} checked={a11y.muteSounds} onChange={() => a11y.toggle("muteSounds")} borderBottom={false} />
-            </div>
-          </div>
-        </CollapsibleSection>
-        </>}
-
-        {/* ──────────── WEITERE LINKS ──────────── */}
-        <div className="space-y-3">
-          {show("focus") && (
+            {/* Focus & Autoplay links */}
             <button
               onClick={() => navigate("/focus-mode")}
               className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
@@ -510,9 +502,7 @@ const SettingsPage = () => {
                 <p className="text-xs text-muted-foreground">{t("settings.focusModeDesc")}</p>
               </div>
             </button>
-          )}
 
-          {show("autoplay") && (
             <button
               onClick={() => navigate("/contact-autoplay")}
               className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
@@ -528,127 +518,179 @@ const SettingsPage = () => {
                 <p className="text-xs text-muted-foreground">{t("settings.autoPlayContactDesc")}</p>
               </div>
             </button>
-          )}
-
-          {show("install") && !window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
-            <button
-              onClick={() => navigate("/install")}
-              className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-            >
-              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                <Download className="w-5 h-5 text-accent" />
-              </div>
-              <div className="text-left flex-1">
-                <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
-                <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
-              </div>
-            </button>
-          )}
-        </div>
-
-        {show("session") && (
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            <ToggleRow
-              icon={KeyRound}
-              label={t("settings.stayLoggedIn")}
-              description={t("settings.stayLoggedInDesc")}
-              checked={stayLoggedIn}
-              onChange={toggleStayLoggedIn}
-              borderBottom={false}
-            />
           </div>
-        )}
+        </CollapsibleSection>
+        </>}
 
-        {show("subscription") && !(isFoundingUser && daysRemaining === -1) && (
+        {show("language") && <>
+        {/* ──────────── SPRACHE ──────────── */}
+        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen={isSearching} delay="70ms">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-4 py-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", isPremium ? "gradient-primary" : "bg-muted")}>
-                    <Crown className={cn("w-5 h-5", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-[0.938rem]">{planLabel}</p>
-                    {isPremium && daysRemaining > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {stripeActive ? t("sub.nextPayment").replace("{n}", String(daysRemaining)) : t("sub.daysLeft").replace("{n}", String(daysRemaining))}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={handleRefreshSubscription}
-                  disabled={refreshingSubscription}
-                  className="p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-60"
-                  aria-label={t("settings.subRefreshLabel")}
-                >
-                  <RefreshCw className={cn("w-4 h-4 text-muted-foreground", refreshingSubscription && "animate-spin")} />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 px-1">
-                <span className={cn(
-                  "w-2 h-2 rounded-full shrink-0 transition-colors",
-                  isPremium ? "bg-primary" : "bg-muted-foreground/40"
-                )} />
-                <p className="text-xs text-muted-foreground">
-                  {isPremium ? t("settings.subActive") : t("settings.subInactive")}
-                  {lastChecked && (
-                    <> · {t("settings.subLastChecked")} {lastChecked.toLocaleTimeString(locale === "de" ? "de-DE" : locale === "en" ? "en-US" : undefined, { hour: "2-digit", minute: "2-digit" })}</>
-                  )}
-                </p>
-              </div>
-
-              {!isPremium && (
-                <button
-                  onClick={startCheckout}
-                  disabled={checkoutLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-                >
-                  {checkoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                  {t("sub.subscribe")}
-                </button>
-              )}
-              {stripeActive && (
-                <button
-                  onClick={openPortal}
-                  disabled={portalLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-                >
-                  {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                  {t("sub.manage")}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {show("logout") && (
-          <div className="animate-reveal-up" style={{ animationDelay: "100ms" }}>
-            {!showLogoutConfirm ? (
+            {languages.map(([code, name]) => (
               <button
-                onClick={() => setShowLogoutConfirm(true)}
-                className="w-full flex items-center justify-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl shadow-sm hover:bg-destructive/20 transition-colors active:scale-[0.98] font-semibold"
+                key={code}
+                onClick={() => setLocale(code)}
+                className={cn(
+                  "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
+                  "hover:bg-secondary/50 active:scale-[0.99]",
+                  "border-b border-border last:border-b-0",
+                  locale === code && "bg-primary/5"
+                )}
               >
-                <LogOut className="w-5 h-5" />
-                {t("settings.logout")}
+                <span className="text-[0.938rem]">{name}</span>
+                {locale === code && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
               </button>
-            ) : (
-              <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
-                <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
-                <div className="flex gap-3">
-                  <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
-                    {t("a11y.back")}
-                  </button>
-                  <button onClick={handleLogout} className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm">
-                    {t("settings.logout")}
-                  </button>
+            ))}
+          </div>
+        </CollapsibleSection>
+        </>}
+
+        {(show("session") || show("subscription") || show("install") || show("logout")) && <>
+        {/* ──────────── KONTO & ABO ──────────── */}
+        <CollapsibleSection icon={Settings2} title={t("settings.accountTitle") || "Konto & Abo"} defaultOpen={!isSearching} delay="80ms">
+          <div className="space-y-3">
+            {show("session") && (
+              <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <ToggleRow
+                  icon={KeyRound}
+                  label={t("settings.stayLoggedIn")}
+                  description={t("settings.stayLoggedInDesc")}
+                  checked={stayLoggedIn}
+                  onChange={toggleStayLoggedIn}
+                  borderBottom={false}
+                />
+              </div>
+            )}
+
+            {show("subscription") && !(isFoundingUser && daysRemaining === -1) && (
+              <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-4 py-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", isPremium ? "gradient-primary" : "bg-muted")}>
+                        <Crown className={cn("w-5 h-5", isPremium ? "text-primary-foreground" : "text-muted-foreground")} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[0.938rem]">{planLabel}</p>
+                        {isPremium && daysRemaining > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {stripeActive ? t("sub.nextPayment").replace("{n}", String(daysRemaining)) : t("sub.daysLeft").replace("{n}", String(daysRemaining))}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleRefreshSubscription}
+                      disabled={refreshingSubscription}
+                      className="p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-60"
+                      aria-label={t("settings.subRefreshLabel")}
+                    >
+                      <RefreshCw className={cn("w-4 h-4 text-muted-foreground", refreshingSubscription && "animate-spin")} />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 px-1">
+                    <span className={cn("w-2 h-2 rounded-full shrink-0 transition-colors", isPremium ? "bg-primary" : "bg-muted-foreground/40")} />
+                    <p className="text-xs text-muted-foreground">
+                      {isPremium ? t("settings.subActive") : t("settings.subInactive")}
+                      {lastChecked && (
+                        <> · {t("settings.subLastChecked")} {lastChecked.toLocaleTimeString(locale === "de" ? "de-DE" : locale === "en" ? "en-US" : undefined, { hour: "2-digit", minute: "2-digit" })}</>
+                      )}
+                    </p>
+                  </div>
+                  {!isPremium && (
+                    <button
+                      onClick={startCheckout}
+                      disabled={checkoutLoading}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+                    >
+                      {checkoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                      {t("sub.subscribe")}
+                    </button>
+                  )}
+                  {stripeActive && (
+                    <button
+                      onClick={openPortal}
+                      disabled={portalLoading}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+                    >
+                      {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                      {t("sub.manage")}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
-          </div>
-        )}
 
+            {show("install") && !window.matchMedia("(display-mode: standalone)").matches && !(window.navigator as any).standalone && (
+              <button
+                onClick={() => navigate("/install")}
+                className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-sm hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+              >
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <Download className="w-5 h-5 text-accent" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-[0.938rem]">{t("settings.installApp")}</p>
+                  <p className="text-xs text-muted-foreground">{t("settings.installAppDesc")}</p>
+                </div>
+              </button>
+            )}
+
+            {show("logout") && (
+              <>
+                {!showLogoutConfirm ? (
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="w-full flex items-center justify-center gap-3 p-4 bg-destructive/10 text-destructive rounded-2xl shadow-sm hover:bg-destructive/20 transition-colors active:scale-[0.98] font-semibold"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    {t("settings.logout")}
+                  </button>
+                ) : (
+                  <div className="bg-card rounded-2xl shadow-sm p-4 space-y-3 border border-destructive/20">
+                    <p className="text-sm text-center text-muted-foreground">{t("settings.logoutConfirm")}</p>
+                    <div className="flex gap-3">
+                      <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
+                        {t("a11y.back")}
+                      </button>
+                      <button onClick={handleLogout} className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-medium text-sm">
+                        {t("settings.logout")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </CollapsibleSection>
+        </>}
+
+        {show("legal") && (
+          <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen={isSearching} delay="90ms">
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => navigate("/privacy")}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors border-b border-border"
+              >
+                <Shield className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block">{t("settings.privacy")}</span>
+                  <span className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</span>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate("/terms")}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors"
+              >
+                <FileText className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <span className="text-[0.938rem] block">{t("settings.terms")}</span>
+                  <span className="text-xs text-muted-foreground">{t("settings.termsDesc")}</span>
+                </div>
+              </button>
+            </div>
+          </CollapsibleSection>
+        )}
         {show("legal") && (
           <CollapsibleSection icon={Lock} title={t("settings.legal")} defaultOpen={isSearching} delay="110ms">
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
