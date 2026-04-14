@@ -160,30 +160,40 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
 
     } else {
       /* ════════════════════════════════════════════
-         SPARKLE MODE – quick flashing light dots
+         LIVELY MODE – slow drifting particles, no blinking
          ════════════════════════════════════════════ */
 
       if (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 2) return;
 
-      const poolSize = Math.round(12 + intensity * 50);
+      const count = Math.round(60 + intensity * 180);
+      const speedFactor = (settings.sparkleMovementSpeed ?? 30) / 100; // 0–1
+      const baseSpeed = 0.08 + speedFactor * 0.35; // px per frame (very slow → moderate)
+
+      const createDrift = (): DriftParticle => {
+        const roll = Math.random();
+        const light = resolved.light - 5 + Math.random() * 10;
+        const sat = Math.max(0, resolved.sat + (Math.random() * 14 - 7));
+        const baseAlpha = 0.20 + intensity * 0.30;
+        const alpha = baseAlpha * (0.5 + Math.random() * 0.5);
+        const angle = Math.random() * Math.PI * 2;
+        const speed = baseSpeed * (0.4 + Math.random() * 0.6);
+        return {
+          x: Math.random() * ww,
+          y: Math.random() * hh,
+          size: roll < 0.12 ? 2.5 + Math.random() * 2 : roll < 0.4 ? 0.7 + Math.random() * 0.8 : 0.5 + Math.random() * 1.2,
+          alpha,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          type: roll < 0.12 ? "star" : roll < 0.4 ? "glow" : "dot",
+          light,
+          sat,
+        };
+      };
+
+      const particles: DriftParticle[] = Array.from({ length: count }, () => createDrift());
+
       let lastTime = 0;
       const frameDuration = 1000 / 30;
-
-      const createSparkle = (delayed: boolean): SparkleParticle => ({
-        x: Math.random() * ww,
-        y: Math.random() * hh,
-        size: Math.random() < 0.2 ? 4 + Math.random() * 3 : 1.5 + Math.random() * 2,
-        alpha: 0,
-        life: 0,
-        maxLife: 10 + Math.floor(Math.random() * 16),
-        peakTime: 0.12 + Math.random() * 0.13,
-        active: !delayed,
-        spawnDelay: delayed
-          ? Math.floor(Math.random() * Math.max(2, Math.round(30 / (0.5 + intensity * 3))))
-          : 0,
-      });
-
-      const pool: SparkleParticle[] = Array.from({ length: poolSize }, (_, i) => createSparkle(i > 3));
 
       const onResize = () => { setupCanvas(); };
       window.addEventListener("resize", onResize);
@@ -198,48 +208,54 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
         const ch = window.innerHeight;
         ctx.clearRect(0, 0, cw, ch);
 
-        for (let i = 0; i < pool.length; i++) {
-          const p = pool[i];
+        for (const p of particles) {
+          // Move
+          p.x += p.vx;
+          p.y += p.vy;
+          // Wrap around edges
+          if (p.x < -10) p.x = cw + 10;
+          if (p.x > cw + 10) p.x = -10;
+          if (p.y < -10) p.y = ch + 10;
+          if (p.y > ch + 10) p.y = -10;
 
-          if (!p.active) {
-            p.spawnDelay--;
-            if (p.spawnDelay <= 0) p.active = true;
-            else continue;
-          }
-
-          p.life++;
-          const lifeRatio = p.life / p.maxLife;
-
-          if (lifeRatio < p.peakTime) {
-            const t = lifeRatio / p.peakTime;
-            p.alpha = t * t * t * (0.85 + intensity * 0.15);
-          } else {
-            const t = (lifeRatio - p.peakTime) / (1 - p.peakTime);
-            p.alpha = (1 - t * t) * (0.85 + intensity * 0.15);
-          }
-          p.alpha = Math.max(0, Math.min(p.alpha, 1.0));
-
-          if (p.life >= p.maxLife) {
-            pool[i] = createSparkle(true);
-            continue;
-          }
-          if (p.alpha < 0.01) continue;
-
-          const outerR = p.size * 5;
-          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, outerR);
-          grad.addColorStop(0, `rgba(255, 255, 255, ${p.alpha * 0.95})`);
-          grad.addColorStop(0.15, `rgba(255, 255, 255, ${p.alpha * 0.6})`);
-          grad.addColorStop(0.4, `hsla(${resolved.hue}, ${Math.min(resolved.sat + 10, 40)}%, 85%, ${p.alpha * 0.25})`);
-          grad.addColorStop(1, `hsla(${resolved.hue}, ${resolved.sat}%, 70%, 0)`);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, outerR, 0, Math.PI * 2);
-          ctx.fillStyle = grad;
-          ctx.fill();
-
-          if (p.alpha > 0.2) {
+          if (p.type === "star") {
+            const armLen = p.size;
+            const coreR = p.size * 0.35;
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, armLen * 2.5);
+            grad.addColorStop(0, `hsla(${resolved.hue}, ${p.sat}%, ${p.light}%, ${p.alpha * 0.5})`);
+            grad.addColorStop(1, `hsla(${resolved.hue}, ${p.sat}%, ${p.light}%, 0)`);
             ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(p.size * 0.6, 1), 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(p.alpha * 1.3, 1.0)})`;
+            ctx.arc(p.x, p.y, armLen * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.strokeStyle = `hsla(${resolved.hue}, ${Math.min(p.sat + 8, 50)}%, ${Math.min(p.light + 3, 100)}%, ${p.alpha * 0.9})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(p.x - armLen, p.y); ctx.lineTo(p.x + armLen, p.y);
+            ctx.moveTo(p.x, p.y - armLen); ctx.lineTo(p.x, p.y + armLen);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, coreR, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${resolved.hue}, ${Math.min(p.sat + 5, 40)}%, ${Math.min(p.light + 5, 100)}%, ${Math.min(p.alpha * 1.4, 1)})`;
+            ctx.fill();
+          } else if (p.type === "glow") {
+            const glowR = p.size * 4;
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
+            grad.addColorStop(0, `hsla(${resolved.hue}, ${p.sat}%, ${Math.min(p.light + 3, 100)}%, ${p.alpha * 0.9})`);
+            grad.addColorStop(0.35, `hsla(${resolved.hue}, ${p.sat}%, ${p.light}%, ${p.alpha * 0.35})`);
+            grad.addColorStop(1, `hsla(${resolved.hue}, ${p.sat}%, ${p.light}%, 0)`);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${resolved.hue}, ${Math.min(p.sat + 5, 45)}%, ${Math.min(p.light + 4, 100)}%, ${Math.min(p.alpha * 1.2, 1)})`;
+            ctx.fill();
+          } else {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${resolved.hue}, ${p.sat}%, ${p.light}%, ${p.alpha * 0.7})`;
             ctx.fill();
           }
         }
