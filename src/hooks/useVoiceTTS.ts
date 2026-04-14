@@ -192,6 +192,14 @@ export const useVoiceTTS = () => {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // Pre-create utterance synchronously within gesture context for mobile compatibility
+    const langMap: Record<string, string> = {
+      de: "de-DE", en: "en-US", fr: "fr-FR", es: "es-ES", tr: "tr-TR", ar: "ar-SA",
+    };
+    const fallbackUtterance = new SpeechSynthesisUtterance(text);
+    fallbackUtterance.lang = langMap[lang || "de"] || "de-DE";
+    fallbackUtterance.rate = 1.0;
+
     const onEnd = () => {
       setIsPlaying(false);
       setIsLoading(false);
@@ -220,12 +228,23 @@ export const useVoiceTTS = () => {
       }
     } catch (error: any) {
       if (error.name === "AbortError") return;
-      console.error("Voice TTS error:", error);
-      const { toast } = await import("sonner");
-      toast.error("Sprachausgabe fehlgeschlagen", {
-        description: error.message || "Bitte versuche es später erneut.",
-      });
-      onEnd();
+      console.error("Voice TTS error, falling back to browser TTS:", error);
+
+      // Fallback: use free browser speech synthesis (utterance pre-created in gesture context)
+      try {
+        fallbackUtterance.onend = onEnd;
+        fallbackUtterance.onerror = onEnd;
+        setIsLoading(false);
+        setIsPlaying(true);
+        window.speechSynthesis.speak(fallbackUtterance);
+      } catch (fallbackError) {
+        console.error("Browser TTS fallback also failed:", fallbackError);
+        const { toast } = await import("sonner");
+        toast.error("Sprachausgabe fehlgeschlagen", {
+          description: "Bitte versuche es später erneut.",
+        });
+        onEnd();
+      }
     }
   }, [playingMsgId, isPlaying, isLoading, stop, playStreaming, playBlobFallback]);
 
