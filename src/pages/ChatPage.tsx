@@ -160,6 +160,7 @@ const ChatPage = () => {
   const [showChatMenu, setShowChatMenu] = useState(false);
   const chatMenuBtnRef = useRef<HTMLDivElement>(null);
   const [showClemioKI, setShowClemioKI] = useState(false);
+  const [groupAvatarUrl, setGroupAvatarUrl] = useState<string | null>(null);
   const [clemioKIDraft, setClemioKIDraft] = useState("");
   const [pendingSuggestion, setPendingSuggestion] = useState("");
 
@@ -414,6 +415,7 @@ const ChatPage = () => {
 
       setIsGroup(conv.is_group ?? false);
       setCreatorId(conv.created_by || "");
+      setGroupAvatarUrl((conv as any).avatar_url || null);
       const members = membersRes.data;
 
       // Process messages immediately so UI renders fast
@@ -959,12 +961,16 @@ const ChatPage = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="relative w-11 h-11 shrink-0">
-            <div className={cn(
-              "w-11 h-11 rounded-full flex items-center justify-center font-semibold text-sm",
-              isGroup ? "gradient-primary text-primary-foreground" : "bg-primary/10 text-primary"
-            )}>
-              {isGroup ? <Users className="w-5 h-5" /> : initials}
-            </div>
+            {isGroup && groupAvatarUrl ? (
+              <img src={groupAvatarUrl} alt="Gruppe" className="w-11 h-11 rounded-full object-cover" />
+            ) : (
+              <div className={cn(
+                "w-11 h-11 rounded-full flex items-center justify-center font-semibold text-sm",
+                isGroup ? "gradient-primary text-primary-foreground" : "bg-primary/10 text-primary"
+              )}>
+                {isGroup ? <Users className="w-5 h-5" /> : initials}
+              </div>
+            )}
             {!isGroup && (
               <span
                 className={cn(
@@ -1318,6 +1324,10 @@ const ChatPage = () => {
           conversationId={conversationId}
           creatorId={creatorId}
           onLeft={() => { setShowGroupMembers(false); navigate("/chats"); }}
+          groupName={chatName}
+          groupAvatarUrl={groupAvatarUrl}
+          onNameChanged={(name) => setChatName(name)}
+          onAvatarChanged={(url) => setGroupAvatarUrl(url)}
         />
       )}
 
