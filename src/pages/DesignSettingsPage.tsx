@@ -11,11 +11,11 @@ import ColorSurface from "@/components/design/ColorSurface";
 import BackgroundPicker from "@/components/chat/BackgroundPicker";
 import { Slider } from "@/components/ui/slider";
 
-const presetConfigs: { id: DesignPreset; label: string; hue: number; sat: number; light: number; accentHue: number; icon: string; desc: string }[] = [
-  { id: "softMagic", label: "Soft Magic", hue: 328, sat: 56, light: 62, accentHue: 370, icon: "✨", desc: "Weich & magisch" },
-  { id: "elegant", label: "Elegant", hue: 214, sat: 20, light: 48, accentHue: 244, icon: "🪶", desc: "Schlicht & edel" },
-  { id: "neon", label: "Neon", hue: 168, sat: 94, light: 52, accentHue: 198, icon: "⚡", desc: "Lebendig & hell" },
-  { id: "galaxy", label: "Galaxy", hue: 248, sat: 78, light: 58, accentHue: 290, icon: "🌌", desc: "Tief & kosmisch" },
+const presetConfigs: { id: DesignPreset; label: string; hue: number; sat: number; light: number; accentHue: number; icon: string; desc: string; gradient: string; vibe: string }[] = [
+  { id: "softMagic", label: "Soft Magic", hue: 328, sat: 56, light: 62, accentHue: 370, icon: "✨", desc: "Weich & magisch", gradient: "linear-gradient(135deg, hsl(328,56%,62%), hsl(10,50%,72%))", vibe: "Sanfte Pastelltöne mit zartem Glow" },
+  { id: "elegant", label: "Elegant", hue: 214, sat: 20, light: 48, accentHue: 244, icon: "🪶", desc: "Schlicht & edel", gradient: "linear-gradient(135deg, hsl(214,20%,48%), hsl(244,18%,58%))", vibe: "Reduzierts Design, klare Linien" },
+  { id: "neon", label: "Neon", hue: 168, sat: 94, light: 52, accentHue: 198, icon: "⚡", desc: "Lebendig & hell", gradient: "linear-gradient(135deg, hsl(168,94%,52%), hsl(198,80%,62%))", vibe: "Leuchtende Farben, hoher Kontrast" },
+  { id: "galaxy", label: "Galaxy", hue: 248, sat: 78, light: 58, accentHue: 290, icon: "🌌", desc: "Tief & kosmisch", gradient: "linear-gradient(135deg, hsl(248,78%,58%), hsl(290,60%,68%))", vibe: "Dunkle Tiefe, kosmische Weite" },
 ];
 
 /** Polished mini chat preview card that looks like a real chat interface */
