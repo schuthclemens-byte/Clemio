@@ -529,7 +529,7 @@ const SettingsPage = () => {
 
         {(show("session") || show("subscription") || show("install") || show("logout")) && <>
         {/* ──────────── KONTO & ABO ──────────── */}
-        <CollapsibleSection icon={Settings2} title={t("settings.accountTitle") || "Konto & Abo"} defaultOpen={!isSearching} delay="80ms">
+        <CollapsibleSection icon={Settings2} title={t("settings.accountTitle") || "Konto & Abo"} defaultOpen delay="80ms">
           <div className="space-y-3">
             {show("session") && (
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
