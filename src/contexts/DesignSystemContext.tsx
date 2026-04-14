@@ -124,12 +124,13 @@ const createTheme = (colors: DesignColors, magic: MagicModeSettings, isDark: boo
   const secondarySaturation = clamp(primarySaturation * (isDark ? 0.82 : 0.72), 18, 96);
   const secondaryLightness = clamp(primaryLightness + (isDark ? 6 : 10), isDark ? 42 : 34, isDark ? 72 : 80);
 
-  const backgroundSaturation = clamp(primarySaturation * (isDark ? 0.4 : 0.3), isDark ? 14 : 8, isDark ? 34 : 28);
+  // In dark mode, keep backgrounds neutral (near-zero saturation) to avoid brown tints
+  const bgSat = isDark ? 0 : clamp(primarySaturation * 0.3, 8, 28);
   const backgroundLightness = isDark
     ? clamp(7 + (100 - primaryLightness) * 0.04, 7, 13)
     : clamp(97 - primarySaturation * 0.05, 89, 97);
 
-  const surfaceSaturation = clamp(backgroundSaturation + (isDark ? 4 : 2), isDark ? 14 : 8, isDark ? 30 : 20);
+  const surfSat = isDark ? 0 : clamp(bgSat + 2, 8, 20);
   const surfaceLightness = isDark
     ? clamp(backgroundLightness + 6, 13, 19)
     : clamp(backgroundLightness - 3, 84, 95);
@@ -160,21 +161,24 @@ const createTheme = (colors: DesignColors, magic: MagicModeSettings, isDark: boo
     ? clamp(surfaceLightness + 3, 18, 24)
     : clamp(surfaceLightness - 4, 78, 90);
 
+  // In dark mode use neutral hue (0) for backgrounds; in light mode use primary hue for warmth
+  const bgHue = isDark ? 0 : primaryHue;
+
   return {
     primaryColor: hsl(primaryHue, primarySaturation, primaryLightness),
     primaryForeground: hsl(primaryHue, 18, primaryForegroundLightness),
     secondaryColor: hsl(secondaryHue, secondarySaturation, secondaryLightness),
     secondaryForeground: hsl(secondaryHue, 18, secondaryForegroundLightness),
-    backgroundColor: hsl(primaryHue, backgroundSaturation, backgroundLightness),
-    surfaceColor: hsl(primaryHue, surfaceSaturation, surfaceLightness),
-    surfaceMutedColor: hsl(primaryHue, clamp(backgroundSaturation * 0.9, 6, 24), surfaceMutedLightness),
-    textPrimary: hsl(primaryHue, 18, textPrimaryLightness),
-    textSecondary: hsl(primaryHue, 12, textSecondaryLightness),
+    backgroundColor: hsl(bgHue, bgSat, backgroundLightness),
+    surfaceColor: hsl(bgHue, surfSat, surfaceLightness),
+    surfaceMutedColor: hsl(bgHue, isDark ? 0 : clamp(bgSat * 0.9, 6, 24), surfaceMutedLightness),
+    textPrimary: hsl(0, isDark ? 0 : 18, textPrimaryLightness),
+    textSecondary: hsl(0, isDark ? 0 : 12, textSecondaryLightness),
     effectColor: hsl(effectHue, effectSaturation, effectLightness),
-    borderColor: hsl(primaryHue, clamp(backgroundSaturation * 0.75, 6, 22), borderLightness),
-    chatTheirsColor: hsl(primaryHue, surfaceSaturation, chatTheirsLightness),
-    sidebarBackgroundColor: hsl(primaryHue, clamp(backgroundSaturation + 2, 8, 30), sidebarBackgroundLightness),
-    sidebarAccentColor: hsl(primaryHue, clamp(surfaceSaturation, 8, 24), sidebarAccentLightness),
+    borderColor: hsl(bgHue, isDark ? 0 : clamp(bgSat * 0.75, 6, 22), borderLightness),
+    chatTheirsColor: hsl(bgHue, surfSat, chatTheirsLightness),
+    sidebarBackgroundColor: hsl(bgHue, isDark ? 0 : clamp(bgSat + 2, 8, 30), sidebarBackgroundLightness),
+    sidebarAccentColor: hsl(bgHue, isDark ? 0 : clamp(surfSat, 8, 24), sidebarAccentLightness),
     sparkleIntensity: magic.sparkleIntensity,
     magicMode: magic.enabled,
   };
@@ -229,7 +233,6 @@ const applyThemeToRoot = (theme: GlobalTheme) => {
   Object.entries(cssVars).forEach(([key, value]) => {
     root.style.setProperty(key, value);
   });
-  
 
   root.dataset.magicMode = theme.magicMode ? "on" : "off";
 };

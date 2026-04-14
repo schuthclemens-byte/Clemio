@@ -645,9 +645,6 @@ const tr: Record<string, string> = {
     "design.previewButton": "Birincil",
     "design.previewSecondary": "İkincil",
     "design.liveHint": "💡 Tüm değişiklikler anında tüm uygulamada görünür.",
-    "design.sparkleMode": "Mod",
-    "design.modeSparkle": "Parıltı",
-    "design.modeSoft": "Yumuşak",
 };
 
 export default tr;

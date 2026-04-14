@@ -113,15 +113,14 @@ const SparkleOverlay = memo(({ settings, effectHue, effectSaturation, effectLigh
             p.alpha = (1 - t * t) * (0.85 + intensity * 0.15);
           }
         } else {
-          // Soft glow: gentle breathing — higher base alpha for visibility
-          const baseAlpha = 0.25 + intensity * 0.35;
+          // Soft glow: gentle breathing
           if (lifeRatio < 0.12) {
-            p.alpha = (lifeRatio / 0.12) * baseAlpha;
+            p.alpha = (lifeRatio / 0.12) * (0.12 + intensity * 0.18);
           } else if (lifeRatio > 0.88) {
-            p.alpha = ((1 - lifeRatio) / 0.12) * baseAlpha;
+            p.alpha = ((1 - lifeRatio) / 0.12) * (0.12 + intensity * 0.18);
           } else {
-            const breath = Math.sin(lifeRatio * Math.PI * 3) * 0.06;
-            p.alpha = baseAlpha + breath;
+            const breath = Math.sin(lifeRatio * Math.PI * 3) * 0.04;
+            p.alpha = (0.12 + intensity * 0.18) + breath;
           }
         }
 

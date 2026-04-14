@@ -790,9 +790,6 @@ const en: Record<string, string> = {
     "design.previewButton": "Primary",
     "design.previewSecondary": "Secondary",
     "design.liveHint": "💡 All changes are instantly visible across the entire app.",
-    "design.sparkleMode": "Mode",
-    "design.modeSparkle": "Sparkle",
-    "design.modeSoft": "Soft",
 };
 
 export default en;
