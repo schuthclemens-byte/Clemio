@@ -526,28 +526,6 @@ const SettingsPage = () => {
         </CollapsibleSection>
         </>}
 
-        {show("language") && <>
-        {/* ──────────── SPRACHE ──────────── */}
-        <CollapsibleSection icon={Globe} title={t("settings.language")} defaultOpen={isSearching} delay="70ms">
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            {languages.map(([code, name]) => (
-              <button
-                key={code}
-                onClick={() => setLocale(code)}
-                className={cn(
-                  "w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors",
-                  "hover:bg-secondary/50 active:scale-[0.99]",
-                  "border-b border-border last:border-b-0",
-                  locale === code && "bg-primary/5"
-                )}
-              >
-                <span className="text-[0.938rem]">{name}</span>
-                {locale === code && <span className="w-2.5 h-2.5 rounded-full bg-primary" />}
-              </button>
-            ))}
-          </div>
-        </CollapsibleSection>
-        </>}
 
         {(show("session") || show("subscription") || show("install") || show("logout")) && <>
         {/* ──────────── KONTO & ABO ──────────── */}
