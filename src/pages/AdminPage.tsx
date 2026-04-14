@@ -1,15 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
+  Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X,
+} from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
+
+interface UserSubscription {
+  plan: string;
+  premium_until: string | null;
+  is_founding_user: boolean;
+}
 
 interface UserProfile {
   id: string;
@@ -18,6 +35,16 @@ interface UserProfile {
   created_at: string | null;
   avatar_url: string | null;
   is_blocked: boolean;
+  message_count: number;
+  subscription: UserSubscription | null;
+}
+
+interface Stats {
+  totalUsers: number;
+  activeUsers: number;
+  blockedUsers: number;
+  totalMessages: number;
+  premiumUsers: number;
 }
 
 const AdminPage = () => {
@@ -28,25 +55,44 @@ const AdminPage = () => {
   const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
-  const fetchUsers = async () => {
+  // Password reset dialog
+  const [pwDialog, setPwDialog] = useState<{ open: boolean; userId: string; name: string }>({ open: false, userId: "", name: "" });
+  const [newPassword, setNewPassword] = useState("");
+
+  // Subscription dialog
+  const [subDialog, setSubDialog] = useState<{ open: boolean; userId: string; name: string; current: UserSubscription | null }>({ open: false, userId: "", name: "", current: null });
+  const [subPlan, setSubPlan] = useState("premium");
+  const [subDate, setSubDate] = useState("");
+
+  const fetchData = async () => {
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke("admin-manage-user", {
-      body: { action: "list", targetUserId: "dummy" },
-    });
-    if (error) {
-      toast.error(tr("Fehler beim Laden", "Error loading users"));
-    } else {
-      setProfiles(data?.profiles || []);
-    }
+    const [listRes, statsRes] = await Promise.all([
+      supabase.functions.invoke("admin-manage-user", { body: { action: "list", targetUserId: "dummy" } }),
+      supabase.functions.invoke("admin-manage-user", { body: { action: "stats" } }),
+    ]);
+    if (!listRes.error) setProfiles(listRes.data?.profiles || []);
+    if (!statsRes.error) setStats(statsRes.data);
     setLoading(false);
   };
 
   useEffect(() => {
-    if (!adminLoading && isAdmin) fetchUsers();
+    if (!adminLoading && isAdmin) fetchData();
   }, [adminLoading, isAdmin]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return profiles;
+    const q = search.toLowerCase();
+    return profiles.filter(
+      (p) =>
+        (p.display_name || "").toLowerCase().includes(q) ||
+        p.phone_number.toLowerCase().includes(q)
+    );
+  }, [profiles, search]);
 
   if (adminLoading) {
     return (
@@ -61,18 +107,48 @@ const AdminPage = () => {
     return null;
   }
 
-  const performAction = async (action: string, targetUserId: string, label: string) => {
+  const performAction = async (action: string, targetUserId: string, label: string, extra?: Record<string, any>) => {
     setActionLoading(targetUserId);
     const { error } = await supabase.functions.invoke("admin-manage-user", {
-      body: { action, targetUserId },
+      body: { action, targetUserId, ...extra },
     });
     if (error) {
       toast.error(`${label} fehlgeschlagen`);
     } else {
       toast.success(`${label} erfolgreich`);
-      await fetchUsers();
+      await fetchData();
     }
     setActionLoading(null);
+  };
+
+  const handlePasswordReset = async () => {
+    if (newPassword.length < 8) {
+      toast.error(tr("Mindestens 8 Zeichen", "At least 8 characters"));
+      return;
+    }
+    await performAction("reset-password", pwDialog.userId, tr("Passwort zurücksetzen", "Password reset"), { newPassword });
+    setPwDialog({ open: false, userId: "", name: "" });
+    setNewPassword("");
+  };
+
+  const handleSetSubscription = async () => {
+    if (!subDate) {
+      toast.error(tr("Datum wählen", "Choose a date"));
+      return;
+    }
+    await performAction("set-subscription", subDialog.userId, tr("Abo aktualisiert", "Subscription updated"), {
+      plan: subPlan,
+      premiumUntil: new Date(subDate).toISOString(),
+    });
+    setSubDialog({ open: false, userId: "", name: "", current: null });
+  };
+
+  const getSubBadge = (sub: UserSubscription | null) => {
+    if (!sub) return <Badge variant="secondary" className="text-[0.6rem] px-1.5">Free</Badge>;
+    const isPremium = sub.premium_until && new Date(sub.premium_until) > new Date();
+    if (sub.is_founding_user) return <Badge className="text-[0.6rem] px-1.5 bg-amber-500/20 text-amber-600 border-amber-500/30">Founding</Badge>;
+    if (isPremium) return <Badge className="text-[0.6rem] px-1.5 bg-primary/20 text-primary border-primary/30">Premium</Badge>;
+    return <Badge variant="secondary" className="text-[0.6rem] px-1.5">Free</Badge>;
   };
 
   return (
@@ -91,13 +167,50 @@ const AdminPage = () => {
         </div>
       </div>
 
+      {/* Stats Dashboard */}
+      {stats && (
+        <div className="grid grid-cols-5 gap-2 px-4 py-3">
+          {[
+            { icon: Users, label: tr("Gesamt", "Total"), value: stats.totalUsers, color: "text-primary" },
+            { icon: Activity, label: tr("Aktiv 7T", "Active 7d"), value: stats.activeUsers, color: "text-green-500" },
+            { icon: ShieldAlert, label: tr("Blockiert", "Blocked"), value: stats.blockedUsers, color: "text-destructive" },
+            { icon: MessageSquare, label: tr("Nachr.", "Msgs"), value: stats.totalMessages, color: "text-blue-500" },
+            { icon: Crown, label: "Premium", value: stats.premiumUsers, color: "text-amber-500" },
+          ].map(({ icon: Icon, label, value, color }) => (
+            <div key={label} className="flex flex-col items-center p-2 rounded-xl bg-muted/50 gap-1">
+              <Icon className={`w-4 h-4 ${color}`} />
+              <span className="text-lg font-bold">{value}</span>
+              <span className="text-[0.6rem] text-muted-foreground">{label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="px-4 py-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder={tr("Name oder Nummer suchen…", "Search name or number…")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
       ) : (
         <div className="divide-y divide-border/50">
-          {profiles.map((p) => {
+          {filtered.map((p) => {
             const isMe = p.id === user?.id;
             const initials = (p.display_name || "?").substring(0, 2).toUpperCase();
             return (
@@ -108,71 +221,83 @@ const AdminPage = () => {
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-medium text-sm truncate">
                       {p.display_name || tr("Unbekannt", "Unknown")}
                     </span>
+                    {getSubBadge(p.subscription)}
                     {p.is_blocked && (
-                      <span className="text-[0.6rem] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold">
+                      <Badge variant="destructive" className="text-[0.6rem] px-1.5">
                         {tr("Blockiert", "Blocked")}
-                      </span>
+                      </Badge>
                     )}
                     {isMe && (
-                      <span className="text-[0.6rem] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-bold">
-                        Du
-                      </span>
+                      <Badge className="text-[0.6rem] px-1.5 bg-primary/20 text-primary border-primary/30">Du</Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{p.phone_number}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="truncate">{p.phone_number}</span>
+                    <span className="flex items-center gap-0.5">
+                      <MessageSquare className="w-3 h-3" /> {p.message_count}
+                    </span>
+                  </div>
                 </div>
 
                 {!isMe && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Subscription */}
+                    <Button
+                      size="sm" variant="ghost" className="h-7 w-7 p-0"
+                      title={tr("Abo verwalten", "Manage subscription")}
+                      onClick={() => {
+                        setSubDialog({ open: true, userId: p.id, name: p.display_name || p.phone_number, current: p.subscription });
+                        setSubPlan(p.subscription?.plan || "premium");
+                        setSubDate(p.subscription?.premium_until ? p.subscription.premium_until.split("T")[0] : "");
+                      }}
+                    >
+                      <Star className="w-3.5 h-3.5 text-amber-500" />
+                    </Button>
+
+                    {/* Password reset */}
+                    <Button
+                      size="sm" variant="ghost" className="h-7 w-7 p-0"
+                      title={tr("Passwort zurücksetzen", "Reset password")}
+                      onClick={() => { setPwDialog({ open: true, userId: p.id, name: p.display_name || p.phone_number }); setNewPassword(""); }}
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                    </Button>
+
+                    {/* Block/Unblock */}
                     {p.is_blocked ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs gap-1"
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
                         disabled={actionLoading === p.id}
                         onClick={() => performAction("unblock", p.id, tr("Entblockieren", "Unblock"))}
                       >
-                        <Unlock className="w-3.5 h-3.5" />
-                        {tr("Entblockieren", "Unblock")}
+                        <Unlock className="w-3.5 h-3.5 text-green-500" />
                       </Button>
                     ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs gap-1 text-orange-500 border-orange-500/30"
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
                         disabled={actionLoading === p.id}
                         onClick={() => performAction("block", p.id, tr("Blockieren", "Block"))}
                       >
-                        <Ban className="w-3.5 h-3.5" />
-                        {tr("Sperren", "Block")}
+                        <Ban className="w-3.5 h-3.5 text-orange-500" />
                       </Button>
                     )}
 
+                    {/* Delete */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 text-xs gap-1 text-destructive border-destructive/30"
-                          disabled={actionLoading === p.id}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          {tr("Löschen", "Delete")}
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" disabled={actionLoading === p.id}>
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            {tr("Account löschen?", "Delete account?")}
-                          </AlertDialogTitle>
+                          <AlertDialogTitle>{tr("Account löschen?", "Delete account?")}</AlertDialogTitle>
                           <AlertDialogDescription>
                             {tr(
-                              `Der Account von "${p.display_name || p.phone_number}" wird unwiderruflich gelöscht. Alle Nachrichten, Daten und Dateien werden entfernt.`,
-                              `The account of "${p.display_name || p.phone_number}" will be permanently deleted. All messages, data and files will be removed.`
+                              `"${p.display_name || p.phone_number}" wird unwiderruflich gelöscht.`,
+                              `"${p.display_name || p.phone_number}" will be permanently deleted.`
                             )}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
@@ -192,8 +317,79 @@ const AdminPage = () => {
               </div>
             );
           })}
+          {filtered.length === 0 && (
+            <p className="text-center text-muted-foreground text-sm py-8">
+              {tr("Keine Nutzer gefunden", "No users found")}
+            </p>
+          )}
         </div>
       )}
+
+      {/* Password Reset Dialog */}
+      <Dialog open={pwDialog.open} onOpenChange={(o) => setPwDialog((prev) => ({ ...prev, open: o }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tr("Passwort zurücksetzen", "Reset Password")}</DialogTitle>
+            <DialogDescription>{pwDialog.name}</DialogDescription>
+          </DialogHeader>
+          <Input
+            type="password"
+            placeholder={tr("Neues Passwort (mind. 8 Zeichen)", "New password (min 8 chars)")}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPwDialog({ open: false, userId: "", name: "" })}>
+              {tr("Abbrechen", "Cancel")}
+            </Button>
+            <Button onClick={handlePasswordReset} disabled={actionLoading === pwDialog.userId}>
+              {tr("Zurücksetzen", "Reset")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Subscription Dialog */}
+      <Dialog open={subDialog.open} onOpenChange={(o) => setSubDialog((prev) => ({ ...prev, open: o }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tr("Abo verwalten", "Manage Subscription")}</DialogTitle>
+            <DialogDescription>{subDialog.name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">{tr("Plan", "Plan")}</label>
+              <select
+                className="w-full mt-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
+                value={subPlan}
+                onChange={(e) => setSubPlan(e.target.value)}
+              >
+                <option value="free">Free</option>
+                <option value="trial">Trial</option>
+                <option value="premium">Premium</option>
+                <option value="founding">Founding</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Premium bis / until</label>
+              <Input
+                type="date"
+                value={subDate}
+                onChange={(e) => setSubDate(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSubDialog({ open: false, userId: "", name: "", current: null })}>
+              {tr("Abbrechen", "Cancel")}
+            </Button>
+            <Button onClick={handleSetSubscription} disabled={actionLoading === subDialog.userId}>
+              {tr("Speichern", "Save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <BottomTabBar />
     </div>
