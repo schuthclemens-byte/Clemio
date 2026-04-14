@@ -452,33 +452,13 @@ const ChatPage = () => {
       const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
       const profiles: Record<string, boolean> = {};
       await Promise.all(senderIds.map(async (sid) => {
-        const { data: contactVp } = await supabase
-          .from("contact_voice_profiles" as any)
-          .select("id, elevenlabs_voice_id")
-          .eq("user_id", user.id)
-          .eq("contact_user_id", sid)
-          .maybeSingle();
-        if (contactVp) {
-          profiles[sid] = true;
-          setContactVoiceProfileId((contactVp as any).id);
-          setContactElevenLabsId((contactVp as any).elevenlabs_voice_id);
-          return;
-        }
+        // Simply check if the sender has a voice profile — no consent needed
         const { data: vp } = await supabase
           .from("voice_profiles" as any)
           .select("id")
           .eq("user_id", sid)
           .maybeSingle();
-        if (vp) {
-          const { data: consent } = await supabase
-            .from("voice_consents" as any)
-            .select("status")
-            .eq("voice_owner_id", sid)
-            .eq("granted_to_user_id", user.id)
-            .eq("status", "granted")
-            .maybeSingle();
-          profiles[sid] = !!consent;
-        }
+        profiles[sid] = !!vp;
       }));
 
       setVoiceProfiles(profiles);
@@ -712,43 +692,6 @@ const ChatPage = () => {
 
 
 
-  // Delete contact voice profile
-  const handleDeleteContactVoice = async () => {
-    if (!user || !contactVoiceProfileId || !contactElevenLabsId || !otherUserId) return;
-    try {
-      toast.info("Stimmprobe wird gelöscht…");
-      const session = (await supabase.auth.getSession()).data.session;
-      if (!session) return;
-
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            elevenlabs_voice_id: contactElevenLabsId,
-            type: "contact",
-            contact_voice_id: contactVoiceProfileId,
-          }),
-        }
-      );
-
-      if (!res.ok) throw new Error("Delete failed");
-
-      setVoiceProfiles((prev) => ({ ...prev, [otherUserId]: false }));
-      setOtherHasVoice(false);
-      setContactVoiceProfileId(null);
-      setContactElevenLabsId(null);
-      toast.success("Stimmprobe gelöscht. Du kannst jetzt eine neue speichern.");
-    } catch (err) {
-      console.error("Delete contact voice error:", err);
-      toast.error("Stimmprobe konnte nicht gelöscht werden");
-    }
-  };
 
   const handleSaveContactName = async (firstName: string, lastName: string) => {
     if (!user || !otherUserId) return;
