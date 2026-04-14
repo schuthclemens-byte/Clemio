@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, Moon, Sun, Monitor, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, Palette, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Globe, Eye, Type, Contrast, Volume2, User, Headphones, Shield, BellOff, AlignLeft, Download, VolumeX, FileText, Lock, ChevronDown, SpellCheck, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw, Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info, Search, X, Sparkles } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
-import { useTheme } from "@/contexts/ThemeContext";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,7 +115,7 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
-  const { theme, setTheme } = useTheme();
+  
   const { user } = useAuth();
   const { signOut } = useAuth();
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
@@ -202,11 +201,6 @@ const SettingsPage = () => {
 
 
 
-  const themeOptions = [
-    { value: "system" as const, icon: Monitor, label: t("settings.themeSystem") },
-    { value: "light" as const, icon: Sun, label: t("settings.themeLight") },
-    { value: "dark" as const, icon: Moon, label: t("settings.themeDark") },
-  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-background" {...useSwipeBack({ fallbackPath: "/chats" })}>
