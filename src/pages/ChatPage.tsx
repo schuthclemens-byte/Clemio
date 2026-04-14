@@ -1291,8 +1291,8 @@ const ChatPage = () => {
         open={!!reportTarget}
         onOpenChange={(o) => { if (!o) setReportTarget(null); }}
         reportedUserId={reportTarget?.senderId || ""}
-        reportType={reportTarget?.messageType === "audio" || reportTarget?.messageType === "voice" ? "voice" : "message"}
-        messageId={reportTarget?.msgId}
+        reportType={reportTarget?.messageType === "__user__" ? "user" : reportTarget?.messageType === "audio" || reportTarget?.messageType === "voice" ? "voice" : "message"}
+        messageId={reportTarget?.messageType === "__user__" ? undefined : (reportTarget?.msgId || undefined)}
         userName={reportTarget ? (memberNames[reportTarget.senderId] || chatName) : undefined}
       />
     </div>
