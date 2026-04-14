@@ -195,6 +195,11 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
                       <MicOff className="w-3 h-3" /> {tr("Voice löschen", "Delete voice")}
                     </Button>
                   )}
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-muted-foreground"
+                    onClick={() => deleteReport(r.id)}
+                  >
+                    <Trash2 className="w-3 h-3" /> {tr("Löschen", "Delete")}
+                  </Button>
                 </div>
               </div>
             );
