@@ -1,37 +1,54 @@
 
 
-## Plan: Gruppenchat verbessern
+# Serverseitiges Audio-Caching für TTS
 
-### Übersicht
-Gruppenname und Gruppen-Avatar direkt im Mitglieder-Sheet bearbeiten. Admin-Rechte (Ersteller) werden visuell gekennzeichnet. Mitglieder entfernen funktioniert bereits – wird beibehalten.
+## Was wird gemacht?
+Generierte Sprachnachrichten werden serverseitig gespeichert, damit dieselbe Nachricht **nie doppelt** bei ElevenLabs generiert wird. Das spart ElevenLabs-Zeichen und die Stimme klingt **immer wie deine echte geklonte Stimme** – auch beim 100. Abspielen.
 
-### Änderungen
+## Wie funktioniert es?
 
-**1. Migration: `avatar_url` Spalte zur `conversations`-Tabelle**
-```sql
-ALTER TABLE public.conversations ADD COLUMN avatar_url text;
+```text
+Nutzer klickt "Anhören"
+        │
+        ▼
+  Edge Function prüft:
+  Gibt es schon eine cached MP3?
+        │
+   ┌────┴────┐
+   Ja        Nein
+   │         │
+   │         ▼
+   │    ElevenLabs generiert Audio
+   │    (verbraucht Zeichen)
+   │         │
+   │         ▼
+   │    Speichert MP3 in Storage
+   │         │
+   └────┬────┘
+        ▼
+  Sendet MP3 an App
+  (klingt IMMER wie deine echte Stimme)
 ```
-Keine neuen RLS-Policies nötig – die bestehende UPDATE-Policy für Members erlaubt bereits Änderungen.
 
-**2. `src/components/chat/GroupMembersSheet.tsx` – Erweitern**
-- Oben im Sheet: Gruppenavatar (klickbar zum Hochladen) + Gruppenname (editierbar, nur für Creator)
-- Avatar-Upload in den bestehenden `avatars`-Storage-Bucket
-- Gruppenname inline editierbar mit Stift-Icon
-- `onNameChanged` Callback hinzufügen, damit ChatPage den Namen aktualisiert
+## Technische Schritte
 
-**3. `src/pages/ChatPage.tsx` – Anpassungen**
-- `GroupMembersSheet` bekommt neue Props: `groupName`, `groupAvatarUrl`, `onNameChanged`, `onAvatarChanged`
-- Chat-Header zeigt Gruppen-Avatar neben dem Namen an
-- Nach Änderung wird `chatName` / Avatar-State aktualisiert
+### 1. Storage-Bucket erstellen
+- Neuer privater Bucket `tts-cache` für die gecachten Audio-Dateien
+- RLS: Nur Service-Role darf lesen/schreiben (Edge Function nutzt Admin-Client)
 
-**4. `src/pages/ChatListPage.tsx` – Gruppen-Avatar in Liste**
-- Wenn `conversation.avatar_url` vorhanden, in der Chat-Liste anzeigen statt Fallback-Initiale
+### 2. Edge Function `voice-tts-stream` erweitern
+- **Cache-Key** berechnen: Hash aus `voiceId + text` → z.B. `a3f8b2c1.mp3`
+- **Vor** dem ElevenLabs-Aufruf: Prüfen ob Datei in `tts-cache` existiert
+  - **Ja** → Signierte URL erstellen und Audio direkt aus Storage zurückgeben
+  - **Nein** → ElevenLabs aufrufen, Audio generieren, in Storage speichern, dann zurückgeben
+- Streaming bleibt erhalten: Audio wird parallel gestreamt und gespeichert
 
-### Dateien
-| Datei | Änderung |
-|---|---|
-| Migration (SQL) | `avatar_url` zu `conversations` |
-| `GroupMembersSheet.tsx` | Avatar-Upload, Name-Edit UI, neue Props |
-| `ChatPage.tsx` | Props weiterreichen, Header-Avatar, State-Updates |
-| `ChatListPage.tsx` | Gruppen-Avatar in Liste anzeigen |
+### 3. Frontend (keine Änderungen nötig)
+- Der Client-Code (`useVoiceTTS.ts`) bleibt unverändert – er ruft dieselbe Edge Function auf
+- Der bestehende In-Memory-Cache im Browser funktioniert weiterhin als zusätzliche Ebene
+
+## Ergebnis
+- **Erste Wiedergabe**: ElevenLabs generiert → klingt wie deine Stimme → wird gespeichert
+- **Jede weitere Wiedergabe**: Direkt aus Storage → klingt identisch → **0 Zeichen verbraucht**
+- Deine 40.000 Zeichen/Monat reichen damit für deutlich mehr verschiedene Nachrichten
 
