@@ -28,6 +28,12 @@ interface UserSubscription {
   is_founding_user: boolean;
 }
 
+interface VoiceProfile {
+  voice_name: string | null;
+  created_at: string | null;
+  elevenlabs_voice_id: string;
+}
+
 interface UserProfile {
   id: string;
   display_name: string | null;
@@ -37,6 +43,7 @@ interface UserProfile {
   is_blocked: boolean;
   message_count: number;
   subscription: UserSubscription | null;
+  voice_profile: VoiceProfile | null;
 }
 
 interface Stats {
