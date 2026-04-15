@@ -1,25 +1,32 @@
 
+# Onboarding-TTS Audio in Storage cachen
 
-# Admin-Zugang in den Einstellungen statt Navigation
+## Problem
+Jeder Seitenaufruf verbraucht ElevenLabs-Credits für dieselben 6 festen Texte. Mit 40.000 Credits ist genug vorhanden — aber es soll trotzdem nur einmal pro Sprache generiert werden.
 
-## Was du willst
-Der Admin-Link soll **in den Einstellungen** bleiben — nicht in der unteren Navigation. Von den Einstellungen aus navigierst du dann zum Admin-Bereich.
+## Änderung
 
-## Änderungen
+### `supabase/functions/onboarding-tts/index.ts`
+- Supabase Admin-Client erstellen (Service Role Key)
+- Vor ElevenLabs-Aufruf: `tts-cache/onboarding/{lang}_{hash}.mp3` aus Storage prüfen
+- **Cache Hit** → Audio direkt aus Storage zurückgeben (0 Credits)
+- **Cache Miss** → ElevenLabs aufrufen → Audio in `tts-cache` speichern → zurückgeben
+- `Cache-Control: public, max-age=86400` Header setzen
+- Hash basiert auf dem Text, damit bei Textänderungen automatisch neu generiert wird
 
-### 1. BottomTabBar.tsx — Admin-Tab wieder entfernen
-- Den bedingten Admin-Tab aus der `tabs`-Liste entfernen
-- Navigation bleibt bei den 4 Standard-Tabs (Chats, Anrufe, Profil, Einstellungen)
+### Kein Client-Änderung nötig
+- `HeroSection.tsx` ruft weiterhin denselben Endpoint auf
+- Antwort bleibt `audio/mpeg`
 
-### 2. SettingsPage.tsx — Admin-Link wiederherstellen
-- `useAdminRole` importieren
-- Wenn `isAdmin === true`, eine "Administration"-Sektion mit Shield-Icon und Link zu `/admin` anzeigen
-- Platzierung: oben in den Einstellungen
-
-### 3. AppSidebar.tsx — Admin-Link entfernen (falls hinzugefügt)
-- Sidebar bleibt bei den 4 Standard-Einträgen
+## Ablauf
+```text
+Anfrage: onboarding-tts?lang=es
+  → Hash berechnen
+  → Storage: tts-cache/onboarding/es_{hash}.mp3?
+    JA  → direkt zurückgeben (0 Credits)
+    NEIN → ElevenLabs API → in Storage speichern → zurückgeben
+```
 
 ## Ergebnis
-- Navigation: 4 Tabs wie vorher
-- Einstellungen → "Administration" → `/admin`
-
+- 6 Sprachen × 1 Aufruf = max ~780 Credits einmalig
+- Alle weiteren Aufrufe: 0 Credits
