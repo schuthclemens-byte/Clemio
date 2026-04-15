@@ -1,9 +1,10 @@
-import { MessageCircle, Phone, User, Settings } from "lucide-react";
+import { MessageCircle, Phone, User, Settings, Shield } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useMissedCallsCount } from "@/hooks/useMissedCallsCount";
 import { useUnreadChatsCount } from "@/hooks/useUnreadChatsCount";
 import { useI18n } from "@/contexts/I18nContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 const BottomTabBar = () => {
   const location = useLocation();
@@ -11,6 +12,7 @@ const BottomTabBar = () => {
   const missedCalls = useMissedCallsCount();
   const unreadChats = useUnreadChatsCount();
   const { locale, t } = useI18n();
+  const { isAdmin } = useAdminRole();
   const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   const tabs = [
@@ -18,6 +20,7 @@ const BottomTabBar = () => {
     { label: tr("Anrufe", "Calls"), path: "/call-history", icon: Phone },
     { label: tr("Profil", "Profile"), path: "/profile", icon: User },
     { label: t("settings.title"), path: "/settings", icon: Settings },
+    ...(isAdmin ? [{ label: "Admin", path: "/admin", icon: Shield }] : []),
   ];
 
   const getBadge = (path: string) => {
