@@ -242,6 +242,13 @@ const SettingsPage = () => {
 
       <div className="flex-1 p-4 space-y-2 pb-28">
 
+        {/* ━━━ ADMIN ━━━ */}
+        {isAdmin && (
+          <section>
+            <LinkRow icon={Shield} label="Administration" to="/admin" />
+          </section>
+        )}
+
         {/* ━━━ KOMMUNIKATION ━━━ */}
         <section>
           <AccordionHeader icon={MessageSquareText} label={tr("Kommunikation", "Communication")} isOpen={openSection === "communication"} onToggle={() => toggleSection("communication")} />
