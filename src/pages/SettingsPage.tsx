@@ -17,6 +17,7 @@ import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { usePushCapability } from "@/hooks/usePushCapability";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 /** Reusable toggle row */
 const ToggleRow = ({
