@@ -220,7 +220,7 @@ const ProfilePage = () => {
       setVoicePlaying(false);
       return;
     }
-    const { data } = await supabase.storage.from("stimmen").createSignedUrl(`${user.id}/${user.id}.wav`, 60);
+    const { data } = await supabase.storage.from("Stimmen").createSignedUrl(`${user.id}/${user.id}.wav`, 60);
     if (!data?.signedUrl) return;
     const audio = new Audio(data.signedUrl);
     voiceAudioRef.current = audio;
