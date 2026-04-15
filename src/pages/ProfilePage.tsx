@@ -172,7 +172,7 @@ const ProfilePage = () => {
     try {
       const path = `${user.id}/${user.id}.wav`;
       const { error: uploadErr } = await supabase.storage
-        .from("stimmen")
+        .from("Stimmen")
         .upload(path, file, { upsert: true, contentType: "audio/wav" });
       if (uploadErr) {
         console.error("Voice upload error:", uploadErr);
