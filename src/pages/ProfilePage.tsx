@@ -151,11 +151,6 @@ const ProfilePage = () => {
     }
 
     console.log("UPLOAD OK:", data);
-    if (uploadErr) {
-      toast.error(t("profile.uploadFailed"));
-      setUploading(false);
-      return;
-    }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
     const newUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     await supabase.from("profiles").update({ avatar_url: newUrl }).eq("id", user.id);
@@ -186,12 +181,6 @@ const ProfilePage = () => {
       const { error: uploadErr } = await supabase.storage
         .from("Stimmen")
         .upload(path, file, { upsert: true, contentType: "audio/wav" });
-      if (uploadErr) {
-        console.error("Voice upload error:", uploadErr);
-        toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
-        setVoiceUploading(false);
-        return;
-      }
       const { error: dbErr } = await supabase
         .from("profiles")
         .update({ voice_path: path } as any)
