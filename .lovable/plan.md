@@ -1,55 +1,28 @@
 
-Zustand jetzt:
-- Das Problem ist sehr wahrscheinlich nicht dein hochgeladenes Stimmprofil, sondern der TTS-Aufruf selbst.
-- Die Backend-Logs zeigen für `voice-tts-stream` und `onboarding-tts` mehrfach: `quota_exceeded` und `You have 0 credits remaining`.
-- Genau für diesen Fehler hat `src/hooks/useVoiceTTS.ts` aktuell einen Fallback auf `window.speechSynthesis` eingebaut. Deshalb hörst du bei `test` die schlechte Computerstimme statt der geklonten Stimme von `clemens`.
 
-Warum das passiert:
-- In `useVoiceTTS.ts` wird bei jedem Fehler in der TTS-Generierung automatisch Browser-TTS gestartet.
-- Der Chat versucht also korrekt die geklonte Stimme zu laden, bekommt aber vom TTS-Dienst einen Quota-Fehler und springt dann auf Robotersprache um.
-- Zusätzlich verbraucht die Landingpage im Hintergrund ebenfalls TTS über `onboarding-tts`, was das Kontingent zusätzlich belasten kann.
-- In `ChatPage.tsx` wird außerdem die Voice-Verfügbarkeit direkt über `voice_profiles` geprüft statt über die vorhandene RPC für zugängliche Voice-States. Das ist nicht die Hauptursache für die Roboterstimme, sollte aber bereinigt werden.
+# Admin-Zugang auf dem Handy sichtbar machen
 
-Umsetzungsplan:
-1. `useVoiceTTS.ts` anpassen:
-   - Quota-/Provider-Fehler sauber erkennen
-   - bei `quota_exceeded` nicht mehr automatisch Browser-TTS starten
-   - stattdessen klare Meldung anzeigen wie „Deine geklonte Stimme ist gerade nicht verfügbar“
-   - Browser-TTS nur noch als bewusste, getrennte Fallback-Option verwenden
+## Problem
+Es gibt **keinen Link** zum Admin-Bereich in der App-Navigation. Die Admin-Seite existiert nur unter der direkten URL `/admin`. Auf dem Handy gibt es keine Möglichkeit, dorthin zu navigieren, ohne die URL manuell einzugeben.
 
-2. `voice-tts-stream` verbessern:
-   - ElevenLabs-Fehler strukturierter an den Client zurückgeben, z. B. `code: quota_exceeded`
-   - optional zwischen `quota_exceeded`, `unauthorized`, `forbidden`, `tts_failed` unterscheiden
-   - damit der Client gezielt reagieren kann statt immer still auf Roboterstimme zu wechseln
+Zusätzlich: Der `useAdminRole`-Hook nutzt `as any` beim Query auf `user_roles`, was bei RLS-Problemen still fehlschlägt und `isAdmin = false` zurückgibt.
 
-3. `ChatPage.tsx` bereinigen:
-   - Voice-Status nicht mehr per direkter `voice_profiles`-Abfrage laden
-   - stattdessen die vorhandene `get_accessible_voice_profile_states`-RPC bzw. `fetchAccessibleVoiceProfileStates` verwenden
-   - so ist die Anzeige konsistent zwischen Accounts und Zugriffsregeln
+## Änderungen
 
-4. Landingpage-Kosten reduzieren:
-   - `onboarding-tts`/`HeroSection.tsx` so ändern, dass nicht unnötig bei jedem Laden neuer TTS-Verbrauch entsteht
-   - bevorzugt vorhandene statische Demo-Audio oder aggressiver Cache
-   - verhindert, dass Demo-Audio das Stimmen-Kontingent mit verbraucht
+### 1. Admin-Link in SettingsPage einbauen
+- `useAdminRole` importieren
+- Wenn `isAdmin === true`, einen Link-Row mit Shield-Icon zu `/admin` anzeigen
+- Platzierung: ganz oben oder in einer eigenen Sektion "Administration"
 
-5. UX im Chat verbessern:
-   - falls keine echte geklonte Stimme verfügbar ist, Button-Zustand oder Hinweistext anpassen
-   - optional zwei getrennte Aktionen:
-     - „In echter Stimme anhören“
-     - „Mit Computerstimme anhören“
-   - dann ist für Nutzer klar, was gerade abgespielt wird
+### 2. useAdminRole robuster machen
+- Fehlerbehandlung für den Fall, dass die Tabelle `user_roles` nicht existiert oder RLS den Zugriff blockiert
+- Console-Log bei Fehlern, damit Probleme sichtbar werden
 
-Erwartetes Ergebnis:
-- Wenn TTS-Kontingent leer ist, hörst du nicht mehr irreführend die Roboterstimme als stillen Ersatz.
-- Stattdessen siehst du einen klaren Hinweis, warum die echte Stimme nicht abgespielt werden kann.
-- Sobald wieder Kontingent verfügbar ist oder bereits gecachte Audio-Dateien existieren, wird wieder die echte geklonte Stimme abgespielt.
+### 3. Optional: Admin-Link im BottomTabBar (nur für Admins)
+- Nur anzeigen wenn `isAdmin === true`
+- Shield-Icon als 5. Tab oder als Badge auf Settings
 
-Technische Kernursache:
-```text
-Chat klickt auf "Anhören"
--> voice-tts-stream wird aufgerufen
--> Provider antwortet mit quota_exceeded
--> useVoiceTTS catch() greift
--> Browser speechSynthesis startet
--> Ergebnis: schlechte Computerstimme
-```
+## Ergebnis
+- Als Admin siehst du auf dem Handy in den Einstellungen einen Link zum Admin-Bereich
+- Kein manuelles URL-Eintippen mehr nötig
+
