@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Crown, Trash2, Mic, ChevronRight, CheckCircle, LogOut } from "lucide-react";
+import { ArrowLeft, Camera, Crown, Trash2, Mic, ChevronRight, CheckCircle, LogOut, Upload, Play, Pause } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,11 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [hasVoice, setHasVoice] = useState(false);
+  const [voicePath, setVoicePath] = useState<string | null>(null);
+  const [voiceUploading, setVoiceUploading] = useState(false);
+  const [voicePlaying, setVoicePlaying] = useState(false);
+  const voiceInputRef = useRef<HTMLInputElement>(null);
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
@@ -42,7 +47,7 @@ const ProfilePage = () => {
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, phone_number, avatar_url, language, first_name, last_name")
+        .select("display_name, phone_number, avatar_url, language, first_name, last_name, voice_path")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
@@ -57,6 +62,7 @@ const ProfilePage = () => {
         setLastName(derivedName.lastName);
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
+        setVoicePath((data as any).voice_path || null);
       }
       const { data: voiceData } = await supabase
         .from("voice_profiles")
