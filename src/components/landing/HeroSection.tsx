@@ -28,7 +28,9 @@ function prefetchTTS(lang: string): Promise<HTMLAudioElement | null> {
   if (ttsCache.has(lang)) return Promise.resolve(ttsCache.get(lang)!);
   if (ttsPending.has(lang)) return ttsPending.get(lang)!;
 
-  const promise = fetch(`${SUPABASE_URL}/functions/v1/onboarding-tts?lang=${lang}&v=${Date.now()}`)
+  // Use a stable cache-buster (daily) instead of Date.now() to allow HTTP caching
+  const dayKey = new Date().toISOString().slice(0, 10);
+  const promise = fetch(`${SUPABASE_URL}/functions/v1/onboarding-tts?lang=${lang}&v=${dayKey}`)
     .then(async (res) => {
       const ct = res.headers.get("Content-Type") || "";
       if (ct.includes("application/json") || !res.ok) return null;
@@ -46,9 +48,11 @@ function prefetchTTS(lang: string): Promise<HTMLAudioElement | null> {
   return promise;
 }
 
-// Start fetching immediately on module load
+// Only prefetch on first visit per session to avoid burning credits on every page load
+const _ttsSessionKey = "clemio_landing_tts_prefetched";
 const initialLang = detectLang();
-if (initialLang !== "de") {
+if (initialLang !== "de" && !sessionStorage.getItem(_ttsSessionKey)) {
+  sessionStorage.setItem(_ttsSessionKey, "1");
   prefetchTTS(initialLang);
 }
 
