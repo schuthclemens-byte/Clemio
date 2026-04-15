@@ -543,6 +543,7 @@ export type Database = {
           push_preview_enabled: boolean
           updated_at: string | null
           voice_enabled: boolean | null
+          voice_path: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -556,6 +557,7 @@ export type Database = {
           push_preview_enabled?: boolean
           updated_at?: string | null
           voice_enabled?: boolean | null
+          voice_path?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -569,6 +571,7 @@ export type Database = {
           push_preview_enabled?: boolean
           updated_at?: string | null
           voice_enabled?: boolean | null
+          voice_path?: string | null
         }
         Relationships: []
       }
@@ -845,6 +848,7 @@ export type Database = {
           push_preview_enabled: boolean
           updated_at: string | null
           voice_enabled: boolean | null
+          voice_path: string | null
         }
         SetofOptions: {
           from: "*"
