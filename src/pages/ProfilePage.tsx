@@ -118,6 +118,53 @@ const ProfilePage = () => {
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
 
+  const handleVoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.name.toLowerCase().endsWith(".wav")) {
+      toast.error(t("profile.voiceWavOnly"));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t("profile.voiceFileTooLarge"));
+      return;
+    }
+    setVoiceUploading(true);
+    const path = `${user.id}/${user.id}.wav`;
+    const { error: uploadErr } = await supabase.storage.from("stimmen").upload(path, file, { upsert: true, contentType: "audio/wav" });
+    if (uploadErr) { toast.error(t("profile.voiceUploadFailed")); setVoiceUploading(false); return; }
+    const { error: dbErr } = await supabase.from("profiles").update({ voice_path: `${user.id}.wav` } as any).eq("id", user.id);
+    if (dbErr) { toast.error(t("profile.voiceUploadFailed")); setVoiceUploading(false); return; }
+    setVoicePath(`${user.id}.wav`);
+    setVoiceUploading(false);
+    toast.success(t("profile.voiceSaved"));
+  };
+
+  const handleDeleteVoiceFile = async () => {
+    if (!user || !voicePath) return;
+    const path = `${user.id}/${user.id}.wav`;
+    await supabase.storage.from("stimmen").remove([path]);
+    await supabase.from("profiles").update({ voice_path: null } as any).eq("id", user.id);
+    setVoicePath(null);
+    toast.success(t("profile.voiceFileDeleted"));
+  };
+
+  const handlePlayVoice = async () => {
+    if (!user || !voicePath) return;
+    if (voicePlaying && voiceAudioRef.current) {
+      voiceAudioRef.current.pause();
+      setVoicePlaying(false);
+      return;
+    }
+    const { data } = await supabase.storage.from("stimmen").createSignedUrl(`${user.id}/${user.id}.wav`, 60);
+    if (!data?.signedUrl) return;
+    const audio = new Audio(data.signedUrl);
+    voiceAudioRef.current = audio;
+    audio.onended = () => setVoicePlaying(false);
+    audio.play();
+    setVoicePlaying(true);
+  };
+
   const initials = [firstName, lastName].filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
 
   if (!loaded) {
