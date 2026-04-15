@@ -151,6 +151,7 @@ const SettingsPage = () => {
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const pushCap = usePushCapability();
   const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
+  const { isAdmin } = useAdminRole();
 
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
