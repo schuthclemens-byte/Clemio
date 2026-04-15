@@ -138,7 +138,19 @@ const ProfilePage = () => {
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${user.id}/avatar.${ext}`;
-    const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    const { data, error } = await supabase.storage.from("Stimmen").upload(path, file, {
+      upsert: true,
+      contentType: "audio/wav",
+    });
+
+    if (error) {
+      console.error("UPLOAD ERROR:", error);
+      toast.error(error.message);
+      setVoiceUploading(false);
+      return;
+    }
+
+    console.log("UPLOAD OK:", data);
     if (uploadErr) {
       toast.error(t("profile.uploadFailed"));
       setUploading(false);
