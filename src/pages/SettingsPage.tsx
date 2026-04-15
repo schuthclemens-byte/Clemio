@@ -242,6 +242,15 @@ const SettingsPage = () => {
 
       <div className="flex-1 p-4 space-y-2 pb-28">
 
+        {/* ━━━ ADMIN ━━━ */}
+        {isAdmin && (
+          <section>
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <LinkRow icon={Shield} label={tr("Administration", "Administration")} description={tr("Nutzer & Berichte verwalten", "Manage users & reports")} onClick={() => navigate("/admin")} borderBottom={false} />
+            </div>
+          </section>
+        )}
+
         {/* ━━━ KOMMUNIKATION ━━━ */}
         <section>
           <AccordionHeader icon={MessageSquareText} label={tr("Kommunikation", "Communication")} isOpen={openSection === "communication"} onToggle={() => toggleSection("communication")} />
