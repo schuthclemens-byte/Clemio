@@ -31,7 +31,7 @@ import GroupMembersSheet from "@/components/chat/GroupMembersSheet";
 import MediaGallerySheet from "@/components/chat/MediaGallerySheet";
 import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
-import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
+import { fetchAccessibleProfile, fetchAccessibleProfiles, fetchAccessibleVoiceProfileStates } from "@/lib/accessibleProfiles";
 import ClemioKISheet from "@/components/chat/ClemioKISheet";
 import ReportDialog from "@/components/chat/ReportDialog";
 
@@ -471,20 +471,12 @@ const ChatPage = () => {
       markConversationRead().then(() => {});
       scrollToBottom("auto");
 
-      // Check voice profiles in background
+      // Check voice profiles via RPC for consistent access control
       const senderIds = [...new Set(msgs?.map(m => m.sender_id) || [])];
-      // Also include current user so own messages can use cloned voice
       if (!senderIds.includes(user.id)) senderIds.push(user.id);
+      const voiceStates = await fetchAccessibleVoiceProfileStates(senderIds);
       const profiles: Record<string, boolean> = {};
-      await Promise.all(senderIds.map(async (sid) => {
-        // Simply check if the sender has a voice profile — no consent needed
-        const { data: vp } = await supabase
-          .from("voice_profiles" as any)
-          .select("id")
-          .eq("user_id", sid)
-          .maybeSingle();
-        profiles[sid] = !!vp;
-      }));
+      voiceStates.forEach((vs) => { profiles[vs.user_id] = vs.has_voice; });
 
       setVoiceProfiles(profiles);
 

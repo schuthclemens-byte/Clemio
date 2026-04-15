@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getCachedAudio, setCachedAudio } from "@/lib/ttsCache";
+import { toast } from "sonner";
 
 /**
  * Check if MediaSource supports MP3 streaming (not available in Safari).
@@ -15,6 +16,24 @@ const canStreamMp3 = (() => {
     return false;
   }
 })();
+
+/** Known provider error codes that should NOT trigger browser TTS fallback */
+const PROVIDER_ERROR_CODES = new Set([
+  "quota_exceeded",
+  "unauthorized",
+  "forbidden",
+  "config_error",
+]);
+
+/** Parse structured error from TTS response */
+async function parseTtsError(response: Response): Promise<{ error: string; code: string }> {
+  try {
+    const body = await response.json();
+    return { error: body.error || "TTS fehlgeschlagen", code: body.code || "unknown" };
+  } catch {
+    return { error: "TTS fehlgeschlagen", code: "unknown" };
+  }
+}
 
 export const useVoiceTTS = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -114,14 +133,24 @@ export const useVoiceTTS = () => {
     );
 
     if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || "TTS fehlgeschlagen");
+      const parsed = await parseTtsError(response);
+      const err = new Error(parsed.error);
+      (err as any).code = parsed.code;
+      throw err;
     }
 
     return response.blob();
   }, []);
 
-  /** Play using MediaSource streaming – audio starts as soon as first chunks arrive */
+  /** Handle non-OK TTS response – throws with structured code */
+  const handleTtsError = useCallback(async (response: Response) => {
+    const parsed = await parseTtsError(response);
+    const err = new Error(parsed.error);
+    (err as any).code = parsed.code;
+    throw err;
+  }, []);
+
+  /** Play using MediaSource streaming */
   const playStreaming = useCallback(async (
     text: string,
     senderId: string,
@@ -130,11 +159,7 @@ export const useVoiceTTS = () => {
     onEnd: () => void
   ) => {
     const response = await buildTtsRequest(text, senderId, msgId, signal);
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || "TTS fehlgeschlagen");
-    }
+    if (!response.ok) await handleTtsError(response);
 
     const mediaSource = new MediaSource();
     const audio = new Audio();
@@ -152,23 +177,17 @@ export const useVoiceTTS = () => {
           const pump = async () => {
             while (true) {
               const { done, value } = await reader.read();
-              if (signal.aborted) {
-                reader.cancel();
-                return;
-              }
+              if (signal.aborted) { reader.cancel(); return; }
 
               if (done) {
                 if (sourceBuffer.updating) {
                   await new Promise<void>(r => sourceBuffer.addEventListener("updateend", () => r(), { once: true }));
                 }
-                if (mediaSource.readyState === "open") {
-                  mediaSource.endOfStream();
-                }
+                if (mediaSource.readyState === "open") mediaSource.endOfStream();
                 break;
               }
 
               chunks.push(value);
-
               if (sourceBuffer.updating) {
                 await new Promise<void>(r => sourceBuffer.addEventListener("updateend", () => r(), { once: true }));
               }
@@ -184,10 +203,8 @@ export const useVoiceTTS = () => {
           };
 
           await pump();
-
           const fullBlob = new Blob(chunks as BlobPart[], { type: "audio/mpeg" });
           setCachedAudio(senderId, text, fullBlob);
-
           resolve();
         } catch (e) {
           reject(e);
@@ -197,7 +214,7 @@ export const useVoiceTTS = () => {
 
     audio.onended = onEnd;
     audio.onerror = onEnd;
-  }, [buildTtsRequest]);
+  }, [buildTtsRequest, handleTtsError]);
 
   /** Play with blob fallback (Safari or when MediaSource unavailable) */
   const playBlobFallback = useCallback(async (
@@ -208,11 +225,7 @@ export const useVoiceTTS = () => {
     onEnd: () => void
   ) => {
     const response = await buildTtsRequest(text, senderId, msgId, signal);
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || "TTS fehlgeschlagen");
-    }
+    if (!response.ok) await handleTtsError(response);
 
     const audioBlob = await response.blob();
     const audioUrl = setCachedAudio(senderId, text, audioBlob);
@@ -225,7 +238,7 @@ export const useVoiceTTS = () => {
     setIsLoading(false);
     setIsPlaying(true);
     await audio.play();
-  }, [buildTtsRequest]);
+  }, [buildTtsRequest, handleTtsError]);
 
   const playClonedVoice = useCallback(async (text: string, senderId: string, msgId: string, lang?: string, audioUrl?: string) => {
     // Toggle off
@@ -241,14 +254,6 @@ export const useVoiceTTS = () => {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // Pre-create utterance synchronously within gesture context for mobile compatibility
-    const langMap: Record<string, string> = {
-      de: "de-DE", en: "en-US", fr: "fr-FR", es: "es-ES", tr: "tr-TR", ar: "ar-SA",
-    };
-    const fallbackUtterance = new SpeechSynthesisUtterance(text);
-    fallbackUtterance.lang = langMap[lang || "de"] || "de-DE";
-    fallbackUtterance.rate = 1.0;
-
     const onEnd = () => {
       setIsPlaying(false);
       setIsLoading(false);
@@ -256,7 +261,7 @@ export const useVoiceTTS = () => {
     };
 
     try {
-      // 1. Check in-memory LRU cache first – instant playback
+      // 1. Check in-memory LRU cache first
       const cachedUrl = getCachedAudio(senderId, text);
       if (cachedUrl) {
         const audio = new Audio(cachedUrl);
@@ -269,14 +274,13 @@ export const useVoiceTTS = () => {
         return;
       }
 
-      // 2. If audio_url exists on message, download directly from storage (NO edge function call)
+      // 2. If audio_url exists on message, download directly from storage
       if (audioUrl) {
         const success = await playFromStorage(audioUrl, senderId, text, onEnd);
         if (success) return;
-        // If storage download fails, fall through to edge function
       }
 
-      // 3. Call edge function (generates via ElevenLabs if needed, caches, and sets audio_url)
+      // 3. Call edge function
       if (canStreamMp3) {
         await playStreaming(text, senderId, msgId, controller.signal, onEnd);
       } else {
@@ -284,23 +288,31 @@ export const useVoiceTTS = () => {
       }
     } catch (error: any) {
       if (error.name === "AbortError") return;
-      console.error("Voice TTS error, falling back to browser TTS:", error);
 
-      // Fallback: use free browser speech synthesis
-      try {
-        fallbackUtterance.onend = onEnd;
-        fallbackUtterance.onerror = onEnd;
-        setIsLoading(false);
-        setIsPlaying(true);
-        window.speechSynthesis.speak(fallbackUtterance);
-      } catch (fallbackError) {
-        console.error("Browser TTS fallback also failed:", fallbackError);
-        const { toast } = await import("sonner");
-        toast.error("Sprachausgabe fehlgeschlagen", {
-          description: "Bitte versuche es später erneut.",
-        });
+      const errorCode = error.code || "unknown";
+
+      // Provider errors (quota, auth) → show clear message, NO browser TTS fallback
+      if (PROVIDER_ERROR_CODES.has(errorCode)) {
+        console.error("Voice TTS provider error:", errorCode, error.message);
+        if (errorCode === "quota_exceeded") {
+          toast.error("Stimmkontingent aufgebraucht", {
+            description: "Die geklonte Stimme ist derzeit nicht verfügbar. Bitte versuche es später erneut.",
+          });
+        } else {
+          toast.error("Sprachausgabe nicht verfügbar", {
+            description: error.message || "Bitte versuche es später erneut.",
+          });
+        }
         onEnd();
+        return;
       }
+
+      // Unknown/network errors → also show toast, no silent browser fallback
+      console.error("Voice TTS error:", error);
+      toast.error("Sprachausgabe fehlgeschlagen", {
+        description: "Bitte versuche es später erneut.",
+      });
+      onEnd();
     }
   }, [playingMsgId, isPlaying, isLoading, stop, playFromStorage, playStreaming, playBlobFallback]);
 
