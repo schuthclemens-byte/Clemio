@@ -282,7 +282,51 @@ const ProfilePage = () => {
           </button>
         </section>
 
-        {/* Sign Out & Delete */}
+        {/* Voice File Upload */}
+        <section className="animate-reveal-up" style={{ animationDelay: "105ms" }}>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block px-1">
+            {t("profile.myVoiceFile")}
+          </label>
+          {voicePath ? (
+            <div className="bg-card rounded-2xl p-4 shadow-sm border border-border space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0 shadow-soft">
+                  <Mic className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-[0.938rem]">{voicePath}</p>
+                  <p className="text-xs text-muted-foreground">{t("profile.voiceSaved")}</p>
+                </div>
+                <button onClick={handlePlayVoice} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
+                  {voicePlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </button>
+              </div>
+              <button onClick={handleDeleteVoiceFile}
+                className="w-full h-9 rounded-xl text-destructive/70 text-xs font-medium hover:text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                {t("profile.deleteVoiceFile")}
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => voiceInputRef.current?.click()} disabled={voiceUploading}
+              className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                {voiceUploading
+                  ? <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  : <Upload className="w-5 h-5 text-muted-foreground" />}
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-semibold text-[0.938rem]">{t("profile.uploadVoice")}</p>
+                <p className="text-xs text-muted-foreground">.wav · max 5 MB</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
+          )}
+          <input ref={voiceInputRef} type="file" accept=".wav,audio/wav" onChange={handleVoiceUpload} className="hidden" />
+        </section>
+
+
         <section className="animate-reveal-up space-y-3 pt-2" style={{ animationDelay: "120ms" }}>
           <button onClick={handleSignOut}
             className="w-full h-12 rounded-2xl bg-destructive/10 text-destructive font-semibold text-sm flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors active:scale-[0.97]"
