@@ -17,6 +17,28 @@ async function cacheKey(voiceId: string, text: string): Promise<string> {
   return `${hex.slice(0, 16)}.mp3`;
 }
 
+function errorResponse(status: number, error: string, code?: string) {
+  return new Response(JSON.stringify({ error, ...(code ? { code } : {}) }), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+/** Parse ElevenLabs error body into a structured code */
+function parseElevenLabsError(status: number, body: string): { error: string; code: string } {
+  const lower = body.toLowerCase();
+  if (lower.includes("quota_exceeded") || lower.includes("0 credits") || lower.includes("characters remaining")) {
+    return { error: "Voice quota exceeded – no credits remaining", code: "quota_exceeded" };
+  }
+  if (status === 401) {
+    return { error: "ElevenLabs API key invalid", code: "unauthorized" };
+  }
+  if (status === 403) {
+    return { error: "ElevenLabs access forbidden", code: "forbidden" };
+  }
+  return { error: "TTS generation failed", code: "tts_failed" };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,10 +46,7 @@ serve(async (req) => {
 
   const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
   if (!ELEVENLABS_API_KEY) {
-    return new Response(JSON.stringify({ error: "ElevenLabs API key not configured" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(500, "ElevenLabs API key not configured", "config_error");
   }
 
   try {
@@ -40,19 +59,13 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(401, "Unauthorized", "unauthorized");
     }
 
     const { text, senderId, lang, defaultVoiceId, messageId } = await req.json();
 
     if (!text || !senderId) {
-      return new Response(JSON.stringify({ error: "Missing text or senderId" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(400, "Missing text or senderId", "bad_request");
     }
 
     const adminClient = createClient(
@@ -90,10 +103,7 @@ serve(async (req) => {
     const [hasAccess, { data: voiceProfile }] = await Promise.all([scopeCheckPromise, voicePromise]);
 
     if (!hasAccess) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(403, "Forbidden", "forbidden");
     }
 
     const fallbackVoice = defaultVoiceId || "onwK4e9ZLuTAKqWW03F9";
@@ -107,10 +117,8 @@ serve(async (req) => {
       .download(key);
 
     if (cachedFile) {
-      // Cache HIT – return stored audio directly
       const arrayBuf = await cachedFile.arrayBuffer();
 
-      // Persist audio_url on message if provided and not yet set (fire-and-forget)
       if (messageId) {
         adminClient
           .from("messages")
@@ -156,18 +164,14 @@ serve(async (req) => {
 
     if (!ttsResponse.ok) {
       const errBody = await ttsResponse.text();
-      console.error("TTS stream error:", errBody);
-      return new Response(JSON.stringify({ error: "TTS generation failed" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("TTS stream error:", ttsResponse.status, errBody);
+      const parsed = parseElevenLabsError(ttsResponse.status, errBody);
+      return errorResponse(502, parsed.error, parsed.code);
     }
 
-    // Read full response body to cache it
     const audioBytes = await ttsResponse.arrayBuffer();
     const audioBlob = new Blob([audioBytes], { type: "audio/mpeg" });
 
-    // Store in cache AND persist audio_url on message (fire-and-forget)
     adminClient.storage
       .from("tts-cache")
       .upload(key, audioBlob, {
@@ -179,7 +183,6 @@ serve(async (req) => {
         else console.log("Cached TTS audio:", key);
       });
 
-    // Persist audio_url on message if provided
     if (messageId) {
       adminClient
         .from("messages")
@@ -200,9 +203,6 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("TTS stream error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(500, error.message, "internal_error");
   }
 });

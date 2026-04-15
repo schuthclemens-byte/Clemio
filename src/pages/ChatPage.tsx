@@ -31,7 +31,7 @@ import GroupMembersSheet from "@/components/chat/GroupMembersSheet";
 import MediaGallerySheet from "@/components/chat/MediaGallerySheet";
 import ForwardMessageDialog from "@/components/chat/ForwardMessageDialog";
 import { useOfflineQueue } from "@/hooks/useOfflineQueue";
-import { fetchAccessibleProfile, fetchAccessibleProfiles } from "@/lib/accessibleProfiles";
+import { fetchAccessibleProfile, fetchAccessibleProfiles, fetchAccessibleVoiceProfileStates } from "@/lib/accessibleProfiles";
 import ClemioKISheet from "@/components/chat/ClemioKISheet";
 import ReportDialog from "@/components/chat/ReportDialog";
 
