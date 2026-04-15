@@ -1,28 +1,26 @@
 
 
-# Automatische Löschung alter TTS-Cache-Dateien nach 90 Tagen
+# TTS-Wiedergabe für eigene Nachrichten & Premium-Gate entfernen
 
 ## Übersicht
-Eine Edge Function wird per Cron-Job täglich ausgeführt und löscht alle TTS-Cache-Dateien, die älter als 90 Tage sind.
+Zwei Bugs verhindern, dass du deine eigene geklonte Stimme hörst: (1) eigene Nachrichten werden explizit ausgeschlossen, (2) eine Premium-Prüfung blockiert die Wiedergabe.
 
-## Technische Schritte
+## Änderungen
 
-### 1. Edge Function `cleanup-tts-cache` erstellen
-- Listet alle Dateien im `tts-cache` Storage-Bucket auf
-- Prüft das `created_at`-Datum jeder Datei
-- Löscht alle Dateien älter als 90 Tage
-- Gibt eine Zusammenfassung zurück (Anzahl gelöschter Dateien)
+### 1. ChatPage.tsx — Eigene Stimme einschließen
+- Zeile 1211: `!msg.isMine &&` entfernen, sodass `hasClonedVoice` auch für eigene Nachrichten gilt
+- Voice-Profile-Laden muss auch die eigene User-ID abdecken (prüfen ob das bereits der Fall ist)
 
-### 2. Cron-Job einrichten
-- Aktiviert die Extensions `pg_cron` und `pg_net` (falls nicht schon aktiv)
-- Erstellt einen täglichen Cron-Job (z.B. 3:00 Uhr nachts), der die Edge Function aufruft
+### 2. ChatBubble.tsx — Premium-Gate beim Abspielen entfernen
+- Zeile 131-132: `requirePremium()` Wrapper entfernen
+- Direkt `onPlayClonedVoice(...)` aufrufen wenn `hasClonedVoice` true ist
+- Premium bleibt nur beim Voice-Cloning selbst (Stimme erstellen), nicht beim Anhören
 
-### 3. Sicherheit
-- Die Function nutzt den Service-Role-Key für Storage-Zugriff
-- Kein JWT erforderlich (wird nur vom Cron-Job aufgerufen)
+### 3. Preload entfernen (Kosten-Optimierung)
+- Prüfen ob automatische TTS-Preloads existieren und diese entfernen, damit ElevenLabs-Zeichen nur bei manuellem Klick verbraucht werden
 
 ## Ergebnis
-- Jeden Tag werden automatisch Cache-Dateien gelöscht, die älter als 90 Tage sind
-- Kein manueller Eingriff nötig
-- Speicherplatz wird kontinuierlich freigehalten
+- Eigene Nachrichten können in deiner geklonten Stimme angehört werden
+- Keine Paywall beim Abspielen
+- ElevenLabs-Zeichen werden nur bei Klick auf den Play-Button verbraucht
 
