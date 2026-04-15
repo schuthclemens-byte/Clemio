@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Crown, Trash2, Mic, ChevronRight, CheckCircle, LogOut } from "lucide-react";
+import { ArrowLeft, Camera, Crown, Trash2, Mic, ChevronRight, CheckCircle, LogOut, Upload, Play, Pause } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,11 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [hasVoice, setHasVoice] = useState(false);
+  const [voicePath, setVoicePath] = useState<string | null>(null);
+  const [voiceUploading, setVoiceUploading] = useState(false);
+  const [voicePlaying, setVoicePlaying] = useState(false);
+  const voiceInputRef = useRef<HTMLInputElement>(null);
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
@@ -42,7 +47,7 @@ const ProfilePage = () => {
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, phone_number, avatar_url, language, first_name, last_name")
+        .select("display_name, phone_number, avatar_url, language, first_name, last_name, voice_path")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
@@ -57,6 +62,7 @@ const ProfilePage = () => {
         setLastName(derivedName.lastName);
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
+        setVoicePath((data as any).voice_path || null);
       }
       const { data: voiceData } = await supabase
         .from("voice_profiles")
@@ -111,6 +117,53 @@ const ProfilePage = () => {
   };
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
+
+  const handleVoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.name.toLowerCase().endsWith(".wav")) {
+      toast.error(t("profile.voiceWavOnly"));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t("profile.voiceFileTooLarge"));
+      return;
+    }
+    setVoiceUploading(true);
+    const path = `${user.id}/${user.id}.wav`;
+    const { error: uploadErr } = await supabase.storage.from("stimmen").upload(path, file, { upsert: true, contentType: "audio/wav" });
+    if (uploadErr) { toast.error(t("profile.voiceUploadFailed")); setVoiceUploading(false); return; }
+    const { error: dbErr } = await supabase.from("profiles").update({ voice_path: `${user.id}.wav` } as any).eq("id", user.id);
+    if (dbErr) { toast.error(t("profile.voiceUploadFailed")); setVoiceUploading(false); return; }
+    setVoicePath(`${user.id}.wav`);
+    setVoiceUploading(false);
+    toast.success(t("profile.voiceSaved"));
+  };
+
+  const handleDeleteVoiceFile = async () => {
+    if (!user || !voicePath) return;
+    const path = `${user.id}/${user.id}.wav`;
+    await supabase.storage.from("stimmen").remove([path]);
+    await supabase.from("profiles").update({ voice_path: null } as any).eq("id", user.id);
+    setVoicePath(null);
+    toast.success(t("profile.voiceFileDeleted"));
+  };
+
+  const handlePlayVoice = async () => {
+    if (!user || !voicePath) return;
+    if (voicePlaying && voiceAudioRef.current) {
+      voiceAudioRef.current.pause();
+      setVoicePlaying(false);
+      return;
+    }
+    const { data } = await supabase.storage.from("stimmen").createSignedUrl(`${user.id}/${user.id}.wav`, 60);
+    if (!data?.signedUrl) return;
+    const audio = new Audio(data.signedUrl);
+    voiceAudioRef.current = audio;
+    audio.onended = () => setVoicePlaying(false);
+    audio.play();
+    setVoicePlaying(true);
+  };
 
   const initials = [firstName, lastName].filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "?";
 
@@ -229,7 +282,51 @@ const ProfilePage = () => {
           </button>
         </section>
 
-        {/* Sign Out & Delete */}
+        {/* Voice File Upload */}
+        <section className="animate-reveal-up" style={{ animationDelay: "105ms" }}>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block px-1">
+            {t("profile.myVoiceFile")}
+          </label>
+          {voicePath ? (
+            <div className="bg-card rounded-2xl p-4 shadow-sm border border-border space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0 shadow-soft">
+                  <Mic className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-[0.938rem]">{voicePath}</p>
+                  <p className="text-xs text-muted-foreground">{t("profile.voiceSaved")}</p>
+                </div>
+                <button onClick={handlePlayVoice} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
+                  {voicePlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </button>
+              </div>
+              <button onClick={handleDeleteVoiceFile}
+                className="w-full h-9 rounded-xl text-destructive/70 text-xs font-medium hover:text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                {t("profile.deleteVoiceFile")}
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => voiceInputRef.current?.click()} disabled={voiceUploading}
+              className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                {voiceUploading
+                  ? <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  : <Upload className="w-5 h-5 text-muted-foreground" />}
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-semibold text-[0.938rem]">{t("profile.uploadVoice")}</p>
+                <p className="text-xs text-muted-foreground">.wav · max 5 MB</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
+          )}
+          <input ref={voiceInputRef} type="file" accept=".wav,audio/wav" onChange={handleVoiceUpload} className="hidden" />
+        </section>
+
+
         <section className="animate-reveal-up space-y-3 pt-2" style={{ animationDelay: "120ms" }}>
           <button onClick={handleSignOut}
             className="w-full h-12 rounded-2xl bg-destructive/10 text-destructive font-semibold text-sm flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors active:scale-[0.97]"
