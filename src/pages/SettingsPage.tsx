@@ -245,7 +245,7 @@ const SettingsPage = () => {
         {/* ━━━ ADMIN ━━━ */}
         {isAdmin && (
           <section>
-            <LinkRow icon={Shield} label="Administration" to="/admin" />
+            <LinkRow icon={Shield} label="Administration" onClick={() => navigate("/admin")} />
           </section>
         )}
 
