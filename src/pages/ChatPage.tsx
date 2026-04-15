@@ -472,7 +472,9 @@ const ChatPage = () => {
       scrollToBottom("auto");
 
       // Check voice profiles in background
-      const senderIds = [...new Set(msgs?.map(m => m.sender_id).filter(id => id !== user.id) || [])];
+      const senderIds = [...new Set(msgs?.map(m => m.sender_id) || [])];
+      // Also include current user so own messages can use cloned voice
+      if (!senderIds.includes(user.id)) senderIds.push(user.id);
       const profiles: Record<string, boolean> = {};
       await Promise.all(senderIds.map(async (sid) => {
         // Simply check if the sender has a voice profile — no consent needed
@@ -486,18 +488,7 @@ const ChatPage = () => {
 
       setVoiceProfiles(profiles);
 
-      // Preload TTS for last 3 received text messages from senders with voice profiles
-      if (msgs) {
-        const receivedTexts = msgs
-          .filter((m: any) => m.sender_id !== user.id && (!m.message_type || m.message_type === "text") && m.content)
-          .slice(-3);
-        
-        receivedTexts.forEach((m: any) => {
-          if (profiles[m.sender_id]) {
-            preloadAudio(m.sender_id, m.content, () => fetchTtsBlob(m.content, m.sender_id));
-          }
-        });
-      }
+      // Preload removed — TTS audio is only generated on manual click to save ElevenLabs characters
     };
 
     loadChat();
@@ -1208,7 +1199,7 @@ const ChatPage = () => {
                   msgId={msg.id}
                   createdAt={msg.createdAt}
                   isEdited={msg.isEdited}
-                  hasClonedVoice={!msg.isMine && voiceProfiles[msg.senderId] === true}
+                  hasClonedVoice={voiceProfiles[msg.senderId] === true}
                   audioUrl={msg.audioUrl}
                   onPlayClonedVoice={playClonedVoice}
                   isPlayingCloned={playingMsgId === msg.id && isPlayingCloned}
