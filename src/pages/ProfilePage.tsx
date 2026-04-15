@@ -180,8 +180,10 @@ const ProfilePage = () => {
         setVoiceUploading(false);
         return;
       }
-      const { error: dbErr } = await supabase.from("profiles");
-      voice_path: path.eq("id", user.id);
+      const { error: dbErr } = await supabase
+        .from("profiles")
+        .update({ voice_path: path } as any)
+        .eq("id", user.id);
       if (dbErr) {
         console.error("Voice DB update error:", dbErr);
         toast.error(`${t("profile.voiceUploadFailed")}: ${dbErr.message}`);
