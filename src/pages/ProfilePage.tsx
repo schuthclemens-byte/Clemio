@@ -196,7 +196,7 @@ const ProfilePage = () => {
       setVoiceUploading(false);
       return;
     }
-    setVoicePath(`${user.id}.wav`);
+    setVoicePath(`${user.id}/${user.id}.wav`);
     setVoiceUploading(false);
     toast.success(t("profile.voiceSaved"));
   };
