@@ -130,11 +130,28 @@ const ProfilePage = () => {
       return;
     }
     setVoiceUploading(true);
-    const path = `${user.id}/${user.id}.wav`;
-    const { error: uploadErr } = await supabase.storage.from("stimmen").upload(path, file, { upsert: true, contentType: "audio/wav" });
-    if (uploadErr) { toast.error(t("profile.voiceUploadFailed")); setVoiceUploading(false); return; }
-    const { error: dbErr } = await supabase.from("profiles").update({ voice_path: `${user.id}.wav` } as any).eq("id", user.id);
-    if (dbErr) { toast.error(t("profile.voiceUploadFailed")); setVoiceUploading(false); return; }
+    try {
+      const path = `${user.id}/${user.id}.wav`;
+      const { error: uploadErr } = await supabase.storage.from("stimmen").upload(path, file, { upsert: true, contentType: "audio/wav" });
+      if (uploadErr) {
+        console.error("Voice upload error:", uploadErr);
+        toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
+        setVoiceUploading(false);
+        return;
+      }
+      const { error: dbErr } = await supabase.from("profiles").update({ voice_path: `${user.id}.wav` } as any).eq("id", user.id);
+      if (dbErr) {
+        console.error("Voice DB update error:", dbErr);
+        toast.error(`${t("profile.voiceUploadFailed")}: ${dbErr.message}`);
+        setVoiceUploading(false);
+        return;
+      }
+    } catch (err: any) {
+      console.error("Voice upload exception:", err);
+      toast.error(`${t("profile.voiceUploadFailed")}: ${err?.message || "Unknown error"}`);
+      setVoiceUploading(false);
+      return;
+    }
     setVoicePath(`${user.id}.wav`);
     setVoiceUploading(false);
     toast.success(t("profile.voiceSaved"));
