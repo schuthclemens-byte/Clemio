@@ -1,28 +1,25 @@
 
 
-# Admin-Zugang auf dem Handy sichtbar machen
+# Admin-Zugang in den Einstellungen statt Navigation
 
-## Problem
-Es gibt **keinen Link** zum Admin-Bereich in der App-Navigation. Die Admin-Seite existiert nur unter der direkten URL `/admin`. Auf dem Handy gibt es keine Möglichkeit, dorthin zu navigieren, ohne die URL manuell einzugeben.
-
-Zusätzlich: Der `useAdminRole`-Hook nutzt `as any` beim Query auf `user_roles`, was bei RLS-Problemen still fehlschlägt und `isAdmin = false` zurückgibt.
+## Was du willst
+Der Admin-Link soll **in den Einstellungen** bleiben — nicht in der unteren Navigation. Von den Einstellungen aus navigierst du dann zum Admin-Bereich.
 
 ## Änderungen
 
-### 1. Admin-Link in SettingsPage einbauen
+### 1. BottomTabBar.tsx — Admin-Tab wieder entfernen
+- Den bedingten Admin-Tab aus der `tabs`-Liste entfernen
+- Navigation bleibt bei den 4 Standard-Tabs (Chats, Anrufe, Profil, Einstellungen)
+
+### 2. SettingsPage.tsx — Admin-Link wiederherstellen
 - `useAdminRole` importieren
-- Wenn `isAdmin === true`, einen Link-Row mit Shield-Icon zu `/admin` anzeigen
-- Platzierung: ganz oben oder in einer eigenen Sektion "Administration"
+- Wenn `isAdmin === true`, eine "Administration"-Sektion mit Shield-Icon und Link zu `/admin` anzeigen
+- Platzierung: oben in den Einstellungen
 
-### 2. useAdminRole robuster machen
-- Fehlerbehandlung für den Fall, dass die Tabelle `user_roles` nicht existiert oder RLS den Zugriff blockiert
-- Console-Log bei Fehlern, damit Probleme sichtbar werden
-
-### 3. Optional: Admin-Link im BottomTabBar (nur für Admins)
-- Nur anzeigen wenn `isAdmin === true`
-- Shield-Icon als 5. Tab oder als Badge auf Settings
+### 3. AppSidebar.tsx — Admin-Link entfernen (falls hinzugefügt)
+- Sidebar bleibt bei den 4 Standard-Einträgen
 
 ## Ergebnis
-- Als Admin siehst du auf dem Handy in den Einstellungen einen Link zum Admin-Bereich
-- Kein manuelles URL-Eintippen mehr nötig
+- Navigation: 4 Tabs wie vorher
+- Einstellungen → "Administration" → `/admin`
 
