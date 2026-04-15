@@ -15,12 +15,15 @@ export const useAdminRole = () => {
     }
 
     const check = async () => {
-      const { data } = await supabase
-        .from("user_roles" as any)
+      const { data, error } = await supabase
+        .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
         .eq("role", "admin")
         .maybeSingle();
+      if (error) {
+        console.error("[useAdminRole] Failed to check admin role:", error.message);
+      }
       setIsAdmin(!!data);
       setLoading(false);
     };

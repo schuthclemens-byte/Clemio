@@ -17,6 +17,7 @@ import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { usePushCapability } from "@/hooks/usePushCapability";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 /** Reusable toggle row */
 const ToggleRow = ({
@@ -150,6 +151,7 @@ const SettingsPage = () => {
   const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
   const pushCap = usePushCapability();
   const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
+  const { isAdmin } = useAdminRole();
 
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
@@ -239,6 +241,15 @@ const SettingsPage = () => {
       </header>
 
       <div className="flex-1 p-4 space-y-2 pb-28">
+
+        {/* ━━━ ADMIN ━━━ */}
+        {isAdmin && (
+          <section>
+            <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              <LinkRow icon={Shield} label={tr("Administration", "Administration")} description={tr("Nutzer & Berichte verwalten", "Manage users & reports")} onClick={() => navigate("/admin")} borderBottom={false} />
+            </div>
+          </section>
+        )}
 
         {/* ━━━ KOMMUNIKATION ━━━ */}
         <section>
