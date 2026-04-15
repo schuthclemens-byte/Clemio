@@ -128,9 +128,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
     const textToSpeak = displayText;
     if (!textToSpeak) return;
     
-    if (hasClonedVoice && senderId && msgId && onPlayClonedVoice) {
-      requirePremium(() => onPlayClonedVoice(textToSpeak, senderId, msgId, locale, audioUrl));
-    } else if (onPlayClonedVoice && senderId && msgId) {
+    if (onPlayClonedVoice && senderId && msgId) {
       onPlayClonedVoice(textToSpeak, senderId, msgId, locale, audioUrl);
     }
   };
