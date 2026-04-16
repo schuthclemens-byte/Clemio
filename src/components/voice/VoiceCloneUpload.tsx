@@ -176,6 +176,14 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           setPhase("error");
           return;
         }
+        if (err.error === "transcription_failed") {
+          setErrorMsg(tr(
+            "Wir konnten den vorgelesenen Satz nicht sicher erkennen. Das kann an Tempo, Aussprache oder Hintergrundgeräuschen liegen. Versuch es bitte nochmal.",
+            "We couldn't reliably recognize the spoken sentence. This may be due to pace, pronunciation, or background noise. Please try again."
+          ));
+          setPhase("error");
+          return;
+        }
         throw new Error(err.error || tr("Fehler", "Error"));
       }
 
@@ -319,7 +327,13 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           <p className="text-xs text-muted-foreground mt-1">
             {canStop
               ? tr("Du kannst jetzt aufhören – oder weitersprechen für bessere Qualität", "You can stop now — or keep talking for better quality")
-              : tr("Erzähl einfach etwas über deinen Tag...", "Just talk a little about your day...")}
+              : tr("Sprich 30–45 Sekunden ganz natürlich.", "Speak naturally for 30–45 seconds.")}
+          </p>
+          <p className="text-[0.625rem] text-muted-foreground/70 mt-1">
+            {tr(
+              "Normale Alltagsgeräusche sind okay. Je natürlicher du sprichst, desto besser klingt deine Stimme.",
+              "Normal everyday sounds are fine. The more naturally you speak, the better your voice will sound."
+            )}
           </p>
         </div>
 
