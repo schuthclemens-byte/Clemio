@@ -61,7 +61,7 @@ const ProfilePage = () => {
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, phone_number, avatar_url, language, first_name, last_name, voice_path")
+        .select("display_name, phone_number, avatar_url, language, first_name, last_name, voice_path, voice_encryption_key")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
