@@ -38,6 +38,7 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 const VoiceRecordingsPage = lazy(() => import("./pages/VoiceRecordingsPage"));
+const VoiceOnboardingPage = lazy(() => import("./pages/VoiceOnboardingPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const ImpressumPage = lazy(() => import("./pages/ImpressumPage"));
@@ -101,6 +102,7 @@ const App = () => (
                             <Route path="/index" element={<Navigate to="/" replace />} />
                             <Route path="/landing" element={<LandingPage />} />
                             <Route path="/onboarding" element={<OnboardingPage />} />
+                            <Route path="/voice-setup" element={<ProtectedRoute><VoiceOnboardingPage /></ProtectedRoute>} />
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/reset-password" element={<ResetPasswordPage />} />
                             <Route path="/chats" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
