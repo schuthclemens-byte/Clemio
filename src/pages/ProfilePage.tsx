@@ -148,19 +148,18 @@ const ProfilePage = () => {
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${user.id}/avatar.${ext}`;
-    const { data, error } = await supabase.storage.from("Stimmen").upload(path, file, {
+    const { error } = await supabase.storage.from("avatars").upload(path, file, {
       upsert: true,
-      contentType: "audio/wav",
+      contentType: file.type,
     });
 
     if (error) {
       console.error("UPLOAD ERROR:", error);
       toast.error(error.message);
-      setVoiceUploading(false);
+      setUploading(false);
       return;
     }
 
-    console.log("UPLOAD OK:", data);
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
     const newUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     await supabase.from("profiles").update({ avatar_url: newUrl }).eq("id", user.id);

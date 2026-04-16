@@ -239,7 +239,7 @@ const InlineVoiceRecorder = ({ onVoiceSaved, userName }: InlineVoiceRecorderProp
         ) : uploading ? (
           <div className="flex items-center justify-center gap-2 text-muted-foreground py-3">
             <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span className="text-sm">{isDE ? "Wird hochgeladen…" : "Uploading…"}</span>
+            <span className="text-sm">{isDE ? "Wird gespeichert…" : "Saving…"}</span>
           </div>
         ) : (
           <button
