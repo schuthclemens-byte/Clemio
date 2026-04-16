@@ -261,27 +261,33 @@ const ProfilePage = () => {
           return;
         }
 
-        // Upload to stimmen bucket as {user_id}/{user_id}.wav
+        // Encrypt and upload to stimmen bucket as {user_id}.enc
         setVoiceUploading(true);
         try {
-          const filePath = `${user!.id}/${user!.id}.wav`;
+          const encKey = voiceEncKey || await generateVoiceKey();
+          const encryptedBlob = await encryptVoiceFile(blob, encKey);
+          const filePath = `${user!.id}.enc`;
 
           const { error: uploadErr } = await supabase.storage
             .from("stimmen")
-            .upload(filePath, blob, { upsert: true, contentType: "audio/wav" });
+            .upload(filePath, encryptedBlob, { upsert: true, contentType: "application/octet-stream" });
           if (uploadErr) {
             toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
             setVoiceUploading(false);
             return;
           }
 
+          // Also clean up old unencrypted file if it existed
+          await supabase.storage.from("stimmen").remove([`${user!.id}/${user!.id}.wav`]);
+
           const { error: dbErr } = await supabase
             .from("profiles")
-            .update({ voice_path: filePath } as any)
+            .update({ voice_path: "uploaded", voice_encryption_key: encKey } as any)
             .eq("id", user!.id);
           if (dbErr) throw dbErr;
 
-          setVoicePath(filePath);
+          setVoicePath("uploaded");
+          setVoiceEncKey(encKey);
           toast.success(locale === "de" ? "Aufnahme gespeichert" : "Recording saved");
         } catch (err: any) {
           console.error("Voice record upload error:", err);
@@ -585,8 +591,8 @@ const ProfilePage = () => {
                   <Mic className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-[0.938rem]">{voicePath}</p>
-                  <p className="text-xs text-muted-foreground">{t("profile.voiceSaved")}</p>
+                  <p className="font-semibold text-[0.938rem]">{firstName || lastName ? `${firstName} ${lastName}`.trim() : (locale === "de" ? "Meine Stimme" : "My Voice")}</p>
+                  <p className="text-xs text-muted-foreground">{locale === "de" ? "Stimmaufnahme" : "Voice Recording"}</p>
                 </div>
                 <button
                   onClick={handlePlayVoice}
