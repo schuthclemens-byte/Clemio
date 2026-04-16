@@ -19,6 +19,7 @@ const VoiceRecordingsPage = () => {
   const { user } = useAuth();
   const { locale } = useI18n();
   const [myVoice, setMyVoice] = useState<VoiceProfile | null>(null);
+  const [voicePath, setVoicePath] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSetup, setShowSetup] = useState(false);
 
@@ -27,14 +28,24 @@ const VoiceRecordingsPage = () => {
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("voice_profiles")
-      .select("id, voice_name, elevenlabs_voice_id, created_at")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    setMyVoice(data);
+    const [vpRes, profRes] = await Promise.all([
+      supabase
+        .from("voice_profiles")
+        .select("id, voice_name, elevenlabs_voice_id, created_at")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("voice_path")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]);
+    setMyVoice(vpRes.data);
+    setVoicePath(profRes.data?.voice_path ?? null);
     setLoading(false);
   };
+
+  const isVoiceConfigured = Boolean(myVoice) || Boolean(voicePath);
 
   useEffect(() => { loadData(); }, [user]);
 
