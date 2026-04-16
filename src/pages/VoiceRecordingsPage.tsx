@@ -218,12 +218,14 @@ const VoiceRecordingsPage = () => {
                     title: tr("Sprich 30–45 Sekunden ganz natürlich", "Speak naturally for 30–45 seconds"),
                     desc: tr("Normale Alltagsgeräusche sind okay. In ruhiger Umgebung klappt es meist besser.", "Normal everyday sounds are fine. A quieter environment usually works better."),
                     highlight: false,
+                    pending: false,
                   },
                   {
                     step: "2",
                     title: tr("Kurzen Satz vorlesen", "Read a short sentence"),
                     desc: tr("Zur Verifizierung deiner Stimme.", "To verify your voice."),
                     highlight: false,
+                    pending: false,
                   },
                   {
                     step: "✓",
