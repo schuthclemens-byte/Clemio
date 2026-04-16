@@ -615,24 +615,58 @@ const ProfilePage = () => {
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => voiceInputRef.current?.click()}
-              disabled={voiceUploading}
-              className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-            >
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                {voiceUploading ? (
-                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                ) : (
-                  <Upload className="w-5 h-5 text-muted-foreground" />
+            <div className="space-y-2.5">
+              {/* Record button */}
+              <button
+                onClick={handleToggleRecording}
+                disabled={voiceUploading}
+                className={cn(
+                  "w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 transition-colors active:scale-[0.98]",
+                  isRecording ? "border-destructive/50 bg-destructive/5" : "hover:bg-secondary/50",
                 )}
-              </div>
-              <div className="flex-1 text-left">
-                <p className="font-semibold text-[0.938rem]">{t("profile.uploadVoice")}</p>
-                <p className="text-xs text-muted-foreground">.wav · max 5 MB</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                  isRecording ? "bg-destructive/20" : "bg-secondary",
+                )}>
+                  {isRecording ? (
+                    <Square className="w-5 h-5 text-destructive" />
+                  ) : voiceUploading ? (
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  ) : (
+                    <Mic className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-[0.938rem]">
+                    {isRecording
+                      ? locale === "de" ? "Stoppen" : "Stop"
+                      : locale === "de" ? "Aufnahme starten" : "Start Recording"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {isRecording
+                      ? locale === "de" ? "Aufnahme läuft…" : "Recording…"
+                      : locale === "de" ? "Direkt aufnehmen" : "Record directly"}
+                  </p>
+                </div>
+              </button>
+
+              {/* File upload button */}
+              <button
+                onClick={() => voiceInputRef.current?.click()}
+                disabled={voiceUploading || isRecording}
+                className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+              >
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-[0.938rem]">{t("profile.uploadVoice")}</p>
+                  <p className="text-xs text-muted-foreground">.wav · max 5 MB</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </button>
+            </div>
           )}
           <input
             ref={voiceInputRef}
