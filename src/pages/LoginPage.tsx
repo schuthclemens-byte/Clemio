@@ -186,6 +186,8 @@ const LoginPage = () => {
           return;
         }
         toast.success(t("app.signupSuccess") || "Konto erstellt!");
+        navigate("/voice-setup", { replace: true });
+        return;
       }
 
       navigate("/chats");
