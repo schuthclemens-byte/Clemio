@@ -19,6 +19,7 @@ const VoiceRecordingsPage = () => {
   const { user } = useAuth();
   const { locale } = useI18n();
   const [myVoice, setMyVoice] = useState<VoiceProfile | null>(null);
+  const [voicePath, setVoicePath] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSetup, setShowSetup] = useState(false);
 
@@ -27,14 +28,24 @@ const VoiceRecordingsPage = () => {
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("voice_profiles")
-      .select("id, voice_name, elevenlabs_voice_id, created_at")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    setMyVoice(data);
+    const [vpRes, profRes] = await Promise.all([
+      supabase
+        .from("voice_profiles")
+        .select("id, voice_name, elevenlabs_voice_id, created_at")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("voice_path")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]);
+    setMyVoice(vpRes.data);
+    setVoicePath(profRes.data?.voice_path ?? null);
     setLoading(false);
   };
+
+  const isVoiceConfigured = Boolean(myVoice) || Boolean(voicePath);
 
   useEffect(() => { loadData(); }, [user]);
 
@@ -116,7 +127,7 @@ const VoiceRecordingsPage = () => {
           <div>
             <h1 className="text-xl font-bold">{tr("Meine Stimme", "My Voice")}</h1>
             <p className="text-xs text-muted-foreground">
-              {myVoice
+              {isVoiceConfigured
                 ? tr("Aktiv und bereit", "Active and ready")
                 : tr("Noch keine Stimme eingerichtet", "No voice set up yet")}
             </p>
@@ -207,18 +218,21 @@ const VoiceRecordingsPage = () => {
                     title: tr("Sprich 30–45 Sekunden ganz natürlich", "Speak naturally for 30–45 seconds"),
                     desc: tr("Normale Alltagsgeräusche sind okay. In ruhiger Umgebung klappt es meist besser.", "Normal everyday sounds are fine. A quieter environment usually works better."),
                     highlight: false,
+                    pending: false,
                   },
                   {
                     step: "2",
                     title: tr("Kurzen Satz vorlesen", "Read a short sentence"),
                     desc: tr("Zur Verifizierung deiner Stimme.", "To verify your voice."),
                     highlight: false,
+                    pending: false,
                   },
                   {
                     step: "✓",
                     title: tr("Fertig – deine Stimme ist aktiv", "Done – your voice is active"),
                     desc: tr("Ab sofort können Kontakte dich hören.", "Your contacts can hear you from now on."),
-                    highlight: true,
+                    highlight: isVoiceConfigured,
+                    pending: !isVoiceConfigured,
                   },
                 ].map((item, i) => (
                   <div
@@ -226,22 +240,28 @@ const VoiceRecordingsPage = () => {
                     className={`flex items-start gap-3 rounded-xl p-3.5 border transition-colors ${
                       item.highlight
                         ? "bg-primary/5 border-primary/20"
-                        : "bg-card border-border/50"
+                        : item.pending
+                          ? "bg-muted/50 border-border/30 opacity-60"
+                          : "bg-card border-border/50"
                     }`}
                   >
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                         item.highlight
                           ? "gradient-primary shadow-sm"
-                          : "bg-primary/10"
+                          : item.pending
+                            ? "bg-muted"
+                            : "bg-primary/10"
                       }`}
                     >
-                      <span className={`text-xs font-bold ${item.highlight ? "text-primary-foreground" : "text-primary"}`}>
+                      <span className={`text-xs font-bold ${
+                        item.highlight ? "text-primary-foreground" : item.pending ? "text-muted-foreground" : "text-primary"
+                      }`}>
                         {item.step}
                       </span>
                     </div>
                     <div>
-                      <p className={`text-sm font-semibold leading-tight ${item.highlight ? "text-foreground" : ""}`}>
+                      <p className={`text-sm font-semibold leading-tight ${item.highlight ? "text-foreground" : item.pending ? "text-muted-foreground" : ""}`}>
                         {item.title}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
