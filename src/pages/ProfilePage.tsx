@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useSubscription } from "@/hooks/useSubscription";
 import { usePremiumGate } from "@/hooks/usePremiumGate";
 import { Badge } from "@/components/ui/badge";
+import { generateVoiceKey, encryptVoiceFile, decryptVoiceFile } from "@/lib/voiceCrypto";
 
 const splitDisplayName = (value: string) => {
   const trimmedValue = value.trim();
