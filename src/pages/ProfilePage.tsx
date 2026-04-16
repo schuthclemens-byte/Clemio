@@ -284,12 +284,21 @@ const ProfilePage = () => {
     if (!user || !loaded || !voicePath) return;
     if (voicePath.endsWith(".enc")) return; // Already encrypted
     const migrate = async () => {
+      console.log("[VoiceMigration] Starting migration for path:", voicePath);
       try {
-        const { data } = await supabase.storage.from("stimmen").createSignedUrl(voicePath, 60);
-        if (!data?.signedUrl) return;
+        const { data, error: signErr } = await supabase.storage.from("stimmen").createSignedUrl(voicePath, 120);
+        if (signErr || !data?.signedUrl) {
+          console.warn("[VoiceMigration] Signed URL failed:", signErr?.message ?? "no URL returned", "path:", voicePath);
+          return;
+        }
+        console.log("[VoiceMigration] Signed URL obtained, downloading...");
         const resp = await fetch(data.signedUrl);
-        if (!resp.ok) return;
+        if (!resp.ok) {
+          console.warn("[VoiceMigration] Download failed:", resp.status, resp.statusText);
+          return;
+        }
         const wavBlob = await resp.blob();
+        console.log("[VoiceMigration] Downloaded", wavBlob.size, "bytes, encrypting...");
 
         const keyB64 = await generateVoiceKey();
         const encBlob = await encryptVoiceFile(wavBlob, keyB64);
@@ -298,21 +307,31 @@ const ProfilePage = () => {
         const { error: upErr } = await supabase.storage
           .from("stimmen")
           .upload(encPath, encBlob, { upsert: true, contentType: "application/octet-stream" });
-        if (upErr) return;
+        if (upErr) {
+          console.warn("[VoiceMigration] Upload failed:", upErr.message);
+          return;
+        }
+        console.log("[VoiceMigration] Encrypted file uploaded to", encPath);
 
-        await supabase
+        const { error: dbErr } = await supabase
           .from("profiles")
           .update({ voice_path: encPath, voice_encryption_key: keyB64 } as any)
           .eq("id", user.id);
+        if (dbErr) {
+          console.warn("[VoiceMigration] DB update failed:", dbErr.message);
+        }
 
         // Remove old unencrypted file
-        await supabase.storage.from("stimmen").remove([voicePath]);
+        const { error: delErr } = await supabase.storage.from("stimmen").remove([voicePath]);
+        if (delErr) {
+          console.warn("[VoiceMigration] Old file deletion failed:", delErr.message);
+        }
 
         setVoicePath(encPath);
         setVoiceEncKey(keyB64);
-        console.log("Voice file migrated to encrypted format");
+        console.log("[VoiceMigration] ✅ Migration complete");
       } catch (err) {
-        console.error("Voice migration error:", err);
+        console.error("[VoiceMigration] ❌ Unexpected error:", err);
       }
     };
     migrate();
