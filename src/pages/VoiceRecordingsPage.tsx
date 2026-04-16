@@ -140,7 +140,7 @@ const VoiceRecordingsPage = () => {
           <div className="flex items-center justify-center py-20">
             <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
-        ) : myVoice ? (
+        ) : isVoiceConfigured ? (
           /* ── Voice exists ── */
           <>
             <section className="animate-reveal-up">
@@ -152,13 +152,15 @@ const VoiceRecordingsPage = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="font-bold text-base truncate">
-                        {myVoice.voice_name || tr("Meine Stimme", "My Voice")}
+                        {myVoice?.voice_name || tr("Meine Stimme", "My Voice")}
                       </p>
                       <CheckCircle className="w-4 h-4 text-accent shrink-0" />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {tr("Erstellt am", "Created on")} {formatDate(myVoice.created_at)}
-                    </p>
+                    {myVoice?.created_at && (
+                      <p className="text-xs text-muted-foreground">
+                        {tr("Erstellt am", "Created on")} {formatDate(myVoice.created_at)}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {tr(
                         "Deine Kontakte können Nachrichten in deiner Stimme hören.",
