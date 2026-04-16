@@ -7,12 +7,14 @@ import {
   Crown,
   Trash2,
   Mic,
+  MicOff,
   ChevronRight,
   CheckCircle,
   LogOut,
   Upload,
   Play,
   Pause,
+  Square,
 } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -51,8 +53,11 @@ const ProfilePage = () => {
   const [voiceEncKey, setVoiceEncKey] = useState<string | null>(null);
   const [voiceUploading, setVoiceUploading] = useState(false);
   const [voicePlaying, setVoicePlaying] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const voiceInputRef = useRef<HTMLInputElement>(null);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
@@ -220,6 +225,90 @@ const ProfilePage = () => {
       toast.error(`${t("profile.voiceUploadFailed")}: ${err?.message || "Unknown error"}`);
     }
     setVoiceUploading(false);
+  };
+
+  const handleToggleRecording = async () => {
+    if (isRecording) {
+      // Stop recording
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+
+    // Start recording
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recordedChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setIsRecording(false);
+
+        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+        if (blob.size === 0) {
+          toast.error(locale === "de" ? "Aufnahme leer" : "Recording empty");
+          return;
+        }
+        if (blob.size > 5 * 1024 * 1024) {
+          toast.error(t("profile.voiceFileTooLarge"));
+          return;
+        }
+
+        // Encrypt & upload
+        setVoiceUploading(true);
+        try {
+          let keyB64 = voiceEncKey;
+          if (!keyB64) {
+            keyB64 = await generateVoiceKey();
+            const { error: keyErr } = await supabase
+              .from("profiles")
+              .update({ voice_encryption_key: keyB64 } as any)
+              .eq("id", user!.id);
+            if (keyErr) throw keyErr;
+            setVoiceEncKey(keyB64);
+          }
+
+          const encryptedBlob = await encryptVoiceFile(blob, keyB64);
+          const encPath = `${user!.id}.enc`;
+
+          const { error: uploadErr } = await supabase.storage
+            .from("stimmen")
+            .upload(encPath, encryptedBlob, { upsert: true, contentType: "application/octet-stream" });
+          if (uploadErr) {
+            toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
+            setVoiceUploading(false);
+            return;
+          }
+
+          const { error: dbErr } = await supabase
+            .from("profiles")
+            .update({ voice_path: encPath } as any)
+            .eq("id", user!.id);
+          if (dbErr) throw dbErr;
+
+          setVoicePath(encPath);
+          toast.success(t("profile.voiceSaved"));
+        } catch (err: any) {
+          console.error("Voice record upload error:", err);
+          toast.error(`${t("profile.voiceUploadFailed")}: ${err?.message || "Unknown"}`);
+        }
+        setVoiceUploading(false);
+      };
+
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err: any) {
+      console.error("Microphone access error:", err);
+      toast.error(locale === "de" ? "Mikrofon-Zugriff verweigert" : "Microphone access denied");
+    }
   };
 
   const handleDeleteVoiceFile = async () => {
@@ -526,24 +615,58 @@ const ProfilePage = () => {
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => voiceInputRef.current?.click()}
-              disabled={voiceUploading}
-              className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-            >
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                {voiceUploading ? (
-                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                ) : (
-                  <Upload className="w-5 h-5 text-muted-foreground" />
+            <div className="space-y-2.5">
+              {/* Record button */}
+              <button
+                onClick={handleToggleRecording}
+                disabled={voiceUploading}
+                className={cn(
+                  "w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 transition-colors active:scale-[0.98]",
+                  isRecording ? "border-destructive/50 bg-destructive/5" : "hover:bg-secondary/50",
                 )}
-              </div>
-              <div className="flex-1 text-left">
-                <p className="font-semibold text-[0.938rem]">{t("profile.uploadVoice")}</p>
-                <p className="text-xs text-muted-foreground">.wav · max 5 MB</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                  isRecording ? "bg-destructive/20" : "bg-secondary",
+                )}>
+                  {isRecording ? (
+                    <Square className="w-5 h-5 text-destructive" />
+                  ) : voiceUploading ? (
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  ) : (
+                    <Mic className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-[0.938rem]">
+                    {isRecording
+                      ? locale === "de" ? "Stoppen" : "Stop"
+                      : locale === "de" ? "Aufnahme starten" : "Start Recording"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {isRecording
+                      ? locale === "de" ? "Aufnahme läuft…" : "Recording…"
+                      : locale === "de" ? "Direkt aufnehmen" : "Record directly"}
+                  </p>
+                </div>
+              </button>
+
+              {/* File upload button */}
+              <button
+                onClick={() => voiceInputRef.current?.click()}
+                disabled={voiceUploading || isRecording}
+                className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
+              >
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-[0.938rem]">{t("profile.uploadVoice")}</p>
+                  <p className="text-xs text-muted-foreground">.wav · max 5 MB</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </button>
+            </div>
           )}
           <input
             ref={voiceInputRef}
