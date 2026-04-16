@@ -53,8 +53,11 @@ const ProfilePage = () => {
   const [voiceEncKey, setVoiceEncKey] = useState<string | null>(null);
   const [voiceUploading, setVoiceUploading] = useState(false);
   const [voicePlaying, setVoicePlaying] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const voiceInputRef = useRef<HTMLInputElement>(null);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
   const { isPremium, isFoundingUser, planLabel, daysRemaining } = useSubscription();
   const { requirePremium, PaywallGate } = usePremiumGate();
 
