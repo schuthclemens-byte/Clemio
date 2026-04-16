@@ -127,7 +127,7 @@ const VoiceRecordingsPage = () => {
           <div>
             <h1 className="text-xl font-bold">{tr("Meine Stimme", "My Voice")}</h1>
             <p className="text-xs text-muted-foreground">
-              {myVoice
+              {isVoiceConfigured
                 ? tr("Aktiv und bereit", "Active and ready")
                 : tr("Noch keine Stimme eingerichtet", "No voice set up yet")}
             </p>
@@ -229,7 +229,7 @@ const VoiceRecordingsPage = () => {
                     step: "✓",
                     title: tr("Fertig – deine Stimme ist aktiv", "Done – your voice is active"),
                     desc: tr("Ab sofort können Kontakte dich hören.", "Your contacts can hear you from now on."),
-                    highlight: true,
+                    highlight: isVoiceConfigured,
                   },
                 ].map((item, i) => (
                   <div
