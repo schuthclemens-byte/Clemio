@@ -1,40 +1,35 @@
 
 
-## Plan: Stimmaufnahme verschlüsselt hochladen + neutrale DB-Anzeige
+## Fix: Voice Profile Status Logic
 
 ### Problem
-Aktuell wird die Aufnahme als Klartext-`.wav` unter `{user_id}/{user_id}.wav` hochgeladen. Im Backend ist die Datei direkt abspielbar und der Pfad steht sichtbar in `profiles.voice_path`.
+On `/voice-recordings`, Step 3 "Fertig – deine Stimme ist aktiv" is always rendered with active/highlighted styling, even when no voice exists. The step list is inside the `!myVoice` branch, so it always shows — creating a contradiction with the header that correctly says "Noch keine Stimme eingerichtet".
 
-### Ziel
-- Die Aufnahme wird **im Browser mit AES-256-GCM verschlüsselt**, bevor sie hochgeladen wird
-- Im Storage liegt nur ein unlesbarer `.enc`-Blob
-- In `profiles.voice_path` steht **nur ein neutraler Marker** (z.B. `"uploaded"`) — kein Dateipfad
-- In der UI zeigt die Karte den **Namen des Nutzers** und **"Stimmaufnahme"** statt des Pfads
+### Root Cause
+Line 221 in `VoiceRecordingsPage.tsx` hardcodes `highlight: true` for the third step. There is no backend check — it's a static UI value.
 
-### Änderungen in `src/pages/ProfilePage.tsx`
+### Plan
 
-**1. Recording-Handler (`recorder.onstop`, Zeile 250–291):**
-- Nach dem Stoppen: AES-256-GCM Key generieren oder bestehenden wiederverwenden (`voiceEncKey`)
-- Blob mit `encryptVoiceFile()` verschlüsseln
-- Upload als `${user.id}.enc` (nicht mehr `${user.id}/${user.id}.wav`)
-- `voice_path` in DB auf `"uploaded"` setzen (kein Dateipfad)
-- `voice_encryption_key` speichern
+**1. VoiceRecordingsPage.tsx — also load `profiles.voice_path`**
+- Add a `voicePath` state derived from `profiles.voice_path` query
+- Define: `const isVoiceConfigured = Boolean(myVoice) || Boolean(voicePath);`
+- Use `isVoiceConfigured` for:
+  - **Header subtitle**: "Aktiv und bereit" vs "Noch keine Stimme eingerichtet"
+  - **Step 3 highlight**: `highlight: isVoiceConfigured` instead of `highlight: true`
+  - Step 3 styling when not configured: grey background, muted text, no Sparkles icon
+  - **CTA button**: only show "Jetzt einrichten" when `!isVoiceConfigured`
+- When voice exists (`isVoiceConfigured === true`), show the existing voice card (already works via `myVoice`)
 
-**2. Voice-Karte (Zeile 582–603):**
-- Statt `{voicePath}` → `{firstName} {lastName}` (Fallback: "Meine Stimme")
-- Statt `{t("profile.voiceSaved")}` → `"Stimmaufnahme"` / `"Voice Recording"`
+**2. Step 3 conditional styling**
+- When `isVoiceConfigured === false`: render with `bg-muted/50 border-border/30 opacity-60`, step badge in grey, no Sparkles
+- When `isVoiceConfigured === true`: keep current gradient/highlight styling
 
-**3. Delete-Handler (Zeile 302–315):**
-- Bereits korrekt: löscht `.enc` und setzt `voice_path: null`
+**3. ProfilePage.tsx — already correct**
+- Profile page already uses `voicePath` and `hasVoice` from backend. No changes needed — it's already consistent.
 
-**4. Play-Handler (Zeile 317–350):**
-- Bereits korrekt: lädt `.enc`, entschlüsselt im Browser
+**4. After successful setup callback**
+- In `onCloned` callback: reload data (`loadData()`) which re-fetches `voice_profiles` and `profiles.voice_path`, automatically updating `isVoiceConfigured`
 
-### Ergebnis
-
-| Vorher | Nachher |
-|--------|---------|
-| `stimmen/{id}/{id}.wav` (Klartext) | `stimmen/{id}.enc` (AES-256-GCM) |
-| `voice_path = "{id}/{id}.wav"` | `voice_path = "uploaded"` |
-| UI zeigt Dateipfad | UI zeigt "Max Mustermann — Stimmaufnahme" |
+### Files Changed
+- `src/pages/VoiceRecordingsPage.tsx` — add `voicePath` fetch, make Step 3 highlight conditional
 
