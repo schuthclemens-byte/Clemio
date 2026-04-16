@@ -78,7 +78,7 @@ const ProfilePage = () => {
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
         setVoicePath((data as any).voice_path || null);
-      }
+        setVoiceEncKey((data as any).voice_encryption_key || null);
       const { data: voiceData } = await supabase
         .from("voice_profiles")
         .select("id")
