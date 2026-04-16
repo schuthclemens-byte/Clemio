@@ -543,6 +543,7 @@ export type Database = {
           push_preview_enabled: boolean
           updated_at: string | null
           voice_enabled: boolean | null
+          voice_encryption_key: string | null
           voice_path: string | null
         }
         Insert: {
@@ -557,6 +558,7 @@ export type Database = {
           push_preview_enabled?: boolean
           updated_at?: string | null
           voice_enabled?: boolean | null
+          voice_encryption_key?: string | null
           voice_path?: string | null
         }
         Update: {
@@ -571,6 +573,7 @@ export type Database = {
           push_preview_enabled?: boolean
           updated_at?: string | null
           voice_enabled?: boolean | null
+          voice_encryption_key?: string | null
           voice_path?: string | null
         }
         Relationships: []
@@ -848,6 +851,7 @@ export type Database = {
           push_preview_enabled: boolean
           updated_at: string | null
           voice_enabled: boolean | null
+          voice_encryption_key: string | null
           voice_path: string | null
         }
         SetofOptions: {
