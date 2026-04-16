@@ -66,8 +66,25 @@ serve(async (req) => {
     if (!sttResponse.ok) {
       const err = await sttResponse.text();
       console.error("STT error:", err);
-      return new Response(JSON.stringify({ error: "transcription_failed" }), {
-        status: 500,
+
+      // Detect quota exceeded
+      if (err.includes("quota_exceeded")) {
+        return new Response(JSON.stringify({
+          ok: false,
+          error: "quota_exceeded",
+          message: "Der Sprachdienst ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        ok: false,
+        error: "transcription_failed",
+        message: "Wir konnten den vorgelesenen Satz nicht sicher erkennen. Das kann an Tempo, Aussprache oder Hintergrundgeräuschen liegen. Versuch es bitte nochmal.",
+      }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -178,8 +195,24 @@ serve(async (req) => {
     if (!elResponse.ok) {
       const errBody = await elResponse.text();
       console.error("ElevenLabs clone error:", errBody);
-      return new Response(JSON.stringify({ error: "clone_failed", details: errBody }), {
-        status: 500,
+
+      if (errBody.includes("quota_exceeded")) {
+        return new Response(JSON.stringify({
+          ok: false,
+          error: "quota_exceeded",
+          message: "Der Sprachdienst ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        ok: false,
+        error: "clone_failed",
+        message: "Das Klonen der Stimme ist fehlgeschlagen. Bitte versuche es erneut.",
+      }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -212,7 +245,7 @@ serve(async (req) => {
       voice_name: voiceName,
     }, { onConflict: "user_id" });
 
-    return new Response(JSON.stringify({ success: true, voice_id }), {
+    return new Response(JSON.stringify({ ok: true, success: true, voice_id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
