@@ -227,6 +227,90 @@ const ProfilePage = () => {
     setVoiceUploading(false);
   };
 
+  const handleToggleRecording = async () => {
+    if (isRecording) {
+      // Stop recording
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+
+    // Start recording
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recordedChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setIsRecording(false);
+
+        const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+        if (blob.size === 0) {
+          toast.error(locale === "de" ? "Aufnahme leer" : "Recording empty");
+          return;
+        }
+        if (blob.size > 5 * 1024 * 1024) {
+          toast.error(t("profile.voiceFileTooLarge"));
+          return;
+        }
+
+        // Encrypt & upload
+        setVoiceUploading(true);
+        try {
+          let keyB64 = voiceEncKey;
+          if (!keyB64) {
+            keyB64 = await generateVoiceKey();
+            const { error: keyErr } = await supabase
+              .from("profiles")
+              .update({ voice_encryption_key: keyB64 } as any)
+              .eq("id", user!.id);
+            if (keyErr) throw keyErr;
+            setVoiceEncKey(keyB64);
+          }
+
+          const encryptedBlob = await encryptVoiceFile(blob, keyB64);
+          const encPath = `${user!.id}.enc`;
+
+          const { error: uploadErr } = await supabase.storage
+            .from("stimmen")
+            .upload(encPath, encryptedBlob, { upsert: true, contentType: "application/octet-stream" });
+          if (uploadErr) {
+            toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
+            setVoiceUploading(false);
+            return;
+          }
+
+          const { error: dbErr } = await supabase
+            .from("profiles")
+            .update({ voice_path: encPath } as any)
+            .eq("id", user!.id);
+          if (dbErr) throw dbErr;
+
+          setVoicePath(encPath);
+          toast.success(t("profile.voiceSaved"));
+        } catch (err: any) {
+          console.error("Voice record upload error:", err);
+          toast.error(`${t("profile.voiceUploadFailed")}: ${err?.message || "Unknown"}`);
+        }
+        setVoiceUploading(false);
+      };
+
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err: any) {
+      console.error("Microphone access error:", err);
+      toast.error(locale === "de" ? "Mikrofon-Zugriff verweigert" : "Microphone access denied");
+    }
+  };
+
   const handleDeleteVoiceFile = async () => {
     if (!user || !voicePath) return;
     // Delete encrypted file
