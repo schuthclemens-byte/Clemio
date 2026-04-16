@@ -50,21 +50,33 @@ const VoiceRecordingsPage = () => {
   useEffect(() => { loadData(); }, [user]);
 
   const handleDeleteMyVoice = async () => {
-    if (!user || !myVoice) return;
+    if (!user) return;
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-          body: JSON.stringify({ elevenlabs_voice_id: myVoice.elevenlabs_voice_id }),
-        }
-      );
-      if (!response.ok) throw new Error("Delete failed");
+      // Delete from ElevenLabs if voice profile exists
+      if (myVoice?.elevenlabs_voice_id) {
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: JSON.stringify({ elevenlabs_voice_id: myVoice.elevenlabs_voice_id }),
+          }
+        ).catch(() => {});
+      }
+
+      // Delete from storage
+      if (voicePath) {
+        await supabase.storage.from("stimmen").remove([voicePath]).catch(() => {});
+      }
+
+      // Clear voice_path in profile
+      await supabase.from("profiles").update({ voice_path: null }).eq("id", user.id);
+
       setMyVoice(null);
+      setVoicePath(null);
       toast.success(tr("Stimmprofil gelöscht", "Voice profile deleted"));
     } catch {
       toast.error(tr("Fehler beim Löschen", "Error deleting"));
@@ -140,7 +152,7 @@ const VoiceRecordingsPage = () => {
           <div className="flex items-center justify-center py-20">
             <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
-        ) : myVoice ? (
+        ) : isVoiceConfigured ? (
           /* ── Voice exists ── */
           <>
             <section className="animate-reveal-up">
@@ -152,13 +164,15 @@ const VoiceRecordingsPage = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="font-bold text-base truncate">
-                        {myVoice.voice_name || tr("Meine Stimme", "My Voice")}
+                        {myVoice?.voice_name || tr("Meine Stimme", "My Voice")}
                       </p>
                       <CheckCircle className="w-4 h-4 text-accent shrink-0" />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {tr("Erstellt am", "Created on")} {formatDate(myVoice.created_at)}
-                    </p>
+                    {myVoice?.created_at && (
+                      <p className="text-xs text-muted-foreground">
+                        {tr("Erstellt am", "Created on")} {formatDate(myVoice.created_at)}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {tr(
                         "Deine Kontakte können Nachrichten in deiner Stimme hören.",

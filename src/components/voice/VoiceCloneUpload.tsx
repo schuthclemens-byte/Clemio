@@ -141,74 +141,74 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
       const freeSpeechFile = new File([freeSpeechBlobRef.current], "free-speech.webm", { type: "audio/webm" });
       const sentenceFile = new File([sentenceBlob], "sentence.webm", { type: "audio/webm" });
 
-      const formData = new FormData();
-      formData.append("free_speech", freeSpeechFile);
-      formData.append("sentence_audio", sentenceFile);
-      formData.append("expected_sentence", verificationSentenceRef.current);
-      formData.append("name", user.user_metadata?.display_name || "Meine Stimme");
+      // Step 1: ALWAYS upload the recording to Supabase storage first
+      const storagePath = `${user.id}/${user.id}.wav`;
+      const { error: uploadError } = await supabase.storage
+        .from("stimmen")
+        .upload(storagePath, freeSpeechBlobRef.current, {
+          upsert: true,
+          contentType: "audio/webm",
+        });
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-and-clone-voice`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const result = await response.json();
-
-      // Handle both old (HTTP error) and new (ok: false) response formats
-      const isError = !response.ok || result.ok === false;
-      if (isError && result.error) {
-        if (result.error === "quota_exceeded") {
-          setErrorMsg(tr(
-            "Der Sprachdienst ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
-            "The voice service is temporarily unavailable. Please try again later."
-          ));
-          setPhase("error");
-          return;
-        }
-        if (result.error === "sentence_mismatch") {
-          setErrorMsg(tr(
-            "Der gesprochene Satz stimmt nicht überein. Bitte lies den Satz genau vor.",
-            "The spoken sentence doesn't match. Please read the sentence exactly."
-          ));
-          setPhase("error");
-          return;
-        }
-        if (result.error === "speaker_mismatch") {
-          setErrorMsg(tr(
-            "Die Stimmen in den beiden Aufnahmen scheinen nicht übereinzustimmen. Bitte versuche es erneut.",
-            "The voices in the two recordings don't seem to match. Please try again."
-          ));
-          setPhase("error");
-          return;
-        }
-        if (result.error === "transcription_failed") {
-          setErrorMsg(tr(
-            "Wir konnten den vorgelesenen Satz nicht sicher erkennen. Das kann an Tempo, Aussprache oder Hintergrundgeräuschen liegen. Versuch es bitte nochmal.",
-            "We couldn't reliably recognize the spoken sentence. This may be due to pace, pronunciation, or background noise. Please try again."
-          ));
-          setPhase("error");
-          return;
-        }
-        if (result.error === "clone_failed") {
-          setErrorMsg(tr(
-            "Das Klonen der Stimme ist fehlgeschlagen. Bitte versuche es erneut.",
-            "Voice cloning failed. Please try again."
-          ));
-          setPhase("error");
-          return;
-        }
-        throw new Error(result.message || result.error || tr("Fehler", "Error"));
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        throw new Error(tr(
+          "Aufnahme konnte nicht gespeichert werden. Bitte versuche es erneut.",
+          "Recording could not be saved. Please try again."
+        ));
       }
 
+      // Step 2: Save voice_path in profile — voice is now configured
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ voice_path: storagePath })
+        .eq("id", user.id);
+
+      if (profileError) {
+        console.error("Profile update error:", profileError);
+        throw new Error(tr(
+          "Profil konnte nicht aktualisiert werden.",
+          "Profile could not be updated."
+        ));
+      }
+
+      // Voice is saved! Mark as done immediately
       setPhase("done");
       toast.success(tr("Deine Stimme ist bereit! 🎉", "Your voice is ready! 🎉"));
       onCloned();
+
+      // Step 3: Attempt ElevenLabs cloning in the background (OPTIONAL)
+      try {
+        const formData = new FormData();
+        formData.append("free_speech", freeSpeechFile);
+        formData.append("sentence_audio", sentenceFile);
+        formData.append("expected_sentence", verificationSentenceRef.current);
+        formData.append("name", user.user_metadata?.display_name || "Meine Stimme");
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-and-clone-voice`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: formData,
+          }
+        );
+
+        const result = await response.json();
+        if (!response.ok || result.ok === false) {
+          console.warn("ElevenLabs cloning failed (non-blocking):", result.error || result.message);
+          // Show a subtle info toast — do NOT block or reset the flow
+          toast.info(tr(
+            "Stimme gespeichert. Das KI-Stimmklonen ist derzeit nicht verfügbar – deine Stimme funktioniert trotzdem.",
+            "Voice saved. AI voice cloning is currently unavailable – your voice still works."
+          ));
+        }
+      } catch (cloneErr) {
+        console.warn("ElevenLabs cloning error (non-blocking):", cloneErr);
+      }
+
     } catch (error: any) {
       setErrorMsg(error.message || tr("Etwas ist schiefgelaufen", "Something went wrong"));
       setPhase("error");
