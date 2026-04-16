@@ -66,8 +66,25 @@ serve(async (req) => {
     if (!sttResponse.ok) {
       const err = await sttResponse.text();
       console.error("STT error:", err);
-      return new Response(JSON.stringify({ error: "transcription_failed" }), {
-        status: 500,
+
+      // Detect quota exceeded
+      if (err.includes("quota_exceeded")) {
+        return new Response(JSON.stringify({
+          ok: false,
+          error: "quota_exceeded",
+          message: "Der Sprachdienst ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        ok: false,
+        error: "transcription_failed",
+        message: "Wir konnten den vorgelesenen Satz nicht sicher erkennen. Das kann an Tempo, Aussprache oder Hintergrundgeräuschen liegen. Versuch es bitte nochmal.",
+      }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
