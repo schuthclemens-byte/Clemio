@@ -638,31 +638,8 @@ const ProfilePage = () => {
                   </p>
                 </div>
               </button>
-
-              {/* File upload button */}
-              <button
-                onClick={() => voiceInputRef.current?.click()}
-                disabled={voiceUploading || isRecording}
-                className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-3 hover:bg-secondary/50 transition-colors active:scale-[0.98]"
-              >
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                  <Upload className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-semibold text-[0.938rem]">{t("profile.uploadVoice")}</p>
-                  <p className="text-xs text-muted-foreground">.wav · max 5 MB</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              </button>
             </div>
           )}
-          <input
-            ref={voiceInputRef}
-            type="file"
-            accept=".wav,audio/wav"
-            onChange={handleVoiceUpload}
-            className="hidden"
-          />
         </section>
 
         <section className="animate-reveal-up space-y-3 pt-2" style={{ animationDelay: "120ms" }}>
