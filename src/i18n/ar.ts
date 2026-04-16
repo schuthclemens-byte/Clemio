@@ -252,7 +252,7 @@ const ar: Record<string, string> = {
     "consent.title": "صوتك، تحكمك",
     "consent.point1": "لحسابك فقط – لا أحد آخر يمكنه الوصول",
     "consent.point2": "قابل للحذف في أي وقت – أنت تتحكم",
-    "consent.point3": "لا يمكن التحميل أو النسخ",
+    "consent.point3": "مخزّن بشكل خاص وغير متاح للعامة",
     "consent.trust": "يُستخدم صوتك حصرياً داخل التطبيق.",
     "consent.accept": "موافقة والبدء",
     "consent.cancel": "إلغاء",

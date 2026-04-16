@@ -159,8 +159,13 @@ const InlineVoiceRecorder = ({ onVoiceSaved, userName }: InlineVoiceRecorderProp
           </p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             {isDE
-              ? "Damit andere dich hören können, nimm bitte kurz deine Stimme auf. Empfohlen: 30–60 Sekunden."
-              : "So others can hear you, please record a short voice sample. Recommended: 30–60 seconds."}
+              ? "Sprich 30–45 Sekunden ganz natürlich. Normale Alltagsgeräusche sind okay."
+              : "Speak naturally for 30–45 seconds. Normal everyday sounds are fine."}
+          </p>
+          <p className="text-[0.625rem] text-muted-foreground/70 leading-relaxed">
+            {isDE
+              ? "Je natürlicher du sprichst, desto besser klingt deine Stimme."
+              : "The more naturally you speak, the better your voice will sound."}
           </p>
         </div>
       )}

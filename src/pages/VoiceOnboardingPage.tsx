@@ -213,8 +213,13 @@ const VoiceOnboardingPage = () => {
             </p>
             <p className="text-sm text-foreground/80">
               {isDE
-                ? "30–60 Sekunden (optimal ~45 Sekunden). Je länger du sprichst, desto besser klingt deine Stimme."
-                : "30–60 seconds (optimal ~45 seconds). The longer you speak, the better your voice sounds."}
+                ? "Sprich 30–45 Sekunden ganz natürlich. Je natürlicher du sprichst, desto besser klingt deine Stimme."
+                : "Speak naturally for 30–45 seconds. The more naturally you speak, the better your voice sounds."}
+            </p>
+            <p className="text-xs text-muted-foreground/70">
+              {isDE
+                ? "Normale Alltagsgeräusche sind okay. In ruhiger Umgebung klappt es meist besser."
+                : "Normal everyday sounds are fine. A quieter environment usually works better."}
             </p>
           </div>
 

@@ -252,7 +252,7 @@ const tr: Record<string, string> = {
     "consent.title": "Sesin, senin kontrolün",
     "consent.point1": "Yalnızca senin hesabın için – başka kimse erişemez",
     "consent.point2": "İstediğin zaman silinebilir – kontrol sende",
-    "consent.point3": "İndirme veya kopyalama mümkün değil",
+    "consent.point3": "Gizli olarak saklanır ve herkese açık değildir",
     "consent.trust": "Sesin yalnızca uygulama içinde kullanılır.",
     "consent.accept": "Kabul et ve başla",
     "consent.cancel": "İptal",

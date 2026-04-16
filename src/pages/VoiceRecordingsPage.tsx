@@ -118,7 +118,7 @@ const VoiceRecordingsPage = () => {
             <p className="text-xs text-muted-foreground">
               {myVoice
                 ? tr("Aktiv und bereit", "Active and ready")
-                : tr("Noch nicht eingerichtet", "Not set up yet")}
+                : tr("Noch keine Stimme eingerichtet", "No voice set up yet")}
             </p>
           </div>
         </div>
@@ -204,8 +204,8 @@ const VoiceRecordingsPage = () => {
                 {[
                   {
                     step: "1",
-                    title: tr("30 Sekunden frei sprechen", "30 seconds of free speech"),
-                    desc: tr("Erzähl einfach etwas – egal was.", "Just talk about anything."),
+                    title: tr("Sprich 30–45 Sekunden ganz natürlich", "Speak naturally for 30–45 seconds"),
+                    desc: tr("Normale Alltagsgeräusche sind okay. In ruhiger Umgebung klappt es meist besser.", "Normal everyday sounds are fine. A quieter environment usually works better."),
                     highlight: false,
                   },
                   {
@@ -216,7 +216,7 @@ const VoiceRecordingsPage = () => {
                   },
                   {
                     step: "✓",
-                    title: tr("Fertig – deine Stimme ist aktiv!", "Done – your voice is active!"),
+                    title: tr("Fertig – deine Stimme ist aktiv", "Done – your voice is active"),
                     desc: tr("Ab sofort können Kontakte dich hören.", "Your contacts can hear you from now on."),
                     highlight: true,
                   },

@@ -241,7 +241,7 @@ const en: Record<string, string> = {
     "consent.title": "Your voice, your control",
     "consent.point1": "Only for your account – no one else has access",
     "consent.point2": "Deletable anytime – you stay in control",
-    "consent.point3": "No downloading or copying possible",
+    "consent.point3": "Privately stored and not publicly accessible",
     "consent.trust": "Your voice is used exclusively within the app.",
     "consent.accept": "Agree and start",
     "consent.cancel": "Cancel",
