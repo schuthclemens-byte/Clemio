@@ -48,7 +48,7 @@ const ProfilePage = () => {
   const [loaded, setLoaded] = useState(false);
   const [hasVoice, setHasVoice] = useState(false);
   const [voicePath, setVoicePath] = useState<string | null>(null);
-  const [voiceUploading, setVoiceUploading] = useState(false);
+  const [voiceEncKey, setVoiceEncKey] = useState<string | null>(null);
   const [voicePlaying, setVoicePlaying] = useState(false);
   const voiceInputRef = useRef<HTMLInputElement>(null);
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
