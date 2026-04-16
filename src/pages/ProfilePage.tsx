@@ -15,7 +15,9 @@ import {
   Play,
   Pause,
   Square,
+  RotateCcw,
 } from "lucide-react";
+import InlineVoiceRecorder from "@/components/voice/InlineVoiceRecorder";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
