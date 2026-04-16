@@ -1,32 +1,40 @@
 
 
-## Plan: Bestehende Stimmdatei serverseitig in Root verschieben
+## Plan: Stimmaufnahme verschlüsselt hochladen + neutrale DB-Anzeige
 
 ### Problem
-Die alte `.wav`-Datei liegt im verschachtelten Pfad `{user_id}/{user_id}.wav`. Die neue Upload-Logik speichert als `{user_id}.enc` im Root, aber die bestehende Datei wurde nie migriert, weil die Auto-Migration nur beim Öffnen der Profilseite läuft.
+Aktuell wird die Aufnahme als Klartext-`.wav` unter `{user_id}/{user_id}.wav` hochgeladen. Im Backend ist die Datei direkt abspielbar und der Pfad steht sichtbar in `profiles.voice_path`.
 
-### Lösung
-Die Frontend-Auto-Migration beibehalten (für andere Nutzer), aber **zusätzlich jetzt einmalig die bestehende Datei manuell migrieren**:
+### Ziel
+- Die Aufnahme wird **im Browser mit AES-256-GCM verschlüsselt**, bevor sie hochgeladen wird
+- Im Storage liegt nur ein unlesbarer `.enc`-Blob
+- In `profiles.voice_path` steht **nur ein neutraler Marker** (z.B. `"uploaded"`) — kein Dateipfad
+- In der UI zeigt die Karte den **Namen des Nutzers** und **"Stimmaufnahme"** statt des Pfads
 
-1. **Profilseite öffnen** → Die Auto-Migration wird ausgelöst:
-   - Lädt die alte `.wav` per Signed URL
-   - Verschlüsselt sie mit AES-256-GCM
-   - Lädt sie als `{user_id}.enc` in den Root hoch
-   - Aktualisiert `voice_path` und `voice_encryption_key` in der DB
-   - Löscht die alte verschachtelte Datei
+### Änderungen in `src/pages/ProfilePage.tsx`
 
-2. **Logging verbessern** → Falls die Migration fehlschlägt, sehen wir den Grund in der Konsole. Aktuell werden Fehler still verschluckt (`if (!data?.signedUrl) return;`). Ich füge aussagekräftige `console.warn`-Meldungen hinzu.
+**1. Recording-Handler (`recorder.onstop`, Zeile 250–291):**
+- Nach dem Stoppen: AES-256-GCM Key generieren oder bestehenden wiederverwenden (`voiceEncKey`)
+- Blob mit `encryptVoiceFile()` verschlüsseln
+- Upload als `${user.id}.enc` (nicht mehr `${user.id}/${user.id}.wav`)
+- `voice_path` in DB auf `"uploaded"` setzen (kein Dateipfad)
+- `voice_encryption_key` speichern
 
-3. **Fallback**: Falls die Signed URL für den alten Pfad nicht funktioniert (RLS-Problem), passe ich den Migrationscode an, den alten Ordner-basierten Pfad korrekt zu verwenden.
+**2. Voice-Karte (Zeile 582–603):**
+- Statt `{voicePath}` → `{firstName} {lastName}` (Fallback: "Meine Stimme")
+- Statt `{t("profile.voiceSaved")}` → `"Stimmaufnahme"` / `"Voice Recording"`
 
-### Änderungen
-- `src/pages/ProfilePage.tsx`: Logging in der Auto-Migration ergänzen, damit Fehler sichtbar werden
-- Kein neuer Backend-Code nötig – die RLS-Policies erlauben bereits beides (Ordner + Root)
+**3. Delete-Handler (Zeile 302–315):**
+- Bereits korrekt: löscht `.enc` und setzt `voice_path: null`
+
+**4. Play-Handler (Zeile 317–350):**
+- Bereits korrekt: lädt `.enc`, entschlüsselt im Browser
 
 ### Ergebnis
-Nach dem Öffnen der Profilseite:
-- Datei `{user_id}.enc` im Root des `stimmen`-Buckets sichtbar
-- Alte verschachtelte Datei gelöscht
-- `profiles.voice_path` = `{user_id}.enc`
-- `profiles.voice_encryption_key` = Base64-AES-Key
+
+| Vorher | Nachher |
+|--------|---------|
+| `stimmen/{id}/{id}.wav` (Klartext) | `stimmen/{id}.enc` (AES-256-GCM) |
+| `voice_path = "{id}/{id}.wav"` | `voice_path = "uploaded"` |
+| UI zeigt Dateipfad | UI zeigt "Max Mustermann — Stimmaufnahme" |
 
