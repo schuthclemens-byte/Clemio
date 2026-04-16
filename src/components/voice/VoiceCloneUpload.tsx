@@ -158,9 +158,20 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         }
       );
 
-      if (!response.ok) {
-        const err = await response.json();
-        if (err.error === "sentence_mismatch") {
+      const result = await response.json();
+
+      // Handle both old (HTTP error) and new (ok: false) response formats
+      const isError = !response.ok || result.ok === false;
+      if (isError && result.error) {
+        if (result.error === "quota_exceeded") {
+          setErrorMsg(tr(
+            "Der Sprachdienst ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
+            "The voice service is temporarily unavailable. Please try again later."
+          ));
+          setPhase("error");
+          return;
+        }
+        if (result.error === "sentence_mismatch") {
           setErrorMsg(tr(
             "Der gesprochene Satz stimmt nicht überein. Bitte lies den Satz genau vor.",
             "The spoken sentence doesn't match. Please read the sentence exactly."
@@ -168,7 +179,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           setPhase("error");
           return;
         }
-        if (err.error === "speaker_mismatch") {
+        if (result.error === "speaker_mismatch") {
           setErrorMsg(tr(
             "Die Stimmen in den beiden Aufnahmen scheinen nicht übereinzustimmen. Bitte versuche es erneut.",
             "The voices in the two recordings don't seem to match. Please try again."
@@ -176,7 +187,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           setPhase("error");
           return;
         }
-        if (err.error === "transcription_failed") {
+        if (result.error === "transcription_failed") {
           setErrorMsg(tr(
             "Wir konnten den vorgelesenen Satz nicht sicher erkennen. Das kann an Tempo, Aussprache oder Hintergrundgeräuschen liegen. Versuch es bitte nochmal.",
             "We couldn't reliably recognize the spoken sentence. This may be due to pace, pronunciation, or background noise. Please try again."
@@ -184,7 +195,15 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
           setPhase("error");
           return;
         }
-        throw new Error(err.error || tr("Fehler", "Error"));
+        if (result.error === "clone_failed") {
+          setErrorMsg(tr(
+            "Das Klonen der Stimme ist fehlgeschlagen. Bitte versuche es erneut.",
+            "Voice cloning failed. Please try again."
+          ));
+          setPhase("error");
+          return;
+        }
+        throw new Error(result.message || result.error || tr("Fehler", "Error"));
       }
 
       setPhase("done");
