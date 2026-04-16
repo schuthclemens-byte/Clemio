@@ -230,6 +230,7 @@ const VoiceRecordingsPage = () => {
                     title: tr("Fertig – deine Stimme ist aktiv", "Done – your voice is active"),
                     desc: tr("Ab sofort können Kontakte dich hören.", "Your contacts can hear you from now on."),
                     highlight: isVoiceConfigured,
+                    pending: !isVoiceConfigured,
                   },
                 ].map((item, i) => (
                   <div
@@ -237,22 +238,28 @@ const VoiceRecordingsPage = () => {
                     className={`flex items-start gap-3 rounded-xl p-3.5 border transition-colors ${
                       item.highlight
                         ? "bg-primary/5 border-primary/20"
-                        : "bg-card border-border/50"
+                        : item.pending
+                          ? "bg-muted/50 border-border/30 opacity-60"
+                          : "bg-card border-border/50"
                     }`}
                   >
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                         item.highlight
                           ? "gradient-primary shadow-sm"
-                          : "bg-primary/10"
+                          : item.pending
+                            ? "bg-muted"
+                            : "bg-primary/10"
                       }`}
                     >
-                      <span className={`text-xs font-bold ${item.highlight ? "text-primary-foreground" : "text-primary"}`}>
+                      <span className={`text-xs font-bold ${
+                        item.highlight ? "text-primary-foreground" : item.pending ? "text-muted-foreground" : "text-primary"
+                      }`}>
                         {item.step}
                       </span>
                     </div>
                     <div>
-                      <p className={`text-sm font-semibold leading-tight ${item.highlight ? "text-foreground" : ""}`}>
+                      <p className={`text-sm font-semibold leading-tight ${item.highlight ? "text-foreground" : item.pending ? "text-muted-foreground" : ""}`}>
                         {item.title}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
