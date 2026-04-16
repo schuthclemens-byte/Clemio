@@ -180,66 +180,60 @@ const ProfilePage = () => {
     }
     setVoiceUploading(true);
     try {
-      const path = `${user.id}/${user.id}.wav`;
-      console.log("Voice upload started", {
-        bucket: "stimmen",
-        path,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-      });
+      // 1. Generate or reuse encryption key
+      let keyB64 = voiceEncKey;
+      if (!keyB64) {
+        keyB64 = await generateVoiceKey();
+        const { error: keyErr } = await supabase
+          .from("profiles")
+          .update({ voice_encryption_key: keyB64 } as any)
+          .eq("id", user.id);
+        if (keyErr) throw keyErr;
+        setVoiceEncKey(keyB64);
+      }
 
-      const { data: uploadData, error: uploadErr } = await supabase.storage
+      // 2. Encrypt the file in browser
+      const encryptedBlob = await encryptVoiceFile(file, keyB64);
+
+      // 3. Upload encrypted blob to root of bucket
+      const encPath = `${user.id}.enc`;
+      const { error: uploadErr } = await supabase.storage
         .from("stimmen")
-        .upload(path, file, { upsert: true, contentType: "audio/wav" });
-
+        .upload(encPath, encryptedBlob, { upsert: true, contentType: "application/octet-stream" });
       if (uploadErr) {
-        console.error("Voice storage upload error:", {
-          bucket: "stimmen",
-          path,
-          error: uploadErr,
-        });
         toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
         setVoiceUploading(false);
         return;
       }
 
-      console.log("Voice storage upload ok:", {
-        bucket: "stimmen",
-        path,
-        data: uploadData,
-      });
-
+      // 4. Save path in profile
       const { error: dbErr } = await supabase
         .from("profiles")
-        .update({ voice_path: path } as any)
+        .update({ voice_path: encPath } as any)
         .eq("id", user.id);
-      if (dbErr) {
-        console.error("Voice DB update error:", dbErr);
-        toast.error(`${t("profile.voiceUploadFailed")}: ${dbErr.message}`);
-        setVoiceUploading(false);
-        return;
-      }
+      if (dbErr) throw dbErr;
+
+      setVoicePath(encPath);
+      toast.success(t("profile.voiceSaved"));
     } catch (err: any) {
       console.error("Voice upload exception:", err);
       toast.error(`${t("profile.voiceUploadFailed")}: ${err?.message || "Unknown error"}`);
-      setVoiceUploading(false);
-      return;
     }
-    setVoicePath(`${user.id}/${user.id}.wav`);
     setVoiceUploading(false);
-    toast.success(t("profile.voiceSaved"));
   };
 
   const handleDeleteVoiceFile = async () => {
     if (!user || !voicePath) return;
-    const path = `${user.id}/${user.id}.wav`;
-    await supabase.storage.from("stimmen").remove([path]);
+    // Delete encrypted file
+    await supabase.storage.from("stimmen").remove([`${user.id}.enc`]);
+    // Also try to clean up old unencrypted file
+    await supabase.storage.from("stimmen").remove([`${user.id}/${user.id}.wav`]);
     await supabase
       .from("profiles")
-      .update({ voice_path: null } as any)
+      .update({ voice_path: null, voice_encryption_key: null } as any)
       .eq("id", user.id);
     setVoicePath(null);
+    setVoiceEncKey(null);
     toast.success(t("profile.voiceFileDeleted"));
   };
 
@@ -250,14 +244,79 @@ const ProfilePage = () => {
       setVoicePlaying(false);
       return;
     }
-    const { data } = await supabase.storage.from("stimmen").createSignedUrl(`${user.id}/${user.id}.wav`, 60);
-    if (!data?.signedUrl) return;
-    const audio = new Audio(data.signedUrl);
-    voiceAudioRef.current = audio;
-    audio.onended = () => setVoicePlaying(false);
-    audio.play();
-    setVoicePlaying(true);
+    try {
+      const encPath = `${user.id}.enc`;
+      const { data } = await supabase.storage.from("stimmen").createSignedUrl(encPath, 60);
+      if (!data?.signedUrl) {
+        toast.error("Signed URL failed");
+        return;
+      }
+
+      if (!voiceEncKey) {
+        toast.error("Encryption key missing");
+        return;
+      }
+
+      // Download encrypted data
+      const response = await fetch(data.signedUrl);
+      const encryptedData = await response.arrayBuffer();
+
+      // Decrypt in browser
+      const audioBlob = await decryptVoiceFile(encryptedData, voiceEncKey);
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      const audio = new Audio(audioUrl);
+      voiceAudioRef.current = audio;
+      audio.onended = () => {
+        setVoicePlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      audio.play();
+      setVoicePlaying(true);
+    } catch (err: any) {
+      console.error("Voice playback error:", err);
+      toast.error("Playback failed");
+    }
   };
+
+  // Auto-migrate unencrypted voice files to encrypted format
+  useEffect(() => {
+    if (!user || !loaded || !voicePath) return;
+    if (voicePath.endsWith(".enc")) return; // Already encrypted
+    const migrate = async () => {
+      try {
+        const { data } = await supabase.storage.from("stimmen").createSignedUrl(voicePath, 60);
+        if (!data?.signedUrl) return;
+        const resp = await fetch(data.signedUrl);
+        if (!resp.ok) return;
+        const wavBlob = await resp.blob();
+
+        const keyB64 = await generateVoiceKey();
+        const encBlob = await encryptVoiceFile(wavBlob, keyB64);
+        const encPath = `${user.id}.enc`;
+
+        const { error: upErr } = await supabase.storage
+          .from("stimmen")
+          .upload(encPath, encBlob, { upsert: true, contentType: "application/octet-stream" });
+        if (upErr) return;
+
+        await supabase
+          .from("profiles")
+          .update({ voice_path: encPath, voice_encryption_key: keyB64 } as any)
+          .eq("id", user.id);
+
+        // Remove old unencrypted file
+        await supabase.storage.from("stimmen").remove([voicePath]);
+
+        setVoicePath(encPath);
+        setVoiceEncKey(keyB64);
+        console.log("Voice file migrated to encrypted format");
+      } catch (err) {
+        console.error("Voice migration error:", err);
+      }
+    };
+    migrate();
+  }, [user, loaded, voicePath]);
 
   const initials =
     [firstName, lastName]
