@@ -261,33 +261,27 @@ const ProfilePage = () => {
           return;
         }
 
-        // Encrypt and upload to stimmen bucket as {user_id}.enc
+        // Upload to stimmen bucket as {user_id}/{user_id}.wav
         setVoiceUploading(true);
         try {
-          const encKey = voiceEncKey || await generateVoiceKey();
-          const encryptedBlob = await encryptVoiceFile(blob, encKey);
-          const filePath = `${user!.id}.enc`;
+          const filePath = `${user!.id}/${user!.id}.wav`;
 
           const { error: uploadErr } = await supabase.storage
             .from("stimmen")
-            .upload(filePath, encryptedBlob, { upsert: true, contentType: "application/octet-stream" });
+            .upload(filePath, blob, { upsert: true, contentType: "audio/wav" });
           if (uploadErr) {
             toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
             setVoiceUploading(false);
             return;
           }
 
-          // Also clean up old unencrypted file if it existed
-          await supabase.storage.from("stimmen").remove([`${user!.id}/${user!.id}.wav`]);
-
           const { error: dbErr } = await supabase
             .from("profiles")
-            .update({ voice_path: "uploaded", voice_encryption_key: encKey } as any)
+            .update({ voice_path: filePath } as any)
             .eq("id", user!.id);
           if (dbErr) throw dbErr;
 
-          setVoicePath("uploaded");
-          setVoiceEncKey(encKey);
+          setVoicePath(filePath);
           toast.success(locale === "de" ? "Aufnahme gespeichert" : "Recording saved");
         } catch (err: any) {
           console.error("Voice record upload error:", err);
