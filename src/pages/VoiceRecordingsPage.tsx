@@ -50,21 +50,33 @@ const VoiceRecordingsPage = () => {
   useEffect(() => { loadData(); }, [user]);
 
   const handleDeleteMyVoice = async () => {
-    if (!user || !myVoice) return;
+    if (!user) return;
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-          body: JSON.stringify({ elevenlabs_voice_id: myVoice.elevenlabs_voice_id }),
-        }
-      );
-      if (!response.ok) throw new Error("Delete failed");
+      // Delete from ElevenLabs if voice profile exists
+      if (myVoice?.elevenlabs_voice_id) {
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-voice`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: JSON.stringify({ elevenlabs_voice_id: myVoice.elevenlabs_voice_id }),
+          }
+        ).catch(() => {});
+      }
+
+      // Delete from storage
+      if (voicePath) {
+        await supabase.storage.from("stimmen").remove([voicePath]).catch(() => {});
+      }
+
+      // Clear voice_path in profile
+      await supabase.from("profiles").update({ voice_path: null }).eq("id", user.id);
+
       setMyVoice(null);
+      setVoicePath(null);
       toast.success(tr("Stimmprofil gelöscht", "Voice profile deleted"));
     } catch {
       toast.error(tr("Fehler beim Löschen", "Error deleting"));
