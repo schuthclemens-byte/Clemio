@@ -178,9 +178,35 @@ const ProfilePage = () => {
     setVoiceUploading(true);
     try {
       const path = `${user.id}/${user.id}.wav`;
-      const { error: uploadErr } = await supabase.storage
-        .from("Stimmen")
+      console.log("Voice upload started", {
+        bucket: "stimmen",
+        path,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      });
+
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from("stimmen")
         .upload(path, file, { upsert: true, contentType: "audio/wav" });
+
+      if (uploadErr) {
+        console.error("Voice storage upload error:", {
+          bucket: "stimmen",
+          path,
+          error: uploadErr,
+        });
+        toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
+        setVoiceUploading(false);
+        return;
+      }
+
+      console.log("Voice storage upload ok:", {
+        bucket: "stimmen",
+        path,
+        data: uploadData,
+      });
+
       const { error: dbErr } = await supabase
         .from("profiles")
         .update({ voice_path: path } as any)
@@ -205,7 +231,7 @@ const ProfilePage = () => {
   const handleDeleteVoiceFile = async () => {
     if (!user || !voicePath) return;
     const path = `${user.id}/${user.id}.wav`;
-    await supabase.storage.from("Stimmen").remove([path]);
+    await supabase.storage.from("stimmen").remove([path]);
     await supabase
       .from("profiles")
       .update({ voice_path: null } as any)
@@ -221,7 +247,7 @@ const ProfilePage = () => {
       setVoicePlaying(false);
       return;
     }
-    const { data } = await supabase.storage.from("Stimmen").createSignedUrl(`${user.id}/${user.id}.wav`, 60);
+    const { data } = await supabase.storage.from("stimmen").createSignedUrl(`${user.id}/${user.id}.wav`, 60);
     if (!data?.signedUrl) return;
     const audio = new Audio(data.signedUrl);
     voiceAudioRef.current = audio;
