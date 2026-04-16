@@ -428,7 +428,7 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
             {tr("⏱ ca. 1 Minute", "⏱ ~1 minute")}
           </span>
           <span className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
-            {tr("📌 Noch nicht eingerichtet", "📌 Not set up yet")}
+            {tr("📌 Noch keine Stimme eingerichtet", "📌 No voice set up yet")}
           </span>
         </div>
       </div>

@@ -118,7 +118,7 @@ const VoiceRecordingsPage = () => {
             <p className="text-xs text-muted-foreground">
               {myVoice
                 ? tr("Aktiv und bereit", "Active and ready")
-                : tr("Noch nicht eingerichtet", "Not set up yet")}
+                : tr("Noch keine Stimme eingerichtet", "No voice set up yet")}
             </p>
           </div>
         </div>
