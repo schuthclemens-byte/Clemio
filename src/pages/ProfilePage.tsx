@@ -261,26 +261,14 @@ const ProfilePage = () => {
           return;
         }
 
-        // Encrypt & upload
+        // Upload to stimmen bucket as {user_id}/{user_id}.wav
         setVoiceUploading(true);
         try {
-          let keyB64 = voiceEncKey;
-          if (!keyB64) {
-            keyB64 = await generateVoiceKey();
-            const { error: keyErr } = await supabase
-              .from("profiles")
-              .update({ voice_encryption_key: keyB64 } as any)
-              .eq("id", user!.id);
-            if (keyErr) throw keyErr;
-            setVoiceEncKey(keyB64);
-          }
-
-          const encryptedBlob = await encryptVoiceFile(blob, keyB64);
-          const encPath = `${user!.id}.enc`;
+          const filePath = `${user!.id}/${user!.id}.wav`;
 
           const { error: uploadErr } = await supabase.storage
             .from("stimmen")
-            .upload(encPath, encryptedBlob, { upsert: true, contentType: "application/octet-stream" });
+            .upload(filePath, blob, { upsert: true, contentType: "audio/wav" });
           if (uploadErr) {
             toast.error(`${t("profile.voiceUploadFailed")}: ${uploadErr.message}`);
             setVoiceUploading(false);
@@ -289,12 +277,12 @@ const ProfilePage = () => {
 
           const { error: dbErr } = await supabase
             .from("profiles")
-            .update({ voice_path: encPath } as any)
+            .update({ voice_path: filePath } as any)
             .eq("id", user!.id);
           if (dbErr) throw dbErr;
 
-          setVoicePath(encPath);
-          toast.success(t("profile.voiceSaved"));
+          setVoicePath(filePath);
+          toast.success(locale === "de" ? "Aufnahme gespeichert" : "Recording saved");
         } catch (err: any) {
           console.error("Voice record upload error:", err);
           toast.error(`${t("profile.voiceUploadFailed")}: ${err?.message || "Unknown"}`);
