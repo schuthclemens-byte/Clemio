@@ -76,18 +76,21 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = locale;
   }, [locale]);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
     persistSelectedLocale(l);
     document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = l;
   }, []);
 
   const syncLocaleForPath = useCallback((pathname = window.location.pathname) => {
     const nextLocale = detectInitialLocale(pathname);
     setLocaleState((current) => (current === nextLocale ? current : nextLocale));
     document.documentElement.dir = nextLocale === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = nextLocale;
   }, []);
 
   const t = useCallback(
