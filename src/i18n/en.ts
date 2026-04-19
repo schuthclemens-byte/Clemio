@@ -928,7 +928,6 @@ const en: Record<string, string> = {
     "landing.privNoShareTitle": "Never shared",
     "landing.privNoShareDesc": "Never sold. Never shared. Never analyzed. Promised.",
     "landing.finalCtaTitle": "Hear what's really being said.",
-    "landing.finalCtaSub": "",
     "landing.finalCtaPrimary": "Get started",
     "landing.finalCtaSecondary": "Try Clemio",
 };

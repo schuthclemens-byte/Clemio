@@ -928,7 +928,6 @@ const de: Record<string, string> = {
     "landing.privNoShareTitle": "Keine Weitergabe",
     "landing.privNoShareDesc": "Niemals verkauft. Niemals geteilt. Niemals ausgewertet. Versprochen.",
     "landing.finalCtaTitle": "Höre, was dir wirklich gesagt wird.",
-    "landing.finalCtaSub": "",
     "landing.finalCtaPrimary": "Jetzt starten",
     "landing.finalCtaSecondary": "Clemio ausprobieren",
 };

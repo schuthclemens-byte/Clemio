@@ -928,7 +928,6 @@ const fr: Record<string, string> = {
     "landing.privNoShareTitle": "Jamais partagé",
     "landing.privNoShareDesc": "Jamais vendu. Jamais partagé. Jamais analysé. Promis.",
     "landing.finalCtaTitle": "Entends ce qu'on te dit vraiment.",
-    "landing.finalCtaSub": "",
     "landing.finalCtaPrimary": "Commencer",
     "landing.finalCtaSecondary": "Essayer Clemio",
 };

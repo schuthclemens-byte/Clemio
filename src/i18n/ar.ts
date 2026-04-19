@@ -794,7 +794,6 @@ const ar: Record<string, string> = {
     "landing.privNoShareTitle": "لا تتم مشاركتها",
     "landing.privNoShareDesc": "لا تباع أبداً. لا تشارك أبداً. لا تحلل أبداً. وعد.",
     "landing.finalCtaTitle": "اسمع ما يُقال لك حقاً.",
-    "landing.finalCtaSub": "",
     "landing.finalCtaPrimary": "ابدأ الآن",
     "landing.finalCtaSecondary": "جرّب Clemio",
 };

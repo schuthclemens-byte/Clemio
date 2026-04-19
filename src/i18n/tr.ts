@@ -794,7 +794,6 @@ const tr: Record<string, string> = {
     "landing.privNoShareTitle": "Asla paylaşılmaz",
     "landing.privNoShareDesc": "Asla satılmaz. Asla paylaşılmaz. Asla analiz edilmez. Söz.",
     "landing.finalCtaTitle": "Sana gerçekten söyleneni duy.",
-    "landing.finalCtaSub": "",
     "landing.finalCtaPrimary": "Şimdi başla",
     "landing.finalCtaSecondary": "Clemio'yu dene",
 };
