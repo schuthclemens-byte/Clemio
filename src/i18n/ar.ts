@@ -165,6 +165,7 @@ const ar: Record<string, string> = {
     "landing.heroDemoText": "مرحباً… كل رسالة أكتبها لك تبدو كصوتي الحقيقي.",
     "landing.heroAutoPlay": "يتم تشغيل الصوت تلقائياً",
     "landing.tapToStart": "اضغط للبدء",
+    "intro.tapToStart": "اضغط للبدء",
     "landing.heroAudioError": "تعذر تشغيل الصوت – استخدم زر التشغيل",
     "landing.heroSubtitleNew": "بدلاً من القراءة – فقط استمع.",
     "landing.heroCTA": "استمع الآن",
