@@ -13,7 +13,7 @@ const EmotionSection = () => {
   });
 
   return (
-    <section className="relative px-6 py-32 sm:py-40 overflow-hidden">
+    <section className="relative px-6 py-40 sm:py-56 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[60vh] rounded-full opacity-25 blur-[120px]"
@@ -21,13 +21,13 @@ const EmotionSection = () => {
         />
       </div>
 
-      <div className="relative max-w-3xl mx-auto text-center">
+      <div className="relative max-w-4xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.9, ease: "easeOut" }}
-          className="text-3xl sm:text-5xl lg:text-6xl font-extralight tracking-tight leading-[1.1] text-foreground text-balance"
+          className="text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-[-0.02em] leading-[1.05] text-foreground text-balance"
         >
           {t("landing.emotionTitle")}
         </motion.h2>
@@ -38,7 +38,7 @@ const EmotionSection = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 1, delay: 0.3 }}
-          className="mt-16 sm:mt-20 flex items-center justify-center gap-[3px] sm:gap-[5px] h-24 sm:h-32"
+          className="mt-20 sm:mt-24 flex items-center justify-center gap-[3px] sm:gap-[5px] h-20 sm:h-24 opacity-80"
         >
           {bars.map((b, i) => (
             <motion.span
@@ -56,7 +56,7 @@ const EmotionSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.9, delay: 0.4, ease: "easeOut" }}
-          className="mt-10 text-base sm:text-lg text-muted-foreground font-light max-w-md mx-auto leading-relaxed"
+          className="mt-16 sm:mt-20 text-lg sm:text-xl text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed tracking-tight"
         >
           {t("landing.emotionSub")}
         </motion.p>

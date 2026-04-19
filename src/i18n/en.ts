@@ -917,7 +917,7 @@ const en: Record<string, string> = {
     "landing.featV2TransTitle": "Translation",
     "landing.featV2TransDesc": "Real-time — in your voice.",
     "landing.emotionTitle": "Messages feel human again.",
-    "landing.emotionSub": "No walls of text. Just voices you know.",
+    "landing.emotionSub": "Voices carry feeling, closeness and personality. Clemio brings that back.",
     "landing.privEyebrow": "Privacy",
     "landing.privTitle": "Your data belongs to you.",
     "landing.privSub": "We treat your voice and your messages with the same care you speak them with.",

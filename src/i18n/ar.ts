@@ -783,7 +783,7 @@ const ar: Record<string, string> = {
     "landing.featV2TransTitle": "الترجمة",
     "landing.featV2TransDesc": "في الوقت الفعلي — بصوتك.",
     "landing.emotionTitle": "تعود الرسائل لتشعرك بالإنسانية.",
-    "landing.emotionSub": "لا جدران من النص. فقط أصوات تعرفها.",
+    "landing.emotionSub": "الأصوات تنقل الشعور والقرب والشخصية. Clemio يعيد ذلك.",
     "landing.privEyebrow": "الخصوصية",
     "landing.privTitle": "بياناتك ملك لك.",
     "landing.privSub": "نتعامل مع صوتك ورسائلك بنفس العناية التي تقولها بها.",

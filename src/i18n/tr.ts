@@ -783,7 +783,7 @@ const tr: Record<string, string> = {
     "landing.featV2TransTitle": "Çeviri",
     "landing.featV2TransDesc": "Gerçek zamanlı — kendi sesinle.",
     "landing.emotionTitle": "Mesajlar yeniden insani hissediyor.",
-    "landing.emotionSub": "Metin duvarları yok. Sadece tanıdığın sesler.",
+    "landing.emotionSub": "Sesler duyguyu, yakınlığı ve kişiliği taşır. Clemio bunu geri getirir.",
     "landing.privEyebrow": "Gizlilik",
     "landing.privTitle": "Verilerin sana aittir.",
     "landing.privSub": "Sesini ve mesajlarını, onları söylediğin özenle ele alıyoruz.",
