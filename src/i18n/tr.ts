@@ -793,8 +793,7 @@ const tr: Record<string, string> = {
     "landing.privSecDesc": "Aktarımda ve depolamada şifreli. Sesin korunur.",
     "landing.privNoShareTitle": "Asla paylaşılmaz",
     "landing.privNoShareDesc": "Asla satılmaz. Asla paylaşılmaz. Asla analiz edilmez. Söz.",
-    "landing.finalCtaTitle": "Gerçek mesajlara hazır mısın?",
-    "landing.finalCtaSub": "Clemio'yu şimdi dene — farkı duy.",
+    "landing.finalCtaTitle": "Sana gerçekten söyleneni duy.",
     "landing.finalCtaPrimary": "Şimdi başla",
     "landing.finalCtaSecondary": "Clemio'yu dene",
 };

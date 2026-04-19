@@ -21,10 +21,6 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
             {t("landing.footerPrivacy")}
           </button>
           <span className="text-border">·</span>
-          <button onClick={() => navigate("/terms")} className="hover:text-foreground transition-colors">
-            {t("landing.footerTerms")}
-          </button>
-          <span className="text-border">·</span>
           <button onClick={() => navigate("/impressum")} className="hover:text-foreground transition-colors">
             {t("landing.footerImprint")}
           </button>

@@ -927,8 +927,7 @@ const en: Record<string, string> = {
     "landing.privSecDesc": "Encrypted in transit and at rest. Your voice stays protected.",
     "landing.privNoShareTitle": "Never shared",
     "landing.privNoShareDesc": "Never sold. Never shared. Never analyzed. Promised.",
-    "landing.finalCtaTitle": "Ready for real messages?",
-    "landing.finalCtaSub": "Try Clemio now — and hear the difference.",
+    "landing.finalCtaTitle": "Hear what's really being said.",
     "landing.finalCtaPrimary": "Get started",
     "landing.finalCtaSecondary": "Try Clemio",
 };

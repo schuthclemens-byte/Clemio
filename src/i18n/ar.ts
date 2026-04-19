@@ -793,8 +793,7 @@ const ar: Record<string, string> = {
     "landing.privSecDesc": "مشفر أثناء النقل والتخزين. يبقى صوتك محمياً.",
     "landing.privNoShareTitle": "لا تتم مشاركتها",
     "landing.privNoShareDesc": "لا تباع أبداً. لا تشارك أبداً. لا تحلل أبداً. وعد.",
-    "landing.finalCtaTitle": "جاهز لرسائل حقيقية؟",
-    "landing.finalCtaSub": "جرّب Clemio الآن — واسمع الفرق.",
+    "landing.finalCtaTitle": "اسمع ما يُقال لك حقاً.",
     "landing.finalCtaPrimary": "ابدأ الآن",
     "landing.finalCtaSecondary": "جرّب Clemio",
 };
