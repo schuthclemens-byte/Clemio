@@ -47,8 +47,11 @@ const IntroExperience = ({ onEnter }: IntroExperienceProps) => {
       onClick={handleEnter}
       onTouchStart={handleEnter}
       initial={{ opacity: 1 }}
-      animate={{ opacity: activated ? 0 : 1, scale: activated ? 1.04 : 1 }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      animate={{ opacity: activated ? 0 : 1, scale: activated ? 1.06 : 1 }}
+      transition={{
+        opacity: { duration: 1.6, ease: [0.22, 1, 0.36, 1] },
+        scale: { duration: 2.0, ease: [0.22, 1, 0.36, 1] },
+      }}
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center cursor-pointer border-none outline-none w-full h-full overflow-hidden"
       style={{
         background:
