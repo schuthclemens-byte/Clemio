@@ -52,6 +52,32 @@ const WebsitePage = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
+      {/* Website is always mounted so the intro can dissolve INTO it,
+          giving a single continuous experience instead of a screen swap. */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: introDone ? 1 : 0 }}
+        transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+        aria-hidden={!introDone}
+        style={{ pointerEvents: introDone ? "auto" : "none" }}
+      >
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: introDone ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: introDone ? 0.6 : 0 }}
+          className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[60]"
+        >
+          <LanguageSwitcher />
+        </motion.div>
+
+        <HeroSectionV2 initialAudio={introAudio} />
+        <FeaturesSectionV2 />
+        <EmotionSection />
+        <PrivacySection />
+        <FinalCTASection />
+        <FooterSection />
+      </motion.div>
+
       <AnimatePresence>
         {!introDone && (
           <IntroExperience
@@ -61,33 +87,6 @@ const WebsitePage = () => {
               setIntroDone(true);
             }}
           />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {introDone && (
-          <motion.div
-            key="website"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[60]"
-            >
-              <LanguageSwitcher />
-            </motion.div>
-
-            <HeroSectionV2 initialAudio={introAudio} />
-            <FeaturesSectionV2 />
-            <EmotionSection />
-            <PrivacySection />
-            <FinalCTASection />
-            <FooterSection />
-          </motion.div>
         )}
       </AnimatePresence>
     </div>
