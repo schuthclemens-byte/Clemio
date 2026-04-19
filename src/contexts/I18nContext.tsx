@@ -35,12 +35,14 @@ const loaders: Record<Locale, () => Promise<{ default: Record<string, string> }>
 interface I18nContextType {
   locale: Locale;
   setLocale: (l: Locale) => void;
+  syncLocaleForPath: (pathname?: string) => void;
   t: (key: string) => string;
 }
 
 const I18nContext = createContext<I18nContextType>({
   locale: "de",
   setLocale: () => {},
+  syncLocaleForPath: () => {},
   t: (key) => key,
 });
 
@@ -82,12 +84,18 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
   }, []);
 
+  const syncLocaleForPath = useCallback((pathname = window.location.pathname) => {
+    const nextLocale = detectInitialLocale(pathname);
+    setLocaleState((current) => (current === nextLocale ? current : nextLocale));
+    document.documentElement.dir = nextLocale === "ar" ? "rtl" : "ltr";
+  }, []);
+
   const t = useCallback(
     (key: string) => strings[key] || en[key] || de[key] || key,
     [strings]
   );
 
-  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
+  const value = useMemo(() => ({ locale, setLocale, syncLocaleForPath, t }), [locale, setLocale, syncLocaleForPath, t]);
 
   if (!ready) return null;
 

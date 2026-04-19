@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/contexts/I18nContext";
 import HeroSectionV2 from "@/components/landing/HeroSectionV2";
 import FeaturesSectionV2 from "@/components/landing/FeaturesSectionV2";
 import EmotionSection from "@/components/landing/EmotionSection";
@@ -15,6 +16,7 @@ const INTRO_KEY = "clemio_intro_done";
 
 const WebsitePage = () => {
   const { user, loading } = useAuth();
+  const { syncLocaleForPath } = useI18n();
   const [introDone, setIntroDone] = useState<boolean>(() => {
     try {
       return sessionStorage.getItem(INTRO_KEY) === "1";
@@ -23,6 +25,10 @@ const WebsitePage = () => {
     }
   });
   const [introAudio, setIntroAudio] = useState<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    syncLocaleForPath(window.location.pathname);
+  }, [syncLocaleForPath]);
 
   useEffect(() => {
     if (introDone) {
