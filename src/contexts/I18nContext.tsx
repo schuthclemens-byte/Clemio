@@ -48,7 +48,8 @@ export const useI18n = () => useContext(I18nContext);
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const [locale, setLocaleState] = useState<Locale>(() => {
     const saved = localStorage.getItem("app-locale");
-    if (saved && saved in localeNames) return saved as Locale;
+    const savedMode = localStorage.getItem("app-locale-mode");
+    if (savedMode === "manual" && saved && saved in localeNames) return saved as Locale;
 
     const supported: Locale[] = ["de", "en", "es", "fr", "tr", "ar"];
     // Walk through full browser preference list and return first supported match.
@@ -95,6 +96,7 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
     localStorage.setItem("app-locale", l);
+    localStorage.setItem("app-locale-mode", "manual");
     document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
   }, []);
 
