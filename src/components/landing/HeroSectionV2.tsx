@@ -3,10 +3,10 @@ import { Play, Pause, Volume2, VolumeX, ArrowRight } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
+import { detectInitialLocale } from "@/lib/locale";
 
 const LANDING_AUDIO_SRC = "/landing-voice-original.mp3";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const supportedLocales = ["de", "en", "es", "fr", "tr", "ar"] as const;
 
 const preloadedAudio = new Audio(`${LANDING_AUDIO_SRC}?v=1`);
 preloadedAudio.preload = "auto";
@@ -15,27 +15,6 @@ preloadedAudio.load();
 
 const ttsCache = new Map<string, HTMLAudioElement>();
 const ttsPending = new Map<string, Promise<HTMLAudioElement | null>>();
-
-function detectLang(): string {
-  const saved = localStorage.getItem("app-locale");
-  const savedMode = localStorage.getItem("app-locale-mode");
-  if (savedMode === "manual" && saved && supportedLocales.includes(saved as typeof supportedLocales[number])) {
-    return saved;
-  }
-
-  const candidates = (navigator.languages && navigator.languages.length > 0
-    ? navigator.languages
-    : [navigator.language || "de"]
-  ).map((lang) => lang.toLowerCase().split("-")[0]);
-
-  for (const candidate of candidates) {
-    if (supportedLocales.includes(candidate as typeof supportedLocales[number])) {
-      return candidate;
-    }
-  }
-
-  return "de";
-}
 
 function prefetchTTS(lang: string): Promise<HTMLAudioElement | null> {
   if (ttsCache.has(lang)) return Promise.resolve(ttsCache.get(lang)!);
@@ -61,7 +40,7 @@ function prefetchTTS(lang: string): Promise<HTMLAudioElement | null> {
 }
 
 const _ttsSessionKey = "clemio_landing_tts_prefetched";
-const initialLang = detectLang();
+const initialLang = detectInitialLocale();
 if (initialLang !== "de" && !sessionStorage.getItem(_ttsSessionKey)) {
   sessionStorage.setItem(_ttsSessionKey, "1");
   prefetchTTS(initialLang);

@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo, ReactNode } from "react";
 import de from "@/i18n/de";
 import en from "@/i18n/en";
+import { detectInitialLocale, persistSelectedLocale, type SupportedLocale } from "@/lib/locale";
 
-export type Locale = "de" | "en" | "es" | "fr" | "tr" | "ar";
+export type Locale = SupportedLocale;
 
 export const localeNames: Record<Locale, string> = {
   de: "Deutsch",
@@ -46,30 +47,12 @@ const I18nContext = createContext<I18nContextType>({
 export const useI18n = () => useContext(I18nContext);
 
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    const saved = localStorage.getItem("app-locale");
-    const savedMode = localStorage.getItem("app-locale-mode");
-    if (savedMode === "manual" && saved && saved in localeNames) return saved as Locale;
-
-    const supported: Locale[] = ["de", "en", "es", "fr", "tr", "ar"];
-    // Walk through full browser preference list and return first supported match.
-    // navigator.languages reflects the user's ordered preferences (e.g. ["de-DE","en-US"]).
-    const candidates = (navigator.languages && navigator.languages.length > 0
-      ? navigator.languages
-      : [navigator.language || "de"]
-    ).map((l) => l.toLowerCase().split("-")[0]);
-
-    for (const c of candidates) {
-      if ((supported as string[]).includes(c)) return c as Locale;
-    }
-    return "de";
-  });
+  const [locale, setLocaleState] = useState<Locale>(() => detectInitialLocale());
 
   const [strings, setStrings] = useState<Record<string, string>>(de);
   const [ready, setReady] = useState(locale === "de");
   const loadedRef = useRef<Locale>("de");
 
-  // Load initial locale before first render
   useEffect(() => {
     if (locale !== "de") {
       loaders[locale]().then((mod) => {
@@ -95,8 +78,7 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
-    localStorage.setItem("app-locale", l);
-    localStorage.setItem("app-locale-mode", "manual");
+    persistSelectedLocale(l);
     document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
   }, []);
 
