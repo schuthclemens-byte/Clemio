@@ -208,58 +208,69 @@ const HeroSectionV2 = () => {
         )}
       </AnimatePresence>
 
-      {/* Ambient sunset glow */}
+      {/* Premium ambient gradient — soft, calm, cinematic */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Top warm glow */}
         <motion.div
-          className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[140vw] sm:w-[80vw] h-[80vh] rounded-full opacity-40 blur-[120px]"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, hsl(18 90% 55% / 0.5) 35%, transparent 70%)" }}
-          animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.55, 0.4] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-30%] left-1/2 -translate-x-1/2 w-[160vw] sm:w-[100vw] h-[90vh] rounded-full opacity-30 blur-[140px]"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.6) 0%, hsl(18 90% 55% / 0.35) 35%, transparent 70%)" }}
+          animate={{ scale: [1, 1.05, 1], opacity: [0.28, 0.38, 0.28] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
+        {/* Bottom cool tint */}
         <motion.div
-          className="absolute bottom-[-10%] right-[-20%] w-[80vw] h-[60vh] rounded-full opacity-25 blur-[120px]"
-          style={{ background: "radial-gradient(circle, hsl(340 75% 55%), hsl(320 70% 50%) 50%, transparent 70%)" }}
-          animate={{ x: [0, -30, 0], scale: [1, 1.12, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-[-30%] left-1/2 -translate-x-1/2 w-[120vw] h-[70vh] rounded-full opacity-20 blur-[140px]"
+          style={{ background: "radial-gradient(circle, hsl(340 75% 55% / 0.4), hsl(280 70% 50% / 0.3) 50%, transparent 70%)" }}
+          animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.28, 0.18] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         />
+        {/* Subtle vignette to ground content */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40" />
       </div>
 
-      {/* Floating audio orb */}
+      {/* Floating audio orb — refined & premium */}
       <motion.div
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 }}
-        className="relative z-10 mb-12 sm:mb-16"
+        transition={{ duration: 1.1, ease: "easeOut", delay: 0.1 }}
+        className="relative z-10 mb-14 sm:mb-20"
       >
         <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
           className="relative"
         >
-          {/* outer halo */}
+          {/* Soft rotating halo (more subtle) */}
           <motion.div
-            className="absolute inset-[-30%] rounded-full opacity-70 blur-3xl"
-            style={{ background: "conic-gradient(from 0deg, hsl(var(--primary)), hsl(340 75% 55%), hsl(45 95% 65%), hsl(var(--primary)))" }}
+            className="absolute inset-[-25%] rounded-full opacity-50 blur-3xl"
+            style={{ background: "conic-gradient(from 0deg, hsl(var(--primary) / 0.8), hsl(340 75% 55% / 0.6), hsl(45 95% 65% / 0.7), hsl(var(--primary) / 0.8))" }}
             animate={{ rotate: 360 }}
-            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+          />
+          {/* Inner soft ring */}
+          <div
+            className="absolute inset-[-8%] rounded-full opacity-60 blur-xl"
+            style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.25), transparent 70%)" }}
           />
           <button
             onClick={() => void togglePlay()}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className="relative size-44 sm:size-56 rounded-full backdrop-blur-3xl bg-card/40 border border-border/40 shadow-elevated flex items-center justify-center group transition-all duration-500 hover:scale-[1.03] active:scale-[0.98] overflow-hidden"
+            className="relative size-44 sm:size-56 rounded-full backdrop-blur-3xl bg-card/30 border border-border/30 shadow-[0_20px_70px_-20px_hsl(var(--primary)/0.5)] flex items-center justify-center group transition-all duration-500 hover:scale-[1.03] active:scale-[0.98] overflow-hidden"
           >
-            {/* inner shimmer */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-b from-foreground/10 via-transparent to-transparent pointer-events-none" />
-            {/* play / pause */}
+            {/* Glassy top highlight */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-b from-foreground/15 via-transparent to-foreground/5 pointer-events-none" />
+            {/* Inner ring */}
+            <div className="absolute inset-3 rounded-full border border-foreground/10 pointer-events-none" />
+            {/* Play / Pause icon */}
             <span className={`relative z-10 flex items-center justify-center transition-transform duration-500 ${isPlaying ? "scale-100" : "group-hover:scale-110"}`}>
               {isPlaying ? (
-                <Pause className="w-12 h-12 sm:w-14 sm:h-14 text-foreground drop-shadow-[0_0_20px_hsl(var(--primary)/0.6)]" />
+                <Pause className="w-12 h-12 sm:w-14 sm:h-14 text-foreground drop-shadow-[0_0_24px_hsl(var(--primary)/0.7)]" strokeWidth={1.25} />
               ) : (
-                <Play className="w-12 h-12 sm:w-14 sm:h-14 text-foreground ml-1 drop-shadow-[0_0_20px_hsl(var(--primary)/0.6)]" />
+                <Play className="w-12 h-12 sm:w-14 sm:h-14 text-foreground ml-1 drop-shadow-[0_0_24px_hsl(var(--primary)/0.7)]" strokeWidth={1.25} fill="currentColor" />
               )}
             </span>
 
-            {/* waveform overlay when playing */}
+            {/* Waveform overlay when playing */}
             <AnimatePresence>
               {isPlaying && (
                 <motion.div
@@ -287,7 +298,7 @@ const HeroSectionV2 = () => {
       <motion.h1
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: "easeOut", delay: 0.25 }}
+        transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
         className="relative z-10 text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-tight leading-[1.05] text-balance max-w-3xl mx-auto"
       >
         <span className="text-foreground/70 block">{t("landing.heroLine1")}</span>
@@ -300,25 +311,30 @@ const HeroSectionV2 = () => {
       <motion.p
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: "easeOut", delay: 0.45 }}
-        className="relative z-10 mt-6 sm:mt-8 text-base sm:text-xl text-muted-foreground font-light max-w-md mx-auto leading-relaxed"
+        transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
+        className="relative z-10 mt-7 sm:mt-9 text-base sm:text-xl text-muted-foreground font-light max-w-md mx-auto leading-relaxed"
       >
         {t("landing.heroSubV2")}
       </motion.p>
 
-      {/* CTA */}
+      {/* CTA — Premium button */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: "easeOut", delay: 0.6 }}
-        className="relative z-10 mt-10 sm:mt-12"
+        transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
+        className="relative z-10 mt-12 sm:mt-14"
       >
         <button
           onClick={() => navigate("/login")}
-          className="group relative inline-flex items-center gap-2.5 px-8 py-4 rounded-full bg-foreground text-background font-medium text-base shadow-elevated transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]"
+          className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-foreground text-background font-medium text-base sm:text-lg tracking-tight shadow-[0_10px_40px_-10px_hsl(var(--foreground)/0.4)] transition-all duration-500 hover:shadow-[0_20px_60px_-10px_hsl(var(--primary)/0.5)] hover:scale-[1.03] active:scale-[0.97] overflow-hidden"
         >
-          <span className="relative z-10">{t("landing.ctaTryApp")}</span>
-          <ArrowRight className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
+          {/* Hover gradient sheen */}
+          <span
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(340 75% 55%) 100%)" }}
+          />
+          <span className="relative z-10 group-hover:text-primary-foreground transition-colors duration-500">{t("landing.ctaTryApp")}</span>
+          <ArrowRight className="w-5 h-5 relative z-10 transition-all duration-500 group-hover:translate-x-1 group-hover:text-primary-foreground" strokeWidth={2} />
         </button>
       </motion.div>
 
