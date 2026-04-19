@@ -178,7 +178,7 @@ const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-        className="relative z-10 text-[2.2rem] sm:text-6xl lg:text-[5rem] font-extralight tracking-[-0.02em] leading-[1.05] text-balance max-w-4xl mx-auto"
+        className="relative z-10 text-[2.2rem] sm:text-6xl lg:text-[5rem] font-extralight tracking-[-0.02em] leading-[1.05] text-balance max-w-[18ch] mx-auto"
       >
         <span className="text-foreground/65 block">{t("landing.heroLine1")}</span>
         <span className="block bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/55 font-light mt-2 sm:mt-3">
@@ -191,7 +191,7 @@ const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
-        className="relative z-10 mt-6 sm:mt-10 text-base sm:text-xl text-muted-foreground font-light max-w-xl mx-auto leading-relaxed tracking-tight"
+        className="relative z-10 mt-6 sm:mt-10 text-base sm:text-xl text-muted-foreground font-light max-w-[36ch] mx-auto leading-relaxed tracking-tight"
       >
         {t("landing.heroSubV2")}
       </motion.p>
