@@ -770,7 +770,7 @@ const tr: Record<string, string> = {
     "push.close": "Kapat",
     "landing.heroLine1": "Artık mesaj okumuyorsun.",
     "landing.heroLine2": "İnsanları duyuyorsun.",
-    "landing.heroSubV2": "Clemio mesajları gerçek seslere dönüştürür.",
+    "landing.heroSubV2": "Gerçek iletişimin nasıl hissettirdiğini hisset.",
     "landing.ctaTryApp": "Uygulamayı dene",
     "landing.featV2Eyebrow": "Clemio neler yapar",
     "landing.featV2Title": "Dört net avantaj.",

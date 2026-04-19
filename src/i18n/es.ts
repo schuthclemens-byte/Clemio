@@ -770,7 +770,7 @@ const es: Record<string, string> = {
     "push.close": "Cerrar",
     "landing.heroLine1": "Ya no lees mensajes.",
     "landing.heroLine2": "Escuchas a las personas.",
-    "landing.heroSubV2": "Clemio convierte los mensajes en voces reales.",
+    "landing.heroSubV2": "Siente cómo se siente la comunicación real.",
     "landing.ctaTryApp": "Probar la app",
     "landing.featV2Eyebrow": "Lo que hace Clemio",
     "landing.featV2Title": "Cuatro ventajas claras.",

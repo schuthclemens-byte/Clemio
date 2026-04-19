@@ -904,7 +904,7 @@ const fr: Record<string, string> = {
     "sidebar.voices": "Voix",
     "landing.heroLine1": "Tu ne lis plus les messages.",
     "landing.heroLine2": "Tu entends les gens.",
-    "landing.heroSubV2": "Clemio transforme les messages en vraies voix.",
+    "landing.heroSubV2": "Ressens ce qu'est une vraie communication.",
     "landing.ctaTryApp": "Tester l'app",
     "landing.featV2Eyebrow": "Ce que fait Clemio",
     "landing.featV2Title": "Quatre avantages clairs.",
