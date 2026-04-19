@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Globe } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 
 const LanguageSwitcher = () => {
@@ -20,20 +20,25 @@ const LanguageSwitcher = () => {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground hover:bg-accent/10 transition-all duration-200 shadow-sm"
+        aria-label="Sprache wählen"
+        aria-expanded={open}
+        className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-background/40 backdrop-blur-xl border border-border/40 text-sm font-medium text-foreground/90 hover:bg-background/60 hover:border-border/70 transition-all duration-300"
       >
-        {localeNames[locale]}
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <Globe className="w-4 h-4 text-foreground/70" strokeWidth={1.75} />
+        <span>{localeNames[locale]}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-foreground/50 transition-transform duration-300 ${open ? "rotate-180" : ""}`} strokeWidth={2} />
       </button>
       {open && (
-        <div className="absolute right-0 mt-1 w-40 bg-card border border-border rounded-xl shadow-elevated overflow-hidden animate-reveal-up z-50">
+        <div className="absolute right-0 mt-2 w-44 bg-background/80 backdrop-blur-2xl border border-border/40 rounded-2xl shadow-elevated overflow-hidden animate-reveal-up z-50 p-1">
           {(Object.keys(localeNames) as Locale[]).map((l) => (
             <button
               key={l}
               type="button"
               onClick={() => { setLocale(l); setOpen(false); }}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors duration-150 ${
-                l === locale ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-accent/10"
+              className={`w-full text-left px-3.5 py-2.5 text-sm rounded-xl transition-colors duration-150 ${
+                l === locale
+                  ? "bg-foreground/10 text-foreground font-semibold"
+                  : "text-foreground/80 hover:bg-foreground/5"
               }`}
             >
               {localeNames[l]}
