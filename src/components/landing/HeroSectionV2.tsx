@@ -70,7 +70,7 @@ const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
   }, [isPlaying, locale]);
 
   return (
-    <section className="relative min-h-[100dvh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
+    <section className="relative min-h-[100dvh] flex flex-col items-center justify-center px-6 sm:px-10 py-24 sm:py-32 text-center overflow-hidden">
       {/* Premium ambient gradient — soft, calm, cinematic */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
@@ -99,7 +99,7 @@ const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.1, ease: "easeOut", delay: 0.1 }}
-        className="relative z-10 mb-14 sm:mb-20"
+        className="relative z-10 mb-20 sm:mb-28"
       >
         <motion.div
           animate={{ y: [0, -8, 0] }}
@@ -178,10 +178,10 @@ const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-        className="relative z-10 text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-tight leading-[1.05] text-balance max-w-3xl mx-auto"
+        className="relative z-10 text-[2.6rem] sm:text-7xl lg:text-[5.5rem] font-extralight tracking-[-0.02em] leading-[1.02] text-balance max-w-4xl mx-auto"
       >
-        <span className="text-foreground/70 block">{t("landing.heroLine1")}</span>
-        <span className="block bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 font-light mt-1 sm:mt-2">
+        <span className="text-foreground/65 block">{t("landing.heroLine1")}</span>
+        <span className="block bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/55 font-light mt-3 sm:mt-4">
           {t("landing.heroLine2")}
         </span>
       </motion.h1>
@@ -191,7 +191,7 @@ const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
-        className="relative z-10 mt-7 sm:mt-9 text-base sm:text-xl text-muted-foreground font-light max-w-md mx-auto leading-relaxed"
+        className="relative z-10 mt-10 sm:mt-14 text-lg sm:text-2xl text-muted-foreground font-light max-w-xl mx-auto leading-relaxed tracking-tight"
       >
         {t("landing.heroSubV2")}
       </motion.p>
@@ -201,11 +201,11 @@ const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
-        className="relative z-10 mt-12 sm:mt-14"
+        className="relative z-10 mt-16 sm:mt-20"
       >
         <button
           onClick={() => navigate("/login")}
-          className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-foreground text-background font-medium text-base sm:text-lg tracking-tight shadow-[0_10px_40px_-10px_hsl(var(--foreground)/0.4)] transition-all duration-500 hover:shadow-[0_20px_60px_-10px_hsl(var(--primary)/0.5)] hover:scale-[1.03] active:scale-[0.97] overflow-hidden"
+          className="group relative inline-flex items-center gap-3 px-12 py-6 rounded-full bg-foreground text-background font-medium text-base sm:text-lg tracking-tight shadow-[0_15px_50px_-12px_hsl(var(--foreground)/0.45)] transition-all duration-500 hover:shadow-[0_25px_70px_-10px_hsl(var(--primary)/0.55)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
         >
           <span
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
