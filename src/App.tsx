@@ -34,7 +34,7 @@ const ContactAutoplayPage = lazy(() => import("./pages/ContactAutoplayPage"));
 const CallPage = lazy(() => import("./pages/CallPage"));
 const CallHistoryPage = lazy(() => import("./pages/CallHistoryPage"));
 const InstallPage = lazy(() => import("./pages/InstallPage"));
-const LandingPage = lazy(() => import("./pages/LandingPage"));
+const WebsitePage = lazy(() => import("./pages/WebsitePage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 const VoiceRecordingsPage = lazy(() => import("./pages/VoiceRecordingsPage"));
@@ -100,7 +100,7 @@ const App = () => (
                           <Routes>
                             <Route path="/" element={<Index />} />
                             <Route path="/index" element={<Navigate to="/" replace />} />
-                            <Route path="/landing" element={<LandingPage />} />
+                            <Route path="/landing" element={<Navigate to="/" replace />} />
                             <Route path="/onboarding" element={<OnboardingPage />} />
                             <Route path="/voice-setup" element={<ProtectedRoute><VoiceOnboardingPage /></ProtectedRoute>} />
                             <Route path="/login" element={<LoginPage />} />
