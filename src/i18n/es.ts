@@ -793,8 +793,8 @@ const es: Record<string, string> = {
     "landing.privSecDesc": "Cifrado en tránsito y en reposo. Tu voz permanece protegida.",
     "landing.privNoShareTitle": "Nunca compartido",
     "landing.privNoShareDesc": "Nunca vendido. Nunca compartido. Nunca analizado. Prometido.",
-    "landing.finalCtaTitle": "¿Listo para mensajes reales?",
-    "landing.finalCtaSub": "Prueba Clemio ahora — y escucha la diferencia.",
+    "landing.finalCtaTitle": "Escucha lo que de verdad te dicen.",
+    "landing.finalCtaSub": "",
     "landing.finalCtaPrimary": "Empezar ahora",
     "landing.finalCtaSecondary": "Probar Clemio",
 };
