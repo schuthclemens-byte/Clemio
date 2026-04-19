@@ -1,11 +1,10 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import HeroSection from "@/components/landing/HeroSection";
-import PromoSection from "@/components/landing/PromoSection";
-import PositioningSection from "@/components/landing/PositioningSection";
-import TrustSection from "@/components/landing/TrustSection";
-import VoiceRulesSection from "@/components/landing/VoiceRulesSection";
-import PremiumSection from "@/components/landing/PremiumSection";
+import HeroSectionV2 from "@/components/landing/HeroSectionV2";
+import FeaturesSectionV2 from "@/components/landing/FeaturesSectionV2";
+import EmotionSection from "@/components/landing/EmotionSection";
+import PrivacySection from "@/components/landing/PrivacySection";
+import FinalCTASection from "@/components/landing/FinalCTASection";
 import FooterSection from "@/components/landing/FooterSection";
 import LanguageSwitcher from "@/components/landing/LanguageSwitcher";
 
@@ -27,12 +26,11 @@ const LandingPage = () => {
       <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[9999]">
         <LanguageSwitcher />
       </div>
-      <HeroSection />
-      <PromoSection />
-      <PositioningSection />
-      <TrustSection />
-      <VoiceRulesSection />
-      <PremiumSection />
+      <HeroSectionV2 />
+      <FeaturesSectionV2 />
+      <EmotionSection />
+      <PrivacySection />
+      <FinalCTASection />
       <FooterSection />
     </div>
   );
