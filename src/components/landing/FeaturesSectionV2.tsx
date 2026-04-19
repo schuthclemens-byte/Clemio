@@ -28,7 +28,7 @@ const FeaturesSectionV2 = () => {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {features.map((f, i) => {
             const Icon = f.icon;
             return (
@@ -38,15 +38,15 @@ const FeaturesSectionV2 = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.7, delay: i * 0.08, ease: "easeOut" }}
-                className="group relative rounded-3xl p-8 sm:p-10 bg-card/40 backdrop-blur-xl border border-border/40 overflow-hidden transition-all duration-500 hover:border-border/80 hover:bg-card/60"
+                className="group relative rounded-3xl p-8 lg:p-9 bg-card/40 backdrop-blur-xl border border-border/40 overflow-hidden transition-all duration-500 hover:border-border/80 hover:bg-card/60"
               >
-                <div className={`absolute -top-20 -right-20 w-48 h-48 rounded-full bg-gradient-to-br ${f.accent} opacity-60 blur-3xl pointer-events-none transition-opacity duration-500 group-hover:opacity-100`} />
+                <div className={`absolute -top-16 -right-16 w-40 h-40 rounded-full bg-gradient-to-br ${f.accent} opacity-60 blur-3xl pointer-events-none transition-opacity duration-500 group-hover:opacity-100`} />
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-2xl bg-foreground/5 border border-border/40 flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110">
-                    <Icon className="w-5 h-5 text-foreground/80" strokeWidth={1.5} />
+                  <div className="w-14 h-14 rounded-2xl bg-foreground/5 border border-border/40 flex items-center justify-center mb-7 transition-transform duration-500 group-hover:scale-110">
+                    <Icon className="w-6 h-6 text-foreground/85" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-light text-foreground mb-3 tracking-tight">{t(f.titleKey)}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-light">{t(f.descKey)}</p>
+                  <h3 className="text-lg lg:text-xl font-light text-foreground mb-3 tracking-tight leading-snug">{t(f.titleKey)}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-light">{t(f.descKey)}</p>
                 </div>
               </motion.div>
             );
