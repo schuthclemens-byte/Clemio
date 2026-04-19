@@ -6,6 +6,7 @@ import { useI18n } from "@/contexts/I18nContext";
 
 const LANDING_AUDIO_SRC = "/landing-voice-original.mp3";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const supportedLocales = ["de", "en", "es", "fr", "tr", "ar"] as const;
 
 const preloadedAudio = new Audio(`${LANDING_AUDIO_SRC}?v=1`);
 preloadedAudio.preload = "auto";
@@ -17,9 +18,23 @@ const ttsPending = new Map<string, Promise<HTMLAudioElement | null>>();
 
 function detectLang(): string {
   const saved = localStorage.getItem("app-locale");
-  if (saved && ["de", "en", "es", "fr", "tr", "ar"].includes(saved)) return saved;
-  const prefix = (navigator.language || "").split("-")[0].toLowerCase();
-  return ["de", "en", "es", "fr", "tr", "ar"].includes(prefix) ? prefix : "de";
+  const savedMode = localStorage.getItem("app-locale-mode");
+  if (savedMode === "manual" && saved && supportedLocales.includes(saved as typeof supportedLocales[number])) {
+    return saved;
+  }
+
+  const candidates = (navigator.languages && navigator.languages.length > 0
+    ? navigator.languages
+    : [navigator.language || "de"]
+  ).map((lang) => lang.toLowerCase().split("-")[0]);
+
+  for (const candidate of candidates) {
+    if (supportedLocales.includes(candidate as typeof supportedLocales[number])) {
+      return candidate;
+    }
+  }
+
+  return "de";
 }
 
 function prefetchTTS(lang: string): Promise<HTMLAudioElement | null> {
