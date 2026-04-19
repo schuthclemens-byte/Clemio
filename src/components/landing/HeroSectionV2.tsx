@@ -70,7 +70,7 @@ const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
   }, [isPlaying, locale]);
 
   return (
-    <section className="relative min-h-[100dvh] flex flex-col items-center justify-center px-6 sm:px-10 py-24 sm:py-32 text-center overflow-hidden">
+    <section className="relative min-h-[100dvh] flex flex-col items-center justify-center px-6 sm:px-10 py-10 sm:py-16 text-center overflow-hidden">
       {/* Premium ambient gradient — soft, calm, cinematic */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <motion.div
