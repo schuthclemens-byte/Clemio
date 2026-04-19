@@ -770,7 +770,7 @@ const ar: Record<string, string> = {
     "push.close": "إغلاق",
     "landing.heroLine1": "لم تعد تقرأ الرسائل.",
     "landing.heroLine2": "أنت تسمع الناس.",
-    "landing.heroSubV2": "Clemio يحوّل الرسائل إلى أصوات حقيقية.",
+    "landing.heroSubV2": "اشعر بما يعنيه التواصل الحقيقي.",
     "landing.ctaTryApp": "جرّب التطبيق",
     "landing.featV2Eyebrow": "ماذا يفعل Clemio",
     "landing.featV2Title": "أربع مزايا واضحة.",

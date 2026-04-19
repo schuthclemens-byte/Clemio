@@ -904,7 +904,7 @@ const en: Record<string, string> = {
     "legal.priv8Text": "For privacy questions, you can reach us at:",
     "landing.heroLine1": "You don't read messages anymore.",
     "landing.heroLine2": "You hear people.",
-    "landing.heroSubV2": "Clemio turns messages into real voices.",
+    "landing.heroSubV2": "Feel what real communication feels like.",
     "landing.ctaTryApp": "Try the app",
     "landing.featV2Eyebrow": "What Clemio does",
     "landing.featV2Title": "Four clear benefits.",
