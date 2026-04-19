@@ -5,10 +5,14 @@ export type SupportedLocale = (typeof supportedLocales)[number];
 const marketingPaths = new Set(["/", "/landing"]);
 
 export const detectBrowserLocale = (): SupportedLocale => {
-  const candidates = (navigator.languages && navigator.languages.length > 0
+  const primaryLanguage = navigator.language || "de";
+  const preferredLanguages = navigator.languages && navigator.languages.length > 0
     ? navigator.languages
-    : [navigator.language || "de"]
-  ).map((lang) => lang.toLowerCase().split("-")[0]);
+    : [];
+
+  const candidates = [primaryLanguage, ...preferredLanguages]
+    .map((lang) => lang.toLowerCase().split("-")[0])
+    .filter((lang, index, values) => values.indexOf(lang) === index);
 
   for (const candidate of candidates) {
     if (supportedLocales.includes(candidate as SupportedLocale)) {
