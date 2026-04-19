@@ -5,12 +5,18 @@ export type SupportedLocale = (typeof supportedLocales)[number];
 const marketingPaths = new Set(["/", "/landing"]);
 
 export const detectBrowserLocale = (): SupportedLocale => {
-  const primaryLanguage = navigator.language || "de";
-  const preferredLanguages = navigator.languages && navigator.languages.length > 0
-    ? navigator.languages
+  // navigator.languages reflects the user's preferred reading languages in
+  // priority order (the order shown in chrome://settings/languages). The
+  // single navigator.language often only mirrors the browser UI language and
+  // can therefore be misleading (e.g. English UI but German content
+  // preference). We honour the explicit preference list first and only fall
+  // back to navigator.language if nothing else matches.
+  const preferred = navigator.languages && navigator.languages.length > 0
+    ? Array.from(navigator.languages)
     : [];
+  const fallback = navigator.language ? [navigator.language] : ["de"];
 
-  const candidates = [primaryLanguage, ...preferredLanguages]
+  const candidates = [...preferred, ...fallback]
     .map((lang) => lang.toLowerCase().split("-")[0])
     .filter((lang, index, values) => values.indexOf(lang) === index);
 
