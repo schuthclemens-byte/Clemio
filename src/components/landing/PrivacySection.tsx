@@ -12,25 +12,32 @@ const PrivacySection = () => {
   ];
 
   return (
-    <section className="relative px-6 py-32 sm:py-40 overflow-hidden">
-      <div className="max-w-5xl mx-auto">
+    <section className="relative px-6 py-40 sm:py-56 overflow-hidden">
+      {/* Soft trust-glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[60vh] rounded-full opacity-[0.18] blur-[140px]"
+          style={{ background: "radial-gradient(circle, hsl(200 60% 55%) 0%, transparent 70%)" }}
+        />
+      </div>
+
+      <div className="relative max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center mb-20"
+          transition={{ duration: 0.9, ease: "easeOut" }}
+          className="text-center mb-24 sm:mb-32"
         >
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground/70 mb-4">{t("landing.privEyebrow")}</p>
-          <h2 className="text-3xl sm:text-5xl font-extralight tracking-tight text-foreground leading-tight max-w-2xl mx-auto">
+          <p className="text-xs uppercase tracking-[0.32em] text-muted-foreground/70 mb-6">
+            {t("landing.privEyebrow")}
+          </p>
+          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-[-0.02em] text-foreground leading-[1.05] text-balance max-w-3xl mx-auto">
             {t("landing.privTitle")}
           </h2>
-          <p className="mt-6 text-base sm:text-lg text-muted-foreground font-light max-w-lg mx-auto leading-relaxed">
-            {t("landing.privSub")}
-          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px rounded-3xl bg-border/40 overflow-hidden border border-border/40">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
           {items.map((it, i) => {
             const Icon = it.icon;
             return (
@@ -39,14 +46,18 @@ const PrivacySection = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" }}
-                className="bg-background/80 backdrop-blur-xl p-8 sm:p-10 flex flex-col items-start gap-4"
+                transition={{ duration: 0.8, delay: i * 0.12, ease: "easeOut" }}
+                className="flex flex-col items-center text-center px-4"
               >
-                <div className="w-11 h-11 rounded-2xl bg-foreground/5 border border-border/40 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-foreground/80" strokeWidth={1.5} />
+                <div className="w-14 h-14 rounded-2xl bg-foreground/[0.04] border border-border/50 flex items-center justify-center mb-7">
+                  <Icon className="w-6 h-6 text-foreground/75" strokeWidth={1.4} />
                 </div>
-                <h3 className="text-lg sm:text-xl font-light text-foreground tracking-tight">{t(it.titleKey)}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed font-light">{t(it.descKey)}</p>
+                <h3 className="text-lg sm:text-xl font-light text-foreground tracking-tight mb-3">
+                  {t(it.titleKey)}
+                </h3>
+                <p className="text-sm text-muted-foreground/90 leading-relaxed font-light max-w-[18rem]">
+                  {t(it.descKey)}
+                </p>
               </motion.div>
             );
           })}
