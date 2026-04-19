@@ -927,8 +927,8 @@ const de: Record<string, string> = {
     "landing.privSecDesc": "Verschlüsselte Übertragung und Speicherung. Deine Stimme bleibt geschützt.",
     "landing.privNoShareTitle": "Keine Weitergabe",
     "landing.privNoShareDesc": "Niemals verkauft. Niemals geteilt. Niemals ausgewertet. Versprochen.",
-    "landing.finalCtaTitle": "Bereit für echte Nachrichten?",
-    "landing.finalCtaSub": "Teste Clemio jetzt – und höre den Unterschied.",
+    "landing.finalCtaTitle": "Höre, was dir wirklich gesagt wird.",
+    "landing.finalCtaSub": "",
     "landing.finalCtaPrimary": "Jetzt starten",
     "landing.finalCtaSecondary": "Clemio ausprobieren",
 };
