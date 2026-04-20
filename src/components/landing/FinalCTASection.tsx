@@ -28,7 +28,7 @@ const FinalCTASection = () => {
         <h2 className="text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-[-0.02em] leading-[1.05] text-balance text-foreground">
           {t("landing.finalCtaTitle")}
         </h2>
-        <div className="mt-16 sm:mt-20 flex items-center justify-center">
+        <div className="mt-12 sm:mt-16 flex items-center justify-center">
           <button
             onClick={() => navigate("/login")}
             className="group relative inline-flex items-center gap-3 px-12 py-6 rounded-full bg-foreground text-background font-medium text-base sm:text-lg tracking-tight shadow-[0_15px_50px_-12px_hsl(var(--foreground)/0.45)] transition-all duration-500 hover:shadow-[0_25px_70px_-10px_hsl(var(--primary)/0.55)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
