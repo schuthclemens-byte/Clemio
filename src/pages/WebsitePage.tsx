@@ -7,7 +7,7 @@ import FeaturesSectionV2 from "@/components/landing/FeaturesSectionV2";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import EmotionSection from "@/components/landing/EmotionSection";
 import PrivacySection from "@/components/landing/PrivacySection";
-import TrustSection from "@/components/landing/TrustSection";
+
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import FooterSection from "@/components/landing/FooterSection";
 import LanguageSwitcher from "@/components/landing/LanguageSwitcher";
@@ -41,7 +41,6 @@ const WebsitePage = () => {
       <HowItWorksSection />
       <EmotionSection />
       <PrivacySection />
-      <TrustSection />
       <FinalCTASection />
       <FooterSection />
     </div>
