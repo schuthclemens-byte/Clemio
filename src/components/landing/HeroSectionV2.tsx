@@ -81,7 +81,7 @@ const HeroSectionV2 = () => {
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.1, ease: "easeOut", delay: 0.1 }}
-        className="relative z-10 mb-16 sm:mb-20 flex justify-center w-full"
+        className="relative z-10 mb-24 sm:mb-32 flex justify-center w-full"
       >
         <motion.div
           animate={{ y: [0, -8, 0] }}
@@ -104,7 +104,7 @@ const HeroSectionV2 = () => {
           <button
             onClick={() => void togglePlay()}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className="relative size-36 sm:size-48 rounded-full backdrop-blur-3xl bg-card/30 border border-border/30 shadow-[0_20px_70px_-20px_hsl(var(--primary)/0.5)] flex items-center justify-center group transition-all duration-500 hover:scale-[1.03] active:scale-[0.98] overflow-hidden"
+            className="relative size-44 sm:size-56 rounded-full backdrop-blur-3xl bg-card/30 border border-border/30 shadow-[0_25px_85px_-20px_hsl(var(--primary)/0.55)] flex items-center justify-center group transition-all duration-500 hover:scale-[1.03] active:scale-[0.98] overflow-hidden"
           >
             <div className="absolute inset-0 rounded-full bg-gradient-to-b from-foreground/15 via-transparent to-foreground/5 pointer-events-none" />
             <div className="absolute inset-3 rounded-full border border-foreground/10 pointer-events-none" />
@@ -115,12 +115,12 @@ const HeroSectionV2 = () => {
             >
               {isPlaying ? (
                 <Pause
-                  className="w-12 h-12 sm:w-14 sm:h-14 text-foreground drop-shadow-[0_0_24px_hsl(var(--primary)/0.7)]"
+                  className="w-14 h-14 sm:w-16 sm:h-16 text-foreground drop-shadow-[0_0_24px_hsl(var(--primary)/0.7)]"
                   strokeWidth={1.25}
                 />
               ) : (
                 <Play
-                  className="w-12 h-12 sm:w-14 sm:h-14 text-foreground ml-1 drop-shadow-[0_0_24px_hsl(var(--primary)/0.7)]"
+                  className="w-14 h-14 sm:w-16 sm:h-16 text-foreground ml-1 drop-shadow-[0_0_24px_hsl(var(--primary)/0.7)]"
                   strokeWidth={1.25}
                   fill="currentColor"
                 />
@@ -191,7 +191,7 @@ const HeroSectionV2 = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
-        className="relative z-10 mt-12 sm:mt-14 flex flex-col items-center gap-4"
+        className="relative z-10 mt-14 sm:mt-16 flex flex-col items-center gap-4"
       >
         <button
           onClick={() => navigate("/login")}
