@@ -76,12 +76,12 @@ const HeroSectionV2 = () => {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background pointer-events-none" />
       </div>
 
-      {/* Floating audio orb */}
+      {/* Floating audio orb — der visuelle Mittelpunkt */}
       <motion.div
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.1, ease: "easeOut", delay: 0.1 }}
-        className="relative z-10 mb-10 sm:mb-14"
+        className="relative z-10 mb-16 sm:mb-20 flex justify-center w-full"
       >
         <motion.div
           animate={{ y: [0, -8, 0] }}
@@ -153,14 +153,6 @@ const HeroSectionV2 = () => {
             </AnimatePresence>
           </button>
         </motion.div>
-        <motion.p
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.6, ease: "easeOut" }}
-          className="mt-5 text-[0.7rem] sm:text-xs uppercase tracking-[0.22em] text-muted-foreground/60 font-light text-center"
-        >
-          {isPlaying ? t("landing.heroOrbPlaying") : t("landing.heroOrbHint")}
-        </motion.p>
       </motion.div>
 
       {/* Eyebrow */}
@@ -168,40 +160,30 @@ const HeroSectionV2 = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, ease: "easeOut", delay: 0.25 }}
-        className="relative z-10 mb-5 sm:mb-7 text-[0.7rem] sm:text-xs uppercase tracking-[0.32em] text-muted-foreground/70 font-light"
+        className="relative z-10 mb-6 sm:mb-8 text-[0.7rem] sm:text-xs uppercase tracking-[0.32em] text-muted-foreground/70 font-light"
       >
         {t("landing.heroEyebrow")}
       </motion.p>
 
-      {/* Headline */}
+      {/* Headline — zwei Zeilen, luftig */}
       <motion.h1
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-        className="relative z-10 text-[2.2rem] sm:text-6xl lg:text-[5rem] font-extralight tracking-[-0.02em] leading-[1.05] text-balance max-w-[18ch] mx-auto"
+        className="relative z-10 text-[2.2rem] sm:text-6xl lg:text-[5rem] font-extralight tracking-[-0.02em] leading-[1.15] sm:leading-[1.12] text-balance max-w-[20ch] mx-auto"
       >
         <span className="text-foreground/65 block">{t("landing.heroLine1")}</span>
-        <span className="block bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/55 font-light mt-2 sm:mt-3">
+        <span className="block bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/55 font-light mt-3 sm:mt-4">
           {t("landing.heroLine2")}
         </span>
       </motion.h1>
-
-      {/* Subtitle */}
-      <motion.p
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
-        className="relative z-10 mt-6 sm:mt-8 text-base sm:text-lg text-muted-foreground font-light max-w-[42ch] mx-auto leading-relaxed tracking-tight"
-      >
-        {t("landing.heroSubV2")}
-      </motion.p>
 
       {/* CTA */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
-        className="relative z-10 mt-8 sm:mt-10 flex flex-col items-center gap-3"
+        className="relative z-10 mt-12 sm:mt-14 flex flex-col items-center gap-4"
       >
         <button
           onClick={() => navigate("/login")}
