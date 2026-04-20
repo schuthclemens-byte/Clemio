@@ -811,7 +811,7 @@ const es: Record<string, string> = {
     
     "landing.heroOrbHint": "Toca para escuchar una voz",
     "landing.heroOrbPlaying": "Así suena una voz real.",
-    "landing.ctaTryApp": "Escuchar tu voz",
+    "landing.ctaTryApp": "Escuchar ahora",
     "landing.heroCtaHint": "Gratis. Sin tarjeta de crédito.",
     "landing.featV2Eyebrow": "Lo que hace diferente a Clemio",
     "landing.featV2Title": "Cuatro cosas que dan vida a tus palabras.",
