@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import { Mic, UserPlus, MessageCircleHeart, ArrowRight } from "lucide-react";
+import { Smartphone, Mic, MessageCircleHeart, ArrowRight } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
 const fadeUp = {
@@ -17,14 +17,14 @@ const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
 
   const steps = [
     {
-      icon: Mic,
+      icon: Smartphone,
       number: "01",
       title: t("landing.howV2Step1Title"),
       description: t("landing.howV2Step1Desc"),
       hint: t("landing.howV2Step1Hint"),
     },
     {
-      icon: UserPlus,
+      icon: Mic,
       number: "02",
       title: t("landing.howV2Step2Title"),
       description: t("landing.howV2Step2Desc"),
