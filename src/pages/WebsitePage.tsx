@@ -6,6 +6,7 @@ import HeroSectionV2 from "@/components/landing/HeroSectionV2";
 import FeaturesSectionV2 from "@/components/landing/FeaturesSectionV2";
 import EmotionSection from "@/components/landing/EmotionSection";
 import PrivacySection from "@/components/landing/PrivacySection";
+import TrustSection from "@/components/landing/TrustSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import FooterSection from "@/components/landing/FooterSection";
 import LanguageSwitcher from "@/components/landing/LanguageSwitcher";
@@ -38,6 +39,7 @@ const WebsitePage = () => {
       <FeaturesSectionV2 />
       <EmotionSection />
       <PrivacySection />
+      <TrustSection />
       <FinalCTASection />
       <FooterSection />
     </div>
