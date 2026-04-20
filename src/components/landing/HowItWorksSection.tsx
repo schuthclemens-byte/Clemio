@@ -19,23 +19,23 @@ const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
     {
       icon: Mic,
       number: "01",
-      title: t("landing.howStep1Title"),
-      description: t("landing.howStep1Desc"),
-      hint: t("landing.howStep1Hint"),
+      title: t("landing.howV2Step1Title"),
+      description: t("landing.howV2Step1Desc"),
+      hint: t("landing.howV2Step1Hint"),
     },
     {
       icon: UserPlus,
       number: "02",
-      title: t("landing.howStep2Title"),
-      description: t("landing.howStep2Desc"),
-      hint: t("landing.howStep2Hint"),
+      title: t("landing.howV2Step2Title"),
+      description: t("landing.howV2Step2Desc"),
+      hint: t("landing.howV2Step2Hint"),
     },
     {
       icon: MessageCircleHeart,
       number: "03",
-      title: t("landing.howStep3Title"),
-      description: t("landing.howStep3Desc"),
-      hint: t("landing.howStep3Hint"),
+      title: t("landing.howV2Step3Title"),
+      description: t("landing.howV2Step3Desc"),
+      hint: t("landing.howV2Step3Hint"),
     },
   ];
 
@@ -57,7 +57,7 @@ const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
           custom={0}
           className="text-xs font-semibold tracking-[0.18em] uppercase text-primary text-center mb-4"
         >
-          {t("landing.howEyebrow")}
+          {t("landing.howV2Eyebrow")}
         </motion.p>
 
         {/* Headline */}
@@ -66,7 +66,7 @@ const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
           custom={1}
           className="text-3xl sm:text-4xl font-extrabold text-center text-foreground tracking-tight mb-4"
         >
-          {t("landing.howTitle")}
+          {t("landing.howV2Title")}
         </motion.h2>
 
         {/* Sub */}
@@ -75,7 +75,7 @@ const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
           custom={2}
           className="text-base text-muted-foreground text-center max-w-xl mx-auto mb-16 leading-relaxed"
         >
-          {t("landing.howSubtitle")}
+          {t("landing.howV2Subtitle")}
         </motion.p>
 
         {/* Steps row (desktop) / stack (mobile) */}
@@ -138,7 +138,7 @@ const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
           custom={steps.length + 3}
           className="text-sm text-muted-foreground/80 text-center mt-14 max-w-md mx-auto leading-relaxed"
         >
-          {t("landing.howClosing")}
+          {t("landing.howV2Closing")}
         </motion.p>
       </motion.div>
     </section>
