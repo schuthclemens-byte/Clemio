@@ -27,7 +27,7 @@ const PrivacySection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.9, ease: "easeOut" }}
-          className="text-center mb-24 sm:mb-32"
+          className="text-center mb-16 sm:mb-24"
         >
           <p className="text-xs uppercase tracking-[0.32em] text-muted-foreground/70 mb-6">
             {t("landing.privEyebrow")}

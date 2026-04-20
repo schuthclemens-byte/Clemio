@@ -38,7 +38,7 @@ const EmotionSection = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 1, delay: 0.3 }}
-          className="mt-20 sm:mt-24 flex items-center justify-center gap-[3px] sm:gap-[5px] h-20 sm:h-24 opacity-80"
+          className="mt-14 sm:mt-20 flex items-center justify-center gap-[3px] sm:gap-[5px] h-20 sm:h-24 opacity-80"
         >
           {bars.map((b, i) => (
             <motion.span
@@ -56,7 +56,7 @@ const EmotionSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.9, delay: 0.4, ease: "easeOut" }}
-          className="mt-16 sm:mt-20 text-lg sm:text-xl text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed tracking-tight"
+          className="mt-12 sm:mt-16 text-lg sm:text-xl text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed tracking-tight"
         >
           {t("landing.emotionSub")}
         </motion.p>

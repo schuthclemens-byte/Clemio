@@ -20,7 +20,7 @@ const FeaturesSectionV2 = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center mb-20 sm:mb-28"
+          className="text-center mb-16 sm:mb-20"
         >
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground/70 mb-4">{t("landing.featV2Eyebrow")}</p>
           <h2 className="text-3xl sm:text-5xl font-extralight tracking-tight text-foreground max-w-2xl mx-auto leading-tight">
