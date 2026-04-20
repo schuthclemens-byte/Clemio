@@ -803,6 +803,7 @@ const es: Record<string, string> = {
     "landing.privSecDesc": "Conexiones cifradas (TLS). Perfiles de voz protegidos por separado.",
     "landing.privNoShareTitle": "Sin venta a terceros",
     "landing.privNoShareDesc": "No vendemos tus datos ni los usamos para publicidad. Detalles en nuestra política de privacidad.",
+    "landing.privReadFull": "Leer la política completa →",
     "landing.finalCtaTitle": "Escucha lo que de verdad te dicen.",
     "landing.finalCtaPrimary": "Empezar ahora",
     "landing.finalCtaSecondary": "Probar Clemio",

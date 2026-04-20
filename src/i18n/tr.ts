@@ -803,6 +803,7 @@ const tr: Record<string, string> = {
     "landing.privSecDesc": "Şifreli bağlantılar (TLS). Ses profilleri ayrıca korunur.",
     "landing.privNoShareTitle": "Üçüncü taraflara satış yok",
     "landing.privNoShareDesc": "Verilerini satmıyoruz ve reklam için kullanmıyoruz. Ayrıntılar gizlilik politikamızda.",
+    "landing.privReadFull": "Tam gizlilik politikasını oku →",
     "landing.finalCtaTitle": "Sana gerçekten söyleneni duy.",
     "landing.finalCtaPrimary": "Şimdi başla",
     "landing.finalCtaSecondary": "Clemio'yu dene",

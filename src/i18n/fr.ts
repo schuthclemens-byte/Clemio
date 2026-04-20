@@ -937,6 +937,7 @@ const fr: Record<string, string> = {
     "landing.privSecDesc": "Connexions chiffrées (TLS). Profils vocaux protégés séparément.",
     "landing.privNoShareTitle": "Pas de vente à des tiers",
     "landing.privNoShareDesc": "Nous ne vendons pas tes données et ne les utilisons pas pour la publicité. Détails dans notre politique de confidentialité.",
+    "landing.privReadFull": "Lire la politique complète →",
     "landing.finalCtaTitle": "Entends ce qu'on te dit vraiment.",
     "landing.finalCtaPrimary": "Commencer",
     "landing.finalCtaSecondary": "Essayer Clemio",

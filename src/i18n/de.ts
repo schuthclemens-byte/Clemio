@@ -937,6 +937,7 @@ const de: Record<string, string> = {
     "landing.privSecDesc": "Verschlüsselte Verbindungen (TLS). Stimm-Profile gesondert geschützt.",
     "landing.privNoShareTitle": "Kein Verkauf an Dritte",
     "landing.privNoShareDesc": "Wir verkaufen deine Daten nicht und nutzen sie nicht für Werbung. Details findest du in der Datenschutzerklärung.",
+    "landing.privReadFull": "Vollständige Datenschutzerklärung lesen →",
     "landing.finalCtaTitle": "Höre, was dir wirklich gesagt wird.",
     "landing.finalCtaPrimary": "Jetzt starten",
     "landing.finalCtaSecondary": "Clemio ausprobieren",

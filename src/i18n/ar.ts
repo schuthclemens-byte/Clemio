@@ -803,6 +803,7 @@ const ar: Record<string, string> = {
     "landing.privSecDesc": "اتصالات مشفّرة (TLS). ملفات الصوت محميّة بشكل منفصل.",
     "landing.privNoShareTitle": "لا بيع لأطراف ثالثة",
     "landing.privNoShareDesc": "لا نبيع بياناتك ولا نستخدمها للإعلانات. التفاصيل في سياسة الخصوصية.",
+    "landing.privReadFull": "← اقرأ سياسة الخصوصية الكاملة",
     "landing.finalCtaTitle": "اسمع ما يُقال لك حقاً.",
     "landing.finalCtaPrimary": "ابدأ الآن",
     "landing.finalCtaSecondary": "جرّب Clemio",
