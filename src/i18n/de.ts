@@ -970,9 +970,14 @@ const de: Record<string, string> = {
     "landing.privNoShareTitle": "Kein Verkauf an Dritte",
     "landing.privNoShareDesc": "Wir verkaufen deine Daten nicht und nutzen sie nicht für Werbung. Details findest du in der Datenschutzerklärung.",
     "landing.privReadFull": "Vollständige Datenschutzerklärung lesen →",
-    "landing.finalCtaTitle": "Höre, was dir wirklich gesagt wird.",
-    "landing.finalCtaPrimary": "Jetzt starten",
-    "landing.finalCtaSecondary": "Clemio ausprobieren",
+    "landing.finalCtaEyebrow": "In 60 Sekunden startklar",
+    "landing.finalCtaHeadline": "Heute noch das erste Mal sprechen statt tippen.",
+    "landing.finalCtaSub": "Konto erstellen, Stimme aufnehmen, ersten Kontakt einladen — fertig. Kein Adressbuch-Upload, keine Werbung.",
+    "landing.finalCtaPrimary": "Kostenlos starten",
+    "landing.finalCtaFreeNote": "Kostenlos. Keine Kreditkarte.",
+    "landing.finalCtaTrust1": "Setup unter 1 Minute",
+    "landing.finalCtaTrust2": "Server in der EU",
+    "landing.finalCtaTrust3": "Stimme jederzeit löschbar",
 };
 
 export default de;

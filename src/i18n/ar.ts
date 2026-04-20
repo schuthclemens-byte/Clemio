@@ -836,9 +836,14 @@ const ar: Record<string, string> = {
     "landing.privNoShareTitle": "لا بيع لأطراف ثالثة",
     "landing.privNoShareDesc": "لا نبيع بياناتك ولا نستخدمها للإعلانات. التفاصيل في سياسة الخصوصية.",
     "landing.privReadFull": "← اقرأ سياسة الخصوصية الكاملة",
-    "landing.finalCtaTitle": "اسمع ما يُقال لك حقاً.",
-    "landing.finalCtaPrimary": "ابدأ الآن",
-    "landing.finalCtaSecondary": "جرّب Clemio",
+    "landing.finalCtaEyebrow": "جاهز في 60 ثانية",
+    "landing.finalCtaHeadline": "تحدّث بدل أن تكتب — لأول مرة اليوم.",
+    "landing.finalCtaSub": "أنشئ حسابك، سجّل صوتك، ادعُ أول جهة اتصال — انتهى. لا رفع لدفتر العناوين ولا إعلانات.",
+    "landing.finalCtaPrimary": "ابدأ مجاناً",
+    "landing.finalCtaFreeNote": "مجاناً. بدون بطاقة ائتمان.",
+    "landing.finalCtaTrust1": "إعداد في أقل من دقيقة",
+    "landing.finalCtaTrust2": "خوادم في الاتحاد الأوروبي",
+    "landing.finalCtaTrust3": "يمكنك حذف صوتك في أي وقت",
 };
 
 export default ar;
