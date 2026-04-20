@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import HeroSectionV2 from "@/components/landing/HeroSectionV2";
 import FeaturesSectionV2 from "@/components/landing/FeaturesSectionV2";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import EmotionSection from "@/components/landing/EmotionSection";
 import PrivacySection from "@/components/landing/PrivacySection";
 import TrustSection from "@/components/landing/TrustSection";
@@ -37,6 +38,7 @@ const WebsitePage = () => {
 
       <HeroSectionV2 />
       <FeaturesSectionV2 />
+      <HowItWorksSection />
       <EmotionSection />
       <PrivacySection />
       <TrustSection />

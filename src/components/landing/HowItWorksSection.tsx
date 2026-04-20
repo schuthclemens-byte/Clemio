@@ -1,5 +1,6 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, Ear, Headphones } from "lucide-react";
+import { Mic, UserPlus, MessageCircleHeart, ArrowRight } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
 const fadeUp = {
@@ -7,67 +8,143 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.15, duration: 0.6, ease: "easeOut" as const },
+    transition: { delay: i * 0.1, duration: 0.55, ease: "easeOut" as const },
   }),
 };
 
-const HowItWorksSection = () => {
+const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useI18n();
 
   const steps = [
-    { icon: <MessageSquare className="w-6 h-6" />, number: "01", title: t("landing.howStep1Title"), description: t("landing.howStep1Desc") },
-    { icon: <Ear className="w-6 h-6" />, number: "02", title: t("landing.howStep2Title"), description: t("landing.howStep2Desc") },
-    { icon: <Headphones className="w-6 h-6" />, number: "03", title: t("landing.howStep3Title"), description: t("landing.howStep3Desc") },
+    {
+      icon: Mic,
+      number: "01",
+      title: t("landing.howV2Step1Title"),
+      description: t("landing.howV2Step1Desc"),
+      hint: t("landing.howV2Step1Hint"),
+    },
+    {
+      icon: UserPlus,
+      number: "02",
+      title: t("landing.howV2Step2Title"),
+      description: t("landing.howV2Step2Desc"),
+      hint: t("landing.howV2Step2Hint"),
+    },
+    {
+      icon: MessageCircleHeart,
+      number: "03",
+      title: t("landing.howV2Step3Title"),
+      description: t("landing.howV2Step3Desc"),
+      hint: t("landing.howV2Step3Hint"),
+    },
   ];
 
   return (
-    <section className="relative px-6 py-24">
-      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background/50 to-transparent pointer-events-none" />
+    <section ref={ref} className="relative px-6 py-32 sm:py-44 overflow-hidden">
+      {/* Soft top fade for seamless transition */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background to-transparent pointer-events-none" aria-hidden />
 
       <motion.div
-        className="max-w-lg mx-auto"
+        className="relative max-w-5xl mx-auto"
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: "-60px" }}
-        variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+        viewport={{ once: true, margin: "-80px" }}
+        variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
       >
-        <motion.p variants={fadeUp} custom={0} className="text-primary text-sm font-bold uppercase tracking-wider text-center mb-3">
-          Clemio
-        </motion.p>
-        <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-extrabold text-center mb-3 text-foreground leading-tight">
-          {t("landing.howTitle")}
-        </motion.h2>
-        <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-center text-base mb-14">
-          {t("landing.howSubtitle")}
+        {/* Eyebrow */}
+        <motion.p
+          variants={fadeUp}
+          custom={0}
+          className="text-xs font-semibold tracking-[0.18em] uppercase text-primary text-center mb-4"
+        >
+          {t("landing.howV2Eyebrow")}
         </motion.p>
 
-        <div className="space-y-4">
-          {steps.map((step, i) => (
-            <motion.div
-              key={i}
-              variants={fadeUp}
-              custom={i + 3}
-              whileHover={{ x: 4 }}
-              className="flex items-start gap-5 p-5 rounded-2xl bg-card border border-border shadow-sm hover:shadow-elevated transition-all duration-300"
-            >
-              <div className="relative">
-                <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground shrink-0">
-                  {step.icon}
+        {/* Headline */}
+        <motion.h2
+          variants={fadeUp}
+          custom={1}
+          className="text-3xl sm:text-4xl font-extrabold text-center text-foreground tracking-tight mb-4"
+        >
+          {t("landing.howV2Title")}
+        </motion.h2>
+
+        {/* Sub */}
+        <motion.p
+          variants={fadeUp}
+          custom={2}
+          className="text-base text-muted-foreground text-center max-w-xl mx-auto mb-16 leading-relaxed"
+        >
+          {t("landing.howV2Subtitle")}
+        </motion.p>
+
+        {/* Steps row (desktop) / stack (mobile) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 relative">
+          {/* Connector line on desktop */}
+          <div
+            className="hidden md:block absolute top-[3.25rem] left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-transparent via-border to-transparent pointer-events-none"
+            aria-hidden
+          />
+
+          {steps.map((step, i) => {
+            const Icon = step.icon;
+            const isLast = i === steps.length - 1;
+            return (
+              <motion.div
+                key={i}
+                variants={fadeUp}
+                custom={i + 3}
+                className="relative flex flex-col items-center text-center px-2"
+              >
+                {/* Icon circle with number badge */}
+                <div className="relative mb-5">
+                  <div className="w-[6.5rem] h-[6.5rem] rounded-2xl gradient-primary flex items-center justify-center text-primary-foreground shadow-elevated">
+                    <Icon className="w-9 h-9" strokeWidth={1.75} />
+                  </div>
+                  <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center shadow-md">
+                    {step.number}
+                  </span>
                 </div>
-                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-foreground text-background text-[0.65rem] font-bold flex items-center justify-center">
-                  {step.number}
+
+                {/* Title */}
+                <h3 className="font-bold text-lg text-foreground mb-2 leading-snug">
+                  {step.title}
+                </h3>
+
+                {/* Description */}
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-xs">
+                  {step.description}
+                </p>
+
+                {/* Hint chip */}
+                <span className="inline-flex items-center text-[0.688rem] font-medium tracking-wide uppercase text-primary/80 bg-primary/10 px-2.5 py-1 rounded-full">
+                  {step.hint}
                 </span>
-              </div>
-              <div>
-                <h3 className="font-bold text-foreground mb-1">{step.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-              </div>
-            </motion.div>
-          ))}
+
+                {/* Mobile arrow connector */}
+                {!isLast && (
+                  <div className="md:hidden mt-6 mb-2 text-muted-foreground/40" aria-hidden>
+                    <ArrowRight className="w-5 h-5 rotate-90" />
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
+
+        {/* Closing line */}
+        <motion.p
+          variants={fadeUp}
+          custom={steps.length + 3}
+          className="text-sm text-muted-foreground/80 text-center mt-14 max-w-md mx-auto leading-relaxed"
+        >
+          {t("landing.howV2Closing")}
+        </motion.p>
       </motion.div>
     </section>
   );
-};
+});
+
+HowItWorksSection.displayName = "HowItWorksSection";
 
 export default HowItWorksSection;
