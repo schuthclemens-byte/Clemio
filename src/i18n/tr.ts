@@ -808,7 +808,7 @@ const tr: Record<string, string> = {
     "landing.heroEyebrow": "Senin sesin · Almanya'da yapıldı",
     "landing.heroLine1": "Sen yazarsın.",
     "landing.heroLine2": "Sözlerin senin gibi tınlar.",
-    "landing.heroSubV2": "",
+    
     "landing.heroOrbHint": "Bir ses duymak için dokun",
     "landing.heroOrbPlaying": "Gerçek bir ses böyle çıkar.",
     "landing.ctaTryApp": "Sesini duy",
