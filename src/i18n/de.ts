@@ -942,7 +942,7 @@ const de: Record<string, string> = {
     "landing.heroEyebrow": "Deine Stimme · Aus Deutschland",
     "landing.heroLine1": "Du schreibst.",
     "landing.heroLine2": "Deine Worte klingen nach dir.",
-    "landing.heroSubV2": "",
+    
     "landing.heroOrbHint": "Tippen, um eine Stimme zu hören",
     "landing.heroOrbPlaying": "So klingt eine echte Stimme.",
     "landing.ctaTryApp": "Stimme erleben",
