@@ -152,28 +152,8 @@ const HeroSectionV2 = () => {
               )}
             </AnimatePresence>
           </button>
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.6, ease: "easeOut" }}
-            className="absolute left-0 right-0 top-full mt-5 flex justify-center pointer-events-none"
-          >
-            <span className="text-[0.7rem] sm:text-xs uppercase tracking-[0.22em] text-muted-foreground/60 font-light text-center whitespace-nowrap [text-indent:0.22em]">
-              {isPlaying ? t("landing.heroOrbPlaying") : t("landing.heroOrbHint")}
-            </span>
-          </motion.div>
         </motion.div>
       </motion.div>
-
-      {/* Eyebrow */}
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: "easeOut", delay: 0.25 }}
-        className="relative z-10 mb-6 sm:mb-8 text-[0.7rem] sm:text-xs uppercase tracking-[0.32em] text-muted-foreground/70 font-light"
-      >
-        {t("landing.heroEyebrow")}
-      </motion.p>
 
       {/* Headline — zwei Zeilen, luftig */}
       <motion.h1
