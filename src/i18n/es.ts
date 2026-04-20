@@ -807,8 +807,8 @@ const es: Record<string, string> = {
     "push.close": "Cerrar",
     "landing.heroEyebrow": "Tu voz · Hecho en Alemania",
     "landing.heroLine1": "Tú escribes.",
-    "landing.heroLine2": "Clemio da vida a tu voz.",
-    "landing.heroSubV2": "Escribes como siempre – y tus palabras llegan en tu voz real.",
+    "landing.heroLine2": "Tus palabras suenan a ti.",
+    
     "landing.heroOrbHint": "Toca para escuchar una voz",
     "landing.heroOrbPlaying": "Así suena una voz real.",
     "landing.ctaTryApp": "Escuchar tu voz",

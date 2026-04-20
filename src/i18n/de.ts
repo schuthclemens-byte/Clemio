@@ -941,8 +941,8 @@ const de: Record<string, string> = {
     "legal.priv8Text": "Für Fragen zum Datenschutz kannst du uns erreichen unter:",
     "landing.heroEyebrow": "Deine Stimme · Aus Deutschland",
     "landing.heroLine1": "Du schreibst.",
-    "landing.heroLine2": "Clemio erweckt deine Stimme zum Leben.",
-    "landing.heroSubV2": "Du schreibst wie immer – und deine Worte kommen in deiner echten Stimme an.",
+    "landing.heroLine2": "Deine Worte klingen nach dir.",
+    
     "landing.heroOrbHint": "Tippen, um eine Stimme zu hören",
     "landing.heroOrbPlaying": "So klingt eine echte Stimme.",
     "landing.ctaTryApp": "Stimme erleben",

@@ -941,8 +941,8 @@ const en: Record<string, string> = {
     "legal.priv8Text": "For privacy questions, you can reach us at:",
     "landing.heroEyebrow": "Your voice · Made in Germany",
     "landing.heroLine1": "You write.",
-    "landing.heroLine2": "Clemio brings your voice to life.",
-    "landing.heroSubV2": "You write like you always do – and your words arrive in your real voice.",
+    "landing.heroLine2": "Your words sound like you.",
+    
     "landing.heroOrbHint": "Tap to hear a voice",
     "landing.heroOrbPlaying": "This is what a real voice sounds like.",
     "landing.ctaTryApp": "Hear your voice",

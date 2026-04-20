@@ -807,8 +807,8 @@ const tr: Record<string, string> = {
     "push.close": "Kapat",
     "landing.heroEyebrow": "Senin sesin · Almanya'da yapıldı",
     "landing.heroLine1": "Sen yazarsın.",
-    "landing.heroLine2": "Clemio sesine hayat verir.",
-    "landing.heroSubV2": "Her zamanki gibi yazarsın – ve sözlerin gerçek sesinle ulaşır.",
+    "landing.heroLine2": "Sözlerin senin gibi tınlar.",
+    
     "landing.heroOrbHint": "Bir ses duymak için dokun",
     "landing.heroOrbPlaying": "Gerçek bir ses böyle çıkar.",
     "landing.ctaTryApp": "Sesini duy",
