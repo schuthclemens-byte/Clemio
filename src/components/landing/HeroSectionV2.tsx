@@ -5,31 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
 import { createPlayableAudio, prefetchLocalizedAudio } from "@/lib/landingAudio";
 
-interface HeroSectionV2Props {
-  /** Audio element handed over from the intro (already playing). */
-  initialAudio?: HTMLAudioElement | null;
-}
-
-const HeroSectionV2 = ({ initialAudio = null }: HeroSectionV2Props) => {
+const HeroSectionV2 = () => {
   const navigate = useNavigate();
   const { t, locale } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [playError, setPlayError] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Adopt audio handed over from the intro so playback continues seamlessly.
-  useEffect(() => {
-    if (!initialAudio) return;
-    audioRef.current = initialAudio;
-    setIsPlaying(!initialAudio.paused);
-    initialAudio.onended = () => setIsPlaying(false);
-    initialAudio.onerror = () => setIsPlaying(false);
-    return () => {
-      initialAudio.onended = null;
-      initialAudio.onerror = null;
-    };
-  }, [initialAudio]);
 
   // Warm up localized TTS on language change.
   useEffect(() => {
