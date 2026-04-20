@@ -776,6 +776,7 @@ const tr: Record<string, string> = {
     "landing.heroCtaHint": "Ücretsiz. Kredi kartı gerekmez.",
     "landing.featV2Eyebrow": "Clemio nasıl hissettirir",
     "landing.featV2Title": "Yazmak dündü. Konuşmak her zamandı.",
+    "landing.featV2HeroLabel": "Özü",
     "landing.featV2VoiceTitle": "Yazı yerine ses",
     "landing.featV2VoiceDesc": "Konuştuğun gibi konuş. Karşındaki seni duyar — sadece kelimelerini değil.",
     "landing.featV2AiTitle": "İstersen nazikçe yeniden yazılır",

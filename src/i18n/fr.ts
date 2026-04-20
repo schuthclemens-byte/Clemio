@@ -910,6 +910,7 @@ const fr: Record<string, string> = {
     "landing.heroCtaHint": "Gratuit. Sans carte bancaire.",
     "landing.featV2Eyebrow": "Ce que tu ressens avec Clemio",
     "landing.featV2Title": "Écrire, c'était hier. Parler, c'est toujours.",
+    "landing.featV2HeroLabel": "L'essentiel",
     "landing.featV2VoiceTitle": "La voix, pas le texte",
     "landing.featV2VoiceDesc": "Parle comme tu parles. L'autre t'entend — pas seulement tes mots.",
     "landing.featV2AiTitle": "Reformulé en douceur, si tu veux",

@@ -776,6 +776,7 @@ const ar: Record<string, string> = {
     "landing.heroCtaHint": "مجانًا. بدون بطاقة ائتمان.",
     "landing.featV2Eyebrow": "كيف يبدو Clemio",
     "landing.featV2Title": "الكتابة كانت بالأمس. الحديث كان دائماً.",
+    "landing.featV2HeroLabel": "الجوهر",
     "landing.featV2VoiceTitle": "صوت بدلاً من النص",
     "landing.featV2VoiceDesc": "تحدّث كما تتحدّث. الطرف الآخر يسمعك — لا كلماتك فقط.",
     "landing.featV2AiTitle": "صياغة لطيفة، إن أردت",

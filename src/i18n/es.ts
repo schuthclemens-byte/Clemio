@@ -776,6 +776,7 @@ const es: Record<string, string> = {
     "landing.heroCtaHint": "Gratis. Sin tarjeta de crédito.",
     "landing.featV2Eyebrow": "Cómo se siente Clemio",
     "landing.featV2Title": "Escribir era ayer. Hablar siempre lo fue.",
+    "landing.featV2HeroLabel": "Lo esencial",
     "landing.featV2VoiceTitle": "Voz en vez de texto",
     "landing.featV2VoiceDesc": "Habla como hablas. La otra persona te escucha — no solo tus palabras.",
     "landing.featV2AiTitle": "Reformulado con suavidad, cuando quieras",
