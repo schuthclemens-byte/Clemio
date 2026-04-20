@@ -79,10 +79,10 @@ const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
         </motion.p>
 
         {/* Steps row (desktop) / stack (mobile) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 relative">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 relative">
           {/* Connector line on desktop */}
           <div
-            className="hidden md:block absolute top-[3.25rem] left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-transparent via-border to-transparent pointer-events-none"
+            className="hidden md:block absolute top-10 left-[16.66%] right-[16.66%] h-px bg-border/60 pointer-events-none"
             aria-hidden
           />
 
@@ -97,34 +97,34 @@ const HowItWorksSection = forwardRef<HTMLElement>((_, ref) => {
                 className="relative flex flex-col items-center text-center px-2"
               >
                 {/* Icon circle with number badge */}
-                <div className="relative mb-5">
-                  <div className="w-[6.5rem] h-[6.5rem] rounded-2xl gradient-primary flex items-center justify-center text-primary-foreground shadow-elevated">
-                    <Icon className="w-9 h-9" strokeWidth={1.75} />
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/15 flex items-center justify-center text-primary">
+                    <Icon className="w-8 h-8" strokeWidth={1.5} />
                   </div>
-                  <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center shadow-md">
+                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-foreground text-background text-[0.65rem] font-semibold flex items-center justify-center">
                     {step.number}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h3 className="font-bold text-lg text-foreground mb-2 leading-snug">
+                <h3 className="font-semibold text-base text-foreground mb-2 leading-snug">
                   {step.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-xs">
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-[14rem]">
                   {step.description}
                 </p>
 
                 {/* Hint chip */}
-                <span className="inline-flex items-center text-[0.688rem] font-medium tracking-wide uppercase text-primary/80 bg-primary/10 px-2.5 py-1 rounded-full">
+                <span className="inline-flex items-center text-[0.7rem] font-medium tracking-wide text-muted-foreground/70">
                   {step.hint}
                 </span>
 
                 {/* Mobile arrow connector */}
                 {!isLast && (
-                  <div className="md:hidden mt-6 mb-2 text-muted-foreground/40" aria-hidden>
-                    <ArrowRight className="w-5 h-5 rotate-90" />
+                  <div className="md:hidden mt-6 text-muted-foreground/30" aria-hidden>
+                    <ArrowRight className="w-4 h-4 rotate-90" />
                   </div>
                 )}
               </motion.div>
