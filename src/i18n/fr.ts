@@ -970,9 +970,14 @@ const fr: Record<string, string> = {
     "landing.privNoShareTitle": "Pas de vente à des tiers",
     "landing.privNoShareDesc": "Nous ne vendons pas tes données et ne les utilisons pas pour la publicité. Détails dans notre politique de confidentialité.",
     "landing.privReadFull": "Lire la politique complète →",
-    "landing.finalCtaTitle": "Entends ce qu'on te dit vraiment.",
-    "landing.finalCtaPrimary": "Commencer",
-    "landing.finalCtaSecondary": "Essayer Clemio",
+    "landing.finalCtaEyebrow": "Prêt en 60 secondes",
+    "landing.finalCtaHeadline": "Parle au lieu d'écrire — pour la première fois dès aujourd'hui.",
+    "landing.finalCtaSub": "Crée ton compte, enregistre ta voix, invite ton premier contact — c'est tout. Pas d'import de carnet, pas de pub.",
+    "landing.finalCtaPrimary": "Commencer gratuitement",
+    "landing.finalCtaFreeNote": "Gratuit. Sans carte bancaire.",
+    "landing.finalCtaTrust1": "Installation en moins d'1 minute",
+    "landing.finalCtaTrust2": "Serveurs dans l'UE",
+    "landing.finalCtaTrust3": "Voix supprimable à tout moment",
 };
 
 export default fr;

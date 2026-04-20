@@ -836,9 +836,14 @@ const es: Record<string, string> = {
     "landing.privNoShareTitle": "Sin venta a terceros",
     "landing.privNoShareDesc": "No vendemos tus datos ni los usamos para publicidad. Detalles en nuestra política de privacidad.",
     "landing.privReadFull": "Leer la política completa →",
-    "landing.finalCtaTitle": "Escucha lo que de verdad te dicen.",
-    "landing.finalCtaPrimary": "Empezar ahora",
-    "landing.finalCtaSecondary": "Probar Clemio",
+    "landing.finalCtaEyebrow": "Listo en 60 segundos",
+    "landing.finalCtaHeadline": "Habla en vez de escribir — por primera vez hoy mismo.",
+    "landing.finalCtaSub": "Crea tu cuenta, graba tu voz, invita a tu primer contacto — listo. Sin carga de agenda, sin anuncios.",
+    "landing.finalCtaPrimary": "Empezar gratis",
+    "landing.finalCtaFreeNote": "Gratis. Sin tarjeta de crédito.",
+    "landing.finalCtaTrust1": "Configuración en menos de 1 minuto",
+    "landing.finalCtaTrust2": "Servidores en la UE",
+    "landing.finalCtaTrust3": "Voz eliminable en cualquier momento",
 };
 
 export default es;

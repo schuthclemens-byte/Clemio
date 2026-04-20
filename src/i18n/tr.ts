@@ -836,9 +836,14 @@ const tr: Record<string, string> = {
     "landing.privNoShareTitle": "Üçüncü taraflara satış yok",
     "landing.privNoShareDesc": "Verilerini satmıyoruz ve reklam için kullanmıyoruz. Ayrıntılar gizlilik politikamızda.",
     "landing.privReadFull": "Tam gizlilik politikasını oku →",
-    "landing.finalCtaTitle": "Sana gerçekten söyleneni duy.",
-    "landing.finalCtaPrimary": "Şimdi başla",
-    "landing.finalCtaSecondary": "Clemio'yu dene",
+    "landing.finalCtaEyebrow": "60 saniyede hazır",
+    "landing.finalCtaHeadline": "Bugün ilk kez yazmak yerine konuş.",
+    "landing.finalCtaSub": "Hesabını oluştur, sesini kaydet, ilk kişini davet et — tamam. Adres defteri yüklemesi yok, reklam yok.",
+    "landing.finalCtaPrimary": "Ücretsiz başla",
+    "landing.finalCtaFreeNote": "Ücretsiz. Kredi kartı gerekmez.",
+    "landing.finalCtaTrust1": "1 dakikadan kısa kurulum",
+    "landing.finalCtaTrust2": "Sunucular AB'de",
+    "landing.finalCtaTrust3": "Sesini her zaman silebilirsin",
 };
 
 export default tr;

@@ -970,9 +970,14 @@ const en: Record<string, string> = {
     "landing.privNoShareTitle": "No sale to third parties",
     "landing.privNoShareDesc": "We don't sell your data and don't use it for advertising. Details in our privacy policy.",
     "landing.privReadFull": "Read the full privacy policy →",
-    "landing.finalCtaTitle": "Hear what's really being said.",
-    "landing.finalCtaPrimary": "Get started",
-    "landing.finalCtaSecondary": "Try Clemio",
+    "landing.finalCtaEyebrow": "Ready in 60 seconds",
+    "landing.finalCtaHeadline": "Speak instead of type — for the first time today.",
+    "landing.finalCtaSub": "Create your account, record your voice, invite your first contact — done. No address book upload, no ads.",
+    "landing.finalCtaPrimary": "Start free",
+    "landing.finalCtaFreeNote": "Free. No credit card.",
+    "landing.finalCtaTrust1": "Setup under 1 minute",
+    "landing.finalCtaTrust2": "Servers in the EU",
+    "landing.finalCtaTrust3": "Delete your voice anytime",
 };
 
 export default en;
