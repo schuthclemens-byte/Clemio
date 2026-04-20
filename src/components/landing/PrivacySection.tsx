@@ -12,7 +12,7 @@ const PrivacySection = () => {
   ];
 
   return (
-    <section className="relative px-6 py-40 sm:py-56 overflow-hidden">
+    <section className="relative px-6 py-28 sm:py-40 overflow-hidden">
       {/* Soft trust-glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div
@@ -27,7 +27,7 @@ const PrivacySection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.9, ease: "easeOut" }}
-          className="text-center mb-24 sm:mb-32"
+          className="text-center mb-16 sm:mb-24"
         >
           <p className="text-xs uppercase tracking-[0.32em] text-muted-foreground/70 mb-6">
             {t("landing.privEyebrow")}

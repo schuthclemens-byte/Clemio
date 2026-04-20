@@ -73,7 +73,7 @@ const HeroSectionV2 = () => {
           animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.28, 0.18] }}
           transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background pointer-events-none" />
       </div>
 
       {/* Floating audio orb */}
@@ -216,6 +216,21 @@ const HeroSectionV2 = () => {
         </p>
       </motion.div>
 
+      {/* Scroll hint — extrem dezent */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, delay: 1.4, ease: "easeOut" }}
+        className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-2"
+        aria-hidden="true"
+      >
+        <div className="h-9 w-[1px] bg-gradient-to-b from-transparent to-foreground/30" />
+        <motion.div
+          animate={{ y: [0, 4, 0], opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          className="w-[3px] h-[3px] rounded-full bg-foreground/60"
+        />
+      </motion.div>
       {/* Audio error toast */}
       <AnimatePresence>
         {playError && !isPlaying && (
