@@ -1,90 +1,112 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Shield, Lock, EyeOff } from "lucide-react";
+import { Shield, Lock, Mic, EyeOff } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
-const PrivacySection = () => {
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.55, ease: "easeOut" as const },
+  }),
+};
+
+const PrivacySection = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useI18n();
 
   const items = [
     { icon: Shield, titleKey: "landing.privGdprTitle", descKey: "landing.privGdprDesc" },
     { icon: Lock, titleKey: "landing.privSecTitle", descKey: "landing.privSecDesc" },
+    { icon: Mic, titleKey: "landing.privVoiceTitle", descKey: "landing.privVoiceDesc" },
     { icon: EyeOff, titleKey: "landing.privNoShareTitle", descKey: "landing.privNoShareDesc" },
   ];
 
   return (
-    <section className="relative px-6 py-28 sm:py-40 overflow-hidden">
-      {/* Soft trust-glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[60vh] rounded-full opacity-[0.18] blur-[140px]"
-          style={{ background: "radial-gradient(circle, hsl(200 60% 55%) 0%, transparent 70%)" }}
-        />
-      </div>
+    <section ref={ref} className="relative px-6 py-32 sm:py-44 overflow-hidden">
+      {/* Soft top fade for seamless transition */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background to-transparent pointer-events-none" aria-hidden />
 
-      <div className="relative max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-          className="text-center mb-16 sm:mb-24"
+      <motion.div
+        className="relative max-w-5xl mx-auto"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+      >
+        {/* Eyebrow */}
+        <motion.p
+          variants={fadeUp}
+          custom={0}
+          className="text-xs font-semibold tracking-[0.18em] uppercase text-primary text-center mb-4"
         >
-          <p className="text-xs uppercase tracking-[0.32em] text-muted-foreground/70 mb-6">
-            {t("landing.privEyebrow")}
-          </p>
-          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-[-0.02em] text-foreground leading-[1.05] text-balance max-w-3xl mx-auto">
-            {t("landing.privTitle")}
-          </h2>
-          <p className="mt-6 sm:mt-8 text-base sm:text-lg text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed tracking-tight">
-            {t("landing.privSub")}
-          </p>
-        </motion.div>
+          {t("landing.privEyebrow")}
+        </motion.p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
+        {/* Headline */}
+        <motion.h2
+          variants={fadeUp}
+          custom={1}
+          className="text-3xl sm:text-4xl font-extrabold text-center text-foreground tracking-tight mb-4"
+        >
+          {t("landing.privTitle")}
+        </motion.h2>
+
+        {/* Sub */}
+        <motion.p
+          variants={fadeUp}
+          custom={2}
+          className="text-base text-muted-foreground text-center max-w-xl mx-auto mb-16 leading-relaxed"
+        >
+          {t("landing.privSub")}
+        </motion.p>
+
+        {/* Cards grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {items.map((it, i) => {
             const Icon = it.icon;
             return (
               <motion.div
                 key={it.titleKey}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.8, delay: i * 0.12, ease: "easeOut" }}
-                className="flex flex-col items-center text-center px-4"
+                variants={fadeUp}
+                custom={i + 3}
+                className="flex items-start gap-4 p-6 rounded-2xl bg-card/50 border border-border/50"
               >
-                <div className="w-14 h-14 rounded-2xl bg-foreground/[0.04] border border-border/50 flex items-center justify-center mb-7">
-                  <Icon className="w-6 h-6 text-foreground/75" strokeWidth={1.4} />
+                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-primary" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-lg sm:text-xl font-light text-foreground tracking-tight mb-3">
-                  {t(it.titleKey)}
-                </h3>
-                <p className="text-sm text-muted-foreground/90 leading-relaxed font-light max-w-[20rem]">
-                  {t(it.descKey)}
-                </p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-base text-foreground mb-1.5 leading-snug">
+                    {t(it.titleKey)}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {t(it.descKey)}
+                  </p>
+                </div>
               </motion.div>
             );
           })}
         </div>
 
-        {/* Verweis auf vollständige Datenschutzerklärung */}
+        {/* Link to full policy */}
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-14 sm:mt-20 text-center"
+          variants={fadeUp}
+          custom={items.length + 3}
+          className="mt-12 text-center"
         >
           <Link
             to="/privacy"
-            className="text-sm text-muted-foreground/80 hover:text-foreground transition-colors font-light tracking-wide underline-offset-4 hover:underline"
+            className="text-sm text-muted-foreground/80 hover:text-foreground transition-colors underline-offset-4 hover:underline"
           >
             {t("landing.privReadFull")}
           </Link>
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
-};
+});
+
+PrivacySection.displayName = "PrivacySection";
 
 export default PrivacySection;
