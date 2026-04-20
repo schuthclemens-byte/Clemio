@@ -180,10 +180,10 @@ const HeroSectionV2 = () => {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-        className="relative z-10 text-[2.2rem] sm:text-6xl lg:text-[5rem] font-extralight tracking-[-0.02em] leading-[1.15] sm:leading-[1.12] text-balance max-w-[20ch] mx-auto"
+        className="relative z-10 text-[2.2rem] sm:text-6xl lg:text-[5rem] font-extralight tracking-[-0.02em] leading-[1.25] sm:leading-[1.22] text-balance max-w-[20ch] mx-auto pb-2"
       >
         <span className="text-foreground/65 block">{t("landing.heroLine1")}</span>
-        <span className="block bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/55 font-light mt-3 sm:mt-4">
+        <span className="block bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/55 font-light mt-3 sm:mt-4 pb-1">
           {t("landing.heroLine2")}
         </span>
       </motion.h1>
