@@ -155,6 +155,16 @@ const HeroSectionV2 = () => {
         </motion.div>
       </motion.div>
 
+      {/* Eyebrow */}
+      <motion.p
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, ease: "easeOut", delay: 0.25 }}
+        className="relative z-10 mb-5 sm:mb-7 text-[0.7rem] sm:text-xs uppercase tracking-[0.32em] text-muted-foreground/70 font-light"
+      >
+        {t("landing.heroEyebrow")}
+      </motion.p>
+
       {/* Headline */}
       <motion.h1
         initial={{ opacity: 0, y: 24 }}
@@ -173,7 +183,7 @@ const HeroSectionV2 = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
-        className="relative z-10 mt-6 sm:mt-10 text-base sm:text-xl text-muted-foreground font-light max-w-[36ch] mx-auto leading-relaxed tracking-tight"
+        className="relative z-10 mt-6 sm:mt-8 text-base sm:text-lg text-muted-foreground font-light max-w-[42ch] mx-auto leading-relaxed tracking-tight"
       >
         {t("landing.heroSubV2")}
       </motion.p>
@@ -183,7 +193,7 @@ const HeroSectionV2 = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
-        className="relative z-10 mt-8 sm:mt-12"
+        className="relative z-10 mt-8 sm:mt-10 flex flex-col items-center gap-3"
       >
         <button
           onClick={() => navigate("/login")}
@@ -201,6 +211,9 @@ const HeroSectionV2 = () => {
             strokeWidth={2}
           />
         </button>
+        <p className="text-xs text-muted-foreground/60 font-light tracking-wide">
+          {t("landing.heroCtaHint")}
+        </p>
       </motion.div>
 
       {/* Audio error toast */}
