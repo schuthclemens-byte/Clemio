@@ -211,9 +211,6 @@ const HeroSectionV2 = () => {
             strokeWidth={2}
           />
         </button>
-        <p className="text-xs text-muted-foreground/60 font-light tracking-wide">
-          {t("landing.heroCtaHint")}
-        </p>
       </motion.div>
 
       {/* Scroll hint — extrem dezent */}
