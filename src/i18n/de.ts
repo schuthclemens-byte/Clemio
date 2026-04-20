@@ -954,7 +954,7 @@ const de: Record<string, string> = {
     "landing.featV2VoiceTitle": "Tippen → echte Stimme",
     "landing.featV2VoiceDesc": "Schreib einen Text. Der Empfänger hört ihn in deiner geklonten Stimme. Kein Aufnehmen, kein Hochladen — Clemio synthetisiert die Stimme aus deinem Profil.",
     "landing.featV2AiTitle": "KI macht harte Worte ruhiger",
-    "landing.featV2AiDesc": "Tippe „Du nervst mich" — Clemio schlägt „Ich brauche gerade Ruhe" vor. 3 Vorschläge pro Tag gratis, mehr im Premium.",
+    "landing.featV2AiDesc": "Tippe 'Du nervst mich' — Clemio schlägt 'Ich brauche gerade Ruhe' vor. 3 Vorschläge pro Tag gratis, mehr im Premium.",
     "landing.featV2AutoTitle": "Auto-Play bei Kopfhörern",
     "landing.featV2AutoDesc": "Sobald Clemio Bluetooth-Kopfhörer erkennt, spielen neue Nachrichten automatisch ab — Hände bleiben frei beim Pendeln, Kochen, Joggen.",
     "landing.featV2TransTitle": "Übersetzung in deiner Stimme",
