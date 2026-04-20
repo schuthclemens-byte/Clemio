@@ -73,7 +73,7 @@ const HeroSectionV2 = () => {
           animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.28, 0.18] }}
           transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/40" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background pointer-events-none" />
       </div>
 
       {/* Floating audio orb */}
