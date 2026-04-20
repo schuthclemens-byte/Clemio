@@ -168,6 +168,16 @@ const HeroSectionV2 = () => {
         </span>
       </motion.h1>
 
+      {/* Subline */}
+      <motion.p
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
+        className="relative z-10 mt-6 sm:mt-8 max-w-[34ch] sm:max-w-xl mx-auto text-base sm:text-lg text-muted-foreground font-light leading-relaxed text-balance"
+      >
+        {t("landing.heroSubtitle")}
+      </motion.p>
+
       {/* CTA */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}

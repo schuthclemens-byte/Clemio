@@ -122,7 +122,7 @@ const de: Record<string, string> = {
     "landing.heroTitle1": "Nachrichten, die",
     "landing.heroTitle2": "klingen",
     "landing.heroTitle3": "wie du.",
-    "landing.heroSubtitle": "Clemio verwandelt Nachrichten in echte Stimmen – als würde dein Freund direkt neben dir sprechen.",
+    "landing.heroSubtitle": "Du schreibst wie immer – und deine Worte kommen in deiner echten Stimme an.",
     "landing.demoPlaying": "Marnie spricht gerade…",
     "landing.demoPlay": "Hör mal rein 🎧",
     "landing.demoStop": "Tippe zum Stoppen",
