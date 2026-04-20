@@ -808,7 +808,7 @@ const ar: Record<string, string> = {
     "landing.heroEyebrow": "صوتك · صُنع في ألمانيا",
     "landing.heroLine1": "أنت تكتب.",
     "landing.heroLine2": "كلماتك تبدو مثلك.",
-    "landing.heroSubV2": "",
+    
     "landing.heroOrbHint": "انقر لسماع صوت",
     "landing.heroOrbPlaying": "هكذا يبدو الصوت الحقيقي.",
     "landing.ctaTryApp": "اسمع صوتك",
