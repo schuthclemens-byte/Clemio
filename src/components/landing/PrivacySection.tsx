@@ -12,7 +12,7 @@ const PrivacySection = () => {
   ];
 
   return (
-    <section className="relative px-6 py-40 sm:py-56 overflow-hidden">
+    <section className="relative px-6 py-28 sm:py-40 overflow-hidden">
       {/* Soft trust-glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div

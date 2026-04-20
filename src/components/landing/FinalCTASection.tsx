@@ -8,7 +8,7 @@ const FinalCTASection = () => {
   const { t } = useI18n();
 
   return (
-    <section className="relative px-6 py-40 sm:py-56 overflow-hidden">
+    <section className="relative px-6 py-32 sm:py-44 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] sm:w-[80vw] h-[80vh] rounded-full opacity-30 blur-[120px]"
