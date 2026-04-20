@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Shield, Lock, EyeOff } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -35,6 +36,9 @@ const PrivacySection = () => {
           <h2 className="text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-[-0.02em] text-foreground leading-[1.05] text-balance max-w-3xl mx-auto">
             {t("landing.privTitle")}
           </h2>
+          <p className="mt-6 sm:mt-8 text-base sm:text-lg text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed tracking-tight">
+            {t("landing.privSub")}
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
@@ -55,13 +59,29 @@ const PrivacySection = () => {
                 <h3 className="text-lg sm:text-xl font-light text-foreground tracking-tight mb-3">
                   {t(it.titleKey)}
                 </h3>
-                <p className="text-sm text-muted-foreground/90 leading-relaxed font-light max-w-[18rem]">
+                <p className="text-sm text-muted-foreground/90 leading-relaxed font-light max-w-[20rem]">
                   {t(it.descKey)}
                 </p>
               </motion.div>
             );
           })}
         </div>
+
+        {/* Verweis auf vollständige Datenschutzerklärung */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="mt-14 sm:mt-20 text-center"
+        >
+          <Link
+            to="/privacy"
+            className="text-sm text-muted-foreground/80 hover:text-foreground transition-colors font-light tracking-wide underline-offset-4 hover:underline"
+          >
+            {t("landing.privReadFull")}
+          </Link>
+        </motion.div>
       </div>
     </section>
   );
