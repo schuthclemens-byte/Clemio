@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Car, Headphones, Eye } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
 const EmotionSection = () => {
@@ -123,6 +124,49 @@ const EmotionSection = () => {
         >
           {t("landing.emotionSub")}
         </motion.p>
+
+        {/* Konkrete Nutzungs-Szenarien */}
+        <div className="mt-24 sm:mt-32">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="text-xs uppercase tracking-[0.3em] text-muted-foreground/70 text-center mb-10"
+          >
+            {t("landing.emotionScenariosEyebrow")}
+          </motion.p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 lg:gap-6">
+            {[
+              { icon: Car, titleKey: "landing.emotionScenario1Title", descKey: "landing.emotionScenario1Desc" },
+              { icon: Headphones, titleKey: "landing.emotionScenario2Title", descKey: "landing.emotionScenario2Desc" },
+              { icon: Eye, titleKey: "landing.emotionScenario3Title", descKey: "landing.emotionScenario3Desc" },
+            ].map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <motion.div
+                  key={s.titleKey}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.7, delay: 0.1 + i * 0.1, ease: "easeOut" }}
+                  className="relative rounded-3xl p-7 lg:p-8 bg-card/40 backdrop-blur-xl border border-border/40 overflow-hidden"
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-foreground/[0.05] border border-border/40 flex items-center justify-center mb-5">
+                    <Icon className="w-5 h-5 text-foreground/85" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-base lg:text-lg font-light text-foreground mb-2 tracking-tight">
+                    {t(s.titleKey)}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-light">
+                    {t(s.descKey)}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </section>
   );
