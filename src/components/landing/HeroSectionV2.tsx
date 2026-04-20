@@ -152,14 +152,16 @@ const HeroSectionV2 = () => {
               )}
             </AnimatePresence>
           </button>
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.6, ease: "easeOut" }}
-            className="absolute left-1/2 -translate-x-1/2 top-full mt-5 text-[0.7rem] sm:text-xs uppercase tracking-[0.22em] text-muted-foreground/60 font-light text-center whitespace-nowrap"
+            className="absolute left-0 right-0 top-full mt-5 flex justify-center pointer-events-none"
           >
-            {isPlaying ? t("landing.heroOrbPlaying") : t("landing.heroOrbHint")}
-          </motion.p>
+            <span className="text-[0.7rem] sm:text-xs uppercase tracking-[0.22em] text-muted-foreground/60 font-light text-center whitespace-nowrap [text-indent:0.22em]">
+              {isPlaying ? t("landing.heroOrbPlaying") : t("landing.heroOrbHint")}
+            </span>
+          </motion.div>
         </motion.div>
       </motion.div>
 
