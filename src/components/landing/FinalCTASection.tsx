@@ -62,9 +62,6 @@ const FinalCTASection = () => {
           </button>
         </div>
 
-        <p className="mt-5 text-xs sm:text-sm text-muted-foreground/80">
-          {t("landing.finalCtaFreeNote")}
-        </p>
 
         <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs sm:text-sm text-muted-foreground">
           {microTrust.map((item, i) => (
