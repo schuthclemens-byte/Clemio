@@ -812,6 +812,7 @@ const tr: Record<string, string> = {
     "landing.heroOrbHint": "Bir ses duymak için dokun",
     "landing.heroOrbPlaying": "Gerçek bir ses böyle çıkar.",
     "landing.ctaTryApp": "Şimdi dinle",
+    "landing.comingSoon": "Yakında",
     "landing.featV2Eyebrow": "Clemio'yu farklı kılan",
     "landing.featV2Title": "Her şeyi değiştiren dört şey.",
     "landing.featV2HeroLabel": "Kalbi",

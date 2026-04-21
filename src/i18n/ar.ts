@@ -812,6 +812,7 @@ const ar: Record<string, string> = {
     "landing.heroOrbHint": "انقر لسماع صوت",
     "landing.heroOrbPlaying": "هكذا يبدو الصوت الحقيقي.",
     "landing.ctaTryApp": "استمع الآن",
+    "landing.comingSoon": "قريبًا",
     "landing.featV2Eyebrow": "ما يجعل كليميو مختلفًا",
     "landing.featV2Title": "أربعة أشياء تُغيِّر كل شيء.",
     "landing.featV2HeroLabel": "القلب",
