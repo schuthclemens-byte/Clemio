@@ -4,9 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
+import { useLaunchMode } from "@/hooks/useLaunchMode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -18,7 +20,7 @@ import {
 import {
   ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
   Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff, Flag,
-  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar,
+  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar, Rocket,
 } from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
