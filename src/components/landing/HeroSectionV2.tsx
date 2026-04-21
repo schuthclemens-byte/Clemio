@@ -4,10 +4,12 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
 import { createPlayableAudio, prefetchLocalizedAudio } from "@/lib/landingAudio";
+import { useLaunchMode } from "@/hooks/useLaunchMode";
 
 const HeroSectionV2 = () => {
   const navigate = useNavigate();
   const { t, locale } = useI18n();
+  const { comingSoon } = useLaunchMode();
   const [isPlaying, setIsPlaying] = useState(false);
   const [playError, setPlayError] = useState(false);
 
@@ -185,22 +187,33 @@ const HeroSectionV2 = () => {
         transition={{ duration: 1, ease: "easeOut", delay: 0.7 }}
         className="relative z-10 mt-14 sm:mt-16 flex flex-col items-center gap-4"
       >
-        <button
-          onClick={() => navigate("/login")}
-          className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-full bg-foreground text-background font-medium text-base sm:text-lg tracking-tight shadow-[0_15px_50px_-12px_hsl(var(--foreground)/0.45)] transition-all duration-500 hover:shadow-[0_25px_70px_-10px_hsl(var(--primary)/0.55)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
-        >
-          <span
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(340 75% 55%) 100%)" }}
-          />
-          <span className="relative z-10 group-hover:text-primary-foreground transition-colors duration-500">
-            {t("landing.ctaTryApp")}
-          </span>
-          <ArrowRight
-            className="w-5 h-5 relative z-10 transition-all duration-500 group-hover:translate-x-1 group-hover:text-primary-foreground"
-            strokeWidth={2}
-          />
-        </button>
+        {comingSoon ? (
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            className="relative inline-flex items-center gap-3 px-10 py-5 rounded-full bg-muted text-muted-foreground font-medium text-base sm:text-lg tracking-tight border border-border/40 opacity-80 cursor-not-allowed"
+          >
+            <span>{t("landing.comingSoon")}</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/login")}
+            className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-full bg-foreground text-background font-medium text-base sm:text-lg tracking-tight shadow-[0_15px_50px_-12px_hsl(var(--foreground)/0.45)] transition-all duration-500 hover:shadow-[0_25px_70px_-10px_hsl(var(--primary)/0.55)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
+          >
+            <span
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(340 75% 55%) 100%)" }}
+            />
+            <span className="relative z-10 group-hover:text-primary-foreground transition-colors duration-500">
+              {t("landing.ctaTryApp")}
+            </span>
+            <ArrowRight
+              className="w-5 h-5 relative z-10 transition-all duration-500 group-hover:translate-x-1 group-hover:text-primary-foreground"
+              strokeWidth={2}
+            />
+          </button>
+        )}
       </motion.div>
 
       {/* Scroll hint — extrem dezent */}

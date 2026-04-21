@@ -946,6 +946,7 @@ const de: Record<string, string> = {
     "landing.heroOrbHint": "Tippen, um eine Stimme zu hören",
     "landing.heroOrbPlaying": "So klingt eine echte Stimme.",
     "landing.ctaTryApp": "Jetzt hören",
+    "landing.comingSoon": "Bald verfügbar",
     "landing.featV2Eyebrow": "Was Clemio anders macht",
     "landing.featV2Title": "Vier Dinge, die alles verändern.",
     "landing.featV2HeroLabel": "Das Herzstück",
