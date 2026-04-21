@@ -277,6 +277,51 @@ const AdminPage = () => {
         </div>
       </div>
 
+      {/* Launch Mode Card */}
+      <div className="px-4 pt-4">
+        <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className={`p-2 rounded-xl ${comingSoon ? "bg-amber-500/15" : "bg-emerald-500/15"}`}>
+              <Rocket className={`w-5 h-5 ${comingSoon ? "text-amber-600" : "text-emerald-600"}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm font-semibold">{tr("Launch-Modus", "Launch mode")}</h2>
+                <Badge
+                  className={
+                    comingSoon
+                      ? "text-[0.6rem] px-1.5 bg-amber-500/20 text-amber-700 border-amber-500/30"
+                      : "text-[0.6rem] px-1.5 bg-emerald-500/20 text-emerald-700 border-emerald-500/30"
+                  }
+                >
+                  {comingSoon ? tr("Coming Soon", "Coming Soon") : tr("Live", "Live")}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {comingSoon
+                  ? tr(
+                      "Landingpage zeigt „Bald verfügbar\". /login bleibt direkt erreichbar.",
+                      'Landing page shows "Coming soon". /login stays directly accessible.'
+                    )
+                  : tr(
+                      "Landingpage führt Besucher direkt zum Login.",
+                      "Landing page sends visitors straight to login."
+                    )}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {launchSaving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+              <Switch
+                checked={comingSoon}
+                disabled={launchLoading || launchSaving}
+                onCheckedChange={handleToggleLaunchMode}
+                aria-label={tr("Coming Soon umschalten", "Toggle Coming Soon")}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {activeTab === "reports" ? (
         <AdminReports
           onBlockUser={(userId) => performAction("block", userId, tr("Blockieren", "Block"))}
