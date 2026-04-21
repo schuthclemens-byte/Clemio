@@ -2,10 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Clock, Trash2 } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
+import { useLaunchMode } from "@/hooks/useLaunchMode";
 
 const FinalCTASection = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const { comingSoon } = useLaunchMode();
 
   const microTrust = [
     { icon: Clock, label: t("landing.finalCtaTrust1") },
@@ -44,22 +46,33 @@ const FinalCTASection = () => {
         </p>
 
         <div className="mt-10 sm:mt-12 flex items-center justify-center">
-          <button
-            onClick={() => navigate("/login")}
-            className="group relative inline-flex items-center gap-3 px-10 py-5 sm:px-12 sm:py-6 rounded-full bg-foreground text-background font-medium text-base sm:text-lg tracking-tight shadow-[0_15px_50px_-12px_hsl(var(--foreground)/0.45)] transition-all duration-500 hover:shadow-[0_25px_70px_-10px_hsl(var(--primary)/0.55)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
-          >
-            <span
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(340 75% 55%) 100%)" }}
-            />
-            <span className="relative z-10 group-hover:text-primary-foreground transition-colors duration-500">
-              {t("landing.finalCtaPrimary")}
-            </span>
-            <ArrowRight
-              className="w-5 h-5 relative z-10 transition-all duration-500 group-hover:translate-x-1 group-hover:text-primary-foreground"
-              strokeWidth={2}
-            />
-          </button>
+          {comingSoon ? (
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className="relative inline-flex items-center gap-3 px-10 py-5 sm:px-12 sm:py-6 rounded-full bg-muted text-muted-foreground font-medium text-base sm:text-lg tracking-tight border border-border/40 opacity-80 cursor-not-allowed"
+            >
+              <span>{t("landing.comingSoon")}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate("/login")}
+              className="group relative inline-flex items-center gap-3 px-10 py-5 sm:px-12 sm:py-6 rounded-full bg-foreground text-background font-medium text-base sm:text-lg tracking-tight shadow-[0_15px_50px_-12px_hsl(var(--foreground)/0.45)] transition-all duration-500 hover:shadow-[0_25px_70px_-10px_hsl(var(--primary)/0.55)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
+            >
+              <span
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{ background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(340 75% 55%) 100%)" }}
+              />
+              <span className="relative z-10 group-hover:text-primary-foreground transition-colors duration-500">
+                {t("landing.finalCtaPrimary")}
+              </span>
+              <ArrowRight
+                className="w-5 h-5 relative z-10 transition-all duration-500 group-hover:translate-x-1 group-hover:text-primary-foreground"
+                strokeWidth={2}
+              />
+            </button>
+          )}
         </div>
 
 
