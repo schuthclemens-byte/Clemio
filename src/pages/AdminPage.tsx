@@ -74,6 +74,30 @@ const AdminPage = () => {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"users" | "reports" | "analytics">("users");
   const [openReportsCount, setOpenReportsCount] = useState(0);
+  const { comingSoon, loading: launchLoading } = useLaunchMode();
+  const [launchSaving, setLaunchSaving] = useState(false);
+
+  const handleToggleLaunchMode = async (next: boolean) => {
+    setLaunchSaving(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .update({
+        value: { coming_soon: next },
+        updated_by: user?.id ?? null,
+      })
+      .eq("key", "launch_mode");
+    setLaunchSaving(false);
+    if (error) {
+      toast.error(tr("Konnte Modus nicht ändern", "Could not change mode"));
+      console.error("[AdminPage] launch mode update failed:", error.message);
+    } else {
+      toast.success(
+        next
+          ? tr("Coming Soon aktiv", "Coming Soon active")
+          : tr("App ist live", "App is live")
+      );
+    }
+  };
 
   // Password reset dialog
   const [pwDialog, setPwDialog] = useState<{ open: boolean; userId: string; name: string }>({ open: false, userId: "", name: "" });
