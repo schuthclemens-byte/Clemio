@@ -1,94 +1,58 @@
 
 
-## Links- / Rechtshänder-Modus
+## Suchfeld oben in den Einstellungen
 
 ### Was du willst
-Eine neue Einstellung, die festlegt, ob die App für Rechts- oder Linkshänder optimiert ist. Bedien-Elemente (vor allem im Chat) wandern dann auf die für die Hand bequeme Seite.
+Ein Suchfeld ganz oben auf der Einstellungen-Seite, mit dem du schnell eine bestimmte Einstellung findest, ohne durch alle Akkordeon-Sektionen zu scrollen.
 
-### Was sich konkret ändert
+### So funktioniert's
 
-**Im Chat-Eingabefeld (`ChatInput.tsx`)**
-- **Rechtshänder (Standard, heute):** Mikrofon/Senden-Button rechts, Anhang-Button links.
-- **Linkshänder:** Mikrofon/Senden-Button **links**, Anhang-Button **rechts** → Daumen erreicht den Senden-Button bequem mit der linken Hand.
+**Sticky Suchleiste oben**
+- Direkt unter dem Seitentitel „Einstellungen" eine Suchzeile mit Lupen-Icon und Platzhalter „Einstellung suchen…".
+- Bleibt beim Scrollen oben kleben (`sticky top-0`), damit sie immer erreichbar ist.
+- Ein „×"-Knopf rechts im Feld löscht die Eingabe.
 
-**In den Chat-Bubbles (`ChatBubble.tsx`)**
-- Das Kontext-Menü (Drei-Punkte-Button bei eigenen Nachrichten) und Reaktions-Picker öffnen sich zur jeweils bequemen Seite.
+**Live-Filter beim Tippen**
+- Während du tippst (debounced ~150 ms) werden alle Akkordeon-Sektionen und Einträge nach Treffern in **Titel** und **Beschreibung** durchsucht (Groß/Klein egal, Akzent-tolerant).
+- Sektionen ohne Treffer werden ausgeblendet.
+- Sektionen mit Treffern öffnen sich automatisch und zeigen nur die passenden Einträge.
+- Treffer-Begriff wird im Text **gelb hervorgehoben** (Markierung).
 
-**In der Bottom-Tab-Leiste (`BottomTabBar.tsx`)**
-- Optional: häufig genutzte Tabs (Chats) wandern auf die Daumenseite.
-  → **Entscheidung:** Wir lassen die Tab-Leiste **unverändert**, weil sie symmetrisch ist und ein Umordnen verwirren würde. Nur Chat-Bedienelemente werden gespiegelt.
+**Leerer Zustand**
+- Keine Treffer → freundliche Zeile: „Keine Einstellung gefunden für ‚xyz'."
 
-**Floating Action Button (Neuer Chat in `ChatListPage.tsx`)**
-- Wandert von rechts unten nach links unten bei Linkshänder-Modus.
-
-### Neue Einstellung in Barrierefreiheit
-
-```
-Barrierefreiheit ▼
-  ┌─ Schrift ──────────────────────────────┐
-  │  … (bestehend)                          │
-  └─────────────────────────────────────────┘
-  
-  ┌─ Bedienung ────────────────────────────┐ ← NEU
-  │  Welche Hand benutzt du?  [Rechts ▼]    │
-  │     → „Rechte Hand"                      │
-  │     → „Linke Hand"                       │
-  │  Wirkt: Senden-Knopf, Anhang-Knopf,     │
-  │         Schnell-Aktionen                 │
-  └─────────────────────────────────────────┘
-  
-  Größerer Text
-  Hoher Kontrast
-  …
-```
-
-### Texte (alle 6 Sprachen)
-
-Neue i18n-Keys:
-- `settings.handedness` — DE: **„Welche Hand benutzt du?"**
-- `settings.handednessRight` — DE: **„Rechte Hand"**
-- `settings.handednessLeft` — DE: **„Linke Hand"**
-- `settings.handednessDesc` — DE: **„Wir legen den Senden-Knopf und Schnell-Aktionen auf deine bequeme Seite."**
+**Suchbar sind:**
+Alle bestehenden Einträge in Profil, Privatsphäre, Anzeige, Barrierefreiheit (inkl. Schrift, Bedienung links/rechts), Benachrichtigungen, Töne, Sprache, Abo, Konto, etc. — basierend auf den i18n-Texten, die schon vorhanden sind.
 
 ### Code-Änderungen
 
-- **`src/contexts/AccessibilityContext.tsx`**:
-  - Neuer State `handedness: "right" | "left"`, Default `"right"`.
-  - Speicherung in localStorage (gleiches Schema wie `fontFamily`).
-  - Setter `setHandedness(side)`.
-  - Setzt CSS-Klasse `left-handed` auf `<html>`, wenn aktiv.
-
-- **`src/components/chat/ChatInput.tsx`**:
-  - Reihenfolge der Buttons abhängig von `handedness` (Anhang ↔ Senden tauschen).
-  - Optional: `flex-row-reverse` auf den Button-Container, wenn `left-handed`.
-
-- **`src/components/chat/ChatBubble.tsx`**:
-  - Position des Kontext-Menü-Buttons spiegeln (links bei Linkshändern bei eigenen Nachrichten).
-
-- **`src/pages/ChatListPage.tsx`**:
-  - FAB-Position (`bottom-right` ↔ `bottom-left`) abhängig von `handedness`.
-
 - **`src/pages/SettingsPage.tsx`**:
-  - Neue „Bedienung"-Karte in der Barrierefreiheit-Sektion mit Dropdown (Rechts/Links).
+  - Neuer State `searchQuery` (string).
+  - Sticky-Container oben mit `<Input>` + Lupen- und Lösch-Icon.
+  - Eine `matches(text)`-Hilfsfunktion (lowercase + `normalize("NFD")` für Akzente).
+  - Jede Sektion erhält ein `searchableTexts: string[]`-Array (Titel + Beschreibungen der Items). Sektion wird nur gerendert, wenn mindestens ein Item matcht.
+  - Akkordeon-`defaultValue` / `value` wird bei aktiver Suche auf alle matchenden Sektionen gesetzt (automatisch geöffnet).
+  - Kleine `<Highlight text query />`-Helper-Komponente, die den Treffer mit `<mark>` umschließt.
 
-- **`src/i18n/{de,en,es,fr,tr,ar}.ts`**: 4 neue Keys.
+- **`src/i18n/{de,en,es,fr,tr,ar}.ts`**: 2 neue Keys
+  - `settings.searchPlaceholder` — DE: **„Einstellung suchen…"**
+  - `settings.searchEmpty` — DE: **„Keine Einstellung gefunden für ‚{query}'."**
 
 ### Was nicht angefasst wird
-- Tab-Leiste unten (bleibt symmetrisch).
-- Auth, DB, Realtime, Voice, Push.
-- Andere Seiten (Profil, Einstellungen-Layout an sich).
-- Die Schrift-Einstellungen (bleiben wie zuletzt umgesetzt).
+- Inhalte und Logik der Einstellungen selbst.
+- Andere Seiten, Auth, DB, Realtime.
+- Die zuletzt umgesetzten Schrift- und Hand-Einstellungen.
 
-### Tests nach Umsetzung
-1. `/settings` → Anzeige → Barrierefreiheit aufklappen → neue Karte „Bedienung" sichtbar, Standard „Rechte Hand".
-2. Auf „Linke Hand" stellen → Chat öffnen → Senden-Knopf liegt **links**, Anhang-Knopf rechts.
-3. Eigene Nachricht antippen → Kontext-Menü öffnet auf der bequemen Seite.
-4. Chat-Liste → FAB „Neuer Chat" liegt links unten.
-5. Auf „Rechte Hand" zurück → alles wieder im Standard-Layout.
-6. Sprache umstellen (EN/ES/FR/TR/AR) → alle neuen Texte übersetzt, i18n-Sync-Test grün.
+### Tests
+1. `/settings` öffnen → Suchfeld klebt oben.
+2. „dunkel" tippen → nur Theme-Eintrag sichtbar, Wort gelb markiert.
+3. „links" tippen → „Bedienung / Linke Hand" sichtbar, Sektion automatisch offen.
+4. „xyz" tippen → Leer-Hinweis erscheint.
+5. „×" drücken → alle Sektionen wieder im Normalzustand.
+6. Sprache umstellen (EN/ES/FR/TR/AR) → Platzhalter und Leer-Text übersetzt, i18n-Sync-Test grün.
 
 ### STATUS
-- Umfang: 1 Context + 4 Komponenten/Seiten + 6 i18n-Dateien.
-- Risiko: niedrig (rein UI-Spiegelung, keine Logikänderung).
+- Umfang: 1 Page + 6 i18n-Dateien.
+- Risiko: niedrig (rein UI, keine Logik-/Datenänderung).
 - Fertig nach Approval: ja.
 
