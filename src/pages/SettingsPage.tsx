@@ -392,12 +392,12 @@ const SettingsPage = () => {
               </div>
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
         {/* ━━━ WIEDERGABE ━━━ */}
-        <section>
-          <AccordionHeader icon={Volume2} label={tr("Wiedergabe", "Playback")} isOpen={openSection === "playback"} onToggle={() => toggleSection("playback")} />
-          <AccordionBody isOpen={openSection === "playback"}>
+        {sectionVisible("playback") && <section>
+          <AccordionHeader icon={Volume2} label={tr("Wiedergabe", "Playback")} isOpen={isSectionOpen("playback")} onToggle={() => toggleSection("playback")} />
+          <AccordionBody isOpen={isSectionOpen("playback")}>
             <div className="space-y-2 pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <ToggleRow icon={Volume2} label={t("settings.autoReadMessages")} description={t("settings.autoReadMessagesDesc")}
@@ -496,12 +496,12 @@ const SettingsPage = () => {
               </div>
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
         {/* ━━━ ANZEIGE ━━━ */}
-        <section>
-          <AccordionHeader icon={Globe} label={tr("Anzeige", "Display")} isOpen={openSection === "display"} onToggle={() => toggleSection("display")} />
-          <AccordionBody isOpen={openSection === "display"}>
+        {sectionVisible("display") && <section>
+          <AccordionHeader icon={Globe} label={tr("Anzeige", "Display")} isOpen={isSectionOpen("display")} onToggle={() => toggleSection("display")} />
+          <AccordionBody isOpen={isSectionOpen("display")}>
             <div className="space-y-2 pb-4">
               {/* Design */}
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
@@ -651,12 +651,12 @@ const SettingsPage = () => {
               </div>
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
         {/* ━━━ KONTO ━━━ */}
-        <section>
-          <AccordionHeader icon={Settings2} label={tr("Konto", "Account")} isOpen={openSection === "account"} onToggle={() => toggleSection("account")} />
-          <AccordionBody isOpen={openSection === "account"}>
+        {sectionVisible("account") && <section>
+          <AccordionHeader icon={Settings2} label={tr("Konto", "Account")} isOpen={isSectionOpen("account")} onToggle={() => toggleSection("account")} />
+          <AccordionBody isOpen={isSectionOpen("account")}>
             <div className="space-y-2 pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <ToggleRow icon={KeyRound} label={t("settings.stayLoggedIn")} description={t("settings.stayLoggedInDesc")}
@@ -729,12 +729,12 @@ const SettingsPage = () => {
               )}
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
         {/* ━━━ RECHTLICHES ━━━ */}
-        <section>
-          <AccordionHeader icon={Lock} label={t("settings.legal")} isOpen={openSection === "legal"} onToggle={() => toggleSection("legal")} />
-          <AccordionBody isOpen={openSection === "legal"}>
+        {sectionVisible("legal") && <section>
+          <AccordionHeader icon={Lock} label={t("settings.legal")} isOpen={isSectionOpen("legal")} onToggle={() => toggleSection("legal")} />
+          <AccordionBody isOpen={isSectionOpen("legal")}>
             <div className="pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <LinkRow icon={Shield} label={t("settings.privacy")} onClick={() => navigate("/privacy")} />
@@ -742,7 +742,7 @@ const SettingsPage = () => {
               </div>
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
       </div>
     </div>
