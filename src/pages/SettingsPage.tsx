@@ -340,10 +340,18 @@ const SettingsPage = () => {
       <div className="flex-1 p-4 space-y-2 pb-28">
 
         {/* ━━━ ADMIN ━━━ */}
-        {isAdmin && (
+        {isAdmin && !isSearching && (
           <section>
             <LinkRow icon={Shield} label="Administration" onClick={() => navigate("/admin")} />
           </section>
+        )}
+
+        {/* ━━━ NO RESULTS ━━━ */}
+        {noResults && (
+          <div className="text-center py-12 text-sm text-muted-foreground">
+            {t("settings.noResults")}
+            <span className="block mt-1 text-xs opacity-70">„{searchQuery}"</span>
+          </div>
         )}
 
         {/* ━━━ KOMMUNIKATION ━━━ */}
