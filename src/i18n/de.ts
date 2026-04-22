@@ -108,7 +108,7 @@ const de: Record<string, string> = {
     "settings.autoCorrect": "Autokorrektur und Vorschläge",
     "settings.a11yGroup": "Barrierefreiheit",
     "settings.a11yGroupDesc": "Schrift, Kontrast und Schreibhilfen",
-    "settings.dyslexiaFontDesc": "Spezielle Schriftart für Legasthenie / leichteres Lesen",
+    "settings.dyslexiaFontDesc": "Leichter zu lesen – ruhiger für deine Augen",
     "settings.largeTextDesc": "Vergrößert alle Texte in der App",
     "settings.highContrastDesc": "Stärkere Farben für bessere Sichtbarkeit",
     "settings.autoCorrectDesc": "Korrigiert Tippfehler und schlägt Wörter vor",
