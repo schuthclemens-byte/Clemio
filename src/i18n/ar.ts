@@ -107,7 +107,7 @@ const ar: Record<string, string> = {
     "settings.autoCorrect": "التصحيح التلقائي والاقتراحات",
     "settings.a11yGroup": "إمكانية الوصول",
     "settings.a11yGroupDesc": "الخط والتباين ومساعدات الكتابة",
-    "settings.dyslexiaFontDesc": "خط خاص لعسر القراءة / قراءة أسهل",
+    "settings.dyslexiaFontDesc": "أسهل في القراءة – أهدأ لعينيك",
     "settings.largeTextDesc": "يكبّر كل النصوص في التطبيق",
     "settings.highContrastDesc": "ألوان أقوى لرؤية أفضل",
     "settings.autoCorrectDesc": "يصحّح الأخطاء ويقترح الكلمات",

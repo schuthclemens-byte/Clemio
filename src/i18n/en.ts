@@ -107,7 +107,7 @@ const en: Record<string, string> = {
     "settings.autoCorrect": "Autocorrect and suggestions",
     "settings.a11yGroup": "Accessibility",
     "settings.a11yGroupDesc": "Font, contrast and writing aids",
-    "settings.dyslexiaFontDesc": "Special font for dyslexia / easier reading",
+    "settings.dyslexiaFontDesc": "Easier to read – calmer on your eyes",
     "settings.largeTextDesc": "Enlarges all text in the app",
     "settings.highContrastDesc": "Stronger colors for better visibility",
     "settings.autoCorrectDesc": "Fixes typos and suggests words",

@@ -107,7 +107,7 @@ const tr: Record<string, string> = {
     "settings.autoCorrect": "Otomatik düzeltme ve öneriler",
     "settings.a11yGroup": "Erişilebilirlik",
     "settings.a11yGroupDesc": "Yazı tipi, kontrast ve yazma yardımları",
-    "settings.dyslexiaFontDesc": "Disleksi için özel yazı tipi / daha kolay okuma",
+    "settings.dyslexiaFontDesc": "Okuması daha kolay – gözlerin için daha sakin",
     "settings.largeTextDesc": "Uygulamadaki tüm metinleri büyütür",
     "settings.highContrastDesc": "Daha iyi görünürlük için güçlü renkler",
     "settings.autoCorrectDesc": "Yazım hatalarını düzeltir ve kelime önerir",
