@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useMemo, useEffect, R
 
 export type FontScope = "app" | "chat";
 export type FontFamily = "system" | "inter" | "atkinson" | "opendyslexic" | "serif" | "mono";
+export type Handedness = "right" | "left";
 
 interface AccessibilitySettings {
   dyslexiaFont: boolean;
@@ -21,14 +22,16 @@ interface AccessibilitySettings {
   showTypingIndicator: boolean;
   fontScope: FontScope;
   fontFamily: FontFamily;
+  handedness: Handedness;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
-  toggle: (key: keyof Omit<AccessibilitySettings, "speechRate" | "quietHoursStart" | "quietHoursEnd" | "fontScope" | "fontFamily">) => void;
+  toggle: (key: keyof Omit<AccessibilitySettings, "speechRate" | "quietHoursStart" | "quietHoursEnd" | "fontScope" | "fontFamily" | "handedness">) => void;
   setSpeechRate: (rate: number) => void;
   setQuietHours: (start: string, end: string) => void;
   setFontScope: (scope: FontScope) => void;
   setFontFamily: (family: FontFamily) => void;
+  setHandedness: (side: Handedness) => void;
   isQuietTime: () => boolean;
 }
 
@@ -50,6 +53,7 @@ const defaultSettings: AccessibilitySettings = {
   showTypingIndicator: true,
   fontScope: "app",
   fontFamily: "system",
+  handedness: "right",
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
@@ -59,6 +63,7 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   setQuietHours: () => {},
   setFontScope: () => {},
   setFontFamily: () => {},
+  setHandedness: () => {},
   isQuietTime: () => false,
 });
 
@@ -172,6 +177,20 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
     });
   }, []);
 
+  const setHandedness = useCallback((side: Handedness) => {
+    setSettings((prev) => {
+      const next = { ...prev, handedness: side };
+      localStorage.setItem("a11y-settings", JSON.stringify(next));
+      document.documentElement.classList.toggle("left-handed", side === "left");
+      return next;
+    });
+  }, []);
+
+  // Apply handedness class on mount / when it changes via initial load
+  useEffect(() => {
+    document.documentElement.classList.toggle("left-handed", settings.handedness === "left");
+  }, [settings.handedness]);
+
   const isQuietTime = useCallback(() => {
     if (!settings.smartSilence) return false;
     const now = new Date();
@@ -189,8 +208,8 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
   }, [settings.smartSilence, settings.quietHoursStart, settings.quietHoursEnd]);
 
   const value = useMemo(() => ({
-    ...settings, toggle, setSpeechRate, setQuietHours, setFontScope, setFontFamily, isQuietTime
-  }), [settings, toggle, setSpeechRate, setQuietHours, setFontScope, setFontFamily, isQuietTime]);
+    ...settings, toggle, setSpeechRate, setQuietHours, setFontScope, setFontFamily, setHandedness, isQuietTime
+  }), [settings, toggle, setSpeechRate, setQuietHours, setFontScope, setFontFamily, setHandedness, isQuietTime]);
 
   return (
     <AccessibilityContext.Provider value={value}>

@@ -5,7 +5,7 @@ import {
   ArrowLeft, Eye, Volume2, Headphones, BellOff, Download, VolumeX, FileText,
   Lock, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw,
   Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info,
-  Globe, Type, Contrast, SpellCheck, AlignLeft, Shield, ChevronRight, Settings2, ChevronDown, Ban, Palette,
+  Globe, Type, Contrast, SpellCheck, AlignLeft, Shield, ChevronRight, Settings2, ChevronDown, Ban, Palette, Hand,
 } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
@@ -517,6 +517,28 @@ const SettingsPage = () => {
                           </div>
                         </label>
                       </div>
+                    </div>
+
+                    {/* ━━━ Bedienung: Rechts- / Linkshänder ━━━ */}
+                    <div className="px-4 py-3 border-b border-border bg-secondary/20">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Hand className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("settings.handednessSection")}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <span className="text-sm font-medium">{t("settings.handedness")}</span>
+                        <select
+                          value={a11y.handedness}
+                          onChange={(e) => { a11y.setHandedness(e.target.value as "right" | "left"); savedToast(); }}
+                          className="h-9 px-3 rounded-xl bg-card text-sm font-medium border border-border focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer pr-8"
+                          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 0.75rem center" }}
+                        >
+                          <option value="right">{t("settings.handednessRight")}</option>
+                          <option value="left">{t("settings.handednessLeft")}</option>
+                        </select>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{t("settings.handednessDesc")}</p>
                     </div>
 
                     <ToggleRow icon={Eye} label={t("settings.largeText")} description={t("settings.largeTextDesc")}
