@@ -169,7 +169,78 @@ const SettingsPage = () => {
   const languages = Object.entries(localeNames) as [Locale, string][];
   const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
+  const norm = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const q = norm(searchQuery.trim());
+  const isSearching = q.length > 0;
+  const matches = (...texts: (string | undefined | null | false)[]) =>
+    !isSearching || texts.some((t) => t && norm(String(t)).includes(q));
+
+  // Searchable text per section (title + item labels + descriptions)
+  const sectionSearchText: Record<SectionKey, string> = {
+    communication: [
+      tr("Kommunikation", "Communication"),
+      t("settings.readReceipts"), t("settings.readReceiptsDesc"),
+      t("settings.onlineStatus"), t("settings.onlineStatusDesc"),
+      t("settings.typingIndicator"), t("settings.typingIndicatorDesc"),
+      t("settings.messagePreview"), t("settings.messagePreviewDesc"),
+      t("settings.pushTitle"), t("settings.pushDesc"),
+    ].join(" "),
+    playback: [
+      tr("Wiedergabe", "Playback"),
+      t("settings.autoReadMessages"), t("settings.autoReadMessagesDesc"),
+      t("settings.headphoneAutoPlay"),
+      t("settings.muteSounds"), t("settings.muteSoundsDesc"),
+      t("settings.focusMode"), t("settings.focusModeDesc"),
+      t("settings.autoPlayContact"), t("settings.autoPlayContactDesc"),
+      t("settings.speechRate"),
+      tr("Standard-Stimme", "Default Voice"),
+      "Daniel Liam Sarah Lily",
+      t("settings.smartSilence"), t("settings.smartSilenceDesc"),
+      t("settings.quietFrom"), t("settings.quietTo"),
+    ].join(" "),
+    display: [
+      tr("Anzeige", "Display"),
+      t("design.title"), t("design.settingsDesc"),
+      t("settings.language"),
+      t("settings.a11yGroup"), t("settings.a11yGroupDesc"),
+      t("settings.fontSection"), t("settings.fontScope"),
+      t("settings.fontScopeApp"), t("settings.fontScopeChat"),
+      t("settings.fontFamily"), t("settings.fontFamilyDesc"),
+      t("settings.font.system"), t("settings.font.inter"), t("settings.font.atkinson"),
+      t("settings.font.opendyslexic"), t("settings.font.serif"), t("settings.font.mono"),
+      t("settings.dyslexiaFont"), t("settings.dyslexiaFontDesc"),
+      t("settings.handednessSection"), t("settings.handedness"),
+      t("settings.handednessRight"), t("settings.handednessLeft"), t("settings.handednessDesc"),
+      t("settings.largeText"), t("settings.largeTextDesc"),
+      t("settings.highContrast"), t("settings.highContrastDesc"),
+      t("settings.autoCorrect"), t("settings.autoCorrectDesc"),
+      t("settings.compactMode"), t("settings.compactModeDesc"),
+    ].join(" "),
+    account: [
+      tr("Konto", "Account"),
+      t("settings.stayLoggedIn"), t("settings.stayLoggedInDesc"),
+      t("settings.installApp"), t("settings.installAppDesc"),
+      t("settings.blockedUsers"),
+      planLabel, t("sub.subscribe"), t("sub.manage"),
+    ].join(" "),
+    legal: [
+      t("settings.legal"),
+      t("settings.privacy"), t("settings.terms"),
+    ].join(" "),
+  };
+
+  const sectionVisible = (key: SectionKey) =>
+    !isSearching || norm(sectionSearchText[key]).includes(q);
+
+  const isSectionOpen = (key: SectionKey) =>
+    isSearching ? sectionVisible(key) : openSection === key;
+
+  const visibleSections = (Object.keys(sectionSearchText) as SectionKey[]).filter(sectionVisible);
+  const noResults = isSearching && visibleSections.length === 0;
+
   const toggleSection = (key: SectionKey) => {
+    if (isSearching) return; // disable manual toggle while searching
     setOpenSection(prev => prev === key ? null : key);
   };
 
