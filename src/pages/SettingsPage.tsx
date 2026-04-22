@@ -406,6 +406,11 @@ const SettingsPage = () => {
           <AccordionHeader icon={Globe} label={tr("Anzeige", "Display")} isOpen={openSection === "display"} onToggle={() => toggleSection("display")} />
           <AccordionBody isOpen={openSection === "display"}>
             <div className="space-y-2 pb-4">
+              {/* Design */}
+              <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <LinkRow icon={Palette} label={t("design.title")} description={t("design.settingsDesc")} onClick={() => navigate("/design-settings")} borderBottom={false} />
+              </div>
+
               {/* Language – compact select */}
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden px-4 py-3.5">
                 <div className="flex items-center justify-between">
