@@ -305,12 +305,35 @@ const SettingsPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
+      <header className="sticky top-0 z-20 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={goBack} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95" aria-label={t("a11y.back")}>
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold flex-1">{t("settings.title")}</h1>
+        </div>
+        {/* Search */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("settings.searchPlaceholder")}
+              className="w-full h-10 pl-9 pr-9 rounded-xl bg-secondary text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+              aria-label={t("settings.searchPlaceholder")}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center hover:bg-card/70 active:scale-90"
+                aria-label="Clear"
+              >
+                <X className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
