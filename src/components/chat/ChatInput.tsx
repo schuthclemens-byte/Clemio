@@ -42,7 +42,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
   const mediaMenuRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t, locale } = useI18n();
-  const { autoCorrect: autoCorrectEnabled } = useAccessibility();
+  const { autoCorrect: autoCorrectEnabled, handedness } = useAccessibility();
   const { suggestions, updateSuggestions, autoCorrect, applySuggestion } = useAutoCorrect(locale, autoCorrectEnabled);
 
   // Insert external text (e.g. KI suggestion) into the input field for editing
@@ -204,7 +204,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
           </div>
         )}
 
-        <div className={cn("flex items-end gap-2 p-3", a11y.handedness === "left" && "flex-row-reverse")}>
+        <div className={cn("flex items-end gap-2 p-3", handedness === "left" && "flex-row-reverse")}>
           {/* + button for media */}
           <div className="relative">
             <button
