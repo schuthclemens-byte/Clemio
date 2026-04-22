@@ -156,6 +156,7 @@ const SettingsPage = () => {
 
   const [openSection, setOpenSection] = useState<SectionKey | null>("display");
   const [a11yExpanded, setA11yExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
