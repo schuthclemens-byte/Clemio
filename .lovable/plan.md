@@ -1,96 +1,94 @@
 
 
-## Klarere Schrift-Einstellungen — eine gemeinsame „Wo soll das gelten?"-Frage
+## Links- / Rechtshänder-Modus
 
-### Das Problem heute
-- Die Auswahl **„Schriftart"** sagt nirgends, **wo** sie wirkt (überall? nur Chat?).
-- Die Frage **„Wo anwenden?"** erscheint nur bei „Schrift bei Lese-Schwäche" — wirkt aber im Code auch auf die Schriftart-Auswahl.
-- Beide Optionen liegen optisch getrennt → Nutzer denkt, sie sind unabhängig.
+### Was du willst
+Eine neue Einstellung, die festlegt, ob die App für Rechts- oder Linkshänder optimiert ist. Bedien-Elemente (vor allem im Chat) wandern dann auf die für die Hand bequeme Seite.
 
-### Was geändert wird
+### Was sich konkret ändert
 
-**1. „Wo soll das gelten?" wird zur gemeinsamen, immer sichtbaren Frage**
+**Im Chat-Eingabefeld (`ChatInput.tsx`)**
+- **Rechtshänder (Standard, heute):** Mikrofon/Senden-Button rechts, Anhang-Button links.
+- **Linkshänder:** Mikrofon/Senden-Button **links**, Anhang-Button **rechts** → Daumen erreicht den Senden-Button bequem mit der linken Hand.
 
-Statt versteckt unter dem Lese-Schwäche-Toggle wird das eine **eigene, immer sichtbare Zeile** ganz oben in der Schrift-Untergruppe. Sie steuert sowohl die Lese-Schwäche-Schrift als auch die ausgewählte Schriftart.
+**In den Chat-Bubbles (`ChatBubble.tsx`)**
+- Das Kontext-Menü (Drei-Punkte-Button bei eigenen Nachrichten) und Reaktions-Picker öffnen sich zur jeweils bequemen Seite.
 
-**2. Visuelle Gruppierung in einer Karte „Schrift"**
+**In der Bottom-Tab-Leiste (`BottomTabBar.tsx`)**
+- Optional: häufig genutzte Tabs (Chats) wandern auf die Daumenseite.
+  → **Entscheidung:** Wir lassen die Tab-Leiste **unverändert**, weil sie symmetrisch ist und ein Umordnen verwirren würde. Nur Chat-Bedienelemente werden gespiegelt.
 
-Innerhalb der „Barrierefreiheit"-Untergruppe entsteht ein zusammenhängender Block:
+**Floating Action Button (Neuer Chat in `ChatListPage.tsx`)**
+- Wandert von rechts unten nach links unten bei Linkshänder-Modus.
+
+### Neue Einstellung in Barrierefreiheit
 
 ```
 Barrierefreiheit ▼
-  ┌─ Schrift ───────────────────────────────────┐
-  │  Wo soll das gelten?      [Überall ▼]       │
-  │      → „Überall in der App"                  │
-  │      → „Nur in deinen Chats"                 │
-  │                                              │
-  │  Schriftart auswählen     [System ▼]        │
-  │  Wirkt: Überall in der App ←  Live-Hinweis   │
-  │                                              │
-  │  [○] Schrift bei Lese-Schwäche              │
-  │      Eine spezielle Schrift, die Lesen…     │
-  │      Wirkt: Überall in der App ← Live-Hinweis│
-  └──────────────────────────────────────────────┘
+  ┌─ Schrift ──────────────────────────────┐
+  │  … (bestehend)                          │
+  └─────────────────────────────────────────┘
+  
+  ┌─ Bedienung ────────────────────────────┐ ← NEU
+  │  Welche Hand benutzt du?  [Rechts ▼]    │
+  │     → „Rechte Hand"                      │
+  │     → „Linke Hand"                       │
+  │  Wirkt: Senden-Knopf, Anhang-Knopf,     │
+  │         Schnell-Aktionen                 │
+  └─────────────────────────────────────────┘
   
   Größerer Text
   Hoher Kontrast
-  Autokorrektur und Vorschläge
-  Weniger Text
+  …
 ```
-
-**3. Live-Hinweis direkt unter Schriftart und Lese-Schwäche**
-
-Unter beiden Optionen steht in kleiner Schrift, **was gerade gilt**:
-- Wenn „Überall": *„Wirkt: in der ganzen App"*
-- Wenn „Nur Chats": *„Wirkt: nur in deinen Chats"*
-
-Sobald der Nutzer die obere Auswahl ändert, ändert sich der Hinweis live unter beiden Zeilen.
-
-**4. Die Schriftart-Vorschau nutzt die ausgewählte Schrift**
-
-Die Optionen im Dropdown selbst bekommen `style={{ fontFamily: ... }}`, sodass der Nutzer im Dropdown direkt sieht, **wie** jede Schrift aussieht.
 
 ### Texte (alle 6 Sprachen)
 
-**Neue / geänderte Keys:**
-- `settings.fontSection` — DE: „Schrift" / EN: „Font"
-- `settings.fontScope` — DE: **„Wo soll das gelten?"** (statt vorher unklar)
-- `settings.fontScopeApp` — DE: **„Überall in der App"**
-- `settings.fontScopeChat` — DE: **„Nur in deinen Chats"**
-- `settings.fontAppliesTo` — neu, DE: **„Wirkt:"**
-- `settings.fontAppliesApp` — neu, DE: **„in der ganzen App"**
-- `settings.fontAppliesChat` — neu, DE: **„nur in deinen Chats"**
+Neue i18n-Keys:
+- `settings.handedness` — DE: **„Welche Hand benutzt du?"**
+- `settings.handednessRight` — DE: **„Rechte Hand"**
+- `settings.handednessLeft` — DE: **„Linke Hand"**
+- `settings.handednessDesc` — DE: **„Wir legen den Senden-Knopf und Schnell-Aktionen auf deine bequeme Seite."**
 
-Beispiel-Resultat unter „Schriftart": *„Wirkt: in der ganzen App"*
+### Code-Änderungen
 
-### Code-Änderung (was wo)
+- **`src/contexts/AccessibilityContext.tsx`**:
+  - Neuer State `handedness: "right" | "left"`, Default `"right"`.
+  - Speicherung in localStorage (gleiches Schema wie `fontFamily`).
+  - Setter `setHandedness(side)`.
+  - Setzt CSS-Klasse `left-handed` auf `<html>`, wenn aktiv.
+
+- **`src/components/chat/ChatInput.tsx`**:
+  - Reihenfolge der Buttons abhängig von `handedness` (Anhang ↔ Senden tauschen).
+  - Optional: `flex-row-reverse` auf den Button-Container, wenn `left-handed`.
+
+- **`src/components/chat/ChatBubble.tsx`**:
+  - Position des Kontext-Menü-Buttons spiegeln (links bei Linkshändern bei eigenen Nachrichten).
+
+- **`src/pages/ChatListPage.tsx`**:
+  - FAB-Position (`bottom-right` ↔ `bottom-left`) abhängig von `handedness`.
 
 - **`src/pages/SettingsPage.tsx`**:
-  - „Wo soll das gelten?"-Zeile aus dem `dyslexiaFont`-`if`-Block herausziehen und nach oben als eigenständige Zeile setzen (immer sichtbar).
-  - Unter der Schriftart-Auswahl + unter der Lese-Schwäche-Beschreibung jeweils eine kleine Zeile mit dem Live-Hinweis einfügen.
-  - Optional: leichte Karten-Optik (z. B. `bg-secondary/20`) um die drei Schrift-Zeilen, damit klar ist, dass sie zusammengehören.
-  - Dropdown-Optionen `<option>` bekommen `style={{ fontFamily: <jeweilige Schrift> }}` für Vorschau.
+  - Neue „Bedienung"-Karte in der Barrierefreiheit-Sektion mit Dropdown (Rechts/Links).
 
-- **`src/i18n/{de,en,es,fr,tr,ar}.ts`**: 3 neue Keys (`fontSection`, `fontAppliesTo`, `fontAppliesApp`, `fontAppliesChat`) und Feinschliff der vorhandenen Scope-Keys.
-
-- **`src/contexts/AccessibilityContext.tsx`**: keine Änderung — `fontScope` gilt im Code bereits sowohl für Lese-Schwäche als auch für die Schriftart-Auswahl, das wird jetzt nur **sichtbar** gemacht.
+- **`src/i18n/{de,en,es,fr,tr,ar}.ts`**: 4 neue Keys.
 
 ### Was nicht angefasst wird
-- Logik in `index.css` und Chat-Komponenten (Scope-Klassen funktionieren schon richtig).
-- Andere Toggles (Größerer Text, Hoher Kontrast, Autokorrektur, Weniger Text).
-- Auth, DB, Realtime.
+- Tab-Leiste unten (bleibt symmetrisch).
+- Auth, DB, Realtime, Voice, Push.
+- Andere Seiten (Profil, Einstellungen-Layout an sich).
+- Die Schrift-Einstellungen (bleiben wie zuletzt umgesetzt).
 
 ### Tests nach Umsetzung
-1. `/settings` → Anzeige → Barrierefreiheit aufklappen.
-2. „Wo soll das gelten?" steht ganz oben, immer sichtbar, Standard „Überall in der App".
-3. Schriftart auf „OpenDyslexic" → unter dem Dropdown steht „Wirkt: in der ganzen App" → Settings-Schrift ändert sich.
-4. „Wo soll das gelten?" auf „Nur in deinen Chats" → Hinweis wechselt zu „Wirkt: nur in deinen Chats" → Settings-Schrift wird wieder System, im Chat bleibt OpenDyslexic.
-5. „Schrift bei Lese-Schwäche" einschalten → Hinweis darunter folgt derselben Scope-Auswahl.
+1. `/settings` → Anzeige → Barrierefreiheit aufklappen → neue Karte „Bedienung" sichtbar, Standard „Rechte Hand".
+2. Auf „Linke Hand" stellen → Chat öffnen → Senden-Knopf liegt **links**, Anhang-Knopf rechts.
+3. Eigene Nachricht antippen → Kontext-Menü öffnet auf der bequemen Seite.
+4. Chat-Liste → FAB „Neuer Chat" liegt links unten.
+5. Auf „Rechte Hand" zurück → alles wieder im Standard-Layout.
 6. Sprache umstellen (EN/ES/FR/TR/AR) → alle neuen Texte übersetzt, i18n-Sync-Test grün.
 
 ### STATUS
-- Ursache klar: Scope-Auswahl war versteckt + Schriftart hatte keinen sichtbaren Geltungsbereich.
-- Umfang: 1 Page + 6 i18n-Dateien.
-- Risiko: niedrig (rein UI/Text, keine Logikänderung).
+- Umfang: 1 Context + 4 Komponenten/Seiten + 6 i18n-Dateien.
+- Risiko: niedrig (rein UI-Spiegelung, keine Logikänderung).
 - Fertig nach Approval: ja.
 
