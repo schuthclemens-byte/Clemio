@@ -6,6 +6,7 @@ import {
   Lock, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw,
   Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info,
   Globe, Type, Contrast, SpellCheck, AlignLeft, Shield, ChevronRight, Settings2, ChevronDown, Ban, Palette, Hand,
+  Search, X,
 } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
@@ -155,6 +156,7 @@ const SettingsPage = () => {
 
   const [openSection, setOpenSection] = useState<SectionKey | null>("display");
   const [a11yExpanded, setA11yExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
@@ -167,7 +169,78 @@ const SettingsPage = () => {
   const languages = Object.entries(localeNames) as [Locale, string][];
   const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
+  const norm = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const q = norm(searchQuery.trim());
+  const isSearching = q.length > 0;
+  const matches = (...texts: (string | undefined | null | false)[]) =>
+    !isSearching || texts.some((t) => t && norm(String(t)).includes(q));
+
+  // Searchable text per section (title + item labels + descriptions)
+  const sectionSearchText: Record<SectionKey, string> = {
+    communication: [
+      tr("Kommunikation", "Communication"),
+      t("settings.readReceipts"), t("settings.readReceiptsDesc"),
+      t("settings.onlineStatus"), t("settings.onlineStatusDesc"),
+      t("settings.typingIndicator"), t("settings.typingIndicatorDesc"),
+      t("settings.messagePreview"), t("settings.messagePreviewDesc"),
+      t("settings.pushTitle"), t("settings.pushDesc"),
+    ].join(" "),
+    playback: [
+      tr("Wiedergabe", "Playback"),
+      t("settings.autoReadMessages"), t("settings.autoReadMessagesDesc"),
+      t("settings.headphoneAutoPlay"),
+      t("settings.muteSounds"), t("settings.muteSoundsDesc"),
+      t("settings.focusMode"), t("settings.focusModeDesc"),
+      t("settings.autoPlayContact"), t("settings.autoPlayContactDesc"),
+      t("settings.speechRate"),
+      tr("Standard-Stimme", "Default Voice"),
+      "Daniel Liam Sarah Lily",
+      t("settings.smartSilence"), t("settings.smartSilenceDesc"),
+      t("settings.quietFrom"), t("settings.quietTo"),
+    ].join(" "),
+    display: [
+      tr("Anzeige", "Display"),
+      t("design.title"), t("design.settingsDesc"),
+      t("settings.language"),
+      t("settings.a11yGroup"), t("settings.a11yGroupDesc"),
+      t("settings.fontSection"), t("settings.fontScope"),
+      t("settings.fontScopeApp"), t("settings.fontScopeChat"),
+      t("settings.fontFamily"), t("settings.fontFamilyDesc"),
+      t("settings.font.system"), t("settings.font.inter"), t("settings.font.atkinson"),
+      t("settings.font.opendyslexic"), t("settings.font.serif"), t("settings.font.mono"),
+      t("settings.dyslexiaFont"), t("settings.dyslexiaFontDesc"),
+      t("settings.handednessSection"), t("settings.handedness"),
+      t("settings.handednessRight"), t("settings.handednessLeft"), t("settings.handednessDesc"),
+      t("settings.largeText"), t("settings.largeTextDesc"),
+      t("settings.highContrast"), t("settings.highContrastDesc"),
+      t("settings.autoCorrect"), t("settings.autoCorrectDesc"),
+      t("settings.compactMode"), t("settings.compactModeDesc"),
+    ].join(" "),
+    account: [
+      tr("Konto", "Account"),
+      t("settings.stayLoggedIn"), t("settings.stayLoggedInDesc"),
+      t("settings.installApp"), t("settings.installAppDesc"),
+      t("settings.blockedUsers"),
+      planLabel, t("sub.subscribe"), t("sub.manage"),
+    ].join(" "),
+    legal: [
+      t("settings.legal"),
+      t("settings.privacy"), t("settings.terms"),
+    ].join(" "),
+  };
+
+  const sectionVisible = (key: SectionKey) =>
+    !isSearching || norm(sectionSearchText[key]).includes(q);
+
+  const isSectionOpen = (key: SectionKey) =>
+    isSearching ? sectionVisible(key) : openSection === key;
+
+  const visibleSections = (Object.keys(sectionSearchText) as SectionKey[]).filter(sectionVisible);
+  const noResults = isSearching && visibleSections.length === 0;
+
   const toggleSection = (key: SectionKey) => {
+    if (isSearching) return; // disable manual toggle while searching
     setOpenSection(prev => prev === key ? null : key);
   };
 
@@ -232,28 +305,59 @@ const SettingsPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
+      <header className="sticky top-0 z-20 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={goBack} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors active:scale-95" aria-label={t("a11y.back")}>
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold flex-1">{t("settings.title")}</h1>
         </div>
+        {/* Search */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("settings.searchPlaceholder")}
+              className="w-full h-10 pl-9 pr-9 rounded-xl bg-secondary text-sm border-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+              aria-label={t("settings.searchPlaceholder")}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center hover:bg-card/70 active:scale-90"
+                aria-label="Clear"
+              >
+                <X className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
       </header>
 
       <div className="flex-1 p-4 space-y-2 pb-28">
 
         {/* ━━━ ADMIN ━━━ */}
-        {isAdmin && (
+        {isAdmin && !isSearching && (
           <section>
             <LinkRow icon={Shield} label="Administration" onClick={() => navigate("/admin")} />
           </section>
         )}
 
+        {/* ━━━ NO RESULTS ━━━ */}
+        {noResults && (
+          <div className="text-center py-12 text-sm text-muted-foreground">
+            {t("settings.noResults")}
+            <span className="block mt-1 text-xs opacity-70">„{searchQuery}"</span>
+          </div>
+        )}
+
         {/* ━━━ KOMMUNIKATION ━━━ */}
-        <section>
-          <AccordionHeader icon={MessageSquareText} label={tr("Kommunikation", "Communication")} isOpen={openSection === "communication"} onToggle={() => toggleSection("communication")} />
-          <AccordionBody isOpen={openSection === "communication"}>
+        {sectionVisible("communication") && <section>
+          <AccordionHeader icon={MessageSquareText} label={tr("Kommunikation", "Communication")} isOpen={isSectionOpen("communication")} onToggle={() => toggleSection("communication")} />
+          <AccordionBody isOpen={isSectionOpen("communication")}>
             <div className="space-y-2 pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <ToggleRow icon={Eye} label={t("settings.readReceipts")} description={t("settings.readReceiptsDesc")}
@@ -296,12 +400,12 @@ const SettingsPage = () => {
               </div>
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
         {/* ━━━ WIEDERGABE ━━━ */}
-        <section>
-          <AccordionHeader icon={Volume2} label={tr("Wiedergabe", "Playback")} isOpen={openSection === "playback"} onToggle={() => toggleSection("playback")} />
-          <AccordionBody isOpen={openSection === "playback"}>
+        {sectionVisible("playback") && <section>
+          <AccordionHeader icon={Volume2} label={tr("Wiedergabe", "Playback")} isOpen={isSectionOpen("playback")} onToggle={() => toggleSection("playback")} />
+          <AccordionBody isOpen={isSectionOpen("playback")}>
             <div className="space-y-2 pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <ToggleRow icon={Volume2} label={t("settings.autoReadMessages")} description={t("settings.autoReadMessagesDesc")}
@@ -400,12 +504,12 @@ const SettingsPage = () => {
               </div>
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
         {/* ━━━ ANZEIGE ━━━ */}
-        <section>
-          <AccordionHeader icon={Globe} label={tr("Anzeige", "Display")} isOpen={openSection === "display"} onToggle={() => toggleSection("display")} />
-          <AccordionBody isOpen={openSection === "display"}>
+        {sectionVisible("display") && <section>
+          <AccordionHeader icon={Globe} label={tr("Anzeige", "Display")} isOpen={isSectionOpen("display")} onToggle={() => toggleSection("display")} />
+          <AccordionBody isOpen={isSectionOpen("display")}>
             <div className="space-y-2 pb-4">
               {/* Design */}
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
@@ -555,12 +659,12 @@ const SettingsPage = () => {
               </div>
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
         {/* ━━━ KONTO ━━━ */}
-        <section>
-          <AccordionHeader icon={Settings2} label={tr("Konto", "Account")} isOpen={openSection === "account"} onToggle={() => toggleSection("account")} />
-          <AccordionBody isOpen={openSection === "account"}>
+        {sectionVisible("account") && <section>
+          <AccordionHeader icon={Settings2} label={tr("Konto", "Account")} isOpen={isSectionOpen("account")} onToggle={() => toggleSection("account")} />
+          <AccordionBody isOpen={isSectionOpen("account")}>
             <div className="space-y-2 pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <ToggleRow icon={KeyRound} label={t("settings.stayLoggedIn")} description={t("settings.stayLoggedInDesc")}
@@ -633,12 +737,12 @@ const SettingsPage = () => {
               )}
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
         {/* ━━━ RECHTLICHES ━━━ */}
-        <section>
-          <AccordionHeader icon={Lock} label={t("settings.legal")} isOpen={openSection === "legal"} onToggle={() => toggleSection("legal")} />
-          <AccordionBody isOpen={openSection === "legal"}>
+        {sectionVisible("legal") && <section>
+          <AccordionHeader icon={Lock} label={t("settings.legal")} isOpen={isSectionOpen("legal")} onToggle={() => toggleSection("legal")} />
+          <AccordionBody isOpen={isSectionOpen("legal")}>
             <div className="pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <LinkRow icon={Shield} label={t("settings.privacy")} onClick={() => navigate("/privacy")} />
@@ -646,7 +750,7 @@ const SettingsPage = () => {
               </div>
             </div>
           </AccordionBody>
-        </section>
+        </section>}
 
       </div>
     </div>
