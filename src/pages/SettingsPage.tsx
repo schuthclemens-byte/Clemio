@@ -5,7 +5,7 @@ import {
   ArrowLeft, Eye, Volume2, Headphones, BellOff, Download, VolumeX, FileText,
   Lock, LogOut, KeyRound, CreditCard, Crown, ExternalLink, Loader2, RefreshCw,
   Radio, MessageSquareText, Bell, CheckCircle2, XCircle, Smartphone, Info,
-  Globe, Type, Contrast, SpellCheck, AlignLeft, Shield, ChevronRight, Settings2, ChevronDown, Ban,
+  Globe, Type, Contrast, SpellCheck, AlignLeft, Shield, ChevronRight, Settings2, ChevronDown, Ban, Palette,
 } from "lucide-react";
 import { useI18n, localeNames, type Locale } from "@/contexts/I18nContext";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
