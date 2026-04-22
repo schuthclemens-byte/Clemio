@@ -1,99 +1,96 @@
 
 
-## Schrift-Einstellungen erweitern: Geltungsbereich + Schriftart-Auswahl
+## Klarere Schrift-Einstellungen — eine gemeinsame „Wo soll das gelten?"-Frage
 
-### Was du willst
-1. **Lesbare Schrift** soll wählbar sein: nur im Chat oder in der ganzen App
-2. **Neue Option: Schriftart auswählen** — aus mehreren Schriften wählen können
+### Das Problem heute
+- Die Auswahl **„Schriftart"** sagt nirgends, **wo** sie wirkt (überall? nur Chat?).
+- Die Frage **„Wo anwenden?"** erscheint nur bei „Schrift bei Lese-Schwäche" — wirkt aber im Code auch auf die Schriftart-Auswahl.
+- Beide Optionen liegen optisch getrennt → Nutzer denkt, sie sind unabhängig.
 
-### Wie das umgesetzt wird
+### Was geändert wird
 
-**1. Neuer Eintrag „Schriftart" in der Untergruppe Barrierefreiheit**
+**1. „Wo soll das gelten?" wird zur gemeinsamen, immer sichtbaren Frage**
 
-Innerhalb der ausklappbaren „Barrierefreiheit"-Sektion kommt unter „Lesbare Schrift" ein neuer Eintrag:
+Statt versteckt unter dem Lese-Schwäche-Toggle wird das eine **eigene, immer sichtbare Zeile** ganz oben in der Schrift-Untergruppe. Sie steuert sowohl die Lese-Schwäche-Schrift als auch die ausgewählte Schriftart.
+
+**2. Visuelle Gruppierung in einer Karte „Schrift"**
+
+Innerhalb der „Barrierefreiheit"-Untergruppe entsteht ein zusammenhängender Block:
 
 ```
 Barrierefreiheit ▼
-  ├─ Lesbare Schrift              [○] „Leichter zu lesen …"
-  │    └─ Wo anwenden?      [Ganze App ▼]   ← NEU (nur sichtbar wenn an)
-  │         Optionen: „Ganze App" / „Nur Chats"
-  ├─ Schriftart                   [System ▼]   ← NEU
-  │    Optionen:
-  │      • System (Standard)
-  │      • Inter (klar & modern)
-  │      • Atkinson Hyperlegible (sehr lesbar)
-  │      • OpenDyslexic (für Legasthenie)
-  │      • Serif (klassisch)
-  │      • Mono (gleiche Buchstabenbreite)
-  ├─ Größerer Text
-  ├─ Hoher Kontrast
-  ├─ Autokorrektur und Vorschläge
-  └─ Weniger Text
+  ┌─ Schrift ───────────────────────────────────┐
+  │  Wo soll das gelten?      [Überall ▼]       │
+  │      → „Überall in der App"                  │
+  │      → „Nur in deinen Chats"                 │
+  │                                              │
+  │  Schriftart auswählen     [System ▼]        │
+  │  Wirkt: Überall in der App ←  Live-Hinweis   │
+  │                                              │
+  │  [○] Schrift bei Lese-Schwäche              │
+  │      Eine spezielle Schrift, die Lesen…     │
+  │      Wirkt: Überall in der App ← Live-Hinweis│
+  └──────────────────────────────────────────────┘
+  
+  Größerer Text
+  Hoher Kontrast
+  Autokorrektur und Vorschläge
+  Weniger Text
 ```
 
-**2. Wirkung im Code**
+**3. Live-Hinweis direkt unter Schriftart und Lese-Schwäche**
 
-- **Ganze App**: `<html>` bekommt die gewählte Schriftart-Klasse → wirkt überall
-- **Nur Chats**: nur ChatBubble + ChatInput bekommen die Klasse → Rest bleibt System-Schrift
-- **Schriftart-Auswahl**: setzt CSS-Variable `--font-family-app`, die in `index.css` die `body`-Schrift steuert
+Unter beiden Optionen steht in kleiner Schrift, **was gerade gilt**:
+- Wenn „Überall": *„Wirkt: in der ganzen App"*
+- Wenn „Nur Chats": *„Wirkt: nur in deinen Chats"*
 
-**3. Schriften einbinden**
-- **System / Inter / Serif / Mono**: bereits per CSS verfügbar, keine Downloads nötig
-- **Atkinson Hyperlegible** + **OpenDyslexic**: kostenlos via Google Fonts / lokale Einbindung in `index.html` (lazy: nur laden wenn ausgewählt)
+Sobald der Nutzer die obere Auswahl ändert, ändert sich der Hinweis live unter beiden Zeilen.
 
-**4. Speicherung**
-- Beide Werte landen in `AccessibilityContext` → localStorage:
-  - `fontScope`: `"app"` | `"chat"`
-  - `fontFamily`: `"system"` | `"inter"` | `"atkinson"` | `"opendyslexic"` | `"serif"` | `"mono"`
+**4. Die Schriftart-Vorschau nutzt die ausgewählte Schrift**
 
-### Texte (menschlich, ruhig, ohne Fachjargon)
+Die Optionen im Dropdown selbst bekommen `style={{ fontFamily: ... }}`, sodass der Nutzer im Dropdown direkt sieht, **wie** jede Schrift aussieht.
 
-**Lesbare Schrift** (bestehend):
-- „Leichter zu lesen – ruhiger für deine Augen"
+### Texte (alle 6 Sprachen)
 
-**Wo anwenden?** (neu):
-- Label: „Wo anwenden?"
-- Optionen: „Ganze App" / „Nur in Chats"
+**Neue / geänderte Keys:**
+- `settings.fontSection` — DE: „Schrift" / EN: „Font"
+- `settings.fontScope` — DE: **„Wo soll das gelten?"** (statt vorher unklar)
+- `settings.fontScopeApp` — DE: **„Überall in der App"**
+- `settings.fontScopeChat` — DE: **„Nur in deinen Chats"**
+- `settings.fontAppliesTo` — neu, DE: **„Wirkt:"**
+- `settings.fontAppliesApp` — neu, DE: **„in der ganzen App"**
+- `settings.fontAppliesChat` — neu, DE: **„nur in deinen Chats"**
 
-**Schriftart** (neu):
-- Label: „Schriftart"
-- Beschreibung: „Wähle eine Schrift, die sich für dich gut liest"
-- Option-Beschreibungen kurz unter dem Namen:
-  - System: „Wie auf deinem Gerät"
-  - Inter: „Klar und modern"
-  - Atkinson Hyperlegible: „Sehr gut lesbar"
-  - OpenDyslexic: „Für leichteres Lesen"
-  - Serif: „Klassisch mit Serifen"
-  - Mono: „Gleiche Buchstabenbreite"
+Beispiel-Resultat unter „Schriftart": *„Wirkt: in der ganzen App"*
 
-### Dateien, die angefasst werden
-- `src/contexts/AccessibilityContext.tsx` — `fontScope` + `fontFamily` als State, Setter, localStorage
-- `src/pages/SettingsPage.tsx` — 2 neue Zeilen in der Barrierefreiheit-Untergruppe (Select für Scope, Select für Font)
-- `src/index.css` — neue Klassen `.font-inter`, `.font-atkinson`, `.font-opendyslexic`, `.font-serif`, `.font-mono`; Klasse `.dyslexia-font` reagiert auf Scope (`html.dyslexia-font` vs. `.dyslexia-chat-only`)
-- `src/components/chat/ChatBubble.tsx` + `src/components/chat/ChatInput.tsx` — bekommen Klasse `chat-text` für Scope-Targeting
-- `index.html` — `<link>` zu Google Fonts (Atkinson + OpenDyslexic, mit `display=swap`)
-- `src/i18n/{de,en,es,fr,tr,ar}.ts` — neue Keys:
-  - `settings.fontScope`, `settings.fontScopeApp`, `settings.fontScopeChat`
-  - `settings.fontFamily`, `settings.fontFamilyDesc`
-  - `settings.font.system`, `.inter`, `.atkinson`, `.opendyslexic`, `.serif`, `.mono`
+### Code-Änderung (was wo)
+
+- **`src/pages/SettingsPage.tsx`**:
+  - „Wo soll das gelten?"-Zeile aus dem `dyslexiaFont`-`if`-Block herausziehen und nach oben als eigenständige Zeile setzen (immer sichtbar).
+  - Unter der Schriftart-Auswahl + unter der Lese-Schwäche-Beschreibung jeweils eine kleine Zeile mit dem Live-Hinweis einfügen.
+  - Optional: leichte Karten-Optik (z. B. `bg-secondary/20`) um die drei Schrift-Zeilen, damit klar ist, dass sie zusammengehören.
+  - Dropdown-Optionen `<option>` bekommen `style={{ fontFamily: <jeweilige Schrift> }}` für Vorschau.
+
+- **`src/i18n/{de,en,es,fr,tr,ar}.ts`**: 3 neue Keys (`fontSection`, `fontAppliesTo`, `fontAppliesApp`, `fontAppliesChat`) und Feinschliff der vorhandenen Scope-Keys.
+
+- **`src/contexts/AccessibilityContext.tsx`**: keine Änderung — `fontScope` gilt im Code bereits sowohl für Lese-Schwäche als auch für die Schriftart-Auswahl, das wird jetzt nur **sichtbar** gemacht.
 
 ### Was nicht angefasst wird
-- Bestehende Toggles (Größerer Text, Hoher Kontrast, Autokorrektur, Weniger Text)
-- Struktur der Settings-Seite (Akkordeon bleibt)
-- Design-Settings-Seite (Farben, Magie-Modus)
-- Chat-Logik, Auth, Backend
+- Logik in `index.css` und Chat-Komponenten (Scope-Klassen funktionieren schon richtig).
+- Andere Toggles (Größerer Text, Hoher Kontrast, Autokorrektur, Weniger Text).
+- Auth, DB, Realtime.
 
-### Test nach Umsetzung
-1. `/settings` → Anzeige → Barrierefreiheit aufklappen
-2. „Lesbare Schrift" einschalten → neue Zeile „Wo anwenden?" erscheint, Standard „Ganze App"
-3. Auf „Nur in Chats" stellen → Settings-Seite wird wieder Standard-Schrift, ChatBubbles behalten Lesbare Schrift
-4. „Schriftart" → „OpenDyslexic" wählen → Schrift in der ganzen App ändert sich
-5. Auf „System" zurück → wieder Standard
-6. Sprache umstellen → alle neuen Labels übersetzt, i18n-Sync-Test grün
+### Tests nach Umsetzung
+1. `/settings` → Anzeige → Barrierefreiheit aufklappen.
+2. „Wo soll das gelten?" steht ganz oben, immer sichtbar, Standard „Überall in der App".
+3. Schriftart auf „OpenDyslexic" → unter dem Dropdown steht „Wirkt: in der ganzen App" → Settings-Schrift ändert sich.
+4. „Wo soll das gelten?" auf „Nur in deinen Chats" → Hinweis wechselt zu „Wirkt: nur in deinen Chats" → Settings-Schrift wird wieder System, im Chat bleibt OpenDyslexic.
+5. „Schrift bei Lese-Schwäche" einschalten → Hinweis darunter folgt derselben Scope-Auswahl.
+6. Sprache umstellen (EN/ES/FR/TR/AR) → alle neuen Texte übersetzt, i18n-Sync-Test grün.
 
 ### STATUS
-- Umfang: 1 Context + 1 Page + 1 CSS + 2 Chat-Komponenten + 6 i18n-Dateien + 1 index.html
-- Risiko: niedrig (additiv, beeinflusst keine Auth/DB/Realtime-Logik)
-- Performance: Atkinson + OpenDyslexic werden nur geladen wenn aktiv ausgewählt
-- Fertig nach Approval: ja
+- Ursache klar: Scope-Auswahl war versteckt + Schriftart hatte keinen sichtbaren Geltungsbereich.
+- Umfang: 1 Page + 6 i18n-Dateien.
+- Risiko: niedrig (rein UI/Text, keine Logikänderung).
+- Fertig nach Approval: ja.
 
