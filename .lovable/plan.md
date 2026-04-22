@@ -1,60 +1,80 @@
 
-## Design ist nicht wirklich gelöscht, sondern weiter versteckt
 
-### Ursache
-Der Eintrag ist inzwischen wieder im Code vorhanden:
+## „Lesbare Schrift" verständlicher + Autokorrektur stärker + Barrierefreiheit-Untergruppe einklappbar
 
-- `src/pages/SettingsPage.tsx`, Zeilen 409–411: `LinkRow` für `t("design.title")` mit Navigation zu `/design-settings`
-- Aber: `src/pages/SettingsPage.tsx`, Zeile 156 setzt `openSection` standardmäßig auf `null`
+### Was geändert wird
 
-Dadurch sind **alle Akkordeon-Sektionen beim Öffnen von `/settings` eingeklappt**. Der Design-Eintrag liegt in der Sektion **„Anzeige"** und ist deshalb im ersten Blick **unsichtbar**, obwohl er technisch da ist. Das erklärt, warum er für dich „immer noch weg" wirkt.
+**1. „Lesbare Schrift" (Dyslexia-Font) bekommt eine klare Beschreibung**
+Heute steht da nur „Lesbare Schrift" — niemand versteht, was das tut. Neu:
+- Label: **„Lesbare Schrift"**
+- Beschreibung: **„Spezielle Schriftart für Legasthenie / leichteres Lesen"**
 
-### Fix
-Den Design-Eintrag so sichtbar machen, dass er nicht mehr wie „verschwunden" wirkt.
+Gleiches Beschreibungsprinzip auch für die anderen Toggles, die bisher nackt dastanden:
+- **Größerer Text** → „Vergrößert alle Texte in der App"
+- **Hoher Kontrast** → „Stärkere Farben für bessere Sichtbarkeit"
+- **Autokorrektur und Vorschläge** → „Korrigiert Tippfehler und schlägt Wörter vor"
 
-**Empfohlene Umsetzung:**
-1. `SettingsPage.tsx` anpassen, damit die Sektion **„Anzeige" standardmäßig geöffnet** ist
-   - `useState<SectionKey | null>("display")` statt `null`
-2. Den Design-Eintrag **innerhalb der Anzeige-Sektion an erster Position** belassen
-3. Optional zusätzlich:
-   - Design als **eigenen direkten Link oberhalb der Akkordeons** anzeigen, wenn maximale Sichtbarkeit gewünscht ist
+i18n-Keys ergänzt in allen 6 Sprachen (DE/EN/ES/FR/TR/AR), damit der Sync-Test grün bleibt:
+- `settings.dyslexiaFontDesc`
+- `settings.largeTextDesc`
+- `settings.highContrastDesc`
+- `settings.autoCorrectDesc`
 
-### Warum das die richtige Korrektur ist
-- Der vorherige Fix hat den Eintrag technisch zurückgebracht
-- Das eigentliche UX-Problem bleibt aber bestehen: **versteckt in geschlossener Sektion**
-- Mit offenem „Anzeige"-Bereich ist der Eintrag sofort sichtbar, ohne dass du erst raten oder suchen musst
+**2. Autokorrektur deutlich stärker machen**
+`src/hooks/useAutoCorrect.ts` wird ausgebaut:
 
-### Was nicht geändert werden muss
-- Route `/design-settings` in `App.tsx` (existiert)
-- `DesignSettingsPage.tsx` (existiert)
-- i18n-Keys `design.title` / `design.settingsDesc` (werden bereits verwendet)
-- Profil-Seite separat (nur falls du Design zusätzlich auch dort haben willst)
+- **Mehr Korrektur-Einträge** (DE: ~60 → ~250+, EN: ~25 → ~150+). Tippfehler wie „nciht", „weiß nciht", „kanst", „mochte" usw. werden jetzt zuverlässig erkannt.
+- **Auto-Kapitalisierung**: Erstes Wort eines Satzes (Anfang oder nach `.`/`!`/`?`+Space) automatisch groß.
+- **Doppel-Leerzeichen → Punkt+Space** (iOS-Style: "hallo  " → "hallo. ").
+- **Mehr Wortvorschläge**: Wortliste auf ~500 Einträge erweitert (Top-Frequenz-Wörter aus Chat-Kontext).
+- **Bessere Reihenfolge**: Erst Präfix-Treffer, dann Levenshtein ≤2 — wie bisher, aber mit größerem Pool deutlich treffsicherer.
+- **Nach Korrektur Toast/Hinweis**: Optional kleiner inline-Hinweis „nciht → nicht" für 1.5 s über dem Eingabefeld (subtil, nicht störend).
 
-### Umsetzungsschritte
-1. `src/pages/SettingsPage.tsx`
-   - Initialzustand von `openSection` von `null` auf `"display"` ändern
-2. Sichtprüfung:
-   - `/settings` öffnen
-   - „Anzeige" ist direkt aufgeklappt
-   - „Design" mit Palette-Icon ist ohne weiteren Klick sichtbar
-3. Navigationsprüfung:
-   - Klick auf „Design"
-   - Route wechselt zu `/design-settings`
-   - Zurück führt wieder zu `/settings`
+Default-Sprache: bei `locale="de"` werden DE-Wörter+Korrekturen genutzt — Logik bleibt, wird aber massiv besser bestückt.
 
-### Beweis nach Umsetzung
-- Ursache: Eintrag vorhanden, aber durch `openSection = null` verborgen
-- Fix: Anzeige-Sektion standardmäßig offen
-- Test:
-  1. `/settings` laden
-  2. „Design" sofort sichtbar
-  3. Klick öffnet `/design-settings`
-  4. Rücknavigation funktioniert
-- Erwarteter Nachweis im Code:
-  - `const [openSection, setOpenSection] = useState<SectionKey | null>("display");`
+**3. Barrierefreiheit-Untergruppe als ausklappbares Raster**
+Aktuell stehen in der „Anzeige"-Sektion direkt untereinander:
+- Lesbare Schrift, Größerer Text, Hoher Kontrast, Autokorrektur, Weniger Text
+
+→ Diese 5 Toggles werden in eine **eigene ausklappbare Untergruppe „Barrierefreiheit"** verpackt — mit Pfeil-Icon zum Auf-/Zuklappen, optisch genau wie die Hauptsektionen, nur eine Stufe verschachtelt (kleinere Schrift, dezenterer Header).
+
+Struktur unter „Anzeige":
+```
+ANZEIGE ▼
+  ├─ Design                    →
+  ├─ Sprache              [DE ▼]
+  └─ Barrierefreiheit ▼        ← NEU: ausklappbar
+       ├─ Lesbare Schrift          [○] „Spezielle Schriftart …"
+       ├─ Größerer Text             [○] „Vergrößert alle Texte"
+       ├─ Hoher Kontrast            [○] „Stärkere Farben …"
+       ├─ Autokorrektur+Vorschläge  [●] „Korrigiert Tippfehler …"
+       └─ Weniger Text              [○] „Lange Nachrichten kürzen"
+```
+
+Standardmäßig **eingeklappt** — die Liste ist dann viel kürzer und übersichtlicher. Wer's braucht, klickt auf den Pfeil und sieht die fünf Schalter mit klaren Beschreibungen.
+
+### Dateien, die angefasst werden
+- `src/pages/SettingsPage.tsx` — neue Untergruppen-Komponente `SubAccordion` (oder lokale `useState` für „a11y-expanded"); 5 ToggleRows mit Description; Anzeige standardmäßig zu.
+- `src/hooks/useAutoCorrect.ts` — erweiterte Wortliste, erweiterte Korrekturen, Auto-Kapitalisierung, Doppel-Space-zu-Punkt.
+- `src/i18n/de.ts`, `en.ts`, `es.ts`, `fr.ts`, `tr.ts`, `ar.ts` — 4 neue Beschreibungs-Keys + Label „Barrierefreiheit" für Sub-Header (`settings.a11yGroup`).
+
+### Was nicht angefasst wird
+- Routing, Auth, Backend, Design-Settings-Seite
+- Logik der Autokorrektur (nur Daten + 2 kleine Regeln dazu, kein Umbau)
+- Andere Settings-Sektionen (Kommunikation, Wiedergabe, Konto, Rechtliches)
+
+### Test-Plan nach Umsetzung
+1. `/settings` öffnen → „Anzeige" ist offen → Untergruppe „Barrierefreiheit" ist **zu**, Liste wirkt kurz.
+2. Klick auf „Barrierefreiheit ▼" → klappt auf, alle 5 Toggles mit **Beschreibungstext** sichtbar.
+3. „Lesbare Schrift" einschalten → Beschreibung „Spezielle Schriftart …" sichtbar, Schrift ändert sich.
+4. In Chat tippen: „nciht", „kanst", „weiss" + Space → werden zu „nicht", „kannst", „weiß" korrigiert.
+5. Satzanfang klein tippen („hallo wie geht's") → erstes Wort wird groß.
+6. Sprache umstellen (EN/ES/FR/TR/AR) → alle Beschreibungen + „Barrierefreiheit"-Header übersetzt; i18n-Sync-Test bleibt grün.
+7. Untergruppe zuklappen → Pfeil dreht zurück, Toggles wieder versteckt.
 
 ### STATUS
-- Ursache identifiziert: ja
-- Technischer Fix definiert: ja
-- Umsetzung erfolgt: nein (Read-only-Modus)
-- Fertig: nein
+- Ursache klar: 3 Probleme (unklarer Label, schwache Korrektur, zu lange Liste)
+- Fix-Umfang: 1 Hook + 1 Page + 6 i18n-Dateien
+- Risiko: niedrig (additiv, keine Logikänderung an Auth/DB)
+- Fertig nach Approval: ja
+
