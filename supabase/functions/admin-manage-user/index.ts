@@ -109,14 +109,58 @@ serve(async (req) => {
       return json({ success: true, action: "push-sent", results });
     }
 
-    if (!targetUserId || typeof targetUserId !== "string") {
-      return json({ error: "targetUserId required" }, 400);
-    }
-    if (targetUserId === user.id && action !== "list") {
-      return json({ error: "Cannot perform admin action on yourself" }, 400);
+    // ── LIST REPORTS (no targetUserId needed) ──
+    if (action === "list-reports") {
+      const { data: reports, error } = await admin
+        .from("reports")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) return json({ error: error.message }, 500);
+
+      const userIds = new Set<string>();
+      for (const r of reports || []) {
+        userIds.add(r.reported_by);
+        userIds.add(r.reported_user_id);
+      }
+      const { data: reportProfiles } = await admin
+        .from("profiles")
+        .select("id, display_name, phone_number")
+        .in("id", Array.from(userIds));
+      const nameMap: Record<string, string> = {};
+      for (const p of reportProfiles || []) {
+        nameMap[p.id] = p.display_name || p.phone_number;
+      }
+
+      const msgIds = (reports || []).filter((r: any) => r.message_id).map((r: any) => r.message_id);
+      const msgMap: Record<string, { content: string; message_type: string }> = {};
+      if (msgIds.length) {
+        const { data: msgs } = await admin.from("messages").select("id, content, message_type").in("id", msgIds);
+        for (const m of msgs || []) {
+          msgMap[m.id] = { content: m.content, message_type: m.message_type || "text" };
+        }
+      }
+
+      const enriched = (reports || []).map((r: any) => ({
+        ...r,
+        reported_by_name: nameMap[r.reported_by] || "Unknown",
+        reported_user_name: nameMap[r.reported_user_id] || "Unknown",
+        reported_message: r.message_id ? msgMap[r.message_id] || null : null,
+      }));
+      return json({ reports: enriched });
     }
 
-    // ── LIST ALL PROFILES ──
+    // ── UPDATE REPORT STATUS (no targetUserId needed) ──
+    if (action === "update-report") {
+      if (!reportId) return json({ error: "reportId required" }, 400);
+      const updateData: any = { updated_at: new Date().toISOString() };
+      if (reportStatus) updateData.status = reportStatus;
+      if (adminNote !== undefined) updateData.admin_note = adminNote;
+      const { error } = await admin.from("reports").update(updateData).eq("id", reportId);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true, action: "report-updated" });
+    }
+
+    // ── LIST ALL PROFILES (no targetUserId needed) ──
     if (action === "list") {
       const { data: profiles, error } = await admin
         .from("profiles")
