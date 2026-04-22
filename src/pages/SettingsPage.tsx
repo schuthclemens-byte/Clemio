@@ -347,9 +347,9 @@ const SettingsPage = () => {
         )}
 
         {/* ━━━ KOMMUNIKATION ━━━ */}
-        <section>
-          <AccordionHeader icon={MessageSquareText} label={tr("Kommunikation", "Communication")} isOpen={openSection === "communication"} onToggle={() => toggleSection("communication")} />
-          <AccordionBody isOpen={openSection === "communication"}>
+        {sectionVisible("communication") && <section>
+          <AccordionHeader icon={MessageSquareText} label={tr("Kommunikation", "Communication")} isOpen={isSectionOpen("communication")} onToggle={() => toggleSection("communication")} />
+          <AccordionBody isOpen={isSectionOpen("communication")}>
             <div className="space-y-2 pb-4">
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
                 <ToggleRow icon={Eye} label={t("settings.readReceipts")} description={t("settings.readReceiptsDesc")}
