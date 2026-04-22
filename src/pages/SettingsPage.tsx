@@ -154,6 +154,7 @@ const SettingsPage = () => {
   const { isAdmin } = useAdminRole();
 
   const [openSection, setOpenSection] = useState<SectionKey | null>("display");
+  const [a11yExpanded, setA11yExpanded] = useState(false);
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
@@ -431,15 +432,37 @@ const SettingsPage = () => {
                 </div>
               </div>
 
-              {/* Accessibility toggles */}
+              {/* Accessibility – collapsible sub-group */}
               <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-                <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} checked={a11y.dyslexiaFont} onChange={() => { a11y.toggle("dyslexiaFont"); savedToast(); }} />
-                <ToggleRow icon={Eye} label={t("settings.largeText")} checked={a11y.largeText} onChange={() => { a11y.toggle("largeText"); savedToast(); }} />
-                <ToggleRow icon={Contrast} label={t("settings.highContrast")} checked={a11y.highContrast} onChange={() => { a11y.toggle("highContrast"); savedToast(); }} />
-                <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} checked={a11y.autoCorrect} onChange={() => { a11y.toggle("autoCorrect"); savedToast(); }} />
-                <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")}
-                  checked={a11y.compactMode} onChange={() => { a11y.toggle("compactMode"); savedToast(); }} borderBottom={false}
-                />
+                <button
+                  onClick={() => setA11yExpanded(v => !v)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-secondary/50 active:scale-[0.99]"
+                  aria-expanded={a11yExpanded}
+                >
+                  <span className="flex items-start gap-3 flex-1 min-w-0">
+                    <Eye className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="text-[0.938rem] block font-medium">{t("settings.a11yGroup")}</span>
+                      <span className="text-xs text-muted-foreground leading-relaxed">{t("settings.a11yGroupDesc")}</span>
+                    </div>
+                  </span>
+                  <ChevronDown className={cn("w-4 h-4 text-muted-foreground shrink-0 ml-3 transition-transform duration-300", a11yExpanded && "rotate-180")} />
+                </button>
+                <AccordionBody isOpen={a11yExpanded}>
+                  <div className="border-t border-border">
+                    <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} description={t("settings.dyslexiaFontDesc")}
+                      checked={a11y.dyslexiaFont} onChange={() => { a11y.toggle("dyslexiaFont"); savedToast(); }} />
+                    <ToggleRow icon={Eye} label={t("settings.largeText")} description={t("settings.largeTextDesc")}
+                      checked={a11y.largeText} onChange={() => { a11y.toggle("largeText"); savedToast(); }} />
+                    <ToggleRow icon={Contrast} label={t("settings.highContrast")} description={t("settings.highContrastDesc")}
+                      checked={a11y.highContrast} onChange={() => { a11y.toggle("highContrast"); savedToast(); }} />
+                    <ToggleRow icon={SpellCheck} label={t("settings.autoCorrect")} description={t("settings.autoCorrectDesc")}
+                      checked={a11y.autoCorrect} onChange={() => { a11y.toggle("autoCorrect"); savedToast(); }} />
+                    <ToggleRow icon={AlignLeft} label={t("settings.compactMode")} description={t("settings.compactModeDesc")}
+                      checked={a11y.compactMode} onChange={() => { a11y.toggle("compactMode"); savedToast(); }} borderBottom={false}
+                    />
+                  </div>
+                </AccordionBody>
               </div>
             </div>
           </AccordionBody>
