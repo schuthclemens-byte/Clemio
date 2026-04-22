@@ -204,7 +204,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
           </div>
         )}
 
-        <div className="flex items-end gap-2 p-3">
+        <div className={cn("flex items-end gap-2 p-3", a11y.handedness === "left" && "flex-row-reverse")}>
           {/* + button for media */}
           <div className="relative">
             <button
