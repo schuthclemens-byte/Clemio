@@ -450,11 +450,16 @@ const SettingsPage = () => {
                 </button>
                 <AccordionBody isOpen={a11yExpanded}>
                   <div className="border-t border-border">
-                    <ToggleRow icon={Type} label={t("settings.dyslexiaFont")} description={t("settings.dyslexiaFontDesc")}
-                      checked={a11y.dyslexiaFont} onChange={() => { a11y.toggle("dyslexiaFont"); savedToast(); }} />
-                    {a11y.dyslexiaFont && (
-                      <div className="px-4 py-3 border-b border-border bg-secondary/30 flex items-center justify-between gap-3">
-                        <span className="text-sm text-muted-foreground">{t("settings.fontScope")}</span>
+                    {/* ━━━ Schrift-Block: Scope + Schriftart + Lese-Schwäche ━━━ */}
+                    <div className="px-4 py-3 border-b border-border bg-secondary/20">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Type className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("settings.fontSection")}</span>
+                      </div>
+
+                      {/* Geltungsbereich — immer sichtbar, ganz oben */}
+                      <div className="flex items-center justify-between gap-3 mb-4">
+                        <span className="text-sm font-medium">{t("settings.fontScope")}</span>
                         <select
                           value={a11y.fontScope}
                           onChange={(e) => { a11y.setFontScope(e.target.value as "app" | "chat"); savedToast(); }}
@@ -465,29 +470,55 @@ const SettingsPage = () => {
                           <option value="chat">{t("settings.fontScopeChat")}</option>
                         </select>
                       </div>
-                    )}
-                    <div className="px-4 py-3.5 border-b border-border">
-                      <div className="flex items-start gap-3 mb-2.5">
-                        <Type className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-                        <div className="min-w-0 flex-1">
+
+                      {/* Schriftart-Auswahl */}
+                      <div className="mb-4">
+                        <div className="mb-2">
                           <span className="text-[0.938rem] block font-medium">{t("settings.fontFamily")}</span>
                           <span className="text-xs text-muted-foreground leading-relaxed">{t("settings.fontFamilyDesc")}</span>
                         </div>
+                        <select
+                          value={a11y.fontFamily}
+                          onChange={(e) => { a11y.setFontFamily(e.target.value as any); savedToast(); }}
+                          className="w-full h-10 px-3 rounded-xl bg-card text-sm font-medium border border-border focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer pr-8"
+                          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 0.75rem center" }}
+                        >
+                          <option value="system" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>{t("settings.font.system")}</option>
+                          <option value="inter" style={{ fontFamily: "Inter, sans-serif" }}>{t("settings.font.inter")}</option>
+                          <option value="atkinson" style={{ fontFamily: "'Atkinson Hyperlegible', sans-serif" }}>{t("settings.font.atkinson")}</option>
+                          <option value="opendyslexic" style={{ fontFamily: "'OpenDyslexic', sans-serif" }}>{t("settings.font.opendyslexic")}</option>
+                          <option value="serif" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>{t("settings.font.serif")}</option>
+                          <option value="mono" style={{ fontFamily: "'Courier New', monospace" }}>{t("settings.font.mono")}</option>
+                        </select>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          <span className="font-medium">{t("settings.fontAppliesTo")}</span>{" "}
+                          {a11y.fontScope === "app" ? t("settings.fontAppliesApp") : t("settings.fontAppliesChat")}
+                        </p>
                       </div>
-                      <select
-                        value={a11y.fontFamily}
-                        onChange={(e) => { a11y.setFontFamily(e.target.value as any); savedToast(); }}
-                        className="w-full h-10 px-3 rounded-xl bg-secondary text-sm font-medium border-none focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer pr-8"
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 0.75rem center" }}
-                      >
-                        <option value="system">{t("settings.font.system")}</option>
-                        <option value="inter">{t("settings.font.inter")}</option>
-                        <option value="atkinson">{t("settings.font.atkinson")}</option>
-                        <option value="opendyslexic">{t("settings.font.opendyslexic")}</option>
-                        <option value="serif">{t("settings.font.serif")}</option>
-                        <option value="mono">{t("settings.font.mono")}</option>
-                      </select>
+
+                      {/* Lese-Schwäche-Toggle */}
+                      <div className="rounded-xl bg-card border border-border px-3 py-3">
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={a11y.dyslexiaFont}
+                            onChange={() => { a11y.toggle("dyslexiaFont"); savedToast(); }}
+                            className="mt-1 w-4 h-4 rounded accent-primary cursor-pointer"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[0.938rem] block font-medium">{t("settings.dyslexiaFont")}</span>
+                            <span className="text-xs text-muted-foreground leading-relaxed block mt-0.5">{t("settings.dyslexiaFontDesc")}</span>
+                            {a11y.dyslexiaFont && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                <span className="font-medium">{t("settings.fontAppliesTo")}</span>{" "}
+                                {a11y.fontScope === "app" ? t("settings.fontAppliesApp") : t("settings.fontAppliesChat")}
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      </div>
                     </div>
+
                     <ToggleRow icon={Eye} label={t("settings.largeText")} description={t("settings.largeTextDesc")}
                       checked={a11y.largeText} onChange={() => { a11y.toggle("largeText"); savedToast(); }} />
                     <ToggleRow icon={Contrast} label={t("settings.highContrast")} description={t("settings.highContrastDesc")}
