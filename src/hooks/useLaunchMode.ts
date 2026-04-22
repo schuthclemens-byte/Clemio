@@ -39,7 +39,7 @@ export const useLaunchMode = () => {
     load();
 
     const channel = supabase
-      .channel("app_settings_launch_mode")
+      .channel(`app_settings_launch_mode_${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         {
