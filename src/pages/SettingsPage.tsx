@@ -153,7 +153,7 @@ const SettingsPage = () => {
   const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
   const { isAdmin } = useAdminRole();
 
-  const [openSection, setOpenSection] = useState<SectionKey | null>(null);
+  const [openSection, setOpenSection] = useState<SectionKey | null>("display");
   const [stayLoggedIn, setStayLoggedIn] = useState(() => localStorage.getItem("clemio_stay_logged_in") !== "false");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(false);
