@@ -158,7 +158,7 @@ const ChatInput = ({ onSend, onSendMedia, onSendVoice, isListening, onVoiceToggl
 
   return (
     <>
-      <div className="bg-card border-t border-border">
+      <div className="chat-text bg-card border-t border-border">
         {/* Attachment previews */}
         {attachments.length > 0 && (
           <div className="flex gap-2 px-3 pt-3 overflow-x-auto">

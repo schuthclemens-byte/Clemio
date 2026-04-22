@@ -323,13 +323,41 @@
   100% { background-position: -200% 0; }
 }
 
-/* Accessibility: Dyslexia-friendly font */
+/* Accessibility: Dyslexia-friendly font – whole app */
 .dyslexia-font body {
-  font-family: 'Comic Sans MS', 'OpenDyslexic', system-ui, sans-serif !important;
+  font-family: 'OpenDyslexic', 'Comic Sans MS', system-ui, sans-serif !important;
   letter-spacing: 0.05em;
   word-spacing: 0.1em;
   line-height: 1.8;
 }
+/* Accessibility: Dyslexia-friendly font – chats only */
+.dyslexia-font-chat-only .chat-text,
+.dyslexia-font-chat-only .chat-text * {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', system-ui, sans-serif !important;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+  line-height: 1.8;
+}
+
+/* Accessibility: Font family overrides – whole app */
+.font-inter body { font-family: 'Inter', system-ui, sans-serif !important; }
+.font-atkinson body { font-family: 'Atkinson Hyperlegible', system-ui, sans-serif !important; }
+.font-opendyslexic body { font-family: 'OpenDyslexic', 'Comic Sans MS', system-ui, sans-serif !important; letter-spacing: 0.04em; line-height: 1.7; }
+.font-serif-app body { font-family: Georgia, 'Times New Roman', serif !important; }
+.font-mono-app body { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace !important; }
+
+/* Accessibility: Font family overrides – chats only (when scope=chat) */
+.font-scope-chat.font-inter body { font-family: inherit !important; }
+.font-scope-chat.font-atkinson body { font-family: inherit !important; }
+.font-scope-chat.font-opendyslexic body { font-family: inherit !important; letter-spacing: normal; line-height: inherit; }
+.font-scope-chat.font-serif-app body { font-family: inherit !important; }
+.font-scope-chat.font-mono-app body { font-family: inherit !important; }
+
+.font-scope-chat.font-inter .chat-text, .font-scope-chat.font-inter .chat-text * { font-family: 'Inter', system-ui, sans-serif !important; }
+.font-scope-chat.font-atkinson .chat-text, .font-scope-chat.font-atkinson .chat-text * { font-family: 'Atkinson Hyperlegible', system-ui, sans-serif !important; }
+.font-scope-chat.font-opendyslexic .chat-text, .font-scope-chat.font-opendyslexic .chat-text * { font-family: 'OpenDyslexic', 'Comic Sans MS', system-ui, sans-serif !important; letter-spacing: 0.04em; line-height: 1.7; }
+.font-scope-chat.font-serif-app .chat-text, .font-scope-chat.font-serif-app .chat-text * { font-family: Georgia, 'Times New Roman', serif !important; }
+.font-scope-chat.font-mono-app .chat-text, .font-scope-chat.font-mono-app .chat-text * { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace !important; }
 
 /* Accessibility: Larger text */
 .large-text body {

@@ -322,7 +322,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
             return (
               <div onClick={isLong ? (e: React.MouseEvent) => { e.stopPropagation(); setExpanded(true); } : undefined}>
                 <p className={cn(
-                  "text-[0.938rem] leading-relaxed break-words",
+                  "chat-text text-[0.938rem] leading-relaxed break-words",
                   isMedia && "px-4 pt-2"
                 )} style={{ overflowWrap: "anywhere" }}>
                   {truncated}
