@@ -1,80 +1,99 @@
 
 
-## „Lesbare Schrift" verständlicher + Autokorrektur stärker + Barrierefreiheit-Untergruppe einklappbar
+## Schrift-Einstellungen erweitern: Geltungsbereich + Schriftart-Auswahl
 
-### Was geändert wird
+### Was du willst
+1. **Lesbare Schrift** soll wählbar sein: nur im Chat oder in der ganzen App
+2. **Neue Option: Schriftart auswählen** — aus mehreren Schriften wählen können
 
-**1. „Lesbare Schrift" (Dyslexia-Font) bekommt eine klare Beschreibung**
-Heute steht da nur „Lesbare Schrift" — niemand versteht, was das tut. Neu:
-- Label: **„Lesbare Schrift"**
-- Beschreibung: **„Spezielle Schriftart für Legasthenie / leichteres Lesen"**
+### Wie das umgesetzt wird
 
-Gleiches Beschreibungsprinzip auch für die anderen Toggles, die bisher nackt dastanden:
-- **Größerer Text** → „Vergrößert alle Texte in der App"
-- **Hoher Kontrast** → „Stärkere Farben für bessere Sichtbarkeit"
-- **Autokorrektur und Vorschläge** → „Korrigiert Tippfehler und schlägt Wörter vor"
+**1. Neuer Eintrag „Schriftart" in der Untergruppe Barrierefreiheit**
 
-i18n-Keys ergänzt in allen 6 Sprachen (DE/EN/ES/FR/TR/AR), damit der Sync-Test grün bleibt:
-- `settings.dyslexiaFontDesc`
-- `settings.largeTextDesc`
-- `settings.highContrastDesc`
-- `settings.autoCorrectDesc`
+Innerhalb der ausklappbaren „Barrierefreiheit"-Sektion kommt unter „Lesbare Schrift" ein neuer Eintrag:
 
-**2. Autokorrektur deutlich stärker machen**
-`src/hooks/useAutoCorrect.ts` wird ausgebaut:
-
-- **Mehr Korrektur-Einträge** (DE: ~60 → ~250+, EN: ~25 → ~150+). Tippfehler wie „nciht", „weiß nciht", „kanst", „mochte" usw. werden jetzt zuverlässig erkannt.
-- **Auto-Kapitalisierung**: Erstes Wort eines Satzes (Anfang oder nach `.`/`!`/`?`+Space) automatisch groß.
-- **Doppel-Leerzeichen → Punkt+Space** (iOS-Style: "hallo  " → "hallo. ").
-- **Mehr Wortvorschläge**: Wortliste auf ~500 Einträge erweitert (Top-Frequenz-Wörter aus Chat-Kontext).
-- **Bessere Reihenfolge**: Erst Präfix-Treffer, dann Levenshtein ≤2 — wie bisher, aber mit größerem Pool deutlich treffsicherer.
-- **Nach Korrektur Toast/Hinweis**: Optional kleiner inline-Hinweis „nciht → nicht" für 1.5 s über dem Eingabefeld (subtil, nicht störend).
-
-Default-Sprache: bei `locale="de"` werden DE-Wörter+Korrekturen genutzt — Logik bleibt, wird aber massiv besser bestückt.
-
-**3. Barrierefreiheit-Untergruppe als ausklappbares Raster**
-Aktuell stehen in der „Anzeige"-Sektion direkt untereinander:
-- Lesbare Schrift, Größerer Text, Hoher Kontrast, Autokorrektur, Weniger Text
-
-→ Diese 5 Toggles werden in eine **eigene ausklappbare Untergruppe „Barrierefreiheit"** verpackt — mit Pfeil-Icon zum Auf-/Zuklappen, optisch genau wie die Hauptsektionen, nur eine Stufe verschachtelt (kleinere Schrift, dezenterer Header).
-
-Struktur unter „Anzeige":
 ```
-ANZEIGE ▼
-  ├─ Design                    →
-  ├─ Sprache              [DE ▼]
-  └─ Barrierefreiheit ▼        ← NEU: ausklappbar
-       ├─ Lesbare Schrift          [○] „Spezielle Schriftart …"
-       ├─ Größerer Text             [○] „Vergrößert alle Texte"
-       ├─ Hoher Kontrast            [○] „Stärkere Farben …"
-       ├─ Autokorrektur+Vorschläge  [●] „Korrigiert Tippfehler …"
-       └─ Weniger Text              [○] „Lange Nachrichten kürzen"
+Barrierefreiheit ▼
+  ├─ Lesbare Schrift              [○] „Leichter zu lesen …"
+  │    └─ Wo anwenden?      [Ganze App ▼]   ← NEU (nur sichtbar wenn an)
+  │         Optionen: „Ganze App" / „Nur Chats"
+  ├─ Schriftart                   [System ▼]   ← NEU
+  │    Optionen:
+  │      • System (Standard)
+  │      • Inter (klar & modern)
+  │      • Atkinson Hyperlegible (sehr lesbar)
+  │      • OpenDyslexic (für Legasthenie)
+  │      • Serif (klassisch)
+  │      • Mono (gleiche Buchstabenbreite)
+  ├─ Größerer Text
+  ├─ Hoher Kontrast
+  ├─ Autokorrektur und Vorschläge
+  └─ Weniger Text
 ```
 
-Standardmäßig **eingeklappt** — die Liste ist dann viel kürzer und übersichtlicher. Wer's braucht, klickt auf den Pfeil und sieht die fünf Schalter mit klaren Beschreibungen.
+**2. Wirkung im Code**
+
+- **Ganze App**: `<html>` bekommt die gewählte Schriftart-Klasse → wirkt überall
+- **Nur Chats**: nur ChatBubble + ChatInput bekommen die Klasse → Rest bleibt System-Schrift
+- **Schriftart-Auswahl**: setzt CSS-Variable `--font-family-app`, die in `index.css` die `body`-Schrift steuert
+
+**3. Schriften einbinden**
+- **System / Inter / Serif / Mono**: bereits per CSS verfügbar, keine Downloads nötig
+- **Atkinson Hyperlegible** + **OpenDyslexic**: kostenlos via Google Fonts / lokale Einbindung in `index.html` (lazy: nur laden wenn ausgewählt)
+
+**4. Speicherung**
+- Beide Werte landen in `AccessibilityContext` → localStorage:
+  - `fontScope`: `"app"` | `"chat"`
+  - `fontFamily`: `"system"` | `"inter"` | `"atkinson"` | `"opendyslexic"` | `"serif"` | `"mono"`
+
+### Texte (menschlich, ruhig, ohne Fachjargon)
+
+**Lesbare Schrift** (bestehend):
+- „Leichter zu lesen – ruhiger für deine Augen"
+
+**Wo anwenden?** (neu):
+- Label: „Wo anwenden?"
+- Optionen: „Ganze App" / „Nur in Chats"
+
+**Schriftart** (neu):
+- Label: „Schriftart"
+- Beschreibung: „Wähle eine Schrift, die sich für dich gut liest"
+- Option-Beschreibungen kurz unter dem Namen:
+  - System: „Wie auf deinem Gerät"
+  - Inter: „Klar und modern"
+  - Atkinson Hyperlegible: „Sehr gut lesbar"
+  - OpenDyslexic: „Für leichteres Lesen"
+  - Serif: „Klassisch mit Serifen"
+  - Mono: „Gleiche Buchstabenbreite"
 
 ### Dateien, die angefasst werden
-- `src/pages/SettingsPage.tsx` — neue Untergruppen-Komponente `SubAccordion` (oder lokale `useState` für „a11y-expanded"); 5 ToggleRows mit Description; Anzeige standardmäßig zu.
-- `src/hooks/useAutoCorrect.ts` — erweiterte Wortliste, erweiterte Korrekturen, Auto-Kapitalisierung, Doppel-Space-zu-Punkt.
-- `src/i18n/de.ts`, `en.ts`, `es.ts`, `fr.ts`, `tr.ts`, `ar.ts` — 4 neue Beschreibungs-Keys + Label „Barrierefreiheit" für Sub-Header (`settings.a11yGroup`).
+- `src/contexts/AccessibilityContext.tsx` — `fontScope` + `fontFamily` als State, Setter, localStorage
+- `src/pages/SettingsPage.tsx` — 2 neue Zeilen in der Barrierefreiheit-Untergruppe (Select für Scope, Select für Font)
+- `src/index.css` — neue Klassen `.font-inter`, `.font-atkinson`, `.font-opendyslexic`, `.font-serif`, `.font-mono`; Klasse `.dyslexia-font` reagiert auf Scope (`html.dyslexia-font` vs. `.dyslexia-chat-only`)
+- `src/components/chat/ChatBubble.tsx` + `src/components/chat/ChatInput.tsx` — bekommen Klasse `chat-text` für Scope-Targeting
+- `index.html` — `<link>` zu Google Fonts (Atkinson + OpenDyslexic, mit `display=swap`)
+- `src/i18n/{de,en,es,fr,tr,ar}.ts` — neue Keys:
+  - `settings.fontScope`, `settings.fontScopeApp`, `settings.fontScopeChat`
+  - `settings.fontFamily`, `settings.fontFamilyDesc`
+  - `settings.font.system`, `.inter`, `.atkinson`, `.opendyslexic`, `.serif`, `.mono`
 
 ### Was nicht angefasst wird
-- Routing, Auth, Backend, Design-Settings-Seite
-- Logik der Autokorrektur (nur Daten + 2 kleine Regeln dazu, kein Umbau)
-- Andere Settings-Sektionen (Kommunikation, Wiedergabe, Konto, Rechtliches)
+- Bestehende Toggles (Größerer Text, Hoher Kontrast, Autokorrektur, Weniger Text)
+- Struktur der Settings-Seite (Akkordeon bleibt)
+- Design-Settings-Seite (Farben, Magie-Modus)
+- Chat-Logik, Auth, Backend
 
-### Test-Plan nach Umsetzung
-1. `/settings` öffnen → „Anzeige" ist offen → Untergruppe „Barrierefreiheit" ist **zu**, Liste wirkt kurz.
-2. Klick auf „Barrierefreiheit ▼" → klappt auf, alle 5 Toggles mit **Beschreibungstext** sichtbar.
-3. „Lesbare Schrift" einschalten → Beschreibung „Spezielle Schriftart …" sichtbar, Schrift ändert sich.
-4. In Chat tippen: „nciht", „kanst", „weiss" + Space → werden zu „nicht", „kannst", „weiß" korrigiert.
-5. Satzanfang klein tippen („hallo wie geht's") → erstes Wort wird groß.
-6. Sprache umstellen (EN/ES/FR/TR/AR) → alle Beschreibungen + „Barrierefreiheit"-Header übersetzt; i18n-Sync-Test bleibt grün.
-7. Untergruppe zuklappen → Pfeil dreht zurück, Toggles wieder versteckt.
+### Test nach Umsetzung
+1. `/settings` → Anzeige → Barrierefreiheit aufklappen
+2. „Lesbare Schrift" einschalten → neue Zeile „Wo anwenden?" erscheint, Standard „Ganze App"
+3. Auf „Nur in Chats" stellen → Settings-Seite wird wieder Standard-Schrift, ChatBubbles behalten Lesbare Schrift
+4. „Schriftart" → „OpenDyslexic" wählen → Schrift in der ganzen App ändert sich
+5. Auf „System" zurück → wieder Standard
+6. Sprache umstellen → alle neuen Labels übersetzt, i18n-Sync-Test grün
 
 ### STATUS
-- Ursache klar: 3 Probleme (unklarer Label, schwache Korrektur, zu lange Liste)
-- Fix-Umfang: 1 Hook + 1 Page + 6 i18n-Dateien
-- Risiko: niedrig (additiv, keine Logikänderung an Auth/DB)
+- Umfang: 1 Context + 1 Page + 1 CSS + 2 Chat-Komponenten + 6 i18n-Dateien + 1 index.html
+- Risiko: niedrig (additiv, beeinflusst keine Auth/DB/Realtime-Logik)
+- Performance: Atkinson + OpenDyslexic werden nur geladen wenn aktiv ausgewählt
 - Fertig nach Approval: ja
 
