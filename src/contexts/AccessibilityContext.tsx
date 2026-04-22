@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useMemo, useEffect, R
 
 export type FontScope = "app" | "chat";
 export type FontFamily = "system" | "inter" | "atkinson" | "opendyslexic" | "serif" | "mono";
+export type Handedness = "right" | "left";
 
 interface AccessibilitySettings {
   dyslexiaFont: boolean;
@@ -21,14 +22,16 @@ interface AccessibilitySettings {
   showTypingIndicator: boolean;
   fontScope: FontScope;
   fontFamily: FontFamily;
+  handedness: Handedness;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
-  toggle: (key: keyof Omit<AccessibilitySettings, "speechRate" | "quietHoursStart" | "quietHoursEnd" | "fontScope" | "fontFamily">) => void;
+  toggle: (key: keyof Omit<AccessibilitySettings, "speechRate" | "quietHoursStart" | "quietHoursEnd" | "fontScope" | "fontFamily" | "handedness">) => void;
   setSpeechRate: (rate: number) => void;
   setQuietHours: (start: string, end: string) => void;
   setFontScope: (scope: FontScope) => void;
   setFontFamily: (family: FontFamily) => void;
+  setHandedness: (side: Handedness) => void;
   isQuietTime: () => boolean;
 }
 
