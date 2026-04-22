@@ -177,6 +177,20 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
     });
   }, []);
 
+  const setHandedness = useCallback((side: Handedness) => {
+    setSettings((prev) => {
+      const next = { ...prev, handedness: side };
+      localStorage.setItem("a11y-settings", JSON.stringify(next));
+      document.documentElement.classList.toggle("left-handed", side === "left");
+      return next;
+    });
+  }, []);
+
+  // Apply handedness class on mount / when it changes via initial load
+  useEffect(() => {
+    document.documentElement.classList.toggle("left-handed", settings.handedness === "left");
+  }, [settings.handedness]);
+
   const isQuietTime = useCallback(() => {
     if (!settings.smartSilence) return false;
     const now = new Date();
@@ -194,8 +208,8 @@ export const AccessibilityProvider = ({ children }: { children: ReactNode }) => 
   }, [settings.smartSilence, settings.quietHoursStart, settings.quietHoursEnd]);
 
   const value = useMemo(() => ({
-    ...settings, toggle, setSpeechRate, setQuietHours, setFontScope, setFontFamily, isQuietTime
-  }), [settings, toggle, setSpeechRate, setQuietHours, setFontScope, setFontFamily, isQuietTime]);
+    ...settings, toggle, setSpeechRate, setQuietHours, setFontScope, setFontFamily, setHandedness, isQuietTime
+  }), [settings, toggle, setSpeechRate, setQuietHours, setFontScope, setFontFamily, setHandedness, isQuietTime]);
 
   return (
     <AccessibilityContext.Provider value={value}>
