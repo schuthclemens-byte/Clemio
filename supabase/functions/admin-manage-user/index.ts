@@ -203,6 +203,14 @@ serve(async (req) => {
       return json({ profiles: result });
     }
 
+    // From here on, all actions require a valid targetUserId
+    if (!targetUserId || typeof targetUserId !== "string") {
+      return json({ error: "targetUserId required" }, 400);
+    }
+    if (targetUserId === user.id) {
+      return json({ error: "Cannot perform admin action on yourself" }, 400);
+    }
+
     // ── BLOCK USER ──
     if (action === "block") {
       await admin.from("blocked_users").insert({
