@@ -114,7 +114,7 @@ const AdminPage = () => {
   const fetchData = async () => {
     setLoading(true);
     const [listRes, statsRes, reportsRes] = await Promise.all([
-      supabase.functions.invoke("admin-manage-user", { body: { action: "list", targetUserId: "dummy" } }),
+      supabase.functions.invoke("admin-manage-user", { body: { action: "list" } }),
       supabase.functions.invoke("admin-manage-user", { body: { action: "stats" } }),
       supabase.functions.invoke("admin-manage-user", { body: { action: "list-reports" } }),
     ]);

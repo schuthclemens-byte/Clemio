@@ -48,7 +48,7 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
 
   const updateReport = async (reportId: string, status: string) => {
     const { error } = await supabase.functions.invoke("admin-manage-user", {
-      body: { action: "update-report", reportId, status, targetUserId: "dummy" },
+      body: { action: "update-report", reportId, status },
     });
     if (error) {
       toast.error(tr("Fehler", "Error"));
