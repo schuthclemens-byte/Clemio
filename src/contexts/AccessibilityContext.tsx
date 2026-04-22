@@ -53,6 +53,7 @@ const defaultSettings: AccessibilitySettings = {
   showTypingIndicator: true,
   fontScope: "app",
   fontFamily: "system",
+  handedness: "right",
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType>({
@@ -62,6 +63,7 @@ const AccessibilityContext = createContext<AccessibilityContextType>({
   setQuietHours: () => {},
   setFontScope: () => {},
   setFontFamily: () => {},
+  setHandedness: () => {},
   isQuietTime: () => false,
 });
 
