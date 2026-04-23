@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import PermissionDialog from "@/components/PermissionDialog";
 import { usePermissionGate } from "@/hooks/usePermissionGate";
 import { useI18n } from "@/contexts/I18nContext";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 
 interface VoiceRecorderProps {
   onSend: (file: File) => Promise<boolean | void> | boolean | void;
@@ -34,6 +35,7 @@ const getAudioExtension = (mimeType: string) => {
 
 const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
   const { locale } = useI18n();
+  const { handedness } = useAccessibility();
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -170,7 +172,7 @@ const VoiceRecorder = ({ onSend, autoStart }: VoiceRecorderProps) => {
 
   if (recording) {
     return (
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-destructive/5 rounded-2xl border border-destructive/20 animate-fade-in left-handed:flex-row-reverse">
+      <div className={cn("flex items-center gap-3 px-4 py-2.5 bg-destructive/5 rounded-2xl border border-destructive/20 animate-fade-in", handedness === "left" && "flex-row-reverse")}>
         <div className="w-3 h-3 rounded-full bg-destructive animate-pulse" />
         <span className="text-sm font-medium tabular-nums flex-1">{formatTime(seconds)}</span>
         <button
