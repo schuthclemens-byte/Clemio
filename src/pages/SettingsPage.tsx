@@ -212,6 +212,7 @@ const SettingsPage = () => {
       t("settings.dyslexiaFont"), t("settings.dyslexiaFontDesc"),
       t("settings.handednessSection"), t("settings.handedness"),
       t("settings.handednessRight"), t("settings.handednessLeft"), t("settings.handednessDesc"),
+      t("settings.handednessPreview"),
       t("settings.largeText"), t("settings.largeTextDesc"),
       t("settings.highContrast"), t("settings.highContrastDesc"),
       t("settings.autoCorrect"), t("settings.autoCorrectDesc"),
@@ -634,7 +635,11 @@ const SettingsPage = () => {
                         <span className="text-sm font-medium">{t("settings.handedness")}</span>
                         <select
                           value={a11y.handedness}
-                          onChange={(e) => { a11y.setHandedness(e.target.value as "right" | "left"); savedToast(); }}
+                          onChange={(e) => {
+                            const next = e.target.value as "right" | "left";
+                            a11y.setHandedness(next);
+                            toast(next === "left" ? t("settings.handednessSavedLeft") : t("settings.handednessSavedRight"), { duration: 2200 });
+                          }}
                           className="h-9 px-3 rounded-xl bg-card text-sm font-medium border border-border focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer pr-8"
                           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 0.75rem center" }}
                         >
@@ -642,7 +647,24 @@ const SettingsPage = () => {
                           <option value="left">{t("settings.handednessLeft")}</option>
                         </select>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{t("settings.handednessDesc")}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-3">{t("settings.handednessDesc")}</p>
+
+                      {/* Live-Vorschau Mock-Chat-Leiste */}
+                      <div>
+                        <p className="text-[0.7rem] font-medium text-muted-foreground mb-1.5">{t("settings.handednessPreview")}</p>
+                        <div className={cn(
+                          "flex items-center gap-2 p-2 rounded-xl bg-card border border-border transition-all duration-300",
+                          a11y.handedness === "left" && "flex-row-reverse"
+                        )}>
+                          <div className="flex items-center justify-center w-9 h-9 rounded-full bg-secondary text-muted-foreground shrink-0">
+                            <span className="text-lg leading-none">+</span>
+                          </div>
+                          <div className="flex-1 h-9 rounded-lg bg-secondary/60" />
+                          <div className="flex items-center justify-center w-9 h-9 rounded-full gradient-primary text-primary-foreground shrink-0">
+                            <span className="text-xs font-semibold">→</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <ToggleRow icon={Eye} label={t("settings.largeText")} description={t("settings.largeTextDesc")}
