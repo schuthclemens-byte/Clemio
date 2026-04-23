@@ -888,6 +888,14 @@ const tr: Record<string, string> = {
     "landing.finalCtaTrust1": "Bir dakikadan kısa kurulum",
     "landing.finalCtaTrust2": "Sunucular AB'de",
     "landing.finalCtaTrust3": "Ses istediğinde silinir",
+    "voiceConsent.error.rateLimited": "Ses izni isteği sınırına ulaştın. Lütfen daha sonra tekrar dene.",
+    "voiceConsent.error.duplicate": "Bu kişiye zaten bir istek gönderdin.",
+    "voiceConsent.error.cooldown": "Lütfen yeniden denemeden önce 24 saat bekle.",
+    "voiceConsent.error.notAllowed": "İstek mümkün değil.",
+    "voiceConsent.error.invalid": "Geçersiz istek.",
+    "voiceConsent.error.unauthorized": "İstek göndermek için giriş yap.",
+    "voiceConsent.error.unknown": "Bir şeyler ters gitti. Tekrar dene.",
+    "voiceConsent.success": "İstek gönderildi.",
 };
 
 export default tr;

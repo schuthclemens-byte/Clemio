@@ -1022,6 +1022,14 @@ const en: Record<string, string> = {
     "landing.finalCtaTrust1": "Setup in under a minute",
     "landing.finalCtaTrust2": "Servers in the EU",
     "landing.finalCtaTrust3": "Voice deletable any time",
+    "voiceConsent.error.rateLimited": "You've reached your limit for voice permission requests. Please try again later.",
+    "voiceConsent.error.duplicate": "You've already sent this person a request.",
+    "voiceConsent.error.cooldown": "Please wait 24 hours before trying again.",
+    "voiceConsent.error.notAllowed": "Request not possible.",
+    "voiceConsent.error.invalid": "Invalid request.",
+    "voiceConsent.error.unauthorized": "Please sign in to send a request.",
+    "voiceConsent.error.unknown": "Something went wrong. Please try again.",
+    "voiceConsent.success": "Request sent.",
 };
 
 export default en;

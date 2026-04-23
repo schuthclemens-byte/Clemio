@@ -795,6 +795,7 @@ export type Database = {
           created_at: string | null
           granted_to_user_id: string
           id: string
+          push_sent: boolean
           status: string
           updated_at: string | null
           voice_owner_id: string
@@ -803,6 +804,7 @@ export type Database = {
           created_at?: string | null
           granted_to_user_id: string
           id?: string
+          push_sent?: boolean
           status?: string
           updated_at?: string | null
           voice_owner_id: string
@@ -811,6 +813,7 @@ export type Database = {
           created_at?: string | null
           granted_to_user_id?: string
           id?: string
+          push_sent?: boolean
           status?: string
           updated_at?: string | null
           voice_owner_id?: string
@@ -841,6 +844,30 @@ export type Database = {
           sample_url?: string | null
           user_id?: string
           voice_name?: string | null
+        }
+        Relationships: []
+      }
+      voice_request_log: {
+        Row: {
+          created_at: string
+          id: string
+          outcome: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          outcome: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          outcome?: string
+          receiver_id?: string
+          sender_id?: string
         }
         Relationships: []
       }
@@ -940,7 +967,7 @@ export type Database = {
       }
       request_voice_consent: {
         Args: { _voice_owner_id: string }
-        Returns: string
+        Returns: Json
       }
       search_profiles_by_query: {
         Args: { search_query: string }

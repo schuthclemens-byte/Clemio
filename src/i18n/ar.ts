@@ -888,6 +888,14 @@ const ar: Record<string, string> = {
     "landing.finalCtaTrust1": "إعداد في أقل من دقيقة",
     "landing.finalCtaTrust2": "خوادم في الاتحاد الأوروبي",
     "landing.finalCtaTrust3": "يمكن حذف الصوت في أي وقت",
+    "voiceConsent.error.rateLimited": "لقد وصلت إلى حدّ طلبات إذن الصوت. حاول لاحقًا.",
+    "voiceConsent.error.duplicate": "لقد أرسلت طلبًا لهذا الشخص بالفعل.",
+    "voiceConsent.error.cooldown": "يرجى الانتظار 24 ساعة قبل المحاولة مجددًا.",
+    "voiceConsent.error.notAllowed": "الطلب غير ممكن.",
+    "voiceConsent.error.invalid": "طلب غير صالح.",
+    "voiceConsent.error.unauthorized": "سجّل الدخول لإرسال طلب.",
+    "voiceConsent.error.unknown": "حدث خطأ ما. حاول مرة أخرى.",
+    "voiceConsent.success": "تم إرسال الطلب.",
 };
 
 export default ar;
