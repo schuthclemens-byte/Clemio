@@ -1,63 +1,69 @@
 
 
-## Linkshänder-Modus: sichtbar machen, dass es wirkt
+## „Hoher Kontrast" wirkt jetzt wirklich
 
 ### Das Problem
-Du wechselst auf „Linke Hand" → Toast „Gespeichert ✓" erscheint, aber auf der Einstellungen-Seite **siehst du keine Veränderung**. Der Effekt greift technisch (CSS-Klasse `.left-handed` wird gesetzt, im Chat dreht sich die Button-Reihe), aber:
+Du schaltest „Hoher Kontrast" ein → **nichts ändert sich sichtbar**.
 
-1. Du bist auf **/settings**, nicht im Chat → also keine sichtbare Wirkung dort.
-2. Es gibt **keine Live-Vorschau**, die dir zeigt: „so sieht's später aus".
-3. Nur **ein** Element (die Chat-Eingabezeile) wird gespiegelt — andere Stellen, an denen man's erwarten würde (FAB „Neuer Chat", Bottom-Tab-Bar-Schwerpunkt), bleiben gleich.
+**Ursache (in `src/index.css`):**
+Die Klasse `.high-contrast` überschreibt heute nur 6 CSS-Variablen:
+```
+--foreground, --background, --chat-mine, --chat-theirs, --muted-foreground, --border
+```
+Wichtige Tokens wie `--card`, `--secondary`, `--primary`, `--input`, `--ring`, `--accent`, `--destructive` bleiben unverändert. **Außerdem gibt es keinen Dark-Mode-Override** — im dunklen Theme würden weißer Hintergrund + schwarzer Text das Layout zerschießen statt verstärken. Ergebnis: Buttons, Karten, Eingabefelder und Akzente sehen identisch zum Normalmodus aus.
 
 ### Was geändert wird
 
-**1. Live-Vorschau direkt unter dem Dropdown (`SettingsPage.tsx`)**
-Eine kleine Mock-Chat-Eingabezeile als Vorschau-Karte:
-- Zeigt zwei Buttons („+" links/rechts und „Senden" rechts/links) mit Pfeil dazwischen.
-- Wechselt sofort beim Umschalten auf „Linke Hand" — du siehst den Effekt direkt.
-- Beschriftung: „So sieht deine Chat-Leiste aus" / „This is how your chat bar will look".
+**Nur eine Datei: `src/index.css`** (Block ab Zeile 373).
 
-**2. Klarere Beschreibung**
-Aktuell: „Optimiert die Bedienelemente für die gewählte Hand."
-Neu: **„Im Chat wandern Senden- und Plus-Knopf auf die für dich bequemere Seite. Wirkt sofort beim Öffnen eines Chats."**
+**1. Light-Mode High-Contrast — alle Token härter**
+- Reines Schwarz auf reinem Weiß für Text/Hintergrund.
+- `--primary` dunkler/satter (Orange 38% statt 55%) → bessere Lesbarkeit auf Weiß.
+- `--accent`, `--destructive` ebenfalls voll gesättigt und dunkler.
+- `--border` und `--input` auf reines Schwarz → jede Karte, jeder Knopf, jedes Eingabefeld bekommt sichtbare Umrandung.
+- `--muted-foreground` von 25% auf 18% Helligkeit → graue Beschreibungstexte werden lesbar.
 
-**3. Wirkungsbereich erweitern (mehr „Aha"-Momente)**
-- **`ChatListPage.tsx`**: FAB „Neuer Chat" (`fixed bottom-…`) wandert von `right-…` nach `left-…`, wenn `handedness === "left"`.
-- **`ChatBubble.tsx` / `MessageContextMenu.tsx`**: Long-Press-Kontextmenü öffnet sich auf der jeweils bequemen Seite (Anker-Position spiegeln).
-- **`AppSidebar.tsx`** (Desktop, falls relevant): bleibt unverändert — Sidebar-Position ist Layout, nicht Bedienkomfort.
+**2. Dark-Mode High-Contrast (NEU, gab es vorher nicht)**
+Eigener Block `.dark.high-contrast`:
+- Reines Schwarz Hintergrund, reines Weiß Text.
+- `--primary` heller/wärmer (Orange 60%) für Kontrast auf Schwarz.
+- `--accent` Gelb 60% (sticht stark heraus).
+- `--border` weiß → alle Karten/Buttons bekommen weiße Umrandung.
 
-**4. Toast-Text präzisieren**
-Statt nur „Gespeichert ✓":
-- DE: „Linke Hand aktiv — wirkt im Chat."
-- DE: „Rechte Hand aktiv (Standard)."
-(Plus EN/ES/FR/TR/AR.)
+**3. Zusätzliche visuelle Verstärkung**
+- Eingabefelder und Textareas: **`border-width: 2px`** (statt 1px) → klar sichtbar.
+- Fokus-Ring: **`outline: 3px solid` + 2px Offset** auf alle Elemente mit `focus-visible` → Tab-Navigation jederzeit sichtbar.
+- Links: **immer unterstrichen** mit 3px Offset.
+- Alle Borders nutzen `!important`, um Tailwind-Defaults zu überschreiben.
 
-### Code-Änderungen
+### Was du sofort siehst (Vorher → Nachher)
 
-- **`src/pages/SettingsPage.tsx`**: Mock-Vorschau-Komponente unter dem Hand-Dropdown, neuer Beschreibungstext, neuer Toast-Text.
-- **`src/pages/ChatListPage.tsx`**: FAB-Position anhand `handedness` umschalten.
-- **`src/components/chat/ChatBubble.tsx`** + **`MessageContextMenu.tsx`**: Menü-Anker spiegeln.
-- **`src/i18n/{de,en,es,fr,tr,ar}.ts`**: 4 neue/aktualisierte Keys
-  - `settings.handednessDesc` (überschreiben)
-  - `settings.handednessPreview` („So sieht deine Chat-Leiste aus")
-  - `settings.handednessSavedRight` / `settings.handednessSavedLeft`
+| Element | Vorher | Nachher (Light HC) | Nachher (Dark HC) |
+|---|---|---|---|
+| Karten/Akkordeon | hauchdünner grauer Rand | **dicker schwarzer Rand** | **dicker weißer Rand** |
+| Senden-Button | Orange #F97316 | **dunkleres, satteres Orange** | **leuchtendes Orange** |
+| Eingabefelder | grauer 1px Rand | **schwarzer 2px Rand** | **weißer 2px Rand** |
+| Beschreibungstexte | mittelgrau | **fast schwarz** | **fast weiß** |
+| Toggle-Switches | grau/orange | **schwarz/dunkelorange mit Rand** | **weiß/leuchtorange mit Rand** |
+| Fokus (Tab) | dezent | **dicker oranger Ring** | **dicker oranger Ring** |
+| Eigene Chat-Bubbles | Standard-Orange | **dunkles Orange (besser auf Weiß)** | **leuchtendes Orange** |
 
 ### Was nicht angefasst wird
-- Logik der Settings (Speichern, Persistenz, `localStorage`).
-- Andere Sektionen, Auth, DB.
-- Sidebar-/Header-Layout.
+- Keine TypeScript- oder Komponenten-Änderungen.
+- Keine i18n-Änderungen (Texte bleiben gleich).
+- Keine DB- oder Auth-Änderungen.
+- Normaler Modus (ohne High-Contrast) bleibt 1:1 wie heute.
 
 ### Tests
-1. `/settings` → „Linke Hand" wählen → Vorschau-Karte spiegelt sofort, Toast: „Linke Hand aktiv — wirkt im Chat."
-2. Chat öffnen → Senden-/Plus-Knopf gespiegelt (wie bisher).
-3. `/chats` öffnen → FAB unten **links**.
-4. Eigene Nachricht lange drücken → Kontextmenü an bequemer Seite.
-5. Zurück auf „Rechte Hand" → alles wieder im Standard-Layout, Toast: „Rechte Hand aktiv (Standard)."
-6. i18n-Sync-Test grün (10/10).
+1. `/settings` → „Hoher Kontrast" einschalten im **Light-Mode** → alle Karten bekommen schwarze Ränder, Texte werden tiefschwarz, Buttons satter.
+2. Auf Dark-Mode wechseln → bleibt im High-Contrast → Hintergrund tiefschwarz, alle Ränder weiß, Akzente leuchten.
+3. Tab-Taste drücken → dicker oranger Fokus-Ring um den fokussierten Knopf.
+4. „Hoher Kontrast" wieder aus → alles zurück im Standard-Look.
+5. Chat öffnen → eigene Nachrichten haben kräftigeres Orange, fremde Nachrichten klare schwarze Umrandung.
 
 ### STATUS
-- Ursache: Effekt greift, ist aber auf der Settings-Seite unsichtbar → wirkt wie „nichts passiert".
-- Umfang: 1 Page (Vorschau) + 3 Komponenten + 6 i18n-Dateien.
-- Risiko: niedrig (UI-Spiegelung, kein Logikwechsel).
+- Ursache klar: zu wenige Tokens überschrieben + kein Dark-Mode-Override.
+- Umfang: 1 CSS-Block (~110 Zeilen, ersetzt 9 Zeilen).
+- Risiko: niedrig (nur Klasse `.high-contrast` betroffen, normaler Modus unverändert).
 - Fertig nach Approval: ja.
 
