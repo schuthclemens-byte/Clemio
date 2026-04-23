@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Reply } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 
 interface SwipeableBubbleProps {
   children: ReactNode;
@@ -11,6 +12,8 @@ interface SwipeableBubbleProps {
 const THRESHOLD = 60;
 
 const SwipeableBubble = ({ children, isMine, onSwipeReply }: SwipeableBubbleProps) => {
+  const { handedness } = useAccessibility();
+  const isLeft = handedness === "left";
   const startX = useRef(0);
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
@@ -23,29 +26,37 @@ const SwipeableBubble = ({ children, isMine, onSwipeReply }: SwipeableBubbleProp
   const onTouchMove = (e: React.TouchEvent) => {
     if (!swiping) return;
     const diff = e.touches[0].clientX - startX.current;
-    // Only allow swipe right (for reply)
-    if (diff > 0) {
-      setOffset(Math.min(diff, 100));
+    if (isLeft) {
+      // Swipe left for reply
+      if (diff < 0) {
+        setOffset(Math.max(diff, -100));
+      }
+    } else {
+      // Swipe right for reply
+      if (diff > 0) {
+        setOffset(Math.min(diff, 100));
+      }
     }
   };
 
   const onTouchEnd = () => {
-    if (offset >= THRESHOLD) {
+    if (Math.abs(offset) >= THRESHOLD) {
       onSwipeReply();
     }
     setOffset(0);
     setSwiping(false);
   };
 
-  const progress = Math.min(offset / THRESHOLD, 1);
+  const progress = Math.min(Math.abs(offset) / THRESHOLD, 1);
 
   return (
     <div className="relative overflow-hidden">
       {/* Reply icon behind */}
       <div
         className={cn(
-          "absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center",
-          "w-9 h-9 rounded-full bg-primary/15 text-primary transition-all duration-150"
+          "absolute top-1/2 -translate-y-1/2 flex items-center justify-center",
+          "w-9 h-9 rounded-full bg-primary/15 text-primary transition-all duration-150",
+          isLeft ? "right-2" : "left-2"
         )}
         style={{
           opacity: progress,
