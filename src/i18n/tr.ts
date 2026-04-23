@@ -132,7 +132,7 @@ const tr: Record<string, string> = {
     "settings.font.serif": "Serif – klasik, kitap gibi",
     "settings.font.mono": "Mono – tüm harfler aynı genişlikte",
     "settings.largeTextDesc": "Uygulamadaki tüm yazıları büyütür",
-    "settings.highContrastDesc": "Daha net görmek için güçlü renkler",
+    "settings.highContrastDesc": "Daha net kenarlar ve belirgin yazı, daha rahat okuma",
     "settings.autoCorrectDesc": "Yazım hatalarını düzeltir ve kelime önerir",
     "settings.stayLoggedIn": "Giriş yapılı kal",
     "settings.stayLoggedInDesc": "Giriş yapılı kalırsın",
