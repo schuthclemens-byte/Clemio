@@ -1022,6 +1022,14 @@ const de: Record<string, string> = {
     "landing.finalCtaTrust1": "Setup unter einer Minute",
     "landing.finalCtaTrust2": "Server in der EU",
     "landing.finalCtaTrust3": "Stimme jederzeit löschbar",
+    "voiceConsent.error.rateLimited": "Du hast dein Limit für Stimmfreigabe-Anfragen erreicht. Bitte versuche es später erneut.",
+    "voiceConsent.error.duplicate": "Du hast diese Person bereits angefragt.",
+    "voiceConsent.error.cooldown": "Bitte warte 24 Stunden, bevor du es erneut versuchst.",
+    "voiceConsent.error.notAllowed": "Anfrage nicht möglich.",
+    "voiceConsent.error.invalid": "Ungültige Anfrage.",
+    "voiceConsent.error.unauthorized": "Bitte melde dich an, um eine Anfrage zu stellen.",
+    "voiceConsent.error.unknown": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "voiceConsent.success": "Anfrage gesendet.",
 };
 
 export default de;

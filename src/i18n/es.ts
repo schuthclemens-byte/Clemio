@@ -888,6 +888,14 @@ const es: Record<string, string> = {
     "landing.finalCtaTrust1": "Configuración en menos de un minuto",
     "landing.finalCtaTrust2": "Servidores en la UE",
     "landing.finalCtaTrust3": "Voz borrable cuando quieras",
+    "voiceConsent.error.rateLimited": "Has alcanzado tu límite de solicitudes de permiso de voz. Inténtalo más tarde.",
+    "voiceConsent.error.duplicate": "Ya enviaste una solicitud a esta persona.",
+    "voiceConsent.error.cooldown": "Espera 24 horas antes de intentarlo de nuevo.",
+    "voiceConsent.error.notAllowed": "Solicitud no posible.",
+    "voiceConsent.error.invalid": "Solicitud no válida.",
+    "voiceConsent.error.unauthorized": "Inicia sesión para enviar una solicitud.",
+    "voiceConsent.error.unknown": "Algo salió mal. Inténtalo de nuevo.",
+    "voiceConsent.success": "Solicitud enviada.",
 };
 
 export default es;

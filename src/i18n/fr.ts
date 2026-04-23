@@ -1022,6 +1022,14 @@ const fr: Record<string, string> = {
     "landing.finalCtaTrust1": "Configuration en moins d'une minute",
     "landing.finalCtaTrust2": "Serveurs dans l'UE",
     "landing.finalCtaTrust3": "Voix supprimable à tout moment",
+    "voiceConsent.error.rateLimited": "Tu as atteint ta limite de demandes d'autorisation vocale. Réessaie plus tard.",
+    "voiceConsent.error.duplicate": "Tu as déjà envoyé une demande à cette personne.",
+    "voiceConsent.error.cooldown": "Attends 24 heures avant de réessayer.",
+    "voiceConsent.error.notAllowed": "Demande impossible.",
+    "voiceConsent.error.invalid": "Demande invalide.",
+    "voiceConsent.error.unauthorized": "Connecte-toi pour envoyer une demande.",
+    "voiceConsent.error.unknown": "Une erreur est survenue. Réessaie.",
+    "voiceConsent.success": "Demande envoyée.",
 };
 
 export default fr;
