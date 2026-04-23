@@ -372,10 +372,15 @@
 
 /* ==========================================================
    Accessibility: High contrast
-   Boosts contrast for both light and dark themes.
+   - Klare Layer-Trennung (BG vs. Card vs. Secondary)
+   - WCAG AA/AAA Text-Kontrast
+   - Sichtbare Borders, Divider, Focus
+   - Icons folgen Foreground-Farbe
+   - Glas/Gradients deaktiviert für solide Flächen
    ========================================================== */
 .high-contrast {
-  --background: 0 0% 100%;
+  /* Hintergrund leicht abgesetzt vom reinen Weiß → Karten heben sich ab */
+  --background: 0 0% 94%;
   --foreground: 0 0% 0%;
 
   --card: 0 0% 100%;
@@ -384,29 +389,40 @@
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 0%;
 
-  --primary: 18 100% 38%;
+  --primary: 18 100% 35%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 0 0% 92%;
+  --secondary: 0 0% 88%;
   --secondary-foreground: 0 0% 0%;
 
-  --muted: 0 0% 92%;
-  --muted-foreground: 0 0% 18%;
+  --muted: 0 0% 88%;
+  --muted-foreground: 0 0% 15%; /* AAA gegen Background */
 
-  --accent: 340 100% 35%;
+  --accent: 340 100% 32%;
   --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 100% 38%;
+  --destructive: 0 100% 35%;
   --destructive-foreground: 0 0% 100%;
 
   --border: 0 0% 0%;
   --input: 0 0% 0%;
-  --ring: 18 100% 38%;
+  --ring: 18 100% 35%;
 
-  --chat-mine: 18 100% 35%;
+  --chat-mine: 18 100% 32%;
   --chat-mine-foreground: 0 0% 100%;
   --chat-theirs: 0 0% 100%;
   --chat-theirs-foreground: 0 0% 0%;
+
+  --success: 150 100% 22%;
+
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 0 0% 0%;
+  --sidebar-primary: 0 0% 0%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 88%;
+  --sidebar-accent-foreground: 0 0% 0%;
+  --sidebar-border: 0 0% 0%;
+  --sidebar-ring: 18 100% 35%;
 }
 
 .dark.high-contrast,
@@ -414,38 +430,49 @@
   --background: 0 0% 0%;
   --foreground: 0 0% 100%;
 
-  --card: 0 0% 6%;
+  --card: 0 0% 10%;
   --card-foreground: 0 0% 100%;
 
-  --popover: 0 0% 6%;
+  --popover: 0 0% 10%;
   --popover-foreground: 0 0% 100%;
 
-  --primary: 30 100% 60%;
+  --primary: 30 100% 62%;
   --primary-foreground: 0 0% 0%;
 
-  --secondary: 0 0% 12%;
+  --secondary: 0 0% 18%;
   --secondary-foreground: 0 0% 100%;
 
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 85%;
+  --muted: 0 0% 18%;
+  --muted-foreground: 0 0% 88%; /* AAA gegen Background */
 
   --accent: 50 100% 60%;
   --accent-foreground: 0 0% 0%;
 
-  --destructive: 0 100% 65%;
+  --destructive: 0 100% 70%;
   --destructive-foreground: 0 0% 0%;
 
   --border: 0 0% 100%;
   --input: 0 0% 100%;
-  --ring: 30 100% 60%;
+  --ring: 30 100% 62%;
 
   --chat-mine: 30 100% 55%;
   --chat-mine-foreground: 0 0% 0%;
-  --chat-theirs: 0 0% 12%;
+  --chat-theirs: 0 0% 14%;
   --chat-theirs-foreground: 0 0% 100%;
+
+  --success: 150 100% 70%;
+
+  --sidebar-background: 0 0% 0%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 0 0% 100%;
+  --sidebar-primary-foreground: 0 0% 0%;
+  --sidebar-accent: 0 0% 18%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 0 0% 100%;
+  --sidebar-ring: 30 100% 62%;
 }
 
-/* Stronger visual cues in high contrast: thicker borders, visible focus, underlined links */
+/* --- Eingaben + Selects: dicker, sichtbarer Rahmen --- */
 .high-contrast input,
 .high-contrast textarea,
 .high-contrast select {
@@ -453,13 +480,112 @@
   border-color: hsl(var(--border)) !important;
 }
 
+/* --- Buttons (jeder echte Button) sichtbarer Rand --- */
+.high-contrast button:not([data-no-hc-border]) {
+  border: 2px solid hsl(var(--foreground)) !important;
+}
+/* Primärfarben-Buttons behalten ihre Füllung, Border kontrastiert */
+.high-contrast .bg-primary,
+.high-contrast .bg-accent,
+.high-contrast .bg-destructive {
+  border-color: hsl(var(--foreground)) !important;
+}
+
+/* --- Divider/Borders sichtbar dicker --- */
+.high-contrast .border,
+.high-contrast .border-t,
+.high-contrast .border-b,
+.high-contrast .border-l,
+.high-contrast .border-r,
+.high-contrast .border-border,
+.high-contrast hr {
+  border-color: hsl(var(--border)) !important;
+}
+.high-contrast hr {
+  border-top-width: 2px !important;
+}
+
+/* --- Cards visuell vom Hintergrund abheben --- */
+.high-contrast .bg-card,
+.high-contrast .bg-popover {
+  border: 1.5px solid hsl(var(--border)) !important;
+}
+
+/* --- Icons folgen der Textfarbe statt verwaschen --- */
+.high-contrast svg {
+  color: currentColor;
+}
+.high-contrast .text-muted-foreground svg {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* --- Focus immer deutlich sichtbar --- */
 .high-contrast *:focus-visible {
   outline: 3px solid hsl(var(--ring)) !important;
   outline-offset: 2px !important;
+  border-radius: 4px;
 }
 
+/* --- Links unterstrichen --- */
 .high-contrast a {
-  text-decoration: underline;
+  text-decoration: underline !important;
   text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
 }
+
+/* --- Glas/Blur deaktivieren: solide Flächen sind kontrastreicher --- */
+.high-contrast .glass,
+.high-contrast .glass-strong,
+.high-contrast .floating-nav,
+.high-contrast .bubble-glass-mine,
+.high-contrast .bubble-glass-theirs {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.high-contrast .glass,
+.high-contrast .glass-strong,
+.high-contrast .floating-nav {
+  background: hsl(var(--card)) !important;
+  border: 1.5px solid hsl(var(--border)) !important;
+}
+.high-contrast .bubble-glass-mine {
+  background: hsl(var(--chat-mine)) !important;
+  border: 2px solid hsl(var(--foreground)) !important;
+}
+.high-contrast .bubble-glass-theirs {
+  background: hsl(var(--chat-theirs)) !important;
+  border: 2px solid hsl(var(--foreground)) !important;
+}
+
+/* --- Gradient-Buttons werden solide → eindeutiger Kontrast --- */
+.high-contrast .gradient-primary,
+.high-contrast .gradient-accent {
+  background: hsl(var(--primary)) !important;
+}
+
+/* --- Schatten weg → klare Kanten statt weiche Übergänge --- */
+.high-contrast .shadow-soft,
+.high-contrast .shadow-elevated {
+  box-shadow: none !important;
+}
+
+/* --- Disabled bleibt erkennbar, aber klar abgesetzt --- */
+.high-contrast :disabled,
+.high-contrast [aria-disabled="true"] {
+  opacity: 0.65;
+}
+
+/* --- OS-Präferenz: prefers-contrast: more aktiviert HC-Optik standardmäßig,
+       wenn der User ihn nicht manuell ausgeschaltet hat --- */
+@media (prefers-contrast: more) {
+  :root:not(.hc-user-off) {
+    --muted-foreground: 0 0% 15%;
+    --border: 0 0% 0%;
+  }
+  .dark:not(.hc-user-off) {
+    --muted-foreground: 0 0% 88%;
+    --border: 0 0% 100%;
+  }
+}
+
 
