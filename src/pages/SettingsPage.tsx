@@ -212,6 +212,7 @@ const SettingsPage = () => {
       t("settings.dyslexiaFont"), t("settings.dyslexiaFontDesc"),
       t("settings.handednessSection"), t("settings.handedness"),
       t("settings.handednessRight"), t("settings.handednessLeft"), t("settings.handednessDesc"),
+      t("settings.handednessPreview"),
       t("settings.largeText"), t("settings.largeTextDesc"),
       t("settings.highContrast"), t("settings.highContrastDesc"),
       t("settings.autoCorrect"), t("settings.autoCorrectDesc"),
