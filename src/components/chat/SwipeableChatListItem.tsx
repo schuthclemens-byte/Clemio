@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Trash2, Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 
 interface SwipeableChatListItemProps {
   children: ReactNode;
@@ -11,6 +12,8 @@ interface SwipeableChatListItemProps {
 const THRESHOLD = 80;
 
 const SwipeableChatListItem = ({ children, onDelete, onArchive }: SwipeableChatListItemProps) => {
+  const { handedness } = useAccessibility();
+  const isLeft = handedness === "left";
   const startX = useRef(0);
   const [offset, setOffset] = useState(0);
   const [swiping, setSwiping] = useState(false);
@@ -23,16 +26,22 @@ const SwipeableChatListItem = ({ children, onDelete, onArchive }: SwipeableChatL
   const onTouchMove = (e: React.TouchEvent) => {
     if (!swiping) return;
     const diff = e.touches[0].clientX - startX.current;
-    // Only allow swipe left (negative)
-    if (diff < 0) {
-      setOffset(Math.max(diff, -180));
+    if (isLeft) {
+      // Swipe right reveals actions on the left
+      if (diff > 0) {
+        setOffset(Math.min(diff, 180));
+      }
+    } else {
+      // Swipe left reveals actions on the right
+      if (diff < 0) {
+        setOffset(Math.max(diff, -180));
+      }
     }
   };
 
   const onTouchEnd = () => {
     if (Math.abs(offset) >= THRESHOLD) {
-      // Keep open to show actions
-      setOffset(-160);
+      setOffset(isLeft ? 160 : -160);
     } else {
       setOffset(0);
     }
@@ -44,7 +53,12 @@ const SwipeableChatListItem = ({ children, onDelete, onArchive }: SwipeableChatL
   return (
     <div className="relative overflow-hidden">
       {/* Action buttons behind */}
-      <div className="absolute right-0 top-0 bottom-0 flex items-stretch">
+      <div
+        className={cn(
+          "absolute top-0 bottom-0 flex items-stretch",
+          isLeft ? "left-0 flex-row-reverse" : "right-0"
+        )}
+      >
         <button
           onClick={() => { close(); onArchive(); }}
           className="w-20 flex flex-col items-center justify-center gap-1 bg-accent text-accent-foreground transition-colors active:opacity-80"
