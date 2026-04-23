@@ -132,7 +132,7 @@ const fr: Record<string, string> = {
     "settings.font.serif": "Serif – classique, comme dans un livre",
     "settings.font.mono": "Mono – toutes les lettres de même largeur",
     "settings.largeTextDesc": "Agrandit tous les textes de l'app",
-    "settings.highContrastDesc": "Couleurs plus fortes pour plus de clarté",
+    "settings.highContrastDesc": "Bords plus nets et texte plus marqué pour mieux lire",
     "settings.autoCorrectDesc": "Corrige les fautes et suggère des mots",
     "settings.stayLoggedIn": "Rester connecté",
     "settings.stayLoggedInDesc": "Tu restes connecté",

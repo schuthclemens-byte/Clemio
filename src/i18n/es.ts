@@ -132,7 +132,7 @@ const es: Record<string, string> = {
     "settings.font.serif": "Serif – clásica, como en un libro",
     "settings.font.mono": "Mono – todas las letras del mismo ancho",
     "settings.largeTextDesc": "Hace todos los textos más grandes",
-    "settings.highContrastDesc": "Colores más fuertes para más claridad",
+    "settings.highContrastDesc": "Bordes más nítidos y texto más marcado para leer mejor",
     "settings.autoCorrectDesc": "Corrige errores y sugiere palabras",
     "settings.stayLoggedIn": "Mantener sesión iniciada",
     "settings.stayLoggedInDesc": "Sigues con la sesión iniciada",
