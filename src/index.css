@@ -370,12 +370,96 @@
   font-size: 0.813rem;
 }
 
-/* Accessibility: High contrast */
+/* ==========================================================
+   Accessibility: High contrast
+   Boosts contrast for both light and dark themes.
+   ========================================================== */
 .high-contrast {
-  --foreground: 0 0% 0%;
   --background: 0 0% 100%;
-  --chat-mine: 18 80% 35%;
-  --chat-theirs: 0 0% 95%;
-  --muted-foreground: 0 0% 25%;
-  --border: 0 0% 70%;
+  --foreground: 0 0% 0%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+
+  --primary: 18 100% 38%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 92%;
+  --secondary-foreground: 0 0% 0%;
+
+  --muted: 0 0% 92%;
+  --muted-foreground: 0 0% 18%;
+
+  --accent: 340 100% 35%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 100% 38%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 0%;
+  --input: 0 0% 0%;
+  --ring: 18 100% 38%;
+
+  --chat-mine: 18 100% 35%;
+  --chat-mine-foreground: 0 0% 100%;
+  --chat-theirs: 0 0% 100%;
+  --chat-theirs-foreground: 0 0% 0%;
 }
+
+.dark.high-contrast,
+.high-contrast.dark {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+
+  --card: 0 0% 6%;
+  --card-foreground: 0 0% 100%;
+
+  --popover: 0 0% 6%;
+  --popover-foreground: 0 0% 100%;
+
+  --primary: 30 100% 60%;
+  --primary-foreground: 0 0% 0%;
+
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 85%;
+
+  --accent: 50 100% 60%;
+  --accent-foreground: 0 0% 0%;
+
+  --destructive: 0 100% 65%;
+  --destructive-foreground: 0 0% 0%;
+
+  --border: 0 0% 100%;
+  --input: 0 0% 100%;
+  --ring: 30 100% 60%;
+
+  --chat-mine: 30 100% 55%;
+  --chat-mine-foreground: 0 0% 0%;
+  --chat-theirs: 0 0% 12%;
+  --chat-theirs-foreground: 0 0% 100%;
+}
+
+/* Stronger visual cues in high contrast: thicker borders, visible focus, underlined links */
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  border-width: 2px !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.high-contrast *:focus-visible {
+  outline: 3px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+.high-contrast a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
