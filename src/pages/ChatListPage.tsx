@@ -5,6 +5,7 @@ import ChatListItem from "@/components/chat/ChatListItem";
 import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
 import PendingInvitations from "@/components/chat/PendingInvitations";
+import MessageRequests from "@/components/chat/MessageRequests";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -468,6 +469,7 @@ const ChatListPage = () => {
           </div>
         ) : (
           <>
+            <MessageRequests />
             <PendingInvitations />
             {filtered.length > 0 && (
               <>
