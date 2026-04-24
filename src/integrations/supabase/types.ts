@@ -894,7 +894,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_message_request: {
+        Args: { _invitation_id: string }
+        Returns: string
+      }
+      block_message_request: {
+        Args: { _invitation_id: string; _reason?: string }
+        Returns: undefined
+      }
       create_direct_chat: { Args: { _target_user_id: string }; Returns: string }
+      decline_message_request: {
+        Args: { _invitation_id: string }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -948,6 +960,10 @@ export type Database = {
           first_name: string
           user_id: string
         }[]
+      }
+      get_message_request_preview: {
+        Args: { _invitation_id: string }
+        Returns: Json
       }
       has_role: {
         Args: {
