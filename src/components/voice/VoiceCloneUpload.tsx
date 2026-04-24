@@ -158,11 +158,10 @@ const VoiceCloneUpload = ({ existingVoice, onCloned }: VoiceCloneUploadProps) =>
         ));
       }
 
-      // Step 2: Save voice_path in profile — voice is now configured
+      // Step 2: Save voice_path in dedicated voice_secrets table — voice is now configured
       const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ voice_path: storagePath })
-        .eq("id", user.id);
+        .from("voice_secrets")
+        .upsert({ user_id: user.id, voice_path: storagePath } as any, { onConflict: "user_id" });
 
       if (profileError) {
         console.error("Profile update error:", profileError);
