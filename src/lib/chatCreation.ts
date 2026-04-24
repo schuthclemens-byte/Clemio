@@ -14,6 +14,13 @@ export async function findOrCreateDirectChat(
   });
 
   if (error) {
+    const msg = error.message || "";
+    if (msg.includes("rate_limited")) {
+      throw new Error("rate_limited");
+    }
+    if (msg.includes("request_not_allowed")) {
+      throw new Error("request_not_allowed");
+    }
     throw new Error(`create_direct_chat: ${error.message}`);
   }
 
