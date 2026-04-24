@@ -49,6 +49,7 @@ const de: Record<string, string> = {
     "chat.noMessages": "Noch nichts hier. Schreib das erste Wort.",
     "chat.lastSeen": "Zuletzt",
     "chat.offline": "Offline",
+    "chat.pendingRequest.banner": "Wartet auf Freigabe — diese Person muss deine Nachricht zuerst annehmen.",
     "chat.showMore": "Mehr anzeigen",
     "chat.tapToListen": "Tippen, um zu hören · Doppeltippen für mehr",
     "chat.listen": "Anhören",

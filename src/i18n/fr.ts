@@ -48,6 +48,7 @@ const fr: Record<string, string> = {
     "chat.noMessages": "Rien ici pour l'instant. Écris le premier mot.",
     "chat.lastSeen": "Dernière fois",
     "chat.offline": "Hors ligne",
+    "chat.pendingRequest.banner": "En attente d'approbation — cette personne doit d'abord accepter ton message.",
     "chat.showMore": "Afficher plus",
     "chat.tapToListen": "Touche pour écouter · Double-touche pour plus",
     "chat.listen": "Écouter",

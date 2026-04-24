@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2, MoreVertical, Flag } from "lucide-react";
+import { ArrowLeft, Mic, Users, Phone, Video, Headphones, X, ImageIcon, Info, Mic2, Trash2, MoreVertical, Flag, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ChatBubble from "@/components/chat/ChatBubble";
 import ChatInput from "@/components/chat/ChatInput";
@@ -1158,10 +1158,12 @@ const ChatPage = () => {
           <AnimatedChatBackground animation={getChatBackground(conversationId).value} />
         )}
         {isPendingRequest && (
-          <div className="mx-auto my-3 max-w-md px-4 py-2.5 rounded-2xl bg-accent/40 border border-border/50 text-center text-xs text-muted-foreground">
-            {locale === "de"
-              ? "Wartet auf Freigabe — diese Person muss deine Nachricht zuerst annehmen."
-              : "Waiting for approval — this person must accept your message first."}
+          <div
+            role="status"
+            className="sticky top-0 z-[5] mx-auto mb-3 flex max-w-md items-center justify-center gap-2 rounded-2xl border border-border/50 bg-accent/70 backdrop-blur-md px-4 py-2.5 text-center text-xs text-muted-foreground shadow-sm"
+          >
+            <Clock className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden="true" />
+            <span>{t("chat.pendingRequest.banner")}</span>
           </div>
         )}
         {messages.length === 0 ? (

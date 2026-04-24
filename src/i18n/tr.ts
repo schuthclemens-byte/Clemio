@@ -48,6 +48,7 @@ const tr: Record<string, string> = {
     "chat.noMessages": "Henüz bir şey yok. İlk kelimeyi sen yaz.",
     "chat.lastSeen": "Son görülme",
     "chat.offline": "Çevrimdışı",
+    "chat.pendingRequest.banner": "Onay bekleniyor — bu kişinin mesajını önce kabul etmesi gerekiyor.",
     "chat.showMore": "Daha fazla göster",
     "chat.tapToListen": "Dinlemek için dokun · Daha fazlası için çift dokun",
     "chat.listen": "Dinle",

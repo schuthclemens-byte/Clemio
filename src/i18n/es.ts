@@ -48,6 +48,7 @@ const es: Record<string, string> = {
     "chat.noMessages": "Aún no hay nada. Escribe la primera palabra.",
     "chat.lastSeen": "Última vez",
     "chat.offline": "Desconectado",
+    "chat.pendingRequest.banner": "Esperando aprobación — esta persona debe aceptar tu mensaje primero.",
     "chat.showMore": "Mostrar más",
     "chat.tapToListen": "Toca para escuchar · Doble toque para más",
     "chat.listen": "Escuchar",
