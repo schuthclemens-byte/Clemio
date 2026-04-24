@@ -24,15 +24,31 @@ const normalizeLanguageTag = (raw: string | null | undefined): string | null => 
 const collectCandidates = (): string[] => {
   const sources: Array<string | null | undefined> = [];
 
+  // IMPORTANT: Always read from the *own* window.navigator — never from
+  // window.top / window.parent. When the app runs inside the Lovable
+  // preview iframe, navigator inside this frame still reflects the real
+  // user's browser language settings. Server-side Accept-Language headers
+  // are intentionally NOT consulted (they are not exposed to JS anyway,
+  // and iframe/preview environments often inject English defaults).
   if (typeof navigator !== "undefined") {
+    // 1. navigator.languages — the full ordered preference list.
     if (Array.isArray(navigator.languages)) {
       sources.push(...navigator.languages);
     }
+    // 2. navigator.language — the primary UI language as a fallback.
     sources.push(navigator.language);
   }
 
+  // 3. document.documentElement.lang — but only if it was actually set
+  // dynamically by the app (e.g. after manual selection). The static
+  // value baked into index.html ("de") would otherwise pollute every
+  // detection result, so we ignore that exact case.
   if (typeof document !== "undefined") {
-    sources.push(document.documentElement.lang);
+    const htmlLang = document.documentElement.getAttribute("lang");
+    const htmlLangTouched = document.documentElement.dataset.localeApplied === "true";
+    if (htmlLang && htmlLangTouched) {
+      sources.push(htmlLang);
+    }
   }
 
   const seen = new Set<string>();
