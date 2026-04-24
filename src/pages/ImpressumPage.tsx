@@ -49,8 +49,8 @@ const ImpressumPage = () => {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-1">
             <p>
               E-Mail:{" "}
-              <a href="mailto:clemensschuth@outlook.de" className="text-primary font-medium hover:underline">
-                clemensschuth@outlook.de
+              <a href="mailto:support@clemio.app" className="text-primary font-medium hover:underline">
+                support@clemio.app
               </a>
             </p>
           </div>
