@@ -72,8 +72,8 @@ const VoiceRecordingsPage = () => {
         await supabase.storage.from("stimmen").remove([voicePath]).catch(() => {});
       }
 
-      // Clear voice_path in profile
-      await supabase.from("profiles").update({ voice_path: null }).eq("id", user.id);
+      // Clear voice secret in dedicated table
+      await supabase.from("voice_secrets").delete().eq("user_id", user.id);
 
       setMyVoice(null);
       setVoicePath(null);
