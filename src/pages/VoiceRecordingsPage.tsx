@@ -35,13 +35,13 @@ const VoiceRecordingsPage = () => {
         .eq("user_id", user.id)
         .maybeSingle(),
       supabase
-        .from("profiles")
+        .from("voice_secrets")
         .select("voice_path")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .maybeSingle(),
     ]);
     setMyVoice(vpRes.data);
-    setVoicePath(profRes.data?.voice_path ?? null);
+    setVoicePath((profRes.data as any)?.voice_path ?? null);
     setLoading(false);
   };
 
