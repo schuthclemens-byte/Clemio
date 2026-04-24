@@ -140,6 +140,7 @@ const ChatPage = () => {
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<string | null>(null);
   const [isGroup, setIsGroup] = useState(false);
+  const [isPendingRequest, setIsPendingRequest] = useState(false);
   const [memberNames, setMemberNames] = useState<Record<string, string>>({});
 
   const { isListening, transcript, toggle, stop, isSupported } = useSpeechRecognition(
@@ -419,6 +420,20 @@ const ChatPage = () => {
       setCreatorId(conv.created_by || "");
       setGroupAvatarUrl((conv as any).avatar_url || null);
       const members = membersRes.data;
+
+      // Detect pending message request: 1:1 chat where I'm the sender and recipient hasn't accepted
+      if (!conv.is_group && conv.created_by === user.id && (members?.length ?? 0) < 2) {
+        const { data: pendingInv } = await supabase
+          .from("chat_invitations")
+          .select("id")
+          .eq("conversation_id", conversationId)
+          .eq("invited_by", user.id)
+          .eq("status", "pending")
+          .maybeSingle();
+        setIsPendingRequest(!!pendingInv);
+      } else {
+        setIsPendingRequest(false);
+      }
 
       // Process messages immediately so UI renders fast
       const msgs = msgsRes.data;
@@ -1141,6 +1156,13 @@ const ChatPage = () => {
         {/* Animated background layer */}
         {conversationId && getChatBackground(conversationId).type === "animated" && (
           <AnimatedChatBackground animation={getChatBackground(conversationId).value} />
+        )}
+        {isPendingRequest && (
+          <div className="mx-auto my-3 max-w-md px-4 py-2.5 rounded-2xl bg-accent/40 border border-border/50 text-center text-xs text-muted-foreground">
+            {locale === "de"
+              ? "Wartet auf Freigabe — diese Person muss deine Nachricht zuerst annehmen."
+              : "Waiting for approval — this person must accept your message first."}
+          </div>
         )}
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">

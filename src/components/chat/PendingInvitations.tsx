@@ -28,7 +28,7 @@ const PendingInvitations = () => {
     if (!user) return;
     const { data, error } = await supabase
       .from("chat_invitations")
-      .select("id, conversation_id, invited_by, conversations:conversation_id(name)")
+      .select("id, conversation_id, invited_by, conversations:conversation_id(name, is_group)")
       .eq("invited_user_id", user.id)
       .eq("status", "pending");
 
@@ -37,17 +37,20 @@ const PendingInvitations = () => {
       return;
     }
 
-    if (data.length === 0) {
+    // Only show group invitations here; 1:1 requests are handled by MessageRequests
+    const groupInvites = data.filter((d) => (d.conversations as any)?.is_group === true);
+
+    if (groupInvites.length === 0) {
       setInvitations([]);
       setLoading(false);
       return;
     }
 
-    const inviterIds = [...new Set(data.map((d) => d.invited_by))];
+    const inviterIds = [...new Set(groupInvites.map((d) => d.invited_by))];
     const profiles = await fetchAccessibleProfiles(inviterIds);
     const profileMap = new Map(profiles.map((p) => [p.id, p.display_name || tr("Nutzer", "User")]));
 
-    const mapped: Invitation[] = data.map((d) => ({
+    const mapped: Invitation[] = groupInvites.map((d) => ({
       id: d.id,
       conversation_id: d.conversation_id,
       invited_by: d.invited_by,
