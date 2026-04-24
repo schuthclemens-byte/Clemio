@@ -59,11 +59,18 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, phone_number, avatar_url, language, first_name, last_name, voice_path, voice_encryption_key")
-        .eq("id", user.id)
-        .maybeSingle();
+      const [{ data }, { data: secretData }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name, phone_number, avatar_url, language, first_name, last_name")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("voice_secrets")
+          .select("voice_path, voice_encryption_key")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
       if (data) {
         const storedDisplayName = data.display_name?.trim() || "";
         const storedFirstName = (data as any).first_name?.trim() || "";
@@ -77,8 +84,10 @@ const ProfilePage = () => {
         setLastName(derivedName.lastName);
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
-        setVoicePath((data as any).voice_path || null);
-        setVoiceEncKey((data as any).voice_encryption_key || null);
+      }
+      if (secretData) {
+        setVoicePath((secretData as any).voice_path || null);
+        setVoiceEncKey((secretData as any).voice_encryption_key || null);
       }
       const { data: voiceData } = await supabase
         .from("voice_profiles")
