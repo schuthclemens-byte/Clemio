@@ -314,7 +314,11 @@ const ChatListPage = () => {
     } catch (err: any) {
       console.error("[ChatListPage] start chat failed", err);
       const msg = err?.message || "";
-      if (msg.includes("conversations")) {
+      if (msg.includes("rate_limited")) {
+        toast.error("Zu viele Anfragen. Bitte später erneut versuchen.");
+      } else if (msg.includes("request_not_allowed")) {
+        toast.error("Anfrage nicht möglich");
+      } else if (msg.includes("conversations")) {
         toast.error("Konversation konnte nicht erstellt werden");
       } else if (msg.includes("chat_invitations")) {
         toast.error("Einladung konnte nicht gesendet werden");
