@@ -1157,6 +1157,13 @@ const ChatPage = () => {
         {conversationId && getChatBackground(conversationId).type === "animated" && (
           <AnimatedChatBackground animation={getChatBackground(conversationId).value} />
         )}
+        {isPendingRequest && (
+          <div className="mx-auto my-3 max-w-md px-4 py-2.5 rounded-2xl bg-accent/40 border border-border/50 text-center text-xs text-muted-foreground">
+            {locale === "de"
+              ? "Wartet auf Freigabe — diese Person muss deine Nachricht zuerst annehmen."
+              : "Waiting for approval — this person must accept your message first."}
+          </div>
+        )}
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             {t("chat.noMessages") || "Noch keine Nachrichten. Schreib die erste!"}
