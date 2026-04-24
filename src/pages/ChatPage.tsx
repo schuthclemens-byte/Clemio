@@ -421,6 +421,20 @@ const ChatPage = () => {
       setGroupAvatarUrl((conv as any).avatar_url || null);
       const members = membersRes.data;
 
+      // Detect pending message request: 1:1 chat where I'm the sender and recipient hasn't accepted
+      if (!conv.is_group && conv.created_by === user.id && (members?.length ?? 0) < 2) {
+        const { data: pendingInv } = await supabase
+          .from("chat_invitations")
+          .select("id")
+          .eq("conversation_id", conversationId)
+          .eq("invited_by", user.id)
+          .eq("status", "pending")
+          .maybeSingle();
+        setIsPendingRequest(!!pendingInv);
+      } else {
+        setIsPendingRequest(false);
+      }
+
       // Process messages immediately so UI renders fast
       const msgs = msgsRes.data;
       if (msgs) {
