@@ -59,11 +59,18 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, phone_number, avatar_url, language, first_name, last_name, voice_path, voice_encryption_key")
-        .eq("id", user.id)
-        .maybeSingle();
+      const [{ data }, { data: secretData }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name, phone_number, avatar_url, language, first_name, last_name")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("voice_secrets")
+          .select("voice_path, voice_encryption_key")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
       if (data) {
         const storedDisplayName = data.display_name?.trim() || "";
         const storedFirstName = (data as any).first_name?.trim() || "";
@@ -77,8 +84,10 @@ const ProfilePage = () => {
         setLastName(derivedName.lastName);
         setPhoneNumber(data.phone_number || "");
         setAvatarUrl(data.avatar_url);
-        setVoicePath((data as any).voice_path || null);
-        setVoiceEncKey((data as any).voice_encryption_key || null);
+      }
+      if (secretData) {
+        setVoicePath((secretData as any).voice_path || null);
+        setVoiceEncKey((secretData as any).voice_encryption_key || null);
       }
       const { data: voiceData } = await supabase
         .from("voice_profiles")
@@ -170,9 +179,9 @@ const ProfilePage = () => {
     await supabase.storage.from("stimmen").remove([`${user.id}.enc`]);
     await supabase.storage.from("stimmen").remove([`${user.id}/${user.id}.wav`]);
     await supabase
-      .from("profiles")
-      .update({ voice_path: null, voice_encryption_key: null } as any)
-      .eq("id", user.id);
+      .from("voice_secrets")
+      .delete()
+      .eq("user_id", user.id);
     setVoicePath(null);
     setVoiceEncKey(null);
     setReRecording(false);
@@ -259,9 +268,8 @@ const ProfilePage = () => {
         }
 
         const { error: dbErr } = await supabase
-          .from("profiles")
-          .update({ voice_path: encPath, voice_encryption_key: keyB64 } as any)
-          .eq("id", user.id);
+          .from("voice_secrets")
+          .upsert({ user_id: user.id, voice_path: encPath, voice_encryption_key: keyB64 } as any, { onConflict: "user_id" });
         if (dbErr) console.warn("[VoiceMigration] DB update failed:", dbErr.message);
 
         await supabase.storage.from("stimmen").remove([voicePath]);

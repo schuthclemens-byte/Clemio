@@ -93,9 +93,8 @@ const InlineVoiceRecorder = ({ onVoiceSaved, userName }: InlineVoiceRecorderProp
           if (uploadErr) throw uploadErr;
 
           const { error: dbErr } = await supabase
-            .from("profiles")
-            .update({ voice_path: filePath } as any)
-            .eq("id", user.id);
+            .from("voice_secrets")
+            .upsert({ user_id: user.id, voice_path: filePath } as any, { onConflict: "user_id" });
           if (dbErr) throw dbErr;
 
           toast.success(isDE ? "Stimme gespeichert ✓" : "Voice saved ✓");

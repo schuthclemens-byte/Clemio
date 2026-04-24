@@ -35,13 +35,13 @@ const VoiceRecordingsPage = () => {
         .eq("user_id", user.id)
         .maybeSingle(),
       supabase
-        .from("profiles")
+        .from("voice_secrets")
         .select("voice_path")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .maybeSingle(),
     ]);
     setMyVoice(vpRes.data);
-    setVoicePath(profRes.data?.voice_path ?? null);
+    setVoicePath((profRes.data as any)?.voice_path ?? null);
     setLoading(false);
   };
 
@@ -72,8 +72,8 @@ const VoiceRecordingsPage = () => {
         await supabase.storage.from("stimmen").remove([voicePath]).catch(() => {});
       }
 
-      // Clear voice_path in profile
-      await supabase.from("profiles").update({ voice_path: null }).eq("id", user.id);
+      // Clear voice secret in dedicated table
+      await supabase.from("voice_secrets").delete().eq("user_id", user.id);
 
       setMyVoice(null);
       setVoicePath(null);
