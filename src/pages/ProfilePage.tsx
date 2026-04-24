@@ -179,9 +179,9 @@ const ProfilePage = () => {
     await supabase.storage.from("stimmen").remove([`${user.id}.enc`]);
     await supabase.storage.from("stimmen").remove([`${user.id}/${user.id}.wav`]);
     await supabase
-      .from("profiles")
-      .update({ voice_path: null, voice_encryption_key: null } as any)
-      .eq("id", user.id);
+      .from("voice_secrets")
+      .delete()
+      .eq("user_id", user.id);
     setVoicePath(null);
     setVoiceEncKey(null);
     setReRecording(false);
