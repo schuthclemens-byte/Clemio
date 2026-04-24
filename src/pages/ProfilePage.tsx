@@ -268,9 +268,8 @@ const ProfilePage = () => {
         }
 
         const { error: dbErr } = await supabase
-          .from("profiles")
-          .update({ voice_path: encPath, voice_encryption_key: keyB64 } as any)
-          .eq("id", user.id);
+          .from("voice_secrets")
+          .upsert({ user_id: user.id, voice_path: encPath, voice_encryption_key: keyB64 } as any, { onConflict: "user_id" });
         if (dbErr) console.warn("[VoiceMigration] DB update failed:", dbErr.message);
 
         await supabase.storage.from("stimmen").remove([voicePath]);
