@@ -140,6 +140,7 @@ const ChatPage = () => {
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<string | null>(null);
   const [isGroup, setIsGroup] = useState(false);
+  const [isPendingRequest, setIsPendingRequest] = useState(false);
   const [memberNames, setMemberNames] = useState<Record<string, string>>({});
 
   const { isListening, transcript, toggle, stop, isSupported } = useSpeechRecognition(
