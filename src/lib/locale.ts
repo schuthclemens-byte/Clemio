@@ -20,6 +20,14 @@ export const detectBrowserLocale = (): SupportedLocale => {
     .map((lang) => lang.toLowerCase().split("-")[0])
     .filter((lang, index, values) => values.indexOf(lang) === index);
 
+  if (typeof window !== "undefined" && !(window as any).__localeDebugLogged) {
+    (window as any).__localeDebugLogged = true;
+    // One-time debug to verify what the browser actually reports.
+    // Remove once language detection is confirmed working in production.
+    // eslint-disable-next-line no-console
+    console.info("[locale] navigator.languages:", navigator.languages, "navigator.language:", navigator.language, "→ candidates:", candidates);
+  }
+
   for (const candidate of candidates) {
     if (supportedLocales.includes(candidate as SupportedLocale)) {
       return candidate as SupportedLocale;
