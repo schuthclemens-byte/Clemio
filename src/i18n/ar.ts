@@ -48,6 +48,7 @@ const ar: Record<string, string> = {
     "chat.noMessages": "لا شيء هنا بعد. اكتب أول كلمة.",
     "chat.lastSeen": "آخر ظهور",
     "chat.offline": "غير متصل",
+    "chat.pendingRequest.banner": "في انتظار الموافقة — يجب أن يقبل هذا الشخص رسالتك أولاً.",
     "chat.showMore": "إظهار المزيد",
     "chat.tapToListen": "انقر للاستماع · انقر مرتين للمزيد",
     "chat.listen": "استماع",
