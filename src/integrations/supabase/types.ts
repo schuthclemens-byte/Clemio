@@ -244,6 +244,45 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_submissions: {
+        Row: {
+          admin_note: string | null
+          category: string
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          message: string
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          category: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          message: string
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          category?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          message?: string
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_voice_profiles: {
         Row: {
           contact_user_id: string
@@ -617,6 +656,27 @@ export type Database = {
           id?: string
           p256dh?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      report_notification_log: {
+        Row: {
+          id: string
+          notified_at: string
+          reported_user_id: string | null
+          reporter_id: string
+        }
+        Insert: {
+          id?: string
+          notified_at?: string
+          reported_user_id?: string | null
+          reporter_id: string
+        }
+        Update: {
+          id?: string
+          notified_at?: string
+          reported_user_id?: string | null
+          reporter_id?: string
         }
         Relationships: []
       }
@@ -1008,6 +1068,16 @@ export type Database = {
           display_name: string
           id: string
         }[]
+      }
+      submit_contact_form: {
+        Args: {
+          _category: string
+          _email: string
+          _ip_address?: string
+          _message: string
+          _name: string
+        }
+        Returns: string
       }
     }
     Enums: {
