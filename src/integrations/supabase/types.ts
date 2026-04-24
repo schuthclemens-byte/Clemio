@@ -564,8 +564,6 @@ export type Database = {
           push_preview_enabled: boolean
           updated_at: string | null
           voice_enabled: boolean | null
-          voice_encryption_key: string | null
-          voice_path: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -579,8 +577,6 @@ export type Database = {
           push_preview_enabled?: boolean
           updated_at?: string | null
           voice_enabled?: boolean | null
-          voice_encryption_key?: string | null
-          voice_path?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -594,8 +590,6 @@ export type Database = {
           push_preview_enabled?: boolean
           updated_at?: string | null
           voice_enabled?: boolean | null
-          voice_encryption_key?: string | null
-          voice_path?: string | null
         }
         Relationships: []
       }
@@ -871,6 +865,30 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_secrets: {
+        Row: {
+          created_at: string
+          updated_at: string
+          user_id: string
+          voice_encryption_key: string | null
+          voice_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          voice_encryption_key?: string | null
+          voice_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          voice_encryption_key?: string | null
+          voice_path?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -899,8 +917,6 @@ export type Database = {
           push_preview_enabled: boolean
           updated_at: string | null
           voice_enabled: boolean | null
-          voice_encryption_key: string | null
-          voice_path: string | null
         }
         SetofOptions: {
           from: "*"
