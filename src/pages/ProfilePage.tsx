@@ -431,6 +431,47 @@ const ProfilePage = () => {
           </div>
         </section>
 
+        <section className="animate-reveal-up" style={{ animationDelay: "75ms" }}>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block px-1">
+            {locale === "de" ? "Sicherheits-E-Mail" : "Security email"}
+          </label>
+          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[0.938rem]">
+                  {locale === "de" ? "Echte E-Mail für wichtige Hinweise" : "Real email for important alerts"}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                  {locale === "de"
+                    ? "Für Passwort-, Account-, Premium- und Stimmprofil-Hinweise. Optional."
+                    : "For password, account, premium and voice profile alerts. Optional."}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={securityEmail}
+                onChange={(e) => setSecurityEmail(e.target.value)}
+                onBlur={updateSecurityEmail}
+                placeholder="name@example.com"
+                className="flex-1 h-11 rounded-xl bg-background px-3 text-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                autoComplete="email"
+              />
+              <button
+                type="button"
+                onClick={updateSecurityEmail}
+                className="h-11 px-4 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary/15 transition-colors"
+              >
+                {locale === "de" ? "Speichern" : "Save"}
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* Voice Profile */}
         <section className="animate-reveal-up" style={{ animationDelay: "90ms" }}>
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block px-1">
