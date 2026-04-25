@@ -41,3 +41,8 @@ jobs:
 
       - name: App security rules
         run: bun run security:scan
+
+      - name: RLS policy matrix
+        env:
+          RLS_DATABASE_URL: ${{ secrets.RLS_DATABASE_URL }}
+        run: bun run security:rls
