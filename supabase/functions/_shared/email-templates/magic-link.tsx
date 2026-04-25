@@ -27,16 +27,15 @@ export const MagicLinkEmail = ({
     <Preview>Dein Login-Link für {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Dein Login-Link</Heading>
+        <Heading style={h1}>Dein Login-Link für Clemio</Heading>
         <Text style={text}>
-          Klicke auf den Button, um dich bei Clemio anzumelden.
-          Der Link ist nur kurze Zeit gültig.
+          Klicke auf den Button, um dich sicher anzumelden.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Jetzt anmelden
+          Jetzt einloggen
         </Button>
         <Text style={footer}>
-          Falls du diesen Link nicht angefordert hast, kannst du diese E-Mail ignorieren.
+          Der Link ist einmalig nutzbar und nur kurze Zeit gültig. Falls du ihn nicht angefordert hast, kannst du diese E-Mail ignorieren.
         </Text>
       </Container>
     </Body>
