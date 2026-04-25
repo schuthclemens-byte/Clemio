@@ -22,6 +22,19 @@ export const useCapacitorInit = () => {
 
         // Handle Android back button
         const { App } = await import("@capacitor/app");
+        App.addListener("appUrlOpen", ({ url }) => {
+          try {
+            const incomingUrl = new URL(url);
+            const nextPath = `${incomingUrl.pathname}${incomingUrl.search}${incomingUrl.hash}`;
+            if (nextPath.startsWith("/auth/callback") || nextPath.startsWith("/login")) {
+              window.history.replaceState({}, "", nextPath);
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }
+          } catch (error) {
+            console.warn("[Capacitor] Deep link could not be handled", error);
+          }
+        });
+
         App.addListener("backButton", ({ canGoBack }) => {
           if (canGoBack) {
             window.history.back();
