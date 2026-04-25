@@ -601,6 +601,7 @@ export type Database = {
           last_name: string | null
           phone_number: string
           push_preview_enabled: boolean
+          security_email: string | null
           updated_at: string | null
           voice_enabled: boolean | null
         }
@@ -614,6 +615,7 @@ export type Database = {
           last_name?: string | null
           phone_number: string
           push_preview_enabled?: boolean
+          security_email?: string | null
           updated_at?: string | null
           voice_enabled?: boolean | null
         }
@@ -627,6 +629,7 @@ export type Database = {
           last_name?: string | null
           phone_number?: string
           push_preview_enabled?: boolean
+          security_email?: string | null
           updated_at?: string | null
           voice_enabled?: boolean | null
         }
@@ -987,6 +990,7 @@ export type Database = {
           last_name: string | null
           phone_number: string
           push_preview_enabled: boolean
+          security_email: string | null
           updated_at: string | null
           voice_enabled: boolean | null
         }
@@ -1025,6 +1029,7 @@ export type Database = {
         Args: { _invitation_id: string }
         Returns: Json
       }
+      get_user_security_email: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
