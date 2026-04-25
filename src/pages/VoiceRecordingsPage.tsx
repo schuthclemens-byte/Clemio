@@ -175,8 +175,8 @@ const VoiceRecordingsPage = () => {
                     )}
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {tr(
-                        "Deine Kontakte können Nachrichten in deiner Stimme hören.",
-                        "Your contacts can hear messages in your voice."
+                        "Deine Kontakte können Nachrichten in deiner Stimme hören. Du kannst die Nutzung jederzeit durch Löschen beenden.",
+                        "Your contacts can hear messages in your voice. You can stop use at any time by deleting it."
                       )}
                     </p>
                   </div>
@@ -194,8 +194,8 @@ const VoiceRecordingsPage = () => {
                 <Shield className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
                 <p className="text-[0.688rem] text-muted-foreground/80">
                   {tr(
-                    "Dein Stimmprofil ist sicher an dein Konto gebunden und kann jederzeit gelöscht werden.",
-                    "Your voice profile is securely linked to your account and can be deleted anytime."
+                    "Beim Löschen entfernen wir dein gespeichertes Stimmprofil inklusive ElevenLabs-Voice-ID und Stimmaufnahme.",
+                    "When deleted, we remove your stored voice profile including the ElevenLabs voice ID and voice recording."
                   )}
                 </p>
               </div>
