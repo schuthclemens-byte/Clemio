@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/contexts/I18nContext";
 import { Badge } from "@/components/ui/badge";
@@ -28,12 +29,14 @@ interface AdminReportsProps {
 }
 
 const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
+  const navigate = useNavigate();
   const { locale } = useI18n();
   const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "open" | "reviewed" | "resolved">("open");
+  const [chatLoading, setChatLoading] = useState<string | null>(null);
 
   const fetchReports = async () => {
     setLoading(true);
@@ -66,6 +69,25 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
       toast.success(tr("Meldung gelöscht", "Report deleted"));
       fetchReports();
     }
+  };
+
+  const openPrivateChat = async (targetUserId: string, reportId: string) => {
+    setChatLoading(`${reportId}-${targetUserId}`);
+    const { data, error } = await supabase.rpc("create_direct_chat" as any, {
+      _target_user_id: targetUserId,
+    } as any);
+
+    if (error || !data) {
+      toast.error(tr("Chat konnte nicht geöffnet werden", "Could not open chat"));
+      setChatLoading(null);
+      return;
+    }
+
+    await supabase.functions.invoke("admin-manage-user", {
+      body: { action: "update-report", reportId, status: "reviewed" },
+    });
+    setChatLoading(null);
+    navigate(`/chat/${data}`);
   };
 
   const filtered = reports.filter((r) => filter === "all" || r.status === filter);
@@ -169,6 +191,20 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 pt-1">
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
+                    disabled={chatLoading === `${r.id}-${r.reported_by}`}
+                    onClick={() => openPrivateChat(r.reported_by, r.id)}
+                  >
+                    {chatLoading === `${r.id}-${r.reported_by}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageSquare className="w-3 h-3" />}
+                    {tr("Reporter schreiben", "Message reporter")}
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
+                    disabled={chatLoading === `${r.id}-${r.reported_user_id}`}
+                    onClick={() => openPrivateChat(r.reported_user_id, r.id)}
+                  >
+                    {chatLoading === `${r.id}-${r.reported_user_id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageSquare className="w-3 h-3" />}
+                    {tr("Gemeldeten schreiben", "Message reported")}
+                  </Button>
                   {r.status === "open" && (
                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
                       onClick={() => updateReport(r.id, "reviewed")}
