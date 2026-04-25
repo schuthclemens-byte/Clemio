@@ -82,6 +82,28 @@ serve(async (req) => {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
+
+      const [{ data: securityEmail }, { data: profile }] = await Promise.all([
+        supabaseClient.rpc("get_user_security_email", { _user_id: userId }),
+        supabaseClient.from("profiles").select("display_name, first_name").eq("id", userId).maybeSingle(),
+      ]);
+
+      if (securityEmail) {
+        await supabaseClient.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: subscription.cancel_at_period_end ? "premium-cancelled" : "premium-activated",
+            recipientEmail: securityEmail,
+            idempotencyKey: subscription.cancel_at_period_end
+              ? `premium-cancelled-${subscription.id}-${subscription.current_period_end}`
+              : `premium-activated-${subscription.id}`,
+            templateData: {
+              name: profile?.first_name || profile?.display_name || undefined,
+              plan: "Premium Monatlich",
+              premiumUntil: subscriptionEnd,
+            },
+          },
+        }).catch((mailError) => logStep("Premium email failed", { error: String(mailError) }));
+      }
     } else {
       logStep("No active subscription found");
     }
