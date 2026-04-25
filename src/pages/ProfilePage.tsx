@@ -13,6 +13,7 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Mail,
 } from "lucide-react";
 import InlineVoiceRecorder from "@/components/voice/InlineVoiceRecorder";
 import { useI18n } from "@/contexts/I18nContext";
@@ -44,6 +45,7 @@ const ProfilePage = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [securityEmail, setSecurityEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -62,7 +64,7 @@ const ProfilePage = () => {
       const [{ data }, { data: secretData }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("display_name, phone_number, avatar_url, language, first_name, last_name")
+          .select("display_name, phone_number, avatar_url, language, first_name, last_name, security_email")
           .eq("id", user.id)
           .maybeSingle(),
         supabase
@@ -83,6 +85,7 @@ const ProfilePage = () => {
         setFirstName(derivedName.firstName);
         setLastName(derivedName.lastName);
         setPhoneNumber(data.phone_number || "");
+        setSecurityEmail((data as any).security_email || "");
         setAvatarUrl(data.avatar_url);
       }
       if (secretData) {
@@ -141,6 +144,25 @@ const ProfilePage = () => {
   const updateLastName = (val: string) => {
     setLastName(val);
     autoSaveName(firstName, val);
+  };
+
+  const updateSecurityEmail = async () => {
+    if (!user) return;
+    const email = securityEmail.trim().toLowerCase();
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      toast.error(locale === "de" ? "Bitte gib eine gültige E-Mail ein" : "Please enter a valid email");
+      return;
+    }
+    const { error } = await supabase
+      .from("profiles")
+      .update({ security_email: email || null } as any)
+      .eq("id", user.id);
+    if (error) {
+      toast.error(locale === "de" ? "E-Mail konnte nicht gespeichert werden" : "Email could not be saved");
+      return;
+    }
+    setSecurityEmail(email);
+    toast.success(locale === "de" ? "Sicherheits-E-Mail gespeichert" : "Security email saved");
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
