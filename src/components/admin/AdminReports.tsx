@@ -4,7 +4,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Flag, CheckCircle, Eye, Ban, MicOff, MessageSquare, Trash2, Save } from "lucide-react";
+import { Loader2, Flag, CheckCircle, Eye, Ban, MicOff, MessageSquare, Trash2, Save, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface Report {
@@ -101,7 +101,7 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
     other: tr("Sonstiges", "Other"),
   };
 
-  const typeIcons: Record<string, any> = {
+  const typeIcons: Record<string, LucideIcon> = {
     message: MessageSquare,
     voice: MicOff,
     user: Flag,
