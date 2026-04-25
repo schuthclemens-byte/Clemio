@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/contexts/I18nContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Flag, CheckCircle, Eye, Ban, MicOff, MessageSquare, Trash2, XCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Flag, CheckCircle, Eye, Ban, MicOff, MessageSquare, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 
 interface Report {
@@ -29,21 +29,25 @@ interface AdminReportsProps {
 }
 
 const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
-  const navigate = useNavigate();
   const { locale } = useI18n();
   const tr = (de: string, en: string) => (locale === "de" ? de : en);
 
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "open" | "reviewed" | "resolved">("open");
-  const [chatLoading, setChatLoading] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [savingNote, setSavingNote] = useState<string | null>(null);
 
   const fetchReports = async () => {
     setLoading(true);
     const { data, error } = await supabase.functions.invoke("admin-manage-user", {
       body: { action: "list-reports" },
     });
-    if (!error) setReports(data?.reports || []);
+    if (!error) {
+      const fetchedReports = data?.reports || [];
+      setReports(fetchedReports);
+      setNotes(Object.fromEntries(fetchedReports.map((report: Report) => [report.id, report.admin_note || ""])));
+    }
     setLoading(false);
   };
 
@@ -71,23 +75,18 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
     }
   };
 
-  const openPrivateChat = async (targetUserId: string, reportId: string) => {
-    setChatLoading(`${reportId}-${targetUserId}`);
-    const { data, error } = await supabase.rpc("create_direct_chat" as any, {
-      _target_user_id: targetUserId,
-    } as any);
-
-    if (error || !data) {
-      toast.error(tr("Chat konnte nicht geöffnet werden", "Could not open chat"));
-      setChatLoading(null);
-      return;
-    }
-
-    await supabase.functions.invoke("admin-manage-user", {
-      body: { action: "update-report", reportId, status: "reviewed" },
+  const saveAdminNote = async (reportId: string) => {
+    setSavingNote(reportId);
+    const { error } = await supabase.functions.invoke("admin-manage-user", {
+      body: { action: "update-report", reportId, status: "reviewed", adminNote: notes[reportId] || "" },
     });
-    setChatLoading(null);
-    navigate(`/chat/${data}`);
+    setSavingNote(null);
+    if (error) {
+      toast.error(tr("Notiz konnte nicht gespeichert werden", "Could not save note"));
+    } else {
+      toast.success(tr("Admin-Notiz gespeichert", "Admin note saved"));
+      fetchReports();
+    }
   };
 
   const filtered = reports.filter((r) => filter === "all" || r.status === filter);
