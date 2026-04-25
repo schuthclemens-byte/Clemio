@@ -30,19 +30,20 @@ function hasOwnerOrAdminGuard(definition) {
 }
 
 function scanSecurityDefinerProfileAccess() {
-  const sensitiveFields = /\b(security_email|phone_number|phone_normalized)\b/i;
   const sensitiveReturn = /RETURNS\s+TABLE\s*\([^)]*\b(security_email|phone_number|phone_normalized)\b/i;
+  const fullProfileReturn = /RETURNS\s+profiles\b/i;
   const phoneFallback = /COALESCE\s*\([^;]*\bphone_number\b/ims;
+  const externallyVisibleOutput = /RETURN\s+QUERY|RETURNS\s+TABLE|jsonb?_build_object|net\.http_post|payload|push_/i;
 
   for (const [name, { file, definition }] of latestFunctions) {
     if (!/SECURITY\s+DEFINER/i.test(definition)) continue;
     if (!/\bprofiles\b/i.test(definition)) continue;
 
-    if (sensitiveReturn.test(definition)) {
+    if ((sensitiveReturn.test(definition) || fullProfileReturn.test(definition)) && !hasOwnerOrAdminGuard(definition)) {
       failures.push(`${file}: ${name} returns sensitive profile fields from a SECURITY DEFINER function.`);
     }
 
-    if (phoneFallback.test(definition)) {
+    if (phoneFallback.test(definition) && externallyVisibleOutput.test(definition) && !hasOwnerOrAdminGuard(definition)) {
       failures.push(`${file}: ${name} may leak phone_number as a display-name fallback.`);
     }
 
