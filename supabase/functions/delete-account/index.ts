@@ -40,6 +40,11 @@ serve(async (req) => {
     const userId = user.id;
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
+    const [{ data: securityEmail }, { data: profileBeforeDelete }] = await Promise.all([
+      admin.rpc("get_user_security_email", { _user_id: userId }),
+      admin.from("profiles").select("display_name, first_name").eq("id", userId).maybeSingle(),
+    ]);
+
     // 1. Delete ElevenLabs voices (own + contact)
     const { data: ownVoices } = await admin
       .from("voice_profiles")
@@ -134,6 +139,20 @@ serve(async (req) => {
 
     // 5. Delete auth user
     await admin.auth.admin.deleteUser(userId);
+
+    if (securityEmail) {
+      await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "account-deleted",
+          recipientEmail: securityEmail,
+          idempotencyKey: `account-deleted-${userId}`,
+          templateData: {
+            name: profileBeforeDelete?.first_name || profileBeforeDelete?.display_name || undefined,
+            deletedAt: new Date().toISOString(),
+          },
+        },
+      }).catch((mailError) => console.warn("account-deleted email failed", mailError));
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
