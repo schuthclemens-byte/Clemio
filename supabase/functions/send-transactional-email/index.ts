@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
   // Resolve effective recipient: template-level `to` takes precedence over
   // the caller-provided recipientEmail. This allows notification templates
   // to always send to a fixed address (e.g., site owner from env var).
-  const effectiveRecipient = template.to || recipientEmail
+  let effectiveRecipient = template.to || recipientEmail
 
   if (!effectiveRecipient) {
     return new Response(
@@ -128,8 +128,6 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get('Authorization') || ''
   const bearerToken = authHeader.replace(/^Bearer\s+/i, '')
   const isServiceRoleCall = bearerToken === supabaseServiceKey
-
-  let effectiveRecipient = template.to || recipientEmail
 
   if (!isServiceRoleCall) {
     if (templateName !== 'password-changed') {
