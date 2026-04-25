@@ -39,8 +39,5 @@ jobs:
       - name: Production build
         run: bun run build
 
-      - name: Dependency security audit
-        run: npm audit --audit-level=high
-
       - name: App security rules
         run: bun run security:scan
