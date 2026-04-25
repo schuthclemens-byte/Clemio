@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
   // Resolve effective recipient: template-level `to` takes precedence over
   // the caller-provided recipientEmail. This allows notification templates
   // to always send to a fixed address (e.g., site owner from env var).
-  const effectiveRecipient = template.to || recipientEmail
+  let effectiveRecipient = template.to || recipientEmail
 
   if (!effectiveRecipient) {
     return new Response(
@@ -124,6 +124,43 @@ Deno.serve(async (req) => {
 
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  const authHeader = req.headers.get('Authorization') || ''
+  const bearerToken = authHeader.replace(/^Bearer\s+/i, '')
+  const isServiceRoleCall = bearerToken === supabaseServiceKey
+
+  if (!isServiceRoleCall) {
+    if (templateName !== 'password-changed') {
+      return new Response(JSON.stringify({ error: 'Not allowed' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY') || '', {
+      global: { headers: { Authorization: authHeader } },
+    })
+    const { data: { user }, error: userError } = await userClient.auth.getUser()
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const { data: securityEmail } = await supabase.rpc('get_user_security_email', { _user_id: user.id })
+    if (!securityEmail) {
+      return new Response(JSON.stringify({ success: true, skipped: 'no_security_email' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    effectiveRecipient = securityEmail
+    templateData = {
+      ...templateData,
+      changedAt: templateData.changedAt || new Date().toISOString(),
+    }
+  }
 
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase

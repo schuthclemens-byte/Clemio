@@ -55,7 +55,7 @@ const PremiumActivatedEmail = ({ name, plan, premiumUntil }: Props) => (
           <hr style={s.divider} />
           <Text style={s.textMuted}>
             Du kannst dein Abonnement jederzeit in den Einstellungen verwalten. Bei Fragen melde dich gerne
-            unter clemensschuth@outlook.de.
+            unter support@clemio.app.
           </Text>
         </Section>
         <Text style={s.footer}>

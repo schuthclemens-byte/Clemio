@@ -245,6 +245,24 @@ serve(async (req) => {
       voice_name: voiceName,
     }, { onConflict: "user_id" });
 
+    const [{ data: securityEmail }, { data: profile }] = await Promise.all([
+      adminClient.rpc("get_user_security_email", { _user_id: user.id }),
+      adminClient.from("profiles").select("display_name, first_name").eq("id", user.id).maybeSingle(),
+    ]);
+
+    if (securityEmail) {
+      await adminClient.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "voice-clone-created",
+          recipientEmail: securityEmail,
+          idempotencyKey: `voice-clone-created-${user.id}-${voice_id}`,
+          templateData: {
+            name: profile?.first_name || profile?.display_name || undefined,
+          },
+        },
+      }).catch((mailError) => console.warn("voice-clone-created email failed", mailError));
+    }
+
     return new Response(JSON.stringify({ ok: true, success: true, voice_id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

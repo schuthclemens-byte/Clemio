@@ -39,8 +39,8 @@ const PasswordChangedEmail = ({ name, changedAt }: Props) => (
             eingedrungen. Setze sofort ein neues Passwort und kontaktiere uns:
           </Text>
           <Text style={s.text}>
-            👉 <a href="mailto:clemensschuth@outlook.de" style={{ color: 'hsl(18, 90%, 55%)', fontWeight: 600 }}>
-              clemensschuth@outlook.de
+            👉 <a href="mailto:support@clemio.app" style={{ color: 'hsl(18, 90%, 55%)', fontWeight: 600 }}>
+              support@clemio.app
             </a>
           </Text>
           <hr style={s.divider} />

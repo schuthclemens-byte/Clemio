@@ -13,6 +13,7 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Mail,
 } from "lucide-react";
 import InlineVoiceRecorder from "@/components/voice/InlineVoiceRecorder";
 import { useI18n } from "@/contexts/I18nContext";
@@ -44,6 +45,7 @@ const ProfilePage = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [securityEmail, setSecurityEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -62,7 +64,7 @@ const ProfilePage = () => {
       const [{ data }, { data: secretData }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("display_name, phone_number, avatar_url, language, first_name, last_name")
+          .select("display_name, phone_number, avatar_url, language, first_name, last_name, security_email")
           .eq("id", user.id)
           .maybeSingle(),
         supabase
@@ -83,6 +85,7 @@ const ProfilePage = () => {
         setFirstName(derivedName.firstName);
         setLastName(derivedName.lastName);
         setPhoneNumber(data.phone_number || "");
+        setSecurityEmail((data as any).security_email || "");
         setAvatarUrl(data.avatar_url);
       }
       if (secretData) {
@@ -141,6 +144,25 @@ const ProfilePage = () => {
   const updateLastName = (val: string) => {
     setLastName(val);
     autoSaveName(firstName, val);
+  };
+
+  const updateSecurityEmail = async () => {
+    if (!user) return;
+    const email = securityEmail.trim().toLowerCase();
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      toast.error(locale === "de" ? "Bitte gib eine gültige E-Mail ein" : "Please enter a valid email");
+      return;
+    }
+    const { error } = await supabase
+      .from("profiles")
+      .update({ security_email: email || null } as any)
+      .eq("id", user.id);
+    if (error) {
+      toast.error(locale === "de" ? "E-Mail konnte nicht gespeichert werden" : "Email could not be saved");
+      return;
+    }
+    setSecurityEmail(email);
+    toast.success(locale === "de" ? "Sicherheits-E-Mail gespeichert" : "Security email saved");
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -406,6 +428,47 @@ const ProfilePage = () => {
               placeholder={locale === "de" ? "Nachname (optional)" : "Last name (optional)"}
               className="w-full h-12 rounded-2xl bg-card px-4 text-base shadow-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
             />
+          </div>
+        </section>
+
+        <section className="animate-reveal-up" style={{ animationDelay: "75ms" }}>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block px-1">
+            {locale === "de" ? "Sicherheits-E-Mail" : "Security email"}
+          </label>
+          <div className="bg-card rounded-2xl p-4 shadow-sm border border-border space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[0.938rem]">
+                  {locale === "de" ? "Echte E-Mail für wichtige Hinweise" : "Real email for important alerts"}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                  {locale === "de"
+                    ? "Für Passwort-, Account-, Premium- und Stimmprofil-Hinweise. Optional."
+                    : "For password, account, premium and voice profile alerts. Optional."}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={securityEmail}
+                onChange={(e) => setSecurityEmail(e.target.value)}
+                onBlur={updateSecurityEmail}
+                placeholder="name@example.com"
+                className="flex-1 h-11 rounded-xl bg-background px-3 text-sm border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                autoComplete="email"
+              />
+              <button
+                type="button"
+                onClick={updateSecurityEmail}
+                className="h-11 px-4 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary/15 transition-colors"
+              >
+                {locale === "de" ? "Speichern" : "Save"}
+              </button>
+            </div>
           </div>
         </section>
 
