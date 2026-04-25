@@ -91,6 +91,7 @@ export const useSubscription = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
           },
+          body: force ? JSON.stringify({ notifyPremium: true }) : undefined,
         }
       );
       
