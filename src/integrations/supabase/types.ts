@@ -599,6 +599,7 @@ export type Database = {
           id: string
           language: string | null
           last_name: string | null
+          phone_normalized: string | null
           phone_number: string
           push_preview_enabled: boolean
           security_email: string | null
@@ -613,6 +614,7 @@ export type Database = {
           id: string
           language?: string | null
           last_name?: string | null
+          phone_normalized?: string | null
           phone_number: string
           push_preview_enabled?: boolean
           security_email?: string | null
@@ -627,6 +629,7 @@ export type Database = {
           id?: string
           language?: string | null
           last_name?: string | null
+          phone_normalized?: string | null
           phone_number?: string
           push_preview_enabled?: boolean
           security_email?: string | null
@@ -988,6 +991,7 @@ export type Database = {
           id: string
           language: string | null
           last_name: string | null
+          phone_normalized: string | null
           phone_number: string
           push_preview_enabled: boolean
           security_email: string | null
@@ -1045,6 +1049,14 @@ export type Database = {
         Args: { _conversation_id: string }
         Returns: undefined
       }
+      match_contacts_by_phone: {
+        Args: { _phones: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          user_id: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1054,6 +1066,7 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_contact_phone: { Args: { _phone: string }; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
