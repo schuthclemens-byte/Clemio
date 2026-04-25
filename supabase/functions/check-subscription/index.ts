@@ -26,6 +26,12 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    let notifyPremium = false;
+    try {
+      const body = await req.clone().json();
+      notifyPremium = body?.notifyPremium === true;
+    } catch { /* optional body */ }
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
@@ -88,7 +94,7 @@ serve(async (req) => {
         supabaseClient.from("profiles").select("display_name, first_name").eq("id", userId).maybeSingle(),
       ]);
 
-      if (securityEmail) {
+      if (notifyPremium && securityEmail) {
         await supabaseClient.functions.invoke("send-transactional-email", {
           body: {
             templateName: subscription.cancel_at_period_end ? "premium-cancelled" : "premium-activated",
