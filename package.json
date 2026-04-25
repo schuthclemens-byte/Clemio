@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint:ci": "eslint . --quiet",
+    "security:scan": "node scripts/security-scan.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
