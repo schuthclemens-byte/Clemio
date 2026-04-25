@@ -1,6 +1,10 @@
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
 const connectionString = process.env.RLS_DATABASE_URL || process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+const scriptPath = fileURLToPath(import.meta.url).replace(`${process.cwd()}/`, "");
 
 const query = `
 select coalesce(json_agg(row_to_json(p) order by tablename, policyname), '[]'::json)
@@ -17,23 +21,6 @@ from (
   where schemaname = 'public'
 ) p;
 `;
-
-const psqlArgs = connectionString ? [connectionString, "-At", "-c", query] : ["-At", "-c", query];
-const result = spawnSync("psql", psqlArgs, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-
-if (result.status !== 0) {
-  console.error("RLS policy check failed: database connection unavailable or query failed.");
-  console.error("Set RLS_DATABASE_URL as a GitHub secret, or run with PGHOST/PGUSER/PGDATABASE available.");
-  if (result.stderr) console.error(result.stderr.trim());
-  process.exit(1);
-}
-
-const policies = JSON.parse(result.stdout.trim() || "[]");
-const byTable = new Map();
-for (const policy of policies) {
-  if (!byTable.has(policy.tablename)) byTable.set(policy.tablename, []);
-  byTable.get(policy.tablename).push(policy);
-}
 
 const matrix = {
   contact_submissions: {
@@ -160,6 +147,10 @@ const matrix = {
   },
 };
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function normalize(value) {
   return String(value || "")
     .replace(/\s+/g, " ")
@@ -178,28 +169,108 @@ function includesRole(actual, expectedRole) {
   return String(actual || "").includes(expectedRole);
 }
 
+function annotationEscape(value) {
+  return String(value)
+    .replace(/%/g, "%25")
+    .replace(/\r/g, "%0D")
+    .replace(/\n/g, "%0A")
+    .replace(/:/g, "%3A")
+    .replace(/,/g, "%2C");
+}
+
+function findLine(content, matcher) {
+  const lines = content.split("\n");
+  const index = lines.findIndex((line) => matcher.test(line));
+  return index >= 0 ? index + 1 : 1;
+}
+
+function getMatrixLocation(table) {
+  const content = readFileSync(scriptPath, "utf8");
+  return {
+    file: scriptPath,
+    line: findLine(content, new RegExp(`^\\s*${escapeRegExp(table)}\\s*:`)),
+  };
+}
+
+function getPolicyLocations() {
+  const locations = new Map();
+  const dir = "supabase/migrations";
+  if (!existsSync(dir)) return locations;
+
+  for (const file of readdirSync(dir).filter((name) => name.endsWith(".sql")).sort()) {
+    const filePath = join(dir, file);
+    const content = readFileSync(filePath, "utf8");
+    const policyRegex = /CREATE\s+POLICY\s+(?:"([^"]+)"|([^\s]+))[\s\S]*?ON\s+public\.([a-zA-Z0-9_]+)/gi;
+
+    for (const match of content.matchAll(policyRegex)) {
+      const policyname = match[1] || match[2];
+      const table = match[3];
+      const before = content.slice(0, match.index);
+      locations.set(`${table}:${policyname}`, {
+        file: filePath,
+        line: before.split("\n").length,
+      });
+    }
+  }
+
+  return locations;
+}
+
+const psqlArgs = connectionString ? [connectionString, "-At", "-c", query] : ["-At", "-c", query];
+const result = spawnSync("psql", psqlArgs, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+
+if (result.status !== 0) {
+  const location = getMatrixLocation("contact_submissions");
+  const message = "RLS policy check failed: database connection unavailable or query failed. Set RLS_DATABASE_URL as a GitHub secret, or run with PGHOST/PGUSER/PGDATABASE available.";
+  console.error(`::error file=${location.file},line=${location.line},title=RLS database connection::${annotationEscape(message)}`);
+  if (result.stderr) console.error(result.stderr.trim());
+  process.exit(1);
+}
+
+const policies = JSON.parse(result.stdout.trim() || "[]");
+const byTable = new Map();
+for (const policy of policies) {
+  if (!byTable.has(policy.tablename)) byTable.set(policy.tablename, []);
+  byTable.get(policy.tablename).push(policy);
+}
+
+const policyLocations = getPolicyLocations();
 const failures = [];
+
+function policyLocation(policy) {
+  return policyLocations.get(`${policy.tablename}:${policy.policyname}`) || getMatrixLocation(policy.tablename);
+}
+
+function addFailure({ table, cmd, policy, message }) {
+  const location = policy ? policyLocation(policy) : getMatrixLocation(table);
+  failures.push({
+    file: location.file,
+    line: location.line,
+    title: `RLS ${table}${cmd ? ` ${cmd}` : ""}`,
+    message: policy ? `${message} Policy: ${policy.policyname}` : message,
+  });
+}
 
 for (const [table, expectation] of Object.entries(matrix)) {
   const tablePolicies = byTable.get(table) || [];
   if (tablePolicies.length === 0) {
-    failures.push(`${table}: no RLS policies found`);
+    addFailure({ table, message: `${table}: no RLS policies found` });
     continue;
   }
 
   for (const deniedCommand of expectation.denyCommands || []) {
     const denied = tablePolicies.filter((policy) => policy.cmd === deniedCommand);
-    if (denied.length > 0) {
-      failures.push(`${table}: ${deniedCommand} policy exists but matrix denies it (${denied.map((p) => p.policyname).join(", ")})`);
+    for (const policy of denied) {
+      addFailure({ table, cmd: deniedCommand, policy, message: `${table}: ${deniedCommand} policy exists but matrix denies it.` });
     }
   }
 
   for (const policy of tablePolicies) {
     if (!expectation.allowCommands.includes(policy.cmd)) {
-      failures.push(`${table}: unexpected ${policy.cmd} policy '${policy.policyname}'`);
+      addFailure({ table, cmd: policy.cmd, policy, message: `${table}: unexpected ${policy.cmd} policy.` });
     }
     if (policy.roles.includes("anon") && table !== "app_settings") {
-      failures.push(`${table}: anon role is not allowed by matrix in '${policy.policyname}'`);
+      addFailure({ table, cmd: policy.cmd, policy, message: `${table}: anon role is not allowed by matrix.` });
     }
   }
 
@@ -214,13 +285,24 @@ for (const [table, expectation] of Object.entries(matrix)) {
     );
 
     if (!match) {
-      failures.push(`${table}: missing required ${required.cmd} policy for ${required.roles}`);
+      const expectedParts = [
+        `role=${required.roles}`,
+        required.qual ? `using includes "${required.qual}"` : null,
+        required.qual_also ? `using also includes "${required.qual_also}"` : null,
+        required.with_check ? `check includes "${required.with_check}"` : null,
+        required.with_check_also ? `check also includes "${required.with_check_also}"` : null,
+      ].filter(Boolean).join("; ");
+      addFailure({ table, cmd: required.cmd, message: `${table}: missing required ${required.cmd} policy (${expectedParts}).` });
     }
   }
 }
 
 if (failures.length > 0) {
-  console.error("RLS policy matrix check failed:\n" + failures.map((failure) => `- ${failure}`).join("\n"));
+  console.error(`RLS policy matrix check failed with ${failures.length} issue(s).`);
+  for (const failure of failures) {
+    console.error(`::error file=${failure.file},line=${failure.line},title=${annotationEscape(failure.title)}::${annotationEscape(failure.message)}`);
+    console.error(`- ${failure.file}:${failure.line} ${failure.message}`);
+  }
   process.exit(1);
 }
 
