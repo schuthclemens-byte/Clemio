@@ -188,22 +188,25 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex items-center gap-1.5 pt-1">
-                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
-                    disabled={chatLoading === `${r.id}-${r.reported_by}`}
-                    onClick={() => openPrivateChat(r.reported_by, r.id)}
-                  >
-                    {chatLoading === `${r.id}-${r.reported_by}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageSquare className="w-3 h-3" />}
-                    {tr("Reporter schreiben", "Message reporter")}
-                  </Button>
-                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
-                    disabled={chatLoading === `${r.id}-${r.reported_user_id}`}
-                    onClick={() => openPrivateChat(r.reported_user_id, r.id)}
-                  >
-                    {chatLoading === `${r.id}-${r.reported_user_id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageSquare className="w-3 h-3" />}
-                    {tr("Gemeldeten schreiben", "Message reported")}
-                  </Button>
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-2">
+                    <MessageSquare className="mt-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="flex-1 space-y-2">
+                      <Textarea
+                        value={notes[r.id] || ""}
+                        onChange={(event) => setNotes((current) => ({ ...current, [r.id]: event.target.value }))}
+                        placeholder={tr("Interne Admin-Notiz – bleibt nur im Adminbereich", "Internal admin note — stays in admin area")}
+                        className="min-h-[72px] resize-none bg-background/80 text-xs"
+                      />
+                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={savingNote === r.id} onClick={() => saveAdminNote(r.id)}>
+                        {savingNote === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                        {tr("Intern speichern", "Save internally")}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
                   {r.status === "open" && (
                     <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
                       onClick={() => updateReport(r.id, "reviewed")}
@@ -235,6 +238,7 @@ const AdminReports = ({ onBlockUser, onDeleteVoice }: AdminReportsProps) => {
                   >
                     <Trash2 className="w-3 h-3" /> {tr("Löschen", "Delete")}
                   </Button>
+                  </div>
                 </div>
               </div>
             );
