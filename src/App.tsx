@@ -24,6 +24,7 @@ import { useNativePush } from "@/hooks/useNativePush";
 import Index from "./pages/Index";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
+const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
 const ChatListPage = lazy(() => import("./pages/ChatListPage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
@@ -104,6 +105,7 @@ const App = () => (
                             <Route path="/onboarding" element={<OnboardingPage />} />
                             <Route path="/voice-setup" element={<ProtectedRoute><VoiceOnboardingPage /></ProtectedRoute>} />
                             <Route path="/login" element={<LoginPage />} />
+                            <Route path="/auth/callback" element={<AuthCallbackPage />} />
                             <Route path="/reset-password" element={<ResetPasswordPage />} />
                             <Route path="/chats" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                             <Route path="/chat/:id" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
