@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import PasswordRequirements, { isPasswordStrong } from "@/components/auth/PasswordRequirements";
 import { toast } from "sonner";
 
@@ -12,7 +13,7 @@ const ResetPasswordPage = () => {
   const [success, setSuccess] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
   const navigate = useNavigate();
-  const { updatePassword } = useAuth();
+  const { updatePassword, user } = useAuth();
 
   useEffect(() => {
     // Check for recovery token in URL hash
@@ -40,6 +41,19 @@ const ResetPasswordPage = () => {
     if (error) {
       toast.error("Fehler beim Zurücksetzen: " + error);
     } else {
+      if (user) {
+        const { data: securityEmail } = await supabase.rpc("get_user_security_email" as any, { _user_id: user.id } as any);
+        if (securityEmail) {
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "password-changed",
+              recipientEmail: securityEmail,
+              idempotencyKey: `password-changed-${user.id}-${Date.now()}`,
+              templateData: { changedAt: new Date().toISOString() },
+            },
+          });
+        }
+      }
       setSuccess(true);
       toast.success("Passwort erfolgreich geändert!");
       setTimeout(() => navigate("/chats"), 2000);
