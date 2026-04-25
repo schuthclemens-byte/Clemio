@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint:ci": "eslint . --quiet",
-    "security:scan": "node scripts/security-scan.mjs"
+    "security:scan": "node scripts/security-scan.mjs",
+    "security:rls": "node scripts/rls-policy-check.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
