@@ -6,6 +6,7 @@ import { useI18n } from "@/contexts/I18nContext";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { toast } from "sonner";
 import VoiceCloneUpload from "@/components/voice/VoiceCloneUpload";
+import VoiceConsentManager from "@/components/voice/VoiceConsentManager";
 
 interface VoiceProfile {
   id: string;
@@ -175,8 +176,8 @@ const VoiceRecordingsPage = () => {
                     )}
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {tr(
-                        "Deine Kontakte können Nachrichten in deiner Stimme hören. Du kannst die Nutzung jederzeit durch Löschen beenden.",
-                        "Your contacts can hear messages in your voice. You can stop use at any time by deleting it."
+                        "Kontakte hören deine echte KI-Stimme nur mit deiner aktiven Freigabe. Du kannst Freigaben widerrufen oder alles löschen.",
+                        "Contacts can only hear your real AI voice with your active permission. You can revoke permissions or delete everything."
                       )}
                     </p>
                   </div>
@@ -189,13 +190,19 @@ const VoiceRecordingsPage = () => {
                 </div>
               </div>
             </section>
+            <section className="animate-reveal-up" style={{ animationDelay: "60ms" }}>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+                {tr("Stimmfreigaben", "Voice permissions")}
+              </p>
+              <VoiceConsentManager />
+            </section>
             <section className="animate-reveal-up" style={{ animationDelay: "80ms" }}>
               <div className="flex items-center gap-2 px-1 py-2">
                 <Shield className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
                 <p className="text-[0.688rem] text-muted-foreground/80">
                   {tr(
-                    "Beim Löschen entfernen wir dein gespeichertes Stimmprofil inklusive ElevenLabs-Voice-ID und Stimmaufnahme.",
-                    "When deleted, we remove your stored voice profile including the ElevenLabs voice ID and voice recording."
+                    "Beim Löschen entfernen wir dein gespeichertes Stimmprofil, alle aktiven Freigaben, die ElevenLabs-Voice-ID und deine Stimmaufnahme.",
+                    "When deleted, we remove your stored voice profile, all active permissions, the ElevenLabs voice ID, and your voice recording."
                   )}
                 </p>
               </div>

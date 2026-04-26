@@ -70,6 +70,11 @@ serve(async (req) => {
       .delete()
       .eq("user_id", user.id);
 
+    await adminClient
+      .from("voice_consents")
+      .delete()
+      .eq("voice_owner_id", user.id);
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
