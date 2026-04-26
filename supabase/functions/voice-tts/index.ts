@@ -7,6 +7,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const DEFAULT_VOICE_IDS = new Set([
+  "CwhRBWXzGAHq8TQ4Fs17", "EXAVITQu4vr4xnSDxMaL", "FGY2WhTYpPnrIDTdsKH5",
+  "IKne3meq5aSn9XLyUdCD", "JBFqnCBsd6RMkjVDRZzb", "N2lVS1w4EtoT3dr4eOWO",
+  "SAz9YHcvj6GT2YYXdXww", "TX3LPaxmHKxFdv7VOQHJ", "Xb7hH8MSUJpSbSDYk0k2",
+  "XrExE9yKIg1WjnnlVkGX", "bIHbv24MWmeRgasZH58o", "cgSgspJ2msm6clMCkdW9",
+  "cjVigY5qzO86Huf0OWal", "iP95p4xoKVk53GoZ742B", "nPczCjzI2devNBz1zQrb",
+  "onwK4e9ZLuTAKqWW03F9", "pFZP5JQG7iQjIQuC4Bku", "pqHfZKP75CvOlQylNhV4",
+]);
+
+const safeDefaultVoice = (voiceId?: string) =>
+  voiceId && DEFAULT_VOICE_IDS.has(voiceId) ? voiceId : "onwK4e9ZLuTAKqWW03F9";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -85,16 +97,31 @@ serve(async (req) => {
     };
     const languageCode = langMap[lang] || "de";
 
-    // Use sender's own voice profile, fall back to default voice
     const { data: voiceProfile } = await adminClient
       .from("voice_profiles")
       .select("elevenlabs_voice_id")
       .eq("user_id", senderId)
       .maybeSingle();
 
-    // Use user-selected default voice, or fallback to Daniel
-    const fallbackVoice = defaultVoiceId || "onwK4e9ZLuTAKqWW03F9";
-    const voiceId = voiceProfile?.elevenlabs_voice_id || fallbackVoice;
+    const fallbackVoice = safeDefaultVoice(defaultVoiceId);
+    let voiceId = fallbackVoice;
+
+    if (voiceProfile?.elevenlabs_voice_id) {
+      if (user.id === senderId) {
+        voiceId = voiceProfile.elevenlabs_voice_id;
+      } else {
+        const { count } = await adminClient
+          .from("voice_consents")
+          .select("id", { count: "exact", head: true })
+          .eq("voice_owner_id", senderId)
+          .eq("granted_to_user_id", user.id)
+          .eq("status", "granted");
+
+        if (count && count > 0) {
+          voiceId = voiceProfile.elevenlabs_voice_id;
+        }
+      }
+    }
 
     // Generate TTS
     const ttsResponse = await fetch(
