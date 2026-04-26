@@ -130,6 +130,14 @@ const VoiceConsentManager = () => {
               </button>
             </div>
           )}
+          {req.status === "granted" && (
+            <button
+              onClick={() => handleConsent(req.id, "denied")}
+              className="h-9 px-3 rounded-xl bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors active:scale-95 shrink-0"
+            >
+              {tr("Widerrufen", "Revoke")}
+            </button>
+          )}
         </div>
       ))}
     </div>
