@@ -23,6 +23,7 @@ interface UseWebRTCOptions {
   userId: string;
   onRemoteStream?: (stream: MediaStream) => void;
   onCallError?: (error: CallError) => void;
+  onRemoteCaption?: (caption: { text: string; sourceLang?: string; from: string }) => void;
 }
 
 /* ───────── ICE Servers ───────── */
@@ -117,6 +118,7 @@ export function useWebRTC({
   userId,
   onRemoteStream,
   onCallError,
+  onRemoteCaption,
 }: UseWebRTCOptions) {
   const [callState, setCallState] = useState<CallState>("idle");
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -141,6 +143,8 @@ export function useWebRTC({
   onRemoteStreamRef.current = onRemoteStream;
   const onCallErrorRef = useRef(onCallError);
   onCallErrorRef.current = onCallError;
+  const onRemoteCaptionRef = useRef(onRemoteCaption);
+  onRemoteCaptionRef.current = onRemoteCaption;
 
   /* ── Helpers ── */
 
@@ -452,6 +456,14 @@ export function useWebRTC({
           console.log("[WebRTC] Remote hang-up");
           endCallInternal();
         })
+        .on("broadcast", { event: "call-caption" }, ({ payload }) => {
+          if (payload.from === userId || typeof payload.text !== "string") return;
+          onRemoteCaptionRef.current?.({
+            text: payload.text,
+            sourceLang: payload.sourceLang,
+            from: payload.from,
+          });
+        })
         .subscribe();
 
       channelRef.current = channel;
@@ -654,6 +666,16 @@ export function useWebRTC({
     }
   }, [isVideoEnabled]);
 
+  const sendCallCaption = useCallback((text: string, sourceLang = "de") => {
+    const trimmed = text.trim();
+    if (!trimmed || !channelRef.current) return;
+    channelRef.current.send({
+      type: "broadcast",
+      event: "call-caption",
+      payload: { from: userId, text: trimmed, sourceLang },
+    });
+  }, [userId]);
+
   /* ── Cleanup on unmount ── */
 
   useEffect(() => {
@@ -678,5 +700,6 @@ export function useWebRTC({
     toggleVideo,
     toggleAudio,
     flipCamera,
+    sendCallCaption,
   };
 }

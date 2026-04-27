@@ -19,12 +19,29 @@ import { cn } from "@/lib/utils";
 import { useWebRTC, CallError } from "@/hooks/useWebRTC";
 import { useLiveCaptions } from "@/hooks/useLiveCaptions";
 import { useCallCaptionsFeature } from "@/hooks/useCallCaptionsFeature";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCallContext } from "@/contexts/CallContext";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 import { motion, AnimatePresence } from "framer-motion";
+
+const CAPTION_LANGUAGES = [
+  { value: "original", label: "Original" },
+  { value: "de", label: "Deutsch" },
+  { value: "en", label: "English" },
+  { value: "tr", label: "Türkçe" },
+  { value: "ar", label: "العربية" },
+  { value: "fr", label: "Français" },
+  { value: "es", label: "Español" },
+];
 
 const CallPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -40,6 +57,10 @@ const CallPage = () => {
   const [callError, setCallError] = useState<CallError | null>(null);
   const [callPhase, setCallPhase] = useState<"init" | "calling" | "accepted" | "ended" | "error">("init");
   const [endReason, setEndReason] = useState<string | null>(null);
+  const [captionLanguage, setCaptionLanguage] = useState("original");
+  const [remoteCaption, setRemoteCaption] = useState("");
+  const [translatedCaption, setTranslatedCaption] = useState("");
+  const [isTranslatingCaption, setIsTranslatingCaption] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -57,6 +78,11 @@ const CallPage = () => {
     setCallPhase("error");
   }, []);
 
+  const handleRemoteCaption = useCallback((next: { text: string }) => {
+    setRemoteCaption(next.text);
+    setTranslatedCaption("");
+  }, []);
+
   const {
     callState,
     isVideoEnabled,
@@ -69,13 +95,15 @@ const CallPage = () => {
     toggleVideo,
     toggleAudio,
     flipCamera,
+    sendCallCaption,
   } = useWebRTC({
     conversationId: conversationId || "",
     userId: user?.id || "",
     onCallError: handleCallError,
+    onRemoteCaption: handleRemoteCaption,
   });
 
-  const { enabled: callCaptionsFeatureEnabled } = useCallCaptionsFeature();
+  const { enabled: callCaptionsFeatureEnabled, translationEnabled } = useCallCaptionsFeature();
   const { isEnabled: captionsEnabled, caption, toggleCaptions, stopCaptions } = useLiveCaptions();
 
   useEffect(() => {
@@ -83,6 +111,42 @@ const CallPage = () => {
       stopCaptions();
     }
   }, [callCaptionsFeatureEnabled, captionsEnabled, stopCaptions]);
+
+  useEffect(() => {
+    if (!callCaptionsFeatureEnabled || !captionsEnabled || !caption.trim()) return;
+    sendCallCaption(caption, "de");
+  }, [callCaptionsFeatureEnabled, captionsEnabled, caption, sendCallCaption]);
+
+  useEffect(() => {
+    if (!remoteCaption || captionLanguage === "original" || !translationEnabled) {
+      setTranslatedCaption("");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setIsTranslatingCaption(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("translate", {
+          body: { text: remoteCaption, targetLang: captionLanguage },
+        });
+        if (!controller.signal.aborted && !error) {
+          setTranslatedCaption(data?.translated || "");
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("[CallPage] Caption translation failed:", error);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsTranslatingCaption(false);
+      }
+    }, 450);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [remoteCaption, captionLanguage, translationEnabled]);
 
   // Load chat name
   useEffect(() => {
@@ -359,6 +423,9 @@ const CallPage = () => {
   })();
 
   const showRemoteVideo = remoteStream && remoteStream.getVideoTracks().length > 0 && callState === "connected";
+  const visibleCaption = captionLanguage === "original" || !translationEnabled
+    ? remoteCaption
+    : translatedCaption || (isTranslatingCaption ? "…" : remoteCaption);
 
   return (
     <div className="fixed inset-0 z-50 bg-foreground/95 flex flex-col">
@@ -468,7 +535,7 @@ const CallPage = () => {
         )}
 
         <AnimatePresence>
-          {callCaptionsFeatureEnabled && captionsEnabled && caption && (
+          {callCaptionsFeatureEnabled && captionsEnabled && visibleCaption && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -476,7 +543,7 @@ const CallPage = () => {
               className="absolute bottom-20 left-4 right-4 text-center"
             >
               <p className="inline-block bg-foreground/70 backdrop-blur-md text-primary-foreground text-lg font-medium px-5 py-3 rounded-2xl leading-relaxed max-w-lg mx-auto">
-                {caption}
+                {visibleCaption}
               </p>
             </motion.div>
           )}
@@ -521,6 +588,23 @@ const CallPage = () => {
             />
           )}
         </div>
+
+        {callCaptionsFeatureEnabled && captionsEnabled && translationEnabled && (
+          <div className="mt-3 mx-auto w-full max-w-xs">
+            <Select value={captionLanguage} onValueChange={setCaptionLanguage}>
+              <SelectTrigger className="h-9 rounded-full border-primary-foreground/10 bg-primary-foreground/10 text-primary-foreground">
+                <SelectValue placeholder="Untertitel" />
+              </SelectTrigger>
+              <SelectContent>
+                {CAPTION_LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center justify-center gap-4 mt-2">
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Hören</span>
