@@ -19,12 +19,29 @@ import { cn } from "@/lib/utils";
 import { useWebRTC, CallError } from "@/hooks/useWebRTC";
 import { useLiveCaptions } from "@/hooks/useLiveCaptions";
 import { useCallCaptionsFeature } from "@/hooks/useCallCaptionsFeature";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCallContext } from "@/contexts/CallContext";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAccessibleProfile } from "@/lib/accessibleProfiles";
 import { motion, AnimatePresence } from "framer-motion";
+
+const CAPTION_LANGUAGES = [
+  { value: "original", label: "Original" },
+  { value: "de", label: "Deutsch" },
+  { value: "en", label: "English" },
+  { value: "tr", label: "Türkçe" },
+  { value: "ar", label: "العربية" },
+  { value: "fr", label: "Français" },
+  { value: "es", label: "Español" },
+];
 
 const CallPage = () => {
   const { id: conversationId } = useParams<{ id: string }>();
