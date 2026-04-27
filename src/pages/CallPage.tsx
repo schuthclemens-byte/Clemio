@@ -423,6 +423,9 @@ const CallPage = () => {
   })();
 
   const showRemoteVideo = remoteStream && remoteStream.getVideoTracks().length > 0 && callState === "connected";
+  const visibleCaption = captionLanguage === "original" || !translationEnabled
+    ? remoteCaption
+    : translatedCaption || (isTranslatingCaption ? "…" : remoteCaption);
 
   return (
     <div className="fixed inset-0 z-50 bg-foreground/95 flex flex-col">
@@ -532,7 +535,7 @@ const CallPage = () => {
         )}
 
         <AnimatePresence>
-          {callCaptionsFeatureEnabled && captionsEnabled && caption && (
+          {callCaptionsFeatureEnabled && captionsEnabled && visibleCaption && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -540,7 +543,7 @@ const CallPage = () => {
               className="absolute bottom-20 left-4 right-4 text-center"
             >
               <p className="inline-block bg-foreground/70 backdrop-blur-md text-primary-foreground text-lg font-medium px-5 py-3 rounded-2xl leading-relaxed max-w-lg mx-auto">
-                {caption}
+                {visibleCaption}
               </p>
             </motion.div>
           )}
