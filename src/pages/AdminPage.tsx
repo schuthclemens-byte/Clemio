@@ -378,11 +378,16 @@ const AdminPage = () => {
                     Native App only
                   </Badge>
                 )}
+                {translationEnabled && (
+                  <Badge variant="outline" className="text-[0.6rem] px-1.5">
+                    {tr("Übersetzung", "Translation")}
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {tr(
-                  "Blendet Untertitel im Call erst ein, wenn du die native iOS/Android-Funktion freigibst.",
-                  "Shows call captions only after you release the native iOS/Android feature."
+                  "Blendet Untertitel und Übersetzung im Call erst ein, wenn du die native iOS/Android-Funktion freigibst.",
+                  "Shows call captions and translation only after you release the native iOS/Android feature."
                 )}
               </p>
             </div>
@@ -393,6 +398,21 @@ const AdminPage = () => {
                 disabled={callCaptionsLoading || callCaptionsSaving}
                 onCheckedChange={handleToggleCallCaptions}
                 aria-label={tr("Call-Untertitel umschalten", "Toggle call captions")}
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{tr("Live-Übersetzung", "Live translation")}</p>
+              <p className="text-xs text-muted-foreground">{tr("Nutzer können die Untertitel-Sprache im Call wählen.", "Users can choose the caption language in calls.")}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {callTranslationSaving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+              <Switch
+                checked={translationEnabled}
+                disabled={callCaptionsLoading || callTranslationSaving}
+                onCheckedChange={handleToggleCallTranslation}
+                aria-label={tr("Call-Übersetzung umschalten", "Toggle call translation")}
               />
             </div>
           </div>
