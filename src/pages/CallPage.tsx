@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useWebRTC, CallError } from "@/hooks/useWebRTC";
 import { useLiveCaptions } from "@/hooks/useLiveCaptions";
+import { useCallCaptionsFeature } from "@/hooks/useCallCaptionsFeature";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCallContext } from "@/contexts/CallContext";
 import { useHeadphoneDetection } from "@/hooks/useHeadphoneDetection";
@@ -74,7 +75,14 @@ const CallPage = () => {
     onCallError: handleCallError,
   });
 
-  const { isEnabled: captionsEnabled, caption, toggleCaptions } = useLiveCaptions();
+  const { enabled: callCaptionsFeatureEnabled } = useCallCaptionsFeature();
+  const { isEnabled: captionsEnabled, caption, toggleCaptions, stopCaptions } = useLiveCaptions();
+
+  useEffect(() => {
+    if (!callCaptionsFeatureEnabled && captionsEnabled) {
+      stopCaptions();
+    }
+  }, [callCaptionsFeatureEnabled, captionsEnabled, stopCaptions]);
 
   // Load chat name
   useEffect(() => {
@@ -460,7 +468,7 @@ const CallPage = () => {
         )}
 
         <AnimatePresence>
-          {captionsEnabled && caption && (
+          {callCaptionsFeatureEnabled && captionsEnabled && caption && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -503,13 +511,15 @@ const CallPage = () => {
             icon={isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
             label={isAudioEnabled ? "Stumm" : "Laut"}
           />
-          <ControlButton
-            onClick={toggleCaptions}
-            active={captionsEnabled}
-            activeColor="bg-accent"
-            icon={<Subtitles className="w-5 h-5" />}
-            label="Untertitel"
-          />
+          {callCaptionsFeatureEnabled && (
+            <ControlButton
+              onClick={toggleCaptions}
+              active={captionsEnabled}
+              activeColor="bg-accent"
+              icon={<Subtitles className="w-5 h-5" />}
+              label="Untertitel"
+            />
+          )}
         </div>
 
         <div className="flex items-center justify-center gap-4 mt-2">
@@ -517,7 +527,7 @@ const CallPage = () => {
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Video</span>
           <span className="w-16" />
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Mikro</span>
-          <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Text</span>
+          {callCaptionsFeatureEnabled && <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Text</span>}
         </div>
       </div>
     </div>
