@@ -589,6 +589,23 @@ const CallPage = () => {
           )}
         </div>
 
+        {callCaptionsFeatureEnabled && captionsEnabled && translationEnabled && (
+          <div className="mt-3 mx-auto w-full max-w-xs">
+            <Select value={captionLanguage} onValueChange={setCaptionLanguage}>
+              <SelectTrigger className="h-9 rounded-full border-primary-foreground/10 bg-primary-foreground/10 text-primary-foreground">
+                <SelectValue placeholder="Untertitel" />
+              </SelectTrigger>
+              <SelectContent>
+                {CAPTION_LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="flex items-center justify-center gap-4 mt-2">
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Hören</span>
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Video</span>
