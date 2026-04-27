@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { useWebRTC, CallError } from "@/hooks/useWebRTC";
 import { useLiveCaptions } from "@/hooks/useLiveCaptions";
 import { useCallCaptionsFeature } from "@/hooks/useCallCaptionsFeature";
+import { Capacitor } from "@capacitor/core";
 import {
   Select,
   SelectContent,
@@ -103,19 +104,20 @@ const CallPage = () => {
     onRemoteCaption: handleRemoteCaption,
   });
 
-  const { enabled: callCaptionsFeatureEnabled, translationEnabled } = useCallCaptionsFeature();
-  const { isEnabled: captionsEnabled, caption, toggleCaptions, stopCaptions } = useLiveCaptions();
+  const { enabled: callCaptionsFeatureEnabled, nativeOnly, translationEnabled } = useCallCaptionsFeature();
+  const { isEnabled: captionsEnabled, caption, toggleCaptions, stopCaptions, isSupported: captionsSupported } = useLiveCaptions();
+  const callCaptionsAvailable = callCaptionsFeatureEnabled && (!nativeOnly || Capacitor.isNativePlatform()) && captionsSupported;
 
   useEffect(() => {
-    if (!callCaptionsFeatureEnabled && captionsEnabled) {
+    if (!callCaptionsAvailable && captionsEnabled) {
       stopCaptions();
     }
-  }, [callCaptionsFeatureEnabled, captionsEnabled, stopCaptions]);
+  }, [callCaptionsAvailable, captionsEnabled, stopCaptions]);
 
   useEffect(() => {
-    if (!callCaptionsFeatureEnabled || !captionsEnabled || !caption.trim()) return;
+    if (!callCaptionsAvailable || !captionsEnabled || !caption.trim()) return;
     sendCallCaption(caption, "de");
-  }, [callCaptionsFeatureEnabled, captionsEnabled, caption, sendCallCaption]);
+  }, [callCaptionsAvailable, captionsEnabled, caption, sendCallCaption]);
 
   useEffect(() => {
     if (!remoteCaption || captionLanguage === "original" || !translationEnabled) {
@@ -535,7 +537,7 @@ const CallPage = () => {
         )}
 
         <AnimatePresence>
-          {callCaptionsFeatureEnabled && captionsEnabled && visibleCaption && (
+          {callCaptionsAvailable && captionsEnabled && visibleCaption && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -578,7 +580,7 @@ const CallPage = () => {
             icon={isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
             label={isAudioEnabled ? "Stumm" : "Laut"}
           />
-          {callCaptionsFeatureEnabled && (
+          {callCaptionsAvailable && (
             <ControlButton
               onClick={toggleCaptions}
               active={captionsEnabled}
@@ -589,7 +591,7 @@ const CallPage = () => {
           )}
         </div>
 
-        {callCaptionsFeatureEnabled && captionsEnabled && translationEnabled && (
+        {callCaptionsAvailable && captionsEnabled && translationEnabled && (
           <div className="mt-3 mx-auto w-full max-w-xs">
             <Select value={captionLanguage} onValueChange={setCaptionLanguage}>
               <SelectTrigger className="h-9 rounded-full border-primary-foreground/10 bg-primary-foreground/10 text-primary-foreground">
@@ -611,7 +613,7 @@ const CallPage = () => {
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Video</span>
           <span className="w-16" />
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Mikro</span>
-          {callCaptionsFeatureEnabled && <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Text</span>}
+          {callCaptionsAvailable && <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Text</span>}
         </div>
       </div>
     </div>

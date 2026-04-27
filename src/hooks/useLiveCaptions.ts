@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 
 interface UseLiveCaptionsReturn {
   isEnabled: boolean;
@@ -12,14 +13,72 @@ interface UseLiveCaptionsReturn {
 export function useLiveCaptions(): UseLiveCaptionsReturn {
   const [isEnabled, setIsEnabled] = useState(false);
   const [caption, setCaption] = useState("");
+  const [nativeAvailable, setNativeAvailable] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const nativeListeningRef = useRef(false);
+  const nativeListenersRef = useRef<PluginListenerHandle[]>([]);
 
-  const isSupported =
+  const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
+  const browserSupported =
     typeof window !== "undefined" &&
     ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
+  const isSupported = isNative ? nativeAvailable : browserSupported;
+
+  useEffect(() => {
+    if (!isNative) return;
+    let active = true;
+    import("@capacitor-community/speech-recognition")
+      .then(({ SpeechRecognition }) => SpeechRecognition.available())
+      .then(({ available }) => {
+        if (active) setNativeAvailable(Boolean(available));
+      })
+      .catch(() => {
+        if (active) setNativeAvailable(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isNative]);
+
   const startCaptions = useCallback((lang = "de-DE") => {
     if (!isSupported) return;
+
+    if (isNative) {
+      void (async () => {
+        const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
+        const permissions = await SpeechRecognition.checkPermissions();
+        if (permissions.speechRecognition !== "granted") {
+          const requested = await SpeechRecognition.requestPermissions();
+          if (requested.speechRecognition !== "granted") return;
+        }
+
+        await Promise.all(nativeListenersRef.current.map((listener) => listener.remove()));
+        nativeListenersRef.current = [];
+        nativeListeningRef.current = true;
+
+        const partialListener = await SpeechRecognition.addListener("partialResults", (data) => {
+          setCaption(data.matches?.[0] ?? "");
+        });
+        const stateListener = await SpeechRecognition.addListener("listeningState", async (data) => {
+          if (data.status === "stopped" && nativeListeningRef.current) {
+            try {
+              await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
+            } catch {}
+          }
+        });
+        nativeListenersRef.current = [partialListener, stateListener];
+
+        const result = await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
+        if (result.matches?.[0]) setCaption(result.matches[0]);
+        setIsEnabled(true);
+      })().catch(() => {
+        nativeListeningRef.current = false;
+        setIsEnabled(false);
+      });
+      return;
+    }
 
     const SpeechRecognitionCtor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -48,14 +107,36 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     recognition.start();
     recognitionRef.current = recognition;
     setIsEnabled(true);
-  }, [isSupported]);
+  }, [isNative, isSupported]);
 
   const stopCaptions = useCallback(() => {
+    nativeListeningRef.current = false;
+    if (isNative) {
+      void import("@capacitor-community/speech-recognition").then(async ({ SpeechRecognition }) => {
+        await SpeechRecognition.stop().catch(() => undefined);
+        await Promise.all(nativeListenersRef.current.map((listener) => listener.remove()));
+        nativeListenersRef.current = [];
+      });
+    }
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     setIsEnabled(false);
     setCaption("");
-  }, []);
+  }, [isNative]);
+
+  useEffect(() => {
+    return () => {
+      nativeListeningRef.current = false;
+      recognitionRef.current?.stop();
+      if (isNative) {
+        void import("@capacitor-community/speech-recognition").then(async ({ SpeechRecognition }) => {
+          await SpeechRecognition.stop().catch(() => undefined);
+          await Promise.all(nativeListenersRef.current.map((listener) => listener.remove()));
+          nativeListenersRef.current = [];
+        });
+      }
+    };
+  }, [isNative]);
 
   const toggleCaptions = useCallback(() => {
     if (isEnabled) {
