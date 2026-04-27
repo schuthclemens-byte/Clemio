@@ -77,9 +77,10 @@ const AdminPage = () => {
   const [activeTab, setActiveTab] = useState<"users" | "reports" | "analytics">("users");
   const [openReportsCount, setOpenReportsCount] = useState(0);
   const { comingSoon, loading: launchLoading } = useLaunchMode();
-  const { enabled: callCaptionsEnabled, nativeOnly, loading: callCaptionsLoading } = useCallCaptionsFeature();
+  const { enabled: callCaptionsEnabled, nativeOnly, translationEnabled, loading: callCaptionsLoading } = useCallCaptionsFeature();
   const [launchSaving, setLaunchSaving] = useState(false);
   const [callCaptionsSaving, setCallCaptionsSaving] = useState(false);
+  const [callTranslationSaving, setCallTranslationSaving] = useState(false);
 
   const handleToggleLaunchMode = async (next: boolean) => {
     setLaunchSaving(true);
@@ -118,6 +119,24 @@ const AdminPage = () => {
       console.error("[AdminPage] call captions update failed:", error.message);
     } else {
       toast.success(next ? tr("Call-Untertitel aktiviert", "Call captions enabled") : tr("Call-Untertitel deaktiviert", "Call captions disabled"));
+    }
+  };
+
+  const handleToggleCallTranslation = async (next: boolean) => {
+    setCallTranslationSaving(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({
+        key: "call_captions",
+        value: { enabled: callCaptionsEnabled, native_only: true, translation_enabled: next },
+        updated_by: user?.id ?? null,
+      });
+    setCallTranslationSaving(false);
+    if (error) {
+      toast.error(tr("Konnte Call-Übersetzung nicht ändern", "Could not change call translation"));
+      console.error("[AdminPage] call translation update failed:", error.message);
+    } else {
+      toast.success(next ? tr("Call-Übersetzung aktiviert", "Call translation enabled") : tr("Call-Übersetzung deaktiviert", "Call translation disabled"));
     }
   };
 
