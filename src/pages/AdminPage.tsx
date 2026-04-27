@@ -341,6 +341,42 @@ const AdminPage = () => {
             </div>
           </div>
         </div>
+
+        <div className="mt-3 rounded-2xl border border-border/50 bg-card p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className={cn("p-2 rounded-xl", callCaptionsEnabled ? "bg-primary/15" : "bg-muted") }>
+              <Subtitles className={cn("w-5 h-5", callCaptionsEnabled ? "text-primary" : "text-muted-foreground")} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm font-semibold">{tr("Call-Untertitel", "Call captions")}</h2>
+                <Badge className={callCaptionsEnabled ? "text-[0.6rem] px-1.5 bg-primary/20 text-primary border-primary/30" : "text-[0.6rem] px-1.5 bg-muted text-muted-foreground border-border"}>
+                  {callCaptionsEnabled ? tr("Aktiv", "Active") : tr("Aus", "Off")}
+                </Badge>
+                {nativeOnly && (
+                  <Badge variant="outline" className="text-[0.6rem] px-1.5">
+                    Native App only
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {tr(
+                  "Blendet Untertitel im Call erst ein, wenn du die native iOS/Android-Funktion freigibst.",
+                  "Shows call captions only after you release the native iOS/Android feature."
+                )}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {callCaptionsSaving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+              <Switch
+                checked={callCaptionsEnabled}
+                disabled={callCaptionsLoading || callCaptionsSaving}
+                onCheckedChange={handleToggleCallCaptions}
+                aria-label={tr("Call-Untertitel umschalten", "Toggle call captions")}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {activeTab === "reports" ? (
