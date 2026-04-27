@@ -110,7 +110,7 @@ const AdminPage = () => {
       .from("app_settings")
       .upsert({
         key: "call_captions",
-        value: { enabled: next, native_only: true, translation_enabled: true },
+        value: { enabled: next, native_only: nativeOnly, translation_enabled: translationEnabled },
         updated_by: user?.id ?? null,
       });
     setCallCaptionsSaving(false);
@@ -128,7 +128,7 @@ const AdminPage = () => {
       .from("app_settings")
       .upsert({
         key: "call_captions",
-        value: { enabled: callCaptionsEnabled, native_only: true, translation_enabled: next },
+        value: { enabled: callCaptionsEnabled, native_only: nativeOnly, translation_enabled: next },
         updated_by: user?.id ?? null,
       });
     setCallTranslationSaving(false);
