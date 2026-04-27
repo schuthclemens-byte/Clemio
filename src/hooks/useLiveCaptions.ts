@@ -124,6 +124,20 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     setCaption("");
   }, [isNative]);
 
+  useEffect(() => {
+    return () => {
+      nativeListeningRef.current = false;
+      recognitionRef.current?.stop();
+      if (isNative) {
+        void import("@capacitor-community/speech-recognition").then(async ({ SpeechRecognition }) => {
+          await SpeechRecognition.stop().catch(() => undefined);
+          await Promise.all(nativeListenersRef.current.map((listener) => listener.remove()));
+          nativeListenersRef.current = [];
+        });
+      }
+    };
+  }, [isNative]);
+
   const toggleCaptions = useCallback(() => {
     if (isEnabled) {
       stopCaptions();
