@@ -5,6 +5,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useLaunchMode } from "@/hooks/useLaunchMode";
+import { useCallCaptionsFeature } from "@/hooks/useCallCaptionsFeature";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,7 @@ import {
 import {
   ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
   Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff, Flag,
-  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar, Rocket,
+  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar, Rocket, Subtitles,
 } from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -75,7 +76,9 @@ const AdminPage = () => {
   const [activeTab, setActiveTab] = useState<"users" | "reports" | "analytics">("users");
   const [openReportsCount, setOpenReportsCount] = useState(0);
   const { comingSoon, loading: launchLoading } = useLaunchMode();
+  const { enabled: callCaptionsEnabled, nativeOnly, loading: callCaptionsLoading } = useCallCaptionsFeature();
   const [launchSaving, setLaunchSaving] = useState(false);
+  const [callCaptionsSaving, setCallCaptionsSaving] = useState(false);
 
   const handleToggleLaunchMode = async (next: boolean) => {
     setLaunchSaving(true);
@@ -96,6 +99,24 @@ const AdminPage = () => {
           ? tr("Coming Soon aktiv", "Coming Soon active")
           : tr("App ist live", "App is live")
       );
+    }
+  };
+
+  const handleToggleCallCaptions = async (next: boolean) => {
+    setCallCaptionsSaving(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({
+        key: "call_captions",
+        value: { enabled: next, native_only: true, translation_enabled: true },
+        updated_by: user?.id ?? null,
+      });
+    setCallCaptionsSaving(false);
+    if (error) {
+      toast.error(tr("Konnte Call-Untertitel nicht ändern", "Could not change call captions"));
+      console.error("[AdminPage] call captions update failed:", error.message);
+    } else {
+      toast.success(next ? tr("Call-Untertitel aktiviert", "Call captions enabled") : tr("Call-Untertitel deaktiviert", "Call captions disabled"));
     }
   };
 
