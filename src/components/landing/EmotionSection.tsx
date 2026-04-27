@@ -1,8 +1,9 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { Car, Headphones, Eye } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 
-const EmotionSection = () => {
+const EmotionSection = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useI18n();
 
   // 28 Bars für die "gesprochene" Wellenform
@@ -14,7 +15,7 @@ const EmotionSection = () => {
   });
 
   return (
-    <section className="relative px-6 py-32 sm:py-44 overflow-hidden">
+    <section ref={ref} className="relative px-6 py-32 sm:py-44 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[60vh] rounded-full opacity-25 blur-[120px]"
@@ -170,6 +171,8 @@ const EmotionSection = () => {
       </div>
     </section>
   );
-};
+});
+
+EmotionSection.displayName = "EmotionSection";
 
 export default EmotionSection;
