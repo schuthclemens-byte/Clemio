@@ -57,6 +57,10 @@ const CallPage = () => {
   const [callError, setCallError] = useState<CallError | null>(null);
   const [callPhase, setCallPhase] = useState<"init" | "calling" | "accepted" | "ended" | "error">("init");
   const [endReason, setEndReason] = useState<string | null>(null);
+  const [captionLanguage, setCaptionLanguage] = useState("original");
+  const [remoteCaption, setRemoteCaption] = useState("");
+  const [translatedCaption, setTranslatedCaption] = useState("");
+  const [isTranslatingCaption, setIsTranslatingCaption] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -72,6 +76,11 @@ const CallPage = () => {
   const handleCallError = useCallback((error: CallError) => {
     setCallError(error);
     setCallPhase("error");
+  }, []);
+
+  const handleRemoteCaption = useCallback((next: { text: string }) => {
+    setRemoteCaption(next.text);
+    setTranslatedCaption("");
   }, []);
 
   const {
@@ -90,9 +99,10 @@ const CallPage = () => {
     conversationId: conversationId || "",
     userId: user?.id || "",
     onCallError: handleCallError,
+    onRemoteCaption: handleRemoteCaption,
   });
 
-  const { enabled: callCaptionsFeatureEnabled } = useCallCaptionsFeature();
+  const { enabled: callCaptionsFeatureEnabled, translationEnabled } = useCallCaptionsFeature();
   const { isEnabled: captionsEnabled, caption, toggleCaptions, stopCaptions } = useLiveCaptions();
 
   useEffect(() => {
