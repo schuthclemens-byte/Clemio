@@ -1,10 +1,11 @@
+import { forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Clock, Trash2 } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
 import { useLaunchMode } from "@/hooks/useLaunchMode";
 
-const FinalCTASection = () => {
+const FinalCTASection = forwardRef<HTMLElement>((_, ref) => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { comingSoon } = useLaunchMode();
@@ -16,7 +17,7 @@ const FinalCTASection = () => {
   ];
 
   return (
-    <section className="relative px-6 py-28 sm:py-40 overflow-hidden">
+    <section ref={ref} className="relative px-6 py-28 sm:py-40 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] sm:w-[80vw] h-[80vh] rounded-full opacity-25 blur-[120px]"
@@ -87,6 +88,8 @@ const FinalCTASection = () => {
       </motion.div>
     </section>
   );
-};
+});
+
+FinalCTASection.displayName = "FinalCTASection";
 
 export default FinalCTASection;
