@@ -95,6 +95,7 @@ const CallPage = () => {
     toggleVideo,
     toggleAudio,
     flipCamera,
+    sendCallCaption,
   } = useWebRTC({
     conversationId: conversationId || "",
     userId: user?.id || "",
@@ -110,6 +111,42 @@ const CallPage = () => {
       stopCaptions();
     }
   }, [callCaptionsFeatureEnabled, captionsEnabled, stopCaptions]);
+
+  useEffect(() => {
+    if (!callCaptionsFeatureEnabled || !captionsEnabled || !caption.trim()) return;
+    sendCallCaption(caption, "de");
+  }, [callCaptionsFeatureEnabled, captionsEnabled, caption, sendCallCaption]);
+
+  useEffect(() => {
+    if (!remoteCaption || captionLanguage === "original" || !translationEnabled) {
+      setTranslatedCaption("");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setIsTranslatingCaption(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("translate", {
+          body: { text: remoteCaption, targetLang: captionLanguage },
+        });
+        if (!controller.signal.aborted && !error) {
+          setTranslatedCaption(data?.translated || "");
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("[CallPage] Caption translation failed:", error);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsTranslatingCaption(false);
+      }
+    }, 450);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [remoteCaption, captionLanguage, translationEnabled]);
 
   // Load chat name
   useEffect(() => {
