@@ -3,6 +3,12 @@ import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 
 type CaptionsStatus = "checking" | "ready" | "unsupported" | "permission-denied" | "error";
 
+interface CaptionsDebugStatus {
+  sessionId: number;
+  mode: "native" | "browser" | "unknown";
+  lastStatus: string;
+}
+
 interface UseLiveCaptionsReturn {
   isEnabled: boolean;
   caption: string;
@@ -14,6 +20,7 @@ interface UseLiveCaptionsReturn {
   isChecking: boolean;
   status: CaptionsStatus;
   errorMessage: string | null;
+  debugStatus: CaptionsDebugStatus;
 }
 
 export function useLiveCaptions(): UseLiveCaptionsReturn {
@@ -21,6 +28,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   const [caption, setCaption] = useState("");
   const [status, setStatus] = useState<CaptionsStatus>("checking");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [lastDebugStatus, setLastDebugStatus] = useState("checking-support");
   const recognitionRef = useRef<any>(null);
   const nativeListeningRef = useRef(false);
   const nativeListenersRef = useRef<PluginListenerHandle[]>([]);
@@ -36,6 +44,11 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const isSupported = status === "ready";
   const isChecking = status === "checking";
+  const debugStatus: CaptionsDebugStatus = {
+    sessionId: sessionIdRef.current,
+    mode: typeof window === "undefined" ? "unknown" : isNative ? "native" : "browser",
+    lastStatus: lastDebugStatus,
+  };
 
   const isCurrentSession = useCallback((sessionId: number) => {
     return mountedRef.current && sessionIdRef.current === sessionId;
@@ -74,6 +87,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const cleanupCaptions = useCallback((resetState = true) => {
     sessionIdRef.current += 1;
+    setLastDebugStatus(resetState ? "stopped" : "cleanup");
     nativeListeningRef.current = false;
     if (restartTimerRef.current) {
       window.clearTimeout(restartTimerRef.current);
@@ -100,12 +114,14 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   useEffect(() => {
     if (!isNative) {
       setStatus(browserSupported ? "ready" : "unsupported");
+      setLastDebugStatus(browserSupported ? "browser-ready" : "browser-unsupported");
       setErrorMessage(browserSupported ? null : "Untertitel werden auf diesem Gerät nicht unterstützt.");
       return;
     }
 
     let active = true;
     setStatus("checking");
+    setLastDebugStatus("native-checking");
     setErrorMessage(null);
 
     import("@capacitor-community/speech-recognition")
@@ -113,11 +129,13 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       .then(({ available }) => {
         if (!active) return;
         setStatus(available ? "ready" : "unsupported");
+        setLastDebugStatus(available ? "native-ready" : "native-unsupported");
         setErrorMessage(available ? null : "Untertitel werden auf diesem Gerät nicht unterstützt.");
       })
       .catch(() => {
         if (!active) return;
         setStatus("unsupported");
+        setLastDebugStatus("native-import-failed");
         setErrorMessage("Untertitel sind in dieser App-Version nicht verfügbar.");
       });
 
@@ -130,6 +148,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     if (!isSupported) return;
     cleanupCaptions(false);
     const sessionId = sessionIdRef.current;
+    setLastDebugStatus(`starting:${sessionId}`);
     setErrorMessage(null);
 
     if (isNative) {
@@ -142,6 +161,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
         if (!isCurrentSession(sessionId)) return;
         if (!availability.available) {
           setStatus("unsupported");
+          setLastDebugStatus(`unsupported:${sessionId}`);
           setErrorMessage("Untertitel werden auf diesem Gerät nicht unterstützt.");
           cleanupCaptions();
           return;
@@ -154,6 +174,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
           if (!isCurrentSession(sessionId)) return;
           if (requested.speechRecognition !== "granted") {
             setStatus("permission-denied");
+            setLastDebugStatus(`permission-denied:${sessionId}`);
             setErrorMessage("Mikrofon- oder Spracherkennung-Berechtigung fehlt.");
             cleanupCaptions();
             return;
@@ -176,11 +197,13 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
               if (!isCurrentSession(sessionId)) return;
               cleanupCaptions();
               setStatus("error");
+              setLastDebugStatus(`native-restart-error:${sessionId}`);
               setErrorMessage("Untertitel wurden auf diesem Gerät beendet.");
             }
           }
         });
         nativeListenersRef.current = [partialListener, stateListener];
+        setLastDebugStatus(`native-listeners-ready:${sessionId}`);
         if (!isCurrentSession(sessionId)) {
           await removeNativeListeners();
           return;
@@ -189,11 +212,13 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
         const result = await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
         if (!isCurrentSession(sessionId)) return;
         if (result.matches?.[0]) setCaption(result.matches[0]);
+        setLastDebugStatus(`native-started:${sessionId}`);
         setIsEnabled(true);
       })().catch(() => {
         if (!isCurrentSession(sessionId)) return;
         cleanupCaptions();
         setStatus("error");
+        setLastDebugStatus(`native-start-error:${sessionId}`);
         setErrorMessage("Untertitel konnten nicht gestartet werden.");
       });
       return;
@@ -203,6 +228,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) {
       setStatus("unsupported");
+      setLastDebugStatus(`browser-unsupported:${sessionId}`);
       setErrorMessage("Untertitel werden auf diesem Gerät nicht unterstützt.");
       cleanupCaptions();
       return;
@@ -233,6 +259,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
         cleanupCaptions();
         setStatus("permission-denied");
+        setLastDebugStatus(`browser-permission-denied:${sessionId}`);
         setErrorMessage("Mikrofon- oder Spracherkennung-Berechtigung fehlt.");
       }
     };
@@ -244,10 +271,12 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
         return;
       }
       recognitionRef.current = recognition;
+      setLastDebugStatus(`browser-started:${sessionId}`);
       setIsEnabled(true);
     } catch {
       cleanupCaptions();
       setStatus("error");
+      setLastDebugStatus(`browser-start-error:${sessionId}`);
       setErrorMessage("Untertitel konnten nicht gestartet werden.");
     }
   }, [cleanupCaptions, clearBrowserRecognition, isCurrentSession, isNative, isSupported, removeNativeListeners]);
@@ -258,6 +287,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const restartCaptions = useCallback((lang = "de-DE") => {
     cleanupCaptions();
+    setLastDebugStatus("restart-scheduled");
     restartTimerRef.current = window.setTimeout(() => {
       restartTimerRef.current = null;
       if (mountedRef.current && isSupported) {
@@ -281,5 +311,5 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     }
   }, [isEnabled, startCaptions, stopCaptions]);
 
-  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, restartCaptions, isSupported, isChecking, status, errorMessage };
+  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, restartCaptions, isSupported, isChecking, status, errorMessage, debugStatus };
 }

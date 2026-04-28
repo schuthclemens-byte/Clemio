@@ -115,6 +115,7 @@ const CallPage = () => {
     isSupported: captionsSupported,
     isChecking: captionsChecking,
     errorMessage: captionsErrorMessage,
+    debugStatus: captionsDebugStatus,
   } = useLiveCaptions();
   const callCaptionsPlatformAllowed = !nativeOnly || Capacitor.isNativePlatform();
   const captionsCanStart = callCaptionsFeatureEnabled && callCaptionsPlatformAllowed && captionsSupported && !captionsChecking;
@@ -641,6 +642,12 @@ const CallPage = () => {
         {captionsUiBlocked && (
           <p className="mt-3 text-center text-xs text-primary-foreground/50">
             {captionsErrorMessage || "Untertitel sind auf diesem Gerät nicht verfügbar."}
+          </p>
+        )}
+
+        {callCaptionsFeatureEnabled && (
+          <p className="mt-3 text-center text-[10px] text-primary-foreground/35 font-mono">
+            CC #{captionsDebugStatus.sessionId} · {captionsDebugStatus.mode} · {captionsDebugStatus.lastStatus}
           </p>
         )}
 
