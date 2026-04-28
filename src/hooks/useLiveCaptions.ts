@@ -118,60 +118,71 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const startCaptions = useCallback((lang = "de-DE") => {
     if (!isSupported) return;
+    cleanupCaptions(false);
+    const sessionId = sessionIdRef.current;
     setErrorMessage(null);
 
     if (isNative) {
       void (async () => {
         const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
+        if (!isCurrentSession(sessionId)) return;
         const availability = await SpeechRecognition.available().catch(() => ({ available: false }));
+        if (!isCurrentSession(sessionId)) return;
         if (!availability.available) {
           setStatus("unsupported");
           setErrorMessage("Untertitel werden auf diesem Gerät nicht unterstützt.");
+          cleanupCaptions();
           return;
         }
 
         const permissions = await SpeechRecognition.checkPermissions();
+        if (!isCurrentSession(sessionId)) return;
         if (permissions.speechRecognition !== "granted") {
           const requested = await SpeechRecognition.requestPermissions();
+          if (!isCurrentSession(sessionId)) return;
           if (requested.speechRecognition !== "granted") {
             setStatus("permission-denied");
             setErrorMessage("Mikrofon- oder Spracherkennung-Berechtigung fehlt.");
+            cleanupCaptions();
             return;
           }
         }
 
         await removeNativeListeners();
+        if (!isCurrentSession(sessionId)) return;
         nativeListeningRef.current = true;
 
         const partialListener = await SpeechRecognition.addListener("partialResults", (data) => {
+          if (!isCurrentSession(sessionId)) return;
           setCaption(data.matches?.[0] ?? "");
         });
         const stateListener = await SpeechRecognition.addListener("listeningState", async (data) => {
-          if (data.status === "stopped" && nativeListeningRef.current) {
+          if (data.status === "stopped" && nativeListeningRef.current && isCurrentSession(sessionId)) {
             try {
               await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
             } catch {
-              nativeListeningRef.current = false;
-              setIsEnabled(false);
-              setCaption("");
+              if (!isCurrentSession(sessionId)) return;
+              cleanupCaptions();
               setStatus("error");
               setErrorMessage("Untertitel wurden auf diesem Gerät beendet.");
-              await removeNativeListeners();
             }
           }
         });
         nativeListenersRef.current = [partialListener, stateListener];
+        if (!isCurrentSession(sessionId)) {
+          await removeNativeListeners();
+          return;
+        }
 
         const result = await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
+        if (!isCurrentSession(sessionId)) return;
         if (result.matches?.[0]) setCaption(result.matches[0]);
         setIsEnabled(true);
       })().catch(() => {
-        nativeListeningRef.current = false;
-        setIsEnabled(false);
-        setCaption("");
+        if (!isCurrentSession(sessionId)) return;
+        cleanupCaptions();
         setStatus("error");
         setErrorMessage("Untertitel konnten nicht gestartet werden.");
-        void removeNativeListeners();
       });
       return;
     }
@@ -181,6 +192,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     if (!SpeechRecognitionCtor) {
       setStatus("unsupported");
       setErrorMessage("Untertitel werden auf diesem Gerät nicht unterstützt.");
+      cleanupCaptions();
       return;
     }
 
@@ -190,6 +202,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     recognition.continuous = true;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      if (!isCurrentSession(sessionId) || recognitionRef.current !== recognition) return;
       let text = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         text += event.results[i][0].transcript;
@@ -198,17 +211,15 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     };
 
     recognition.onend = () => {
-      // Restart if still enabled
-      if (recognitionRef.current) {
+      if (isCurrentSession(sessionId) && recognitionRef.current === recognition) {
         try { recognition.start(); } catch {}
       }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (!isCurrentSession(sessionId) || recognitionRef.current !== recognition) return;
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-        recognitionRef.current = null;
-        setIsEnabled(false);
-        setCaption("");
+        cleanupCaptions();
         setStatus("permission-denied");
         setErrorMessage("Mikrofon- oder Spracherkennung-Berechtigung fehlt.");
       }
@@ -216,16 +227,18 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
     try {
       recognition.start();
+      if (!isCurrentSession(sessionId)) {
+        clearBrowserRecognition();
+        return;
+      }
       recognitionRef.current = recognition;
       setIsEnabled(true);
     } catch {
-      recognitionRef.current = null;
-      setIsEnabled(false);
-      setCaption("");
+      cleanupCaptions();
       setStatus("error");
       setErrorMessage("Untertitel konnten nicht gestartet werden.");
     }
-  }, [isNative, isSupported, removeNativeListeners]);
+  }, [cleanupCaptions, clearBrowserRecognition, isCurrentSession, isNative, isSupported, removeNativeListeners]);
 
   const stopCaptions = useCallback(() => {
     nativeListeningRef.current = false;
