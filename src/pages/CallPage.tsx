@@ -115,19 +115,24 @@ const CallPage = () => {
     errorMessage: captionsErrorMessage,
   } = useLiveCaptions();
   const callCaptionsPlatformAllowed = !nativeOnly || Capacitor.isNativePlatform();
-  const callCaptionsAvailable = callCaptionsFeatureEnabled && callCaptionsPlatformAllowed && captionsSupported;
-  const showCaptionsUnavailable = callCaptionsFeatureEnabled && callCaptionsPlatformAllowed && !captionsChecking && !captionsSupported;
+  const captionsCanStart = callCaptionsFeatureEnabled && callCaptionsPlatformAllowed && captionsSupported && !captionsChecking;
+  const captionsUiBlocked = callCaptionsFeatureEnabled && callCaptionsPlatformAllowed && !captionsChecking && !captionsSupported;
+  const captionsTranslationCanRender = captionsCanStart && captionsEnabled && translationEnabled;
+  const handleToggleCaptions = useCallback(() => {
+    if (!captionsCanStart) return;
+    toggleCaptions();
+  }, [captionsCanStart, toggleCaptions]);
 
   useEffect(() => {
-    if (!callCaptionsAvailable && captionsEnabled) {
+    if (!captionsCanStart && captionsEnabled) {
       stopCaptions();
     }
-  }, [callCaptionsAvailable, captionsEnabled, stopCaptions]);
+  }, [captionsCanStart, captionsEnabled, stopCaptions]);
 
   useEffect(() => {
-    if (!callCaptionsAvailable || !captionsEnabled || !caption.trim()) return;
+    if (!captionsCanStart || !captionsEnabled || !caption.trim()) return;
     sendCallCaption(caption, "de");
-  }, [callCaptionsAvailable, captionsEnabled, caption, sendCallCaption]);
+  }, [captionsCanStart, captionsEnabled, caption, sendCallCaption]);
 
   useEffect(() => {
     if (!remoteCaption || captionLanguage === "original" || !translationEnabled) {
