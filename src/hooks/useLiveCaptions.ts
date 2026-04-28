@@ -227,6 +227,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) {
       setStatus("unsupported");
+      setLastDebugStatus(`browser-unsupported:${sessionId}`);
       setErrorMessage("Untertitel werden auf diesem Gerät nicht unterstützt.");
       cleanupCaptions();
       return;
@@ -257,6 +258,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
         cleanupCaptions();
         setStatus("permission-denied");
+        setLastDebugStatus(`browser-permission-denied:${sessionId}`);
         setErrorMessage("Mikrofon- oder Spracherkennung-Berechtigung fehlt.");
       }
     };
@@ -268,10 +270,12 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
         return;
       }
       recognitionRef.current = recognition;
+      setLastDebugStatus(`browser-started:${sessionId}`);
       setIsEnabled(true);
     } catch {
       cleanupCaptions();
       setStatus("error");
+      setLastDebugStatus(`browser-start-error:${sessionId}`);
       setErrorMessage("Untertitel konnten nicht gestartet werden.");
     }
   }, [cleanupCaptions, clearBrowserRecognition, isCurrentSession, isNative, isSupported, removeNativeListeners]);
@@ -282,6 +286,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const restartCaptions = useCallback((lang = "de-DE") => {
     cleanupCaptions();
+    setLastDebugStatus("restart-scheduled");
     restartTimerRef.current = window.setTimeout(() => {
       restartTimerRef.current = null;
       if (mountedRef.current && isSupported) {
@@ -305,5 +310,5 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     }
   }, [isEnabled, startCaptions, stopCaptions]);
 
-  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, restartCaptions, isSupported, isChecking, status, errorMessage };
+  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, restartCaptions, isSupported, isChecking, status, errorMessage, debugStatus };
 }
