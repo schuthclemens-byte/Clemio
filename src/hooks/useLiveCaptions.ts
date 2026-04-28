@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 
+type CaptionsStatus = "checking" | "ready" | "unsupported" | "permission-denied" | "error";
+
 interface UseLiveCaptionsReturn {
   isEnabled: boolean;
   caption: string;
@@ -8,12 +10,16 @@ interface UseLiveCaptionsReturn {
   startCaptions: (lang?: string) => void;
   stopCaptions: () => void;
   isSupported: boolean;
+  isChecking: boolean;
+  status: CaptionsStatus;
+  errorMessage: string | null;
 }
 
 export function useLiveCaptions(): UseLiveCaptionsReturn {
   const [isEnabled, setIsEnabled] = useState(false);
   const [caption, setCaption] = useState("");
-  const [nativeAvailable, setNativeAvailable] = useState(false);
+  const [status, setStatus] = useState<CaptionsStatus>("checking");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const nativeListeningRef = useRef(false);
   const nativeListenersRef = useRef<PluginListenerHandle[]>([]);
@@ -23,39 +29,80 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     typeof window !== "undefined" &&
     ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
-  const isSupported = isNative ? nativeAvailable : browserSupported;
+  const isSupported = status === "ready";
+  const isChecking = status === "checking";
+
+  const removeNativeListeners = useCallback(async () => {
+    const listeners = nativeListenersRef.current;
+    nativeListenersRef.current = [];
+    await Promise.all(listeners.map((listener) => listener.remove().catch(() => undefined)));
+  }, []);
+
+  const safeStopNative = useCallback(async () => {
+    try {
+      const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
+      await SpeechRecognition.stop().catch(() => undefined);
+    } catch {
+      // Native plugin may be unavailable on some builds/devices. The call must continue.
+    } finally {
+      await removeNativeListeners();
+    }
+  }, [removeNativeListeners]);
 
   useEffect(() => {
-    if (!isNative) return;
+    if (!isNative) {
+      setStatus(browserSupported ? "ready" : "unsupported");
+      setErrorMessage(browserSupported ? null : "Untertitel werden auf diesem Gerät nicht unterstützt.");
+      return;
+    }
+
     let active = true;
+    setStatus("checking");
+    setErrorMessage(null);
+
     import("@capacitor-community/speech-recognition")
       .then(({ SpeechRecognition }) => SpeechRecognition.available())
       .then(({ available }) => {
-        if (active) setNativeAvailable(Boolean(available));
+        if (!active) return;
+        setStatus(available ? "ready" : "unsupported");
+        setErrorMessage(available ? null : "Untertitel werden auf diesem Gerät nicht unterstützt.");
       })
       .catch(() => {
-        if (active) setNativeAvailable(false);
+        if (!active) return;
+        setStatus("unsupported");
+        setErrorMessage("Untertitel sind in dieser App-Version nicht verfügbar.");
       });
 
     return () => {
       active = false;
     };
-  }, [isNative]);
+  }, [browserSupported, isNative]);
 
   const startCaptions = useCallback((lang = "de-DE") => {
     if (!isSupported) return;
+    setErrorMessage(null);
 
     if (isNative) {
       void (async () => {
         const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
+        const availability = await SpeechRecognition.available().catch(() => ({ available: false }));
+        if (!availability.available) {
+          setStatus("unsupported");
+          setErrorMessage("Untertitel werden auf diesem Gerät nicht unterstützt.");
+          return;
+        }
+
         const permissions = await SpeechRecognition.checkPermissions();
         if (permissions.speechRecognition !== "granted") {
           const requested = await SpeechRecognition.requestPermissions();
-          if (requested.speechRecognition !== "granted") return;
+          if (requested.speechRecognition !== "granted") {
+            setStatus("permission-denied");
+            setErrorMessage("Mikrofon- oder Spracherkennung-Berechtigung fehlt.");
+            return;
+          }
         }
 
-        await Promise.all(nativeListenersRef.current.map((listener) => listener.remove()));
-        nativeListenersRef.current = [];
+        await removeNativeListeners();
         nativeListeningRef.current = true;
 
         const partialListener = await SpeechRecognition.addListener("partialResults", (data) => {
@@ -65,7 +112,14 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
           if (data.status === "stopped" && nativeListeningRef.current) {
             try {
               await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
-            } catch {}
+            } catch {
+              nativeListeningRef.current = false;
+              setIsEnabled(false);
+              setCaption("");
+              setStatus("error");
+              setErrorMessage("Untertitel wurden auf diesem Gerät beendet.");
+              await removeNativeListeners();
+            }
           }
         });
         nativeListenersRef.current = [partialListener, stateListener];
@@ -76,12 +130,22 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       })().catch(() => {
         nativeListeningRef.current = false;
         setIsEnabled(false);
+        setCaption("");
+        setStatus("error");
+        setErrorMessage("Untertitel konnten nicht gestartet werden.");
+        void removeNativeListeners();
       });
       return;
     }
 
     const SpeechRecognitionCtor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) {
+      setStatus("unsupported");
+      setErrorMessage("Untertitel werden auf diesem Gerät nicht unterstützt.");
+      return;
+    }
+
     const recognition = new SpeechRecognitionCtor();
     recognition.lang = lang;
     recognition.interimResults = true;
@@ -102,41 +166,53 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       }
     };
 
-    recognition.onerror = () => {};
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        recognitionRef.current = null;
+        setIsEnabled(false);
+        setCaption("");
+        setStatus("permission-denied");
+        setErrorMessage("Mikrofon- oder Spracherkennung-Berechtigung fehlt.");
+      }
+    };
 
-    recognition.start();
-    recognitionRef.current = recognition;
-    setIsEnabled(true);
-  }, [isNative, isSupported]);
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      setIsEnabled(true);
+    } catch {
+      recognitionRef.current = null;
+      setIsEnabled(false);
+      setCaption("");
+      setStatus("error");
+      setErrorMessage("Untertitel konnten nicht gestartet werden.");
+    }
+  }, [isNative, isSupported, removeNativeListeners]);
 
   const stopCaptions = useCallback(() => {
     nativeListeningRef.current = false;
     if (isNative) {
-      void import("@capacitor-community/speech-recognition").then(async ({ SpeechRecognition }) => {
-        await SpeechRecognition.stop().catch(() => undefined);
-        await Promise.all(nativeListenersRef.current.map((listener) => listener.remove()));
-        nativeListenersRef.current = [];
-      });
+      void safeStopNative();
     }
-    recognitionRef.current?.stop();
+    try {
+      recognitionRef.current?.stop();
+    } catch {}
     recognitionRef.current = null;
     setIsEnabled(false);
     setCaption("");
-  }, [isNative]);
+  }, [isNative, safeStopNative]);
 
   useEffect(() => {
     return () => {
       nativeListeningRef.current = false;
-      recognitionRef.current?.stop();
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
       if (isNative) {
-        void import("@capacitor-community/speech-recognition").then(async ({ SpeechRecognition }) => {
-          await SpeechRecognition.stop().catch(() => undefined);
-          await Promise.all(nativeListenersRef.current.map((listener) => listener.remove()));
-          nativeListenersRef.current = [];
-        });
+        void safeStopNative();
       }
     };
-  }, [isNative]);
+  }, [isNative, safeStopNative]);
 
   const toggleCaptions = useCallback(() => {
     if (isEnabled) {
@@ -146,5 +222,5 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     }
   }, [isEnabled, startCaptions, stopCaptions]);
 
-  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, isSupported };
+  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, isSupported, isChecking, status, errorMessage };
 }

@@ -1,61 +1,40 @@
-## Plan: Native Call-Untertitel erst per Admin-Schalter freigeben
+Kurz erklärt: Das Fallback-Verhalten bedeutet, dass Untertitel/Live-Übersetzung nicht die ganze Anrufseite kaputt machen dürfen, wenn iOS/Android SpeechRecognition auf einem Gerät nicht verfügbar ist, die Berechtigung fehlt, das Plugin nicht geladen werden kann oder die Erkennung während des Calls stoppt. Der Call soll normal weiterlaufen; nur der Untertitel-Button und die Sprach-Auswahl werden sauber deaktiviert oder ausgeblendet.
 
-Ziel: Die Untertitel-/Übersetzungsfunktion im Video-/Audio-Call soll in der App komplett verborgen bleiben, bis sie im Admin-Bereich aktiviert wird.
+Plan zur Umsetzung:
 
-### 1. Globalen Feature-Schalter anlegen
-- In der bestehenden `app_settings`-Struktur wird ein neuer Key genutzt, z. B. `call_captions`.
-- Wert-Beispiel:
-  ```json
-  {
-    "enabled": false,
-    "native_only": true,
-    "translation_enabled": true
-  }
-  ```
-- Lesbar für eingeloggte Nutzer, änderbar nur durch Admins.
-- Falls der Eintrag noch nicht existiert, wird er standardmäßig als deaktiviert behandelt.
+1. `useLiveCaptions` robuster machen
+   - Einen klaren Status ergänzen, z. B. `checking`, `ready`, `unsupported`, `permission-denied`, `error`.
+   - Native SpeechRecognition wird sicher geprüft: Plugin-Import, `available()`, Berechtigung, Start/Stop.
+   - Wenn etwas davon fehlschlägt, wird nicht geworfen und kein Crash ausgelöst.
+   - Captions werden automatisch gestoppt und der Hook meldet `isSupported: false` bzw. einen verständlichen Fehlerstatus.
 
-### 2. Admin UI erweitern
-- Im Admin-Bereich kommt eine neue Karte hinzu: `Call-Untertitel`.
-- Schalter: `Live-Untertitel in der App aktivieren`.
-- Status-Badge: `Aus`, `Aktiv`, optional `Native App only`.
-- Kurzer Hinweistext: Die Funktion wird für normale Nutzer erst sichtbar, wenn der Schalter aktiv ist.
+2. Native-Fallback-Logik verbessern
+   - Falls native SpeechRecognition in der App nicht verfügbar ist, bleibt der Call aktiv.
+   - In nativer App wird nicht blind auf Browser-Web-Speech zurückgegriffen, weil das in WebViews oft unzuverlässig oder nicht vorhanden ist.
+   - Im Browser bleibt der bestehende Web-Speech-Fallback nur dann aktiv, wenn der Admin `native_only` nicht erzwingt.
 
-### 3. Call-Seite absichern
-- `CallPage` lädt den globalen Feature-Status.
-- Wenn `call_captions.enabled = false`:
-  - Untertitel-Button wird nicht angezeigt.
-  - Untertitel-Overlay wird nicht angezeigt.
-  - keine Speech-/Caption-Logik startet.
-- Wenn aktiviert:
-  - Untertitel-Button erscheint wieder.
-  - später kann dort die Sprachauswahl/Übersetzung eingebaut werden.
+3. Call-UI korrekt deaktivieren
+   - Der Untertitel-Button wird nur aktiv angezeigt, wenn Admin-Freigabe + Plattform-Regel + SpeechRecognition-Unterstützung erfüllt sind.
+   - Wenn die Funktion adminseitig aktiv ist, aber das Gerät SpeechRecognition nicht unterstützt, erscheint optional ein kleiner Hinweis wie: `Untertitel auf diesem Gerät nicht verfügbar`.
+   - Die Sprach-Auswahl für Übersetzung wird nur angezeigt, wenn Untertitel wirklich laufen können.
+   - Wenn SpeechRecognition während eines Calls ausfällt, werden Untertitel beendet, remote captions nicht weitergesendet und die UI zurückgesetzt.
 
-### 4. Vorbereitung für native iOS/Android-Umsetzung
-- Die bisherige Browser-basierte `useLiveCaptions`-Logik bleibt als Fallback/alte Web-Logik erhalten, wird aber nicht mehr ungefragt im Call angezeigt.
-- Für die native Umsetzung wird eine saubere Schnittstelle vorbereitet, damit später Android/iOS Speech Recognition angebunden werden kann.
-- In dieser Stufe wird noch keine native Speech-Recognition-Funktion vollständig eingebaut, sondern die Freischaltung/Verbergung sauber vorbereitet.
+4. Schutz gegen Race Conditions und Cleanup
+   - Listener werden immer entfernt, auch wenn Start/Stop fehlschlägt.
+   - `SpeechRecognition.stop()` und dynamische Imports werden überall mit sicheren `catch`-Pfaden behandelt.
+   - `setIsEnabled(true)` passiert erst, wenn SpeechRecognition wirklich gestartet wurde.
 
-### 5. Technische Details
-- Bestehendes Muster wird genutzt:
-  - `app_settings`
-  - Admin-Update über bestehende RLS-geschützte Tabelle
-  - Realtime-Subscription ähnlich `useLaunchMode`
-- Neuer Hook möglich:
-  - `useCallCaptionsFeature()`
-  - liest `app_settings.key = 'call_captions'`
-  - gibt `enabled`, `nativeOnly`, `translationEnabled`, `loading` zurück
-- Datenbankänderung:
-  - falls nötig: Policy erweitern, damit authentifizierte Nutzer genau diesen Feature-Key lesen dürfen.
-  - Admins behalten volle Schreibrechte.
+5. Prüfung nach der Umsetzung
+   - Typecheck/Test laufen lassen.
+   - Manuell logisch prüfen:
+     - Admin aus: kein Untertitel-UI.
+     - Admin an + Gerät unterstützt es: Button funktioniert.
+     - Admin an + Gerät unterstützt es nicht: Call läuft weiter, Untertitel deaktiviert.
+     - Berechtigung abgelehnt: Call läuft weiter, UI deaktiviert/zeigt Hinweis.
+     - Native Plugin fehlt/Import schlägt fehl: kein Crash.
 
-### 6. Validierung
-- Typecheck ausführen.
-- Prüfen:
-  - deaktiviert: kein Untertitel-Button im Call
-  - aktiviert: Untertitel-Button sichtbar
-  - Nicht-Admin kann nicht umschalten
-  - Admin-Schalter speichert korrekt
-
-### Ergebnis
-Danach ist die Call-Untertitel-Funktion sicher hinter einem Admin-Schalter versteckt. Nutzer sehen sie erst, wenn du sie im Admin aktivierst. Anschließend kann die native iOS/Android-Untertitel- und Übersetzungsfunktion kontrolliert ausgerollt werden.
+Technische Details:
+- Betroffene Dateien: `src/hooks/useLiveCaptions.ts`, `src/pages/CallPage.tsx`.
+- Keine Datenbankänderung nötig.
+- Keine Änderung an der bestehenden Admin-Freigabe nötig.
+- Nach nativen Änderungen muss lokal nach dem Pull `npx cap sync` ausgeführt werden, damit iOS/Android die aktualisierte Web-App und Plugin-Konfiguration übernehmen.
