@@ -13,6 +13,9 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+const errorMessage = (error: unknown) => error instanceof Error ? error.message : String(error || "Unknown error");
+const ignoreBestEffortError = (_error: unknown) => undefined;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -103,7 +106,7 @@ serve(async (req) => {
           });
           results.push({ endpoint: sub.endpoint.slice(-20), status: pushRes.status });
         } catch (e) {
-          results.push({ endpoint: sub.endpoint.slice(-20), error: e.message });
+          results.push({ endpoint: sub.endpoint.slice(-20), error: errorMessage(e) });
         }
       }
       return json({ success: true, action: "push-sent", results });
@@ -322,7 +325,9 @@ serve(async (req) => {
               method: "DELETE",
               headers: { "xi-api-key": elevenlabsKey },
             });
-          } catch { /* best effort */ }
+          } catch (error) {
+            ignoreBestEffortError(error);
+          }
         }
       }
 
@@ -355,7 +360,9 @@ serve(async (req) => {
               method: "DELETE",
               headers: { "xi-api-key": elevenlabsKey },
             });
-          } catch { /* best effort */ }
+          } catch (error) {
+            ignoreBestEffortError(error);
+          }
         }
       }
 
@@ -426,6 +433,6 @@ serve(async (req) => {
     return json({ error: "Unknown action" }, 400);
   } catch (err) {
     console.error("admin-manage-user error:", err);
-    return json({ error: err.message }, 500);
+    return json({ error: errorMessage(err) }, 500);
   }
 });

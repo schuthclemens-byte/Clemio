@@ -1,57 +1,30 @@
-Ich passe den Fehlerbereich im Admin so an, dass du Einträge gezielt löschen und sinnvoll filtern kannst.
+Ich sehe auf deinem Screenshot: Die GitHub Actions CI schlägt im Job „Build, TypeScript, tests and security“ fehl. In der aktuellen Codeprüfung fallen besonders zwei Stellen auf, die sehr wahrscheinlich den CI-Lauf abbrechen können:
 
-## Ziel
-Die Fehlerliste im Admin soll nicht nur nach Bearbeitungsstatus, sondern auch nach Relevanz filterbar sein – z. B. offen, erledigt, geprüft und problematisch. Außerdem bekommt die Löschfunktion eine klarere und verlässlichere Bedienung.
+1. `src/hooks/useLiveCaptions.ts`
+   - Im nativen SpeechRecognition-Neustart ist die Formatierung/Einrückung im `try/catch`-Block auffällig und fehleranfällig.
+   - Außerdem enthält die Datei leere `catch {}`-Blöcke. Eure CI führt `eslint . --quiet` aus; Warnungen brechen dabei zwar normalerweise nicht ab, aber ich würde die Stelle trotzdem sauber und robuster machen, damit daraus kein Folgeproblem wird.
 
-## Umsetzung
+2. `supabase/functions/admin-manage-user/index.ts`
+   - Die Backend-Funktion enthält mehrere `catch (e)` / `catch {}`-Stellen, die bei TypeScript/ESLint je nach Regelstand problematisch sein können.
+   - Zusätzlich greifen manche `catch (e)`-Blöcke direkt auf `e.message` zu. In TypeScript ist ein gefangener Fehler nicht garantiert ein `Error`.
 
-1. **Filter im Fehlerbereich erweitern**
-   - Die bestehende Status-Filterung bleibt erhalten, wird aber verständlicher beschriftet.
-   - Zusätzlich kommt ein zweiter Filter für die Problemstufe:
-     - alle
-     - problematisch
-     - Fehler
-     - Warnung
-     - kritisch/fatal
-   - „Problematisch“ wird aus der vorhandenen Severity abgeleitet, damit besonders wichtige Einträge schnell sichtbar sind.
+Plan zur Behebung:
 
-2. **Kombinierte Filterlogik einbauen**
-   - Fehler werden gleichzeitig nach:
-     - Status (`open`, `reviewed`, `resolved`)
-     - Schweregrad (`warning`, `error`, `fatal`)
-     gefiltert.
-   - So kannst du z. B. direkt nur offene problematische Fehler sehen.
+1. Live-Captions-Code stabilisieren
+   - Den nativen `listeningState`-Neustart in `useLiveCaptions.ts` sauber strukturieren.
+   - Fehlerbehandlung vereinheitlichen, ohne die bestehende Funktionalität zu verändern.
+   - Leere `catch`-Blöcke durch sichere No-op-Fehlerbehandlung ersetzen.
 
-3. **Löschfunktion im Admin verbessern**
-   - Die bereits vorhandene Delete-Action wird im UI klarer herausgestellt.
-   - Optional mit Bestätigungsdialog, damit nichts versehentlich gelöscht wird.
-   - Nach dem Löschen wird die Liste sofort aktualisiert, damit der Eintrag direkt verschwindet.
+2. Admin-Backend-Funktion CI-sicher machen
+   - In `admin-manage-user/index.ts` gefangene Fehler sicher in Text umwandeln, z. B. über eine kleine Helper-Funktion.
+   - Direkte `e.message`-Zugriffe ersetzen.
+   - Leere `catch`-Blöcke vermeiden oder mit einer bewusst benannten No-op-Hilfsfunktion absichern.
 
-4. **Darstellung der Fehler klarer machen**
-   - Severity-Badges farblich differenzieren:
-     - warning
-     - error
-     - fatal
-   - Problematische Einträge visuell stärker hervorheben.
-   - Statuslabels in verständliches Deutsch/Englisch übersetzen.
+3. Admin-Fehlerübersicht unverändert lassen, außer nötig
+   - Die zuletzt gewünschten Features sind im UI bereits vorhanden: Statusfilter, Schwerefilter, Suche und Löschen.
+   - Ich ändere dort nur etwas, falls sich ein konkreter CI-Fehler aus dieser Datei ergibt.
 
-5. **Open-Count / Badge konsistent halten**
-   - Prüfen, dass die Badge-Zählung im Admin-Tab weiter korrekt funktioniert, auch wenn Einträge gelöscht oder auf erledigt/geprüft gesetzt werden.
-
-6. **Feinschliff für Admin-UX**
-   - Filter-Chips mobil gut bedienbar halten.
-   - Falls sinnvoll: „Filter zurücksetzen“-Option ergänzen.
-   - Notiz, Status-Update und Delete sollen sich nicht gegenseitig blockieren.
-
-## Betroffene Bereiche
-- `src/components/admin/AdminErrorReports.tsx`
-- ggf. kleiner Abgleich in `src/pages/AdminPage.tsx`
-- kein zusätzlicher Backend-Umbau nötig, da `delete-error` bereits vorhanden ist
-
-## Technische Details
-- Die Datenstruktur für Fehler ist schon vorhanden (`status`, `severity`, `admin_note`, `occurrences`).
-- Der Backend-Endpunkt `admin-manage-user` unterstützt das Löschen bereits mit `delete-error`.
-- Deshalb ist das hier primär ein UI-/UX-Upgrade mit robusterer Filterlogik.
-- Falls ich beim Prüfen sehe, dass „problematisch“ besser als eigener definierter Sammelfilter umgesetzt werden sollte, mappe ich ihn sauber auf bestehende Severity-Werte statt ein neues DB-Feld einzuführen.
-
-Nach Freigabe setze ich das direkt im Admin-Fehlerbereich um.
+4. Validierung nach der Umsetzung
+   - Keine manuellen Builds ausführen, weil die Umgebung den Build/Typecheck automatisch prüft.
+   - Falls erlaubt, gezielt betroffene Tests prüfen oder die bestehende Testabdeckung unangetastet lassen.
+   - Danach bekommst du eine kurze Zusammenfassung der behobenen Ursache und der geänderten Dateien.
