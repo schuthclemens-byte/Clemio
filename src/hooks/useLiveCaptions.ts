@@ -23,6 +23,8 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   const recognitionRef = useRef<any>(null);
   const nativeListeningRef = useRef(false);
   const nativeListenersRef = useRef<PluginListenerHandle[]>([]);
+  const sessionIdRef = useRef(0);
+  const mountedRef = useRef(true);
 
   const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
   const browserSupported =
@@ -31,6 +33,26 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const isSupported = status === "ready";
   const isChecking = status === "checking";
+
+  const isCurrentSession = useCallback((sessionId: number) => {
+    return mountedRef.current && sessionIdRef.current === sessionId;
+  }, []);
+
+  const clearBrowserRecognition = useCallback(() => {
+    const recognition = recognitionRef.current;
+    recognitionRef.current = null;
+    if (!recognition) return;
+
+    recognition.onresult = null;
+    recognition.onend = null;
+    recognition.onerror = null;
+
+    try {
+      recognition.stop();
+    } catch {
+      // SpeechRecognition can throw if it is already stopped. The call must continue.
+    }
+  }, []);
 
   const removeNativeListeners = useCallback(async () => {
     const listeners = nativeListenersRef.current;
@@ -48,6 +70,22 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       await removeNativeListeners();
     }
   }, [removeNativeListeners]);
+
+  const cleanupCaptions = useCallback((resetState = true) => {
+    sessionIdRef.current += 1;
+    nativeListeningRef.current = false;
+    clearBrowserRecognition();
+    if (isNative) {
+      void safeStopNative();
+    } else {
+      void removeNativeListeners();
+    }
+
+    if (resetState && mountedRef.current) {
+      setIsEnabled(false);
+      setCaption("");
+    }
+  }, [clearBrowserRecognition, isNative, removeNativeListeners, safeStopNative]);
 
   useEffect(() => {
     if (!isNative) {
