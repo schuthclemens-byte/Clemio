@@ -202,6 +202,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
           }
         });
         nativeListenersRef.current = [partialListener, stateListener];
+        setLastDebugStatus(`native-listeners-ready:${sessionId}`);
         if (!isCurrentSession(sessionId)) {
           await removeNativeListeners();
           return;
@@ -210,11 +211,13 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
         const result = await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
         if (!isCurrentSession(sessionId)) return;
         if (result.matches?.[0]) setCaption(result.matches[0]);
+        setLastDebugStatus(`native-started:${sessionId}`);
         setIsEnabled(true);
       })().catch(() => {
         if (!isCurrentSession(sessionId)) return;
         cleanupCaptions();
         setStatus("error");
+        setLastDebugStatus(`native-start-error:${sessionId}`);
         setErrorMessage("Untertitel konnten nicht gestartet werden.");
       });
       return;
