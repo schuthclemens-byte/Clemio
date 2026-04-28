@@ -47,17 +47,16 @@ export async function logAppError(input: AppErrorInput) {
     const userId = data.user?.id;
     if (!userId) return;
 
-    await (supabase as any).from("app_error_reports").insert({
-      user_id: userId,
-      title: trim(input.title, 180) || "Unbekannter Fehler",
-      message: trim(input.message || input.title, 2_000),
-      stack: input.stack ? trim(input.stack, 8_000) : null,
-      details: input.details ?? {},
-      route: getRoute(),
-      user_agent: getUserAgent(),
-      platform: getPlatform(),
-      severity: input.severity ?? "error",
-      fingerprint,
+    await (supabase as any).rpc("log_app_error_report", {
+      _title: trim(input.title, 180) || "Unbekannter Fehler",
+      _message: trim(input.message || input.title, 2_000),
+      _stack: input.stack ? trim(input.stack, 8_000) : null,
+      _details: input.details ?? {},
+      _route: getRoute(),
+      _user_agent: getUserAgent(),
+      _platform: getPlatform(),
+      _severity: input.severity ?? "error",
+      _fingerprint: fingerprint,
     });
   } catch (error) {
     console.warn("[AppErrorLogging] failed:", error);
