@@ -552,7 +552,7 @@ const CallPage = () => {
         )}
 
         <AnimatePresence>
-          {callCaptionsAvailable && captionsEnabled && visibleCaption && (
+          {captionsCanStart && captionsEnabled && visibleCaption && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -595,9 +595,9 @@ const CallPage = () => {
             icon={isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
             label={isAudioEnabled ? "Stumm" : "Laut"}
           />
-          {callCaptionsAvailable && (
+          {captionsCanStart && (
             <ControlButton
-              onClick={toggleCaptions}
+              onClick={handleToggleCaptions}
               active={captionsEnabled}
               activeColor="bg-accent"
               icon={<Subtitles className="w-5 h-5" />}
@@ -606,7 +606,7 @@ const CallPage = () => {
           )}
         </div>
 
-        {callCaptionsAvailable && captionsEnabled && translationEnabled && (
+        {captionsTranslationCanRender && (
           <div className="mt-3 mx-auto w-full max-w-xs">
             <Select value={captionLanguage} onValueChange={setCaptionLanguage}>
               <SelectTrigger className="h-9 rounded-full border-primary-foreground/10 bg-primary-foreground/10 text-primary-foreground">
@@ -623,7 +623,7 @@ const CallPage = () => {
           </div>
         )}
 
-        {showCaptionsUnavailable && (
+        {captionsUiBlocked && (
           <p className="mt-3 text-center text-xs text-primary-foreground/50">
             {captionsErrorMessage || "Untertitel sind auf diesem Gerät nicht verfügbar."}
           </p>
@@ -634,7 +634,7 @@ const CallPage = () => {
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Video</span>
           <span className="w-16" />
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Mikro</span>
-          {callCaptionsAvailable && <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Text</span>}
+          {captionsCanStart && <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Text</span>}
         </div>
       </div>
     </div>
