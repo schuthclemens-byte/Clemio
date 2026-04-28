@@ -2,8 +2,10 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initInstallPromptCapture } from "./lib/installPrompt";
+import { installGlobalErrorLogging } from "./lib/appErrorLogging";
 
 initInstallPromptCapture();
+installGlobalErrorLogging();
 
 // Unregister service workers in iframe/preview contexts to prevent stale caches
 const isInIframe = (() => {
