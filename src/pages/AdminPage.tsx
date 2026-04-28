@@ -318,6 +318,7 @@ const AdminPage = () => {
            {([
             { key: "users" as const, icon: Users, label: tr("Nutzer", "Users"), badge: 0 },
             { key: "reports" as const, icon: Flag, label: "Reports", badge: openReportsCount },
+            { key: "errors" as const, icon: AlertTriangle, label: tr("Fehler", "Errors"), badge: openErrorsCount },
             { key: "analytics" as const, icon: Activity, label: "Analytics", badge: 0 },
           ]).map(tab => (
             <button
@@ -444,6 +445,8 @@ const AdminPage = () => {
           onBlockUser={(userId) => performAction("block", userId, tr("Blockieren", "Block"))}
           onDeleteVoice={(userId) => performAction("delete-voice", userId, tr("Voice gelöscht", "Voice deleted"))}
         />
+      ) : activeTab === "errors" ? (
+        <AdminErrorReports />
       ) : activeTab === "analytics" ? (
         /* ── ANALYTICS TAB (Step 9) ── */
         <div className="p-4 space-y-4">
