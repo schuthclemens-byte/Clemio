@@ -611,6 +611,14 @@ const CallPage = () => {
               label="Untertitel"
             />
           )}
+          {captionsCanStart && captionsEnabled && (
+            <ControlButton
+              onClick={handleRestartCaptions}
+              active={false}
+              icon={<RotateCcw className="w-5 h-5" />}
+              label="Untertitel neu starten"
+            />
+          )}
         </div>
 
         {captionsTranslationCanRender && (
@@ -642,6 +650,7 @@ const CallPage = () => {
           <span className="w-16" />
           <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Mikro</span>
           {captionsCanStart && <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Text</span>}
+          {captionsCanStart && captionsEnabled && <span className="text-[10px] text-primary-foreground/40 w-12 text-center">Neu</span>}
         </div>
       </div>
     </div>
