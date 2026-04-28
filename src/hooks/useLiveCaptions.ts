@@ -26,6 +26,8 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   const nativeListenersRef = useRef<PluginListenerHandle[]>([]);
   const sessionIdRef = useRef(0);
   const mountedRef = useRef(true);
+  const restartTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const nativeStopInFlightRef = useRef<Promise<void> | null>(null);
 
   const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
   const browserSupported =
@@ -73,10 +75,20 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   const cleanupCaptions = useCallback((resetState = true) => {
     sessionIdRef.current += 1;
     nativeListeningRef.current = false;
+    if (restartTimerRef.current) {
+      window.clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
+    }
     clearBrowserRecognition();
     void removeNativeListeners();
     if (isNative) {
-      void safeStopNative();
+      const stopPromise = safeStopNative();
+      const trackedStopPromise = stopPromise.finally(() => {
+        if (nativeStopInFlightRef.current === trackedStopPromise) {
+          nativeStopInFlightRef.current = null;
+        }
+      });
+      nativeStopInFlightRef.current = trackedStopPromise;
     }
 
     if (resetState && mountedRef.current) {
