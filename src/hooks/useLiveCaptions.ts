@@ -67,7 +67,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     try {
       recognition.stop();
     } catch {
-      // SpeechRecognition can throw if it is already stopped. The call must continue.
+      return;
     }
   }, []);
 
@@ -82,7 +82,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
       await SpeechRecognition.stop().catch(() => undefined);
     } catch {
-      // Native plugin may be unavailable on some builds/devices. The call must continue.
+      return;
     }
   }, []);
 
@@ -194,15 +194,15 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
           if (data.status === "stopped" && nativeListeningRef.current && isCurrentSession(sessionId)) {
             try {
               await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
-        } catch (error) {
+            } catch (error) {
               if (!isCurrentSession(sessionId)) return;
-          void logAppError({
-            title: "Untertitel Neustart fehlgeschlagen",
-            message: error instanceof Error ? error.message : "Native SpeechRecognition restart failed",
-            stack: error instanceof Error ? error.stack : null,
-            severity: "warning",
-            details: { sessionId, mode: "native", lastStatus: `native-restart-error:${sessionId}` },
-          });
+              void logAppError({
+                title: "Untertitel Neustart fehlgeschlagen",
+                message: error instanceof Error ? error.message : "Native SpeechRecognition restart failed",
+                stack: error instanceof Error ? error.stack : null,
+                severity: "warning",
+                details: { sessionId, mode: "native", lastStatus: `native-restart-error:${sessionId}` },
+              });
               cleanupCaptions();
               setStatus("error");
               setLastDebugStatus(`native-restart-error:${sessionId}`);
@@ -265,7 +265,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
     recognition.onend = () => {
       if (isCurrentSession(sessionId) && recognitionRef.current === recognition) {
-        try { recognition.start(); } catch {}
+        try { recognition.start(); } catch { return; }
       }
     };
 
