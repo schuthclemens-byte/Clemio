@@ -197,6 +197,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
               if (!isCurrentSession(sessionId)) return;
               cleanupCaptions();
               setStatus("error");
+              setLastDebugStatus(`native-restart-error:${sessionId}`);
               setErrorMessage("Untertitel wurden auf diesem Gerät beendet.");
             }
           }
