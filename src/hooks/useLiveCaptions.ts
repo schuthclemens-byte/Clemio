@@ -61,28 +61,22 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     await Promise.all(listeners.map((listener) => listener.remove().catch(() => undefined)));
   }, []);
 
-  const safeStopNative = useCallback(async (cleanupSessionId?: number) => {
+  const safeStopNative = useCallback(async () => {
     try {
       const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
       await SpeechRecognition.stop().catch(() => undefined);
     } catch {
       // Native plugin may be unavailable on some builds/devices. The call must continue.
-    } finally {
-      if (cleanupSessionId === undefined || sessionIdRef.current === cleanupSessionId) {
-        await removeNativeListeners();
-      }
     }
-  }, [removeNativeListeners]);
+  }, []);
 
   const cleanupCaptions = useCallback((resetState = true) => {
     sessionIdRef.current += 1;
-    const cleanupSessionId = sessionIdRef.current;
     nativeListeningRef.current = false;
     clearBrowserRecognition();
+    void removeNativeListeners();
     if (isNative) {
-      void safeStopNative(cleanupSessionId);
-    } else {
-      void removeNativeListeners();
+      void safeStopNative();
     }
 
     if (resetState && mountedRef.current) {
@@ -248,6 +242,15 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     cleanupCaptions();
   }, [cleanupCaptions]);
 
+  const restartCaptions = useCallback((lang = "de-DE") => {
+    cleanupCaptions();
+    window.setTimeout(() => {
+      if (mountedRef.current && isSupported) {
+        startCaptions(lang);
+      }
+    }, 150);
+  }, [cleanupCaptions, isSupported, startCaptions]);
+
   useEffect(() => {
     return () => {
       mountedRef.current = false;
@@ -263,5 +266,5 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     }
   }, [isEnabled, startCaptions, stopCaptions]);
 
-  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, isSupported, isChecking, status, errorMessage };
+  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, restartCaptions, isSupported, isChecking, status, errorMessage };
 }
