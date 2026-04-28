@@ -9,6 +9,7 @@ interface UseLiveCaptionsReturn {
   toggleCaptions: () => void;
   startCaptions: (lang?: string) => void;
   stopCaptions: () => void;
+  restartCaptions: (lang?: string) => void;
   isSupported: boolean;
   isChecking: boolean;
   status: CaptionsStatus;
@@ -66,19 +67,16 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       await SpeechRecognition.stop().catch(() => undefined);
     } catch {
       // Native plugin may be unavailable on some builds/devices. The call must continue.
-    } finally {
-      await removeNativeListeners();
     }
-  }, [removeNativeListeners]);
+  }, []);
 
   const cleanupCaptions = useCallback((resetState = true) => {
     sessionIdRef.current += 1;
     nativeListeningRef.current = false;
     clearBrowserRecognition();
+    void removeNativeListeners();
     if (isNative) {
       void safeStopNative();
-    } else {
-      void removeNativeListeners();
     }
 
     if (resetState && mountedRef.current) {
@@ -244,6 +242,15 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     cleanupCaptions();
   }, [cleanupCaptions]);
 
+  const restartCaptions = useCallback((lang = "de-DE") => {
+    cleanupCaptions();
+    window.setTimeout(() => {
+      if (mountedRef.current && isSupported) {
+        startCaptions(lang);
+      }
+    }, 150);
+  }, [cleanupCaptions, isSupported, startCaptions]);
+
   useEffect(() => {
     return () => {
       mountedRef.current = false;
@@ -259,5 +266,5 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     }
   }, [isEnabled, startCaptions, stopCaptions]);
 
-  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, isSupported, isChecking, status, errorMessage };
+  return { isEnabled, caption, toggleCaptions, startCaptions, stopCaptions, restartCaptions, isSupported, isChecking, status, errorMessage };
 }
