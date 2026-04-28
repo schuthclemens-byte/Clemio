@@ -9,6 +9,7 @@ interface UseLiveCaptionsReturn {
   toggleCaptions: () => void;
   startCaptions: (lang?: string) => void;
   stopCaptions: () => void;
+  restartCaptions: (lang?: string) => void;
   isSupported: boolean;
   isChecking: boolean;
   status: CaptionsStatus;
@@ -60,23 +61,26 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     await Promise.all(listeners.map((listener) => listener.remove().catch(() => undefined)));
   }, []);
 
-  const safeStopNative = useCallback(async () => {
+  const safeStopNative = useCallback(async (cleanupSessionId?: number) => {
     try {
       const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
       await SpeechRecognition.stop().catch(() => undefined);
     } catch {
       // Native plugin may be unavailable on some builds/devices. The call must continue.
     } finally {
-      await removeNativeListeners();
+      if (cleanupSessionId === undefined || sessionIdRef.current === cleanupSessionId) {
+        await removeNativeListeners();
+      }
     }
   }, [removeNativeListeners]);
 
   const cleanupCaptions = useCallback((resetState = true) => {
     sessionIdRef.current += 1;
+    const cleanupSessionId = sessionIdRef.current;
     nativeListeningRef.current = false;
     clearBrowserRecognition();
     if (isNative) {
-      void safeStopNative();
+      void safeStopNative(cleanupSessionId);
     } else {
       void removeNativeListeners();
     }
