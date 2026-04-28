@@ -93,7 +93,7 @@ const AdminErrorReports = () => {
   const statusLabels: Record<StatusFilter, string> = {
     open: tr("Offen", "Open"),
     reviewed: tr("Geprüft", "Reviewed"),
-    resolved: tr("Erledigt", "Resolved"),
+    resolved: tr("Gelöst", "Resolved"),
     all: tr("Alle", "All"),
   };
 
@@ -117,6 +117,10 @@ const AdminErrorReports = () => {
     return item.severity === severityFilter;
   };
 
+  const openCount = errors.filter((item) => item.status === "open").length;
+  const reviewedCount = errors.filter((item) => item.status === "reviewed").length;
+  const resolvedCount = errors.filter((item) => item.status === "resolved").length;
+  const problematicCount = errors.filter((item) => item.severity === "error" || item.severity === "fatal").length;
   const filtered = errors.filter((item) => (statusFilter === "all" || item.status === statusFilter) && matchesSeverity(item));
   const isFiltered = statusFilter !== "open" || severityFilter !== "all";
 
@@ -126,7 +130,42 @@ const AdminErrorReports = () => {
 
   return (
     <div>
+      <div className="px-4 pt-4">
+        <div className="rounded-2xl border border-border/50 bg-card p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-destructive/10 p-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-sm font-semibold">{tr("Fehler-Übersicht", "Error overview")}</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {tr("Neue App-Fehler nach Status prüfen und bearbeiten.", "Review and manage new app errors by status.")}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+            <div className="rounded-xl bg-muted/40 px-2 py-2">
+              <p className="text-base font-bold text-destructive">{openCount}</p>
+              <p className="text-[0.6rem] text-muted-foreground">{tr("Offen", "Open")}</p>
+            </div>
+            <div className="rounded-xl bg-muted/40 px-2 py-2">
+              <p className="text-base font-bold text-primary">{reviewedCount}</p>
+              <p className="text-[0.6rem] text-muted-foreground">{tr("Geprüft", "Reviewed")}</p>
+            </div>
+            <div className="rounded-xl bg-muted/40 px-2 py-2">
+              <p className="text-base font-bold text-foreground">{resolvedCount}</p>
+              <p className="text-[0.6rem] text-muted-foreground">{tr("Gelöst", "Resolved")}</p>
+            </div>
+            <div className="rounded-xl bg-muted/40 px-2 py-2">
+              <p className="text-base font-bold text-destructive">{problematicCount}</p>
+              <p className="text-[0.6rem] text-muted-foreground">{tr("Problem", "Problem")}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-2 px-4 py-2">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">{tr("Status filtern", "Filter by status")}</p>
         <div className="flex gap-1 overflow-x-auto">
           {(["open", "reviewed", "resolved", "all"] as const).map((key) => (
             <button key={key} onClick={() => setStatusFilter(key)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
@@ -180,7 +219,7 @@ const AdminErrorReports = () => {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {item.status === "open" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "reviewed")}><Eye className="h-3 w-3" />{tr("Als geprüft", "Mark reviewed")}</Button>}
-                {item.status !== "resolved" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "resolved")}><CheckCircle className="h-3 w-3" />{tr("Erledigt", "Resolved")}</Button>}
+                {item.status !== "resolved" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "resolved")}><CheckCircle className="h-3 w-3" />{tr("Gelöst", "Resolved")}</Button>}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button size="sm" variant="outline" className="h-7 gap-1 text-xs text-destructive" disabled={deleting === item.id}>
