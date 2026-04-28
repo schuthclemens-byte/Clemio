@@ -3,6 +3,12 @@ import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 
 type CaptionsStatus = "checking" | "ready" | "unsupported" | "permission-denied" | "error";
 
+interface CaptionsDebugStatus {
+  sessionId: number;
+  mode: "native" | "browser" | "unknown";
+  lastStatus: string;
+}
+
 interface UseLiveCaptionsReturn {
   isEnabled: boolean;
   caption: string;
@@ -14,6 +20,7 @@ interface UseLiveCaptionsReturn {
   isChecking: boolean;
   status: CaptionsStatus;
   errorMessage: string | null;
+  debugStatus: CaptionsDebugStatus;
 }
 
 export function useLiveCaptions(): UseLiveCaptionsReturn {
@@ -21,6 +28,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   const [caption, setCaption] = useState("");
   const [status, setStatus] = useState<CaptionsStatus>("checking");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [lastDebugStatus, setLastDebugStatus] = useState("checking-support");
   const recognitionRef = useRef<any>(null);
   const nativeListeningRef = useRef(false);
   const nativeListenersRef = useRef<PluginListenerHandle[]>([]);
@@ -36,6 +44,11 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const isSupported = status === "ready";
   const isChecking = status === "checking";
+  const debugStatus: CaptionsDebugStatus = {
+    sessionId: sessionIdRef.current,
+    mode: typeof window === "undefined" ? "unknown" : isNative ? "native" : "browser",
+    lastStatus: lastDebugStatus,
+  };
 
   const isCurrentSession = useCallback((sessionId: number) => {
     return mountedRef.current && sessionIdRef.current === sessionId;
