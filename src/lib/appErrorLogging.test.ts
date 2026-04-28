@@ -38,7 +38,10 @@ describe("appErrorLogging", () => {
 
   it("logged unhandledrejection", async () => {
     const cleanup = installGlobalErrorLogging();
-    window.dispatchEvent(new PromiseRejectionEvent("unhandledrejection", { reason: new Error("promise kaputt"), promise: Promise.resolve() }));
+    const event = new Event("unhandledrejection") as PromiseRejectionEvent;
+    Object.defineProperty(event, "reason", { value: new Error("promise kaputt") });
+    Object.defineProperty(event, "promise", { value: Promise.resolve() });
+    window.dispatchEvent(event);
 
     await vi.waitFor(() => expect(insert).toHaveBeenCalledTimes(1));
     expect(insert.mock.calls[0][0]).toMatchObject({ title: "Nicht behandelte App-Aktion" });
