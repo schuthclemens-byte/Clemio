@@ -10,6 +10,7 @@ import {
   MicOff,
   Headphones,
   Subtitles,
+  RotateCcw,
   ArrowLeft,
   Ear,
   AlertTriangle,
@@ -109,6 +110,7 @@ const CallPage = () => {
     isEnabled: captionsEnabled,
     caption,
     toggleCaptions,
+    restartCaptions,
     stopCaptions,
     isSupported: captionsSupported,
     isChecking: captionsChecking,
@@ -122,6 +124,11 @@ const CallPage = () => {
     if (!captionsCanStart) return;
     toggleCaptions();
   }, [captionsCanStart, toggleCaptions]);
+
+  const handleRestartCaptions = useCallback(() => {
+    if (!captionsCanStart) return;
+    restartCaptions("de-DE");
+  }, [captionsCanStart, restartCaptions]);
 
   useEffect(() => {
     if (!captionsCanStart && captionsEnabled) {
