@@ -173,6 +173,25 @@ const AdminErrorReports = () => {
       </div>
 
       <div className="space-y-2 px-4 py-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={tr("Betreff oder Message suchen", "Search title or message")}
+            className="h-10 rounded-xl bg-card pl-9 pr-9 text-sm"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground -translate-y-1/2"
+              aria-label={tr("Suche löschen", "Clear search")}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
         <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">{tr("Status filtern", "Filter by status")}</p>
         <div className="flex gap-1 overflow-x-auto">
           {(["open", "reviewed", "resolved", "all"] as const).map((key) => (
@@ -191,7 +210,7 @@ const AdminErrorReports = () => {
             </button>
           ))}
           {isFiltered && (
-            <button onClick={() => { setStatusFilter("open"); setSeverityFilter("all"); }} className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground underline-offset-2 hover:underline">
+            <button onClick={() => { setStatusFilter("open"); setSeverityFilter("all"); setSearch(""); }} className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground underline-offset-2 hover:underline">
               {tr("Zurücksetzen", "Reset")}
             </button>
           )}
