@@ -134,6 +134,8 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
     if (isNative) {
       void (async () => {
+        await nativeStopInFlightRef.current?.catch(() => undefined);
+        if (!isCurrentSession(sessionId)) return;
         const { SpeechRecognition } = await import("@capacitor-community/speech-recognition");
         if (!isCurrentSession(sessionId)) return;
         const availability = await SpeechRecognition.available().catch(() => ({ available: false }));
@@ -256,7 +258,8 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const restartCaptions = useCallback((lang = "de-DE") => {
     cleanupCaptions();
-    window.setTimeout(() => {
+    restartTimerRef.current = window.setTimeout(() => {
+      restartTimerRef.current = null;
       if (mountedRef.current && isSupported) {
         startCaptions(lang);
       }
