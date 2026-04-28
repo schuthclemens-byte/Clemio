@@ -1,22 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { installGlobalErrorLogging, logAppError, resetAppErrorLoggingForTests } from "./appErrorLogging";
 
-const insert = vi.fn().mockResolvedValue({ error: null });
+const rpc = vi.fn().mockResolvedValue({ error: null });
 const getUser = vi.fn().mockResolvedValue({ data: { user: { id: "user-1" } } });
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: { getUser },
-    from: () => ({ insert }),
+    rpc,
   },
 }));
 
 describe("appErrorLogging", () => {
   afterEach(() => {
-    insert.mockClear();
+    rpc.mockClear();
     getUser.mockClear();
     getUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
-    insert.mockResolvedValue({ error: null });
+    rpc.mockResolvedValue({ error: null });
     resetAppErrorLoggingForTests();
   });
 
@@ -24,15 +24,15 @@ describe("appErrorLogging", () => {
     await logAppError({ title: "Test", message: "kaputt", stack: "stack" });
     await logAppError({ title: "Test", message: "kaputt", stack: "stack" });
 
-    expect(insert).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
 
   it("logged window.error", async () => {
     const cleanup = installGlobalErrorLogging();
     window.dispatchEvent(new ErrorEvent("error", { message: "boom", error: new Error("boom") }));
 
-    await vi.waitFor(() => expect(insert).toHaveBeenCalledTimes(1));
-    expect(insert.mock.calls[0][0]).toMatchObject({ title: "Globaler App-Fehler", user_id: "user-1" });
+    await vi.waitFor(() => expect(rpc).toHaveBeenCalledTimes(1));
+    expect(rpc.mock.calls[0][1]).toMatchObject({ _title: "Globaler App-Fehler" });
     cleanup();
   });
 
@@ -43,17 +43,17 @@ describe("appErrorLogging", () => {
     Object.defineProperty(event, "promise", { value: Promise.resolve() });
     window.dispatchEvent(event);
 
-    await vi.waitFor(() => expect(insert).toHaveBeenCalledTimes(1));
-    expect(insert.mock.calls[0][0]).toMatchObject({ title: "Nicht behandelte App-Aktion" });
+    await vi.waitFor(() => expect(rpc).toHaveBeenCalledTimes(1));
+    expect(rpc.mock.calls[0][1]).toMatchObject({ _title: "Nicht behandelte App-Aktion" });
     cleanup();
   });
 
   it("startet keine Endlosschleife, wenn Logging selbst fehlschlägt", async () => {
-    insert.mockRejectedValueOnce(new Error("db down"));
+    rpc.mockRejectedValueOnce(new Error("db down"));
 
     await logAppError({ title: "DB", message: "down" });
     await logAppError({ title: "DB 2", message: "down 2" });
 
-    expect(insert).toHaveBeenCalledTimes(2);
+    expect(rpc).toHaveBeenCalledTimes(2);
   });
 });
