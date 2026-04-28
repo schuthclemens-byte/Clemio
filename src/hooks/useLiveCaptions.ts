@@ -87,6 +87,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
 
   const cleanupCaptions = useCallback((resetState = true) => {
     sessionIdRef.current += 1;
+    setLastDebugStatus(resetState ? "stopped" : "cleanup");
     nativeListeningRef.current = false;
     if (restartTimerRef.current) {
       window.clearTimeout(restartTimerRef.current);
@@ -113,12 +114,14 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   useEffect(() => {
     if (!isNative) {
       setStatus(browserSupported ? "ready" : "unsupported");
+      setLastDebugStatus(browserSupported ? "browser-ready" : "browser-unsupported");
       setErrorMessage(browserSupported ? null : "Untertitel werden auf diesem Gerät nicht unterstützt.");
       return;
     }
 
     let active = true;
     setStatus("checking");
+    setLastDebugStatus("native-checking");
     setErrorMessage(null);
 
     import("@capacitor-community/speech-recognition")
@@ -126,11 +129,13 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       .then(({ available }) => {
         if (!active) return;
         setStatus(available ? "ready" : "unsupported");
+        setLastDebugStatus(available ? "native-ready" : "native-unsupported");
         setErrorMessage(available ? null : "Untertitel werden auf diesem Gerät nicht unterstützt.");
       })
       .catch(() => {
         if (!active) return;
         setStatus("unsupported");
+        setLastDebugStatus("native-import-failed");
         setErrorMessage("Untertitel sind in dieser App-Version nicht verfügbar.");
       });
 
