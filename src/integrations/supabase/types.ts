@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_error_reports: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          details: Json
+          fingerprint: string
+          id: string
+          last_seen_at: string
+          message: string
+          occurrences: number
+          platform: string | null
+          route: string | null
+          severity: string
+          stack: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          details?: Json
+          fingerprint: string
+          id?: string
+          last_seen_at?: string
+          message: string
+          occurrences?: number
+          platform?: string | null
+          route?: string | null
+          severity?: string
+          stack?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          details?: Json
+          fingerprint?: string
+          id?: string
+          last_seen_at?: string
+          message?: string
+          occurrences?: number
+          platform?: string | null
+          route?: string | null
+          severity?: string
+          stack?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
