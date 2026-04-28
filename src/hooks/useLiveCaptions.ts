@@ -26,7 +26,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   const nativeListenersRef = useRef<PluginListenerHandle[]>([]);
   const sessionIdRef = useRef(0);
   const mountedRef = useRef(true);
-  const restartTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const restartTimerRef = useRef<number | null>(null);
   const nativeStopInFlightRef = useRef<Promise<void> | null>(null);
 
   const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
