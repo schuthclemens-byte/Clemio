@@ -183,21 +183,34 @@ const AdminPage = () => {
   useEffect(() => {
     if (!isAdmin) return;
 
+    const refreshOpenCounts = () => {
+      supabase.functions.invoke("admin-manage-user", {
+        body: { action: "list-reports" },
+      }).then(({ data, error }) => {
+        if (!error && data?.reports) {
+          setOpenReportsCount(data.reports.filter((r: any) => r.status === "open").length);
+        }
+      });
+      supabase.functions.invoke("admin-manage-user", {
+        body: { action: "list-errors" },
+      }).then(({ data, error }) => {
+        if (!error && data?.errors) {
+          setOpenErrorsCount(data.errors.filter((item: any) => item.status === "open").length);
+        }
+      });
+    };
+
     const channel = supabase
-      .channel("admin-reports-realtime")
+      .channel("admin-reports-errors-realtime")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "reports" },
-        () => {
-          // Re-fetch open reports count
-          supabase.functions.invoke("admin-manage-user", {
-            body: { action: "list-reports" },
-          }).then(({ data, error }) => {
-            if (!error && data?.reports) {
-              setOpenReportsCount(data.reports.filter((r: any) => r.status === "open").length);
-            }
-          });
-        }
+        refreshOpenCounts
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_error_reports" },
+        refreshOpenCounts
       )
       .subscribe();
 
