@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/contexts/I18nContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
@@ -15,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, CheckCircle, Eye, Loader2, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle, Eye, Loader2, Save, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface AppErrorReport {
@@ -47,6 +48,7 @@ const AdminErrorReports = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("open");
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
+  const [search, setSearch] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -117,12 +119,18 @@ const AdminErrorReports = () => {
     return item.severity === severityFilter;
   };
 
+  const matchesSearch = (item: AppErrorReport) => {
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return `${item.title} ${item.message}`.toLowerCase().includes(query);
+  };
+
   const openCount = errors.filter((item) => item.status === "open").length;
   const reviewedCount = errors.filter((item) => item.status === "reviewed").length;
   const resolvedCount = errors.filter((item) => item.status === "resolved").length;
   const problematicCount = errors.filter((item) => item.severity === "error" || item.severity === "fatal").length;
-  const filtered = errors.filter((item) => (statusFilter === "all" || item.status === statusFilter) && matchesSeverity(item));
-  const isFiltered = statusFilter !== "open" || severityFilter !== "all";
+  const filtered = errors.filter((item) => (statusFilter === "all" || item.status === statusFilter) && matchesSeverity(item) && matchesSearch(item));
+  const isFiltered = statusFilter !== "open" || severityFilter !== "all" || search.trim().length > 0;
 
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
