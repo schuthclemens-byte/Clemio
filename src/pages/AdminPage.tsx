@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
 import AdminReports from "@/components/admin/AdminReports";
+import AdminErrorReports from "@/components/admin/AdminErrorReports";
 
 interface UserSubscription {
   plan: string;
@@ -74,8 +75,9 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"users" | "reports" | "analytics">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "errors" | "analytics">("users");
   const [openReportsCount, setOpenReportsCount] = useState(0);
+  const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const { comingSoon, loading: launchLoading } = useLaunchMode();
   const { enabled: callCaptionsEnabled, nativeOnly, translationEnabled, loading: callCaptionsLoading } = useCallCaptionsFeature();
   const [launchSaving, setLaunchSaving] = useState(false);
@@ -154,16 +156,21 @@ const AdminPage = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [listRes, statsRes, reportsRes] = await Promise.all([
+    const [listRes, statsRes, reportsRes, errorsRes] = await Promise.all([
       supabase.functions.invoke("admin-manage-user", { body: { action: "list" } }),
       supabase.functions.invoke("admin-manage-user", { body: { action: "stats" } }),
       supabase.functions.invoke("admin-manage-user", { body: { action: "list-reports" } }),
+      supabase.functions.invoke("admin-manage-user", { body: { action: "list-errors" } }),
     ]);
     if (!listRes.error) setProfiles(listRes.data?.profiles || []);
     if (!statsRes.error) setStats(statsRes.data);
     if (!reportsRes.error) {
       const reports = reportsRes.data?.reports || [];
       setOpenReportsCount(reports.filter((r: any) => r.status === "open").length);
+    }
+    if (!errorsRes.error) {
+      const errors = errorsRes.data?.errors || [];
+      setOpenErrorsCount(errors.filter((item: any) => item.status === "open").length);
     }
     setLoading(false);
   };
