@@ -148,6 +148,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
     if (!isSupported) return;
     cleanupCaptions(false);
     const sessionId = sessionIdRef.current;
+    setLastDebugStatus(`starting:${sessionId}`);
     setErrorMessage(null);
 
     if (isNative) {
@@ -160,6 +161,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
         if (!isCurrentSession(sessionId)) return;
         if (!availability.available) {
           setStatus("unsupported");
+          setLastDebugStatus(`unsupported:${sessionId}`);
           setErrorMessage("Untertitel werden auf diesem Gerät nicht unterstützt.");
           cleanupCaptions();
           return;
@@ -172,6 +174,7 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
           if (!isCurrentSession(sessionId)) return;
           if (requested.speechRecognition !== "granted") {
             setStatus("permission-denied");
+            setLastDebugStatus(`permission-denied:${sessionId}`);
             setErrorMessage("Mikrofon- oder Spracherkennung-Berechtigung fehlt.");
             cleanupCaptions();
             return;
