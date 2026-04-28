@@ -4,6 +4,17 @@ import { useI18n } from "@/contexts/I18nContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { AlertTriangle, CheckCircle, Eye, Loader2, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,14 +37,19 @@ interface AppErrorReport {
   last_seen_at: string;
 }
 
+type StatusFilter = "open" | "reviewed" | "resolved" | "all";
+type SeverityFilter = "all" | "problematic" | "fatal" | "error" | "warning";
+
 const AdminErrorReports = () => {
   const { locale } = useI18n();
   const tr = (de: string, en: string) => (locale === "de" ? de : en);
   const [errors, setErrors] = useState<AppErrorReport[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"open" | "reviewed" | "resolved" | "all">("open");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("open");
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchErrors = async () => {
     setLoading(true);
@@ -62,9 +78,11 @@ const AdminErrorReports = () => {
   };
 
   const deleteError = async (errorId: string) => {
+    setDeleting(errorId);
     const { error } = await supabase.functions.invoke("admin-manage-user", {
       body: { action: "delete-error", errorId },
     });
+    setDeleting(null);
     if (error) toast.error(tr("Fehler konnte nicht gelöscht werden", "Could not delete error"));
     else {
       toast.success(tr("Fehler gelöscht", "Error deleted"));
@@ -72,7 +90,35 @@ const AdminErrorReports = () => {
     }
   };
 
-  const filtered = errors.filter((item) => filter === "all" || item.status === filter);
+  const statusLabels: Record<StatusFilter, string> = {
+    open: tr("Offen", "Open"),
+    reviewed: tr("Geprüft", "Reviewed"),
+    resolved: tr("Erledigt", "Resolved"),
+    all: tr("Alle", "All"),
+  };
+
+  const severityLabels: Record<SeverityFilter, string> = {
+    all: tr("Alle Stufen", "All levels"),
+    problematic: tr("Problematisch", "Problematic"),
+    fatal: tr("Kritisch", "Critical"),
+    error: tr("Fehler", "Error"),
+    warning: tr("Warnung", "Warning"),
+  };
+
+  const severityBadgeClass: Record<AppErrorReport["severity"], string> = {
+    warning: "border-primary/30 bg-primary/10 text-primary",
+    error: "border-destructive/30 bg-destructive/15 text-destructive",
+    fatal: "border-destructive bg-destructive text-destructive-foreground",
+  };
+
+  const matchesSeverity = (item: AppErrorReport) => {
+    if (severityFilter === "all") return true;
+    if (severityFilter === "problematic") return item.severity === "error" || item.severity === "fatal";
+    return item.severity === severityFilter;
+  };
+
+  const filtered = errors.filter((item) => (statusFilter === "all" || item.status === statusFilter) && matchesSeverity(item));
+  const isFiltered = statusFilter !== "open" || severityFilter !== "all";
 
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
@@ -80,26 +126,42 @@ const AdminErrorReports = () => {
 
   return (
     <div>
-      <div className="flex gap-1 overflow-x-auto px-4 py-2">
-        {(["open", "reviewed", "resolved", "all"] as const).map((key) => (
-          <button key={key} onClick={() => setFilter(key)} className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${filter === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-            {key === "all" ? tr("Alle", "All") : key === "open" ? tr("Offen", "Open") : key === "reviewed" ? tr("Geprüft", "Reviewed") : tr("Erledigt", "Resolved")}
-            {key !== "all" && ` (${errors.filter((item) => item.status === key).length})`}
-          </button>
-        ))}
+      <div className="space-y-2 px-4 py-2">
+        <div className="flex gap-1 overflow-x-auto">
+          {(["open", "reviewed", "resolved", "all"] as const).map((key) => (
+            <button key={key} onClick={() => setStatusFilter(key)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {statusLabels[key]}
+              {key !== "all" && ` (${errors.filter((item) => item.status === key).length})`}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-1 overflow-x-auto">
+          {(["all", "problematic", "fatal", "error", "warning"] as const).map((key) => (
+            <button key={key} onClick={() => setSeverityFilter(key)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${severityFilter === key ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground"}`}>
+              {severityLabels[key]}
+              {key === "problematic" && ` (${errors.filter((item) => item.severity === "error" || item.severity === "fatal").length})`}
+            </button>
+          ))}
+          {isFiltered && (
+            <button onClick={() => { setStatusFilter("open"); setSeverityFilter("all"); }} className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground underline-offset-2 hover:underline">
+              {tr("Zurücksetzen", "Reset")}
+            </button>
+          )}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">{tr("Keine Fehler", "No errors")}</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{tr("Keine Fehler für diesen Filter", "No errors for this filter")}</p>
       ) : (
         <div className="divide-y divide-border/50">
           {filtered.map((item) => (
-            <div key={item.id} className="space-y-2 px-4 py-3">
+            <div key={item.id} className={`space-y-2 px-4 py-3 ${item.severity === "fatal" ? "bg-destructive/5" : ""}`}>
               <div className="flex flex-wrap items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <AlertTriangle className={`h-4 w-4 ${item.severity === "warning" ? "text-primary" : "text-destructive"}`} />
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.title}</span>
-                <Badge className="bg-destructive/15 px-1.5 text-[0.6rem] text-destructive">{item.severity}</Badge>
-                <Badge variant="outline" className="px-1.5 text-[0.6rem]">{item.status}</Badge>
+                <Badge variant="outline" className={`px-1.5 text-[0.6rem] ${severityBadgeClass[item.severity]}`}>{item.severity === "fatal" ? tr("kritisch", "critical") : item.severity === "error" ? tr("Fehler", "error") : tr("Warnung", "warning")}</Badge>
+                <Badge variant="outline" className="px-1.5 text-[0.6rem]">{statusLabels[item.status]}</Badge>
               </div>
               <p className="text-xs text-muted-foreground">{item.user_name}{item.user_phone ? ` · ${item.user_phone}` : ""} · {item.route || "—"}</p>
               <p className="rounded-lg bg-muted/50 p-2 text-sm">{item.message}</p>
@@ -119,7 +181,28 @@ const AdminErrorReports = () => {
               <div className="flex flex-wrap gap-1.5">
                 {item.status === "open" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "reviewed")}><Eye className="h-3 w-3" />{tr("Als geprüft", "Mark reviewed")}</Button>}
                 {item.status !== "resolved" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "resolved")}><CheckCircle className="h-3 w-3" />{tr("Erledigt", "Resolved")}</Button>}
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs text-muted-foreground" onClick={() => deleteError(item.id)}><Trash2 className="h-3 w-3" />{tr("Löschen", "Delete")}</Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-7 gap-1 text-xs text-destructive" disabled={deleting === item.id}>
+                      {deleting === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                      {tr("Löschen", "Delete")}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="max-h-[80dvh] overflow-y-auto">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{tr("Fehler löschen?", "Delete error?")}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {tr("Dieser Fehlereintrag wird dauerhaft aus dem Adminbereich entfernt.", "This error entry will be permanently removed from the admin area.")}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{tr("Abbrechen", "Cancel")}</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteError(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        {tr("Endgültig löschen", "Delete permanently")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           ))}

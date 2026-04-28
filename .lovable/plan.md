@@ -1,85 +1,57 @@
-Ich baue ein internes Fehler-Monitoring ein, damit App-Probleme automatisch im Adminbereich sichtbar werden und du sie bearbeiten kannst.
+Ich passe den Fehlerbereich im Admin so an, dass du Einträge gezielt löschen und sinnvoll filtern kannst.
 
 ## Ziel
-Wenn bei einem Nutzer ein relevanter Fehler passiert, wird daraus automatisch ein Admin-Eintrag mit Kontext. Im Adminbereich bekommst du einen eigenen Bereich für diese Fehler, inkl. Status und Notizen.
+Die Fehlerliste im Admin soll nicht nur nach Bearbeitungsstatus, sondern auch nach Relevanz filterbar sein – z. B. offen, erledigt, geprüft und problematisch. Außerdem bekommt die Löschfunktion eine klarere und verlässlichere Bedienung.
 
 ## Umsetzung
 
-1. **Neue Fehler-Tabelle im Backend**
-   - Neue Tabelle z. B. `app_error_reports` mit:
-     - Nutzer-ID, falls eingeloggt
-     - Fehlertitel / Message
-     - Stacktrace / technische Details
-     - Route, Browser/User-Agent, Plattform
-     - Severity: `error`, `warning`, `fatal`
-     - Status: `open`, `reviewed`, `resolved`
-     - Admin-Notiz
-     - Zeitstempel und Zähler für ähnliche Fehler
-   - RLS:
-     - Nutzer dürfen eigene Fehler einreichen.
-     - Admins dürfen alle Fehler lesen, bearbeiten und löschen.
-     - Keine öffentliche Lesbarkeit.
+1. **Filter im Fehlerbereich erweitern**
+   - Die bestehende Status-Filterung bleibt erhalten, wird aber verständlicher beschriftet.
+   - Zusätzlich kommt ein zweiter Filter für die Problemstufe:
+     - alle
+     - problematisch
+     - Fehler
+     - Warnung
+     - kritisch/fatal
+   - „Problematisch“ wird aus der vorhandenen Severity abgeleitet, damit besonders wichtige Einträge schnell sichtbar sind.
 
-2. **Sichere Fehler-Erfassung im Client**
-   - Neue kleine Fehler-Logging-Utility, die Fehler an die Datenbank sendet.
-   - Erfasst automatisch:
-     - `window.error`
-     - `unhandledrejection`
-     - React-Renderfehler über eine `ErrorBoundary`
-     - wichtige manuell abgefangene Fehler, z. B. Captions-/SpeechRecognition-Fehler.
-   - Mit Schutz gegen Spam/Race-Conditions:
-     - Deduplizierung ähnlicher Fehler im Browser für kurze Zeit.
-     - Kein Endlos-Logging, falls das Logging selbst fehlschlägt.
-     - Sensible Daten werden nicht absichtlich mitgeloggt; Stack/Message werden gekürzt.
+2. **Kombinierte Filterlogik einbauen**
+   - Fehler werden gleichzeitig nach:
+     - Status (`open`, `reviewed`, `resolved`)
+     - Schweregrad (`warning`, `error`, `fatal`)
+     gefiltert.
+   - So kannst du z. B. direkt nur offene problematische Fehler sehen.
 
-3. **Backend-Funktion für Admin-Aktionen erweitern**
-   - `admin-manage-user` bekommt neue Actions:
-     - `list-errors`
-     - `update-error`
-     - optional `delete-error`
-   - Die Funktion reichert Fehler mit Nutzername/Telefon an, damit du im Adminbereich direkt siehst, wen es betrifft.
+3. **Löschfunktion im Admin verbessern**
+   - Die bereits vorhandene Delete-Action wird im UI klarer herausgestellt.
+   - Optional mit Bestätigungsdialog, damit nichts versehentlich gelöscht wird.
+   - Nach dem Löschen wird die Liste sofort aktualisiert, damit der Eintrag direkt verschwindet.
 
-4. **Adminbereich erweitern**
-   - Neuer Tab neben `Nutzer`, `Reports`, `Analytics`: **Fehler**.
-   - Badge mit Anzahl offener Fehler.
-   - Liste mit:
-     - Fehlerstatus
-     - Severity
-     - Nutzer
-     - Route/Plattform
-     - Zeitpunkt
-     - Fehlermeldung
-     - aufklappbaren Details/Stacktrace
-     - Admin-Notiz
-   - Aktionen:
-     - „Als geprüft“
-     - „Erledigt“
-     - „Löschen“
-     - Notiz speichern
+4. **Darstellung der Fehler klarer machen**
+   - Severity-Badges farblich differenzieren:
+     - warning
+     - error
+     - fatal
+   - Problematische Einträge visuell stärker hervorheben.
+   - Statuslabels in verständliches Deutsch/Englisch übersetzen.
 
-5. **Realtime-Update**
-   - Der Adminbereich aktualisiert den Fehler-Badge automatisch, wenn neue Fehler eintreffen.
+5. **Open-Count / Badge konsistent halten**
+   - Prüfen, dass die Badge-Zählung im Admin-Tab weiter korrekt funktioniert, auch wenn Einträge gelöscht oder auf erledigt/geprüft gesetzt werden.
 
-6. **Captions-Fehler gezielt erfassen**
-   - Bei Untertitel-/SpeechRecognition-Problemen wird zusätzlich der bestehende Debug-Status mitgeloggt:
-     - Session-ID
-     - native/browser-Modus
-     - letzter Captions-Status
-   - Wichtig: Das Logging bleibt entkoppelt vom Call-Stream und beeinflusst Telefonate nicht.
+6. **Feinschliff für Admin-UX**
+   - Filter-Chips mobil gut bedienbar halten.
+   - Falls sinnvoll: „Filter zurücksetzen“-Option ergänzen.
+   - Notiz, Status-Update und Delete sollen sich nicht gegenseitig blockieren.
 
-7. **Tests**
-   - Tests für das Logging-Utility:
-     - dedupliziert ähnliche Fehler
-     - logged `window.error`
-     - logged `unhandledrejection`
-     - logged keine Endlosschleife bei Logging-Fehlern
-   - Falls sinnvoll: kleiner Test für ErrorBoundary-Verhalten.
+## Betroffene Bereiche
+- `src/components/admin/AdminErrorReports.tsx`
+- ggf. kleiner Abgleich in `src/pages/AdminPage.tsx`
+- kein zusätzlicher Backend-Umbau nötig, da `delete-error` bereits vorhanden ist
 
 ## Technische Details
+- Die Datenstruktur für Fehler ist schon vorhanden (`status`, `severity`, `admin_note`, `occurrences`).
+- Der Backend-Endpunkt `admin-manage-user` unterstützt das Löschen bereits mit `delete-error`.
+- Deshalb ist das hier primär ein UI-/UX-Upgrade mit robusterer Filterlogik.
+- Falls ich beim Prüfen sehe, dass „problematisch“ besser als eigener definierter Sammelfilter umgesetzt werden sollte, mappe ich ihn sauber auf bestehende Severity-Werte statt ein neues DB-Feld einzuführen.
 
-- Keine Rollen auf Profilen: Adminrechte bleiben über die bestehende `user_roles`-Struktur geschützt.
-- Keine Änderung an automatisch generierten Dateien wie `src/integrations/supabase/client.ts` oder `types.ts`.
-- Migration erstellt die Tabelle, RLS-Policies und optional Realtime für Fehler-Einträge.
-- Die Fehler-Erfassung läuft global in `App`/`main` und zusätzlich gezielt in kritischen Hooks wie `useLiveCaptions`.
-
-Nach Freigabe implementiere ich zuerst die Backend-Migration, dann Logging + ErrorBoundary, danach den neuen Admin-Tab und die Tests.
+Nach Freigabe setze ich das direkt im Admin-Fehlerbereich um.
