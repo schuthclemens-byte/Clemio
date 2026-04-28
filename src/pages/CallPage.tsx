@@ -105,8 +105,18 @@ const CallPage = () => {
   });
 
   const { enabled: callCaptionsFeatureEnabled, nativeOnly, translationEnabled } = useCallCaptionsFeature();
-  const { isEnabled: captionsEnabled, caption, toggleCaptions, stopCaptions, isSupported: captionsSupported } = useLiveCaptions();
-  const callCaptionsAvailable = callCaptionsFeatureEnabled && (!nativeOnly || Capacitor.isNativePlatform()) && captionsSupported;
+  const {
+    isEnabled: captionsEnabled,
+    caption,
+    toggleCaptions,
+    stopCaptions,
+    isSupported: captionsSupported,
+    isChecking: captionsChecking,
+    errorMessage: captionsErrorMessage,
+  } = useLiveCaptions();
+  const callCaptionsPlatformAllowed = !nativeOnly || Capacitor.isNativePlatform();
+  const callCaptionsAvailable = callCaptionsFeatureEnabled && callCaptionsPlatformAllowed && captionsSupported;
+  const showCaptionsUnavailable = callCaptionsFeatureEnabled && callCaptionsPlatformAllowed && !captionsChecking && !captionsSupported;
 
   useEffect(() => {
     if (!callCaptionsAvailable && captionsEnabled) {
@@ -606,6 +616,12 @@ const CallPage = () => {
               </SelectContent>
             </Select>
           </div>
+        )}
+
+        {showCaptionsUnavailable && (
+          <p className="mt-3 text-center text-xs text-primary-foreground/50">
+            {captionsErrorMessage || "Untertitel sind auf diesem Gerät nicht verfügbar."}
+          </p>
         )}
 
         <div className="flex items-center justify-center gap-4 mt-2">
