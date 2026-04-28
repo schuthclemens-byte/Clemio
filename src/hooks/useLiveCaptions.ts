@@ -241,29 +241,15 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
   }, [cleanupCaptions, clearBrowserRecognition, isCurrentSession, isNative, isSupported, removeNativeListeners]);
 
   const stopCaptions = useCallback(() => {
-    nativeListeningRef.current = false;
-    if (isNative) {
-      void safeStopNative();
-    }
-    try {
-      recognitionRef.current?.stop();
-    } catch {}
-    recognitionRef.current = null;
-    setIsEnabled(false);
-    setCaption("");
-  }, [isNative, safeStopNative]);
+    cleanupCaptions();
+  }, [cleanupCaptions]);
 
   useEffect(() => {
     return () => {
-      nativeListeningRef.current = false;
-      try {
-        recognitionRef.current?.stop();
-      } catch {}
-      if (isNative) {
-        void safeStopNative();
-      }
+      mountedRef.current = false;
+      cleanupCaptions(false);
     };
-  }, [isNative, safeStopNative]);
+  }, [cleanupCaptions]);
 
   const toggleCaptions = useCallback(() => {
     if (isEnabled) {
