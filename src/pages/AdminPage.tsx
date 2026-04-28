@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
 import AdminReports from "@/components/admin/AdminReports";
+import AdminErrorReports from "@/components/admin/AdminErrorReports";
 
 interface UserSubscription {
   plan: string;
@@ -74,8 +75,9 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"users" | "reports" | "analytics">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "errors" | "analytics">("users");
   const [openReportsCount, setOpenReportsCount] = useState(0);
+  const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const { comingSoon, loading: launchLoading } = useLaunchMode();
   const { enabled: callCaptionsEnabled, nativeOnly, translationEnabled, loading: callCaptionsLoading } = useCallCaptionsFeature();
   const [launchSaving, setLaunchSaving] = useState(false);
@@ -154,16 +156,21 @@ const AdminPage = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [listRes, statsRes, reportsRes] = await Promise.all([
+    const [listRes, statsRes, reportsRes, errorsRes] = await Promise.all([
       supabase.functions.invoke("admin-manage-user", { body: { action: "list" } }),
       supabase.functions.invoke("admin-manage-user", { body: { action: "stats" } }),
       supabase.functions.invoke("admin-manage-user", { body: { action: "list-reports" } }),
+      supabase.functions.invoke("admin-manage-user", { body: { action: "list-errors" } }),
     ]);
     if (!listRes.error) setProfiles(listRes.data?.profiles || []);
     if (!statsRes.error) setStats(statsRes.data);
     if (!reportsRes.error) {
       const reports = reportsRes.data?.reports || [];
       setOpenReportsCount(reports.filter((r: any) => r.status === "open").length);
+    }
+    if (!errorsRes.error) {
+      const errors = errorsRes.data?.errors || [];
+      setOpenErrorsCount(errors.filter((item: any) => item.status === "open").length);
     }
     setLoading(false);
   };
@@ -176,21 +183,34 @@ const AdminPage = () => {
   useEffect(() => {
     if (!isAdmin) return;
 
+    const refreshOpenCounts = () => {
+      supabase.functions.invoke("admin-manage-user", {
+        body: { action: "list-reports" },
+      }).then(({ data, error }) => {
+        if (!error && data?.reports) {
+          setOpenReportsCount(data.reports.filter((r: any) => r.status === "open").length);
+        }
+      });
+      supabase.functions.invoke("admin-manage-user", {
+        body: { action: "list-errors" },
+      }).then(({ data, error }) => {
+        if (!error && data?.errors) {
+          setOpenErrorsCount(data.errors.filter((item: any) => item.status === "open").length);
+        }
+      });
+    };
+
     const channel = supabase
-      .channel("admin-reports-realtime")
+      .channel("admin-reports-errors-realtime")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "reports" },
-        () => {
-          // Re-fetch open reports count
-          supabase.functions.invoke("admin-manage-user", {
-            body: { action: "list-reports" },
-          }).then(({ data, error }) => {
-            if (!error && data?.reports) {
-              setOpenReportsCount(data.reports.filter((r: any) => r.status === "open").length);
-            }
-          });
-        }
+        refreshOpenCounts
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_error_reports" },
+        refreshOpenCounts
       )
       .subscribe();
 
@@ -298,6 +318,7 @@ const AdminPage = () => {
            {([
             { key: "users" as const, icon: Users, label: tr("Nutzer", "Users"), badge: 0 },
             { key: "reports" as const, icon: Flag, label: "Reports", badge: openReportsCount },
+            { key: "errors" as const, icon: AlertTriangle, label: tr("Fehler", "Errors"), badge: openErrorsCount },
             { key: "analytics" as const, icon: Activity, label: "Analytics", badge: 0 },
           ]).map(tab => (
             <button
@@ -424,6 +445,8 @@ const AdminPage = () => {
           onBlockUser={(userId) => performAction("block", userId, tr("Blockieren", "Block"))}
           onDeleteVoice={(userId) => performAction("delete-voice", userId, tr("Voice gelöscht", "Voice deleted"))}
         />
+      ) : activeTab === "errors" ? (
+        <AdminErrorReports />
       ) : activeTab === "analytics" ? (
         /* ── ANALYTICS TAB (Step 9) ── */
         <div className="p-4 space-y-4">

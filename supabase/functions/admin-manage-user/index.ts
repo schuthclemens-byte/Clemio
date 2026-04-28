@@ -41,7 +41,7 @@ serve(async (req) => {
 
     if (!roleRow) return json({ error: "Forbidden: admin role required" }, 403);
 
-    const { action, targetUserId, reason, plan, premiumUntil, newPassword, reportId, status: reportStatus, adminNote } = await req.json();
+    const { action, targetUserId, reason, plan, premiumUntil, newPassword, reportId, errorId, status: reportStatus, adminNote } = await req.json();
 
     // ── STATS ──
     if (action === "stats") {
@@ -158,6 +158,50 @@ serve(async (req) => {
       const { error } = await admin.from("reports").update(updateData).eq("id", reportId);
       if (error) return json({ error: error.message }, 500);
       return json({ success: true, action: "report-updated" });
+    }
+
+    // ── LIST APP ERRORS (no targetUserId needed) ──
+    if (action === "list-errors") {
+      const { data: errors, error } = await admin
+        .from("app_error_reports")
+        .select("*")
+        .order("last_seen_at", { ascending: false })
+        .limit(200);
+      if (error) return json({ error: error.message }, 500);
+
+      const userIds = [...new Set((errors || []).map((item: any) => item.user_id).filter(Boolean))];
+      const { data: profiles } = userIds.length
+        ? await admin.from("profiles").select("id, display_name, phone_number").in("id", userIds)
+        : { data: [] };
+      const profileMap: Record<string, any> = {};
+      for (const profile of profiles || []) profileMap[profile.id] = profile;
+
+      return json({
+        errors: (errors || []).map((item: any) => ({
+          ...item,
+          user_name: profileMap[item.user_id]?.display_name || profileMap[item.user_id]?.phone_number || "Unknown",
+          user_phone: profileMap[item.user_id]?.phone_number || null,
+        })),
+      });
+    }
+
+    // ── UPDATE APP ERROR STATUS / NOTE ──
+    if (action === "update-error") {
+      if (!errorId) return json({ error: "errorId required" }, 400);
+      const updateData: any = { updated_at: new Date().toISOString() };
+      if (reportStatus) updateData.status = reportStatus;
+      if (adminNote !== undefined) updateData.admin_note = adminNote;
+      const { error } = await admin.from("app_error_reports").update(updateData).eq("id", errorId);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true, action: "error-updated" });
+    }
+
+    // ── DELETE APP ERROR ──
+    if (action === "delete-error") {
+      if (!errorId) return json({ error: "errorId required" }, 400);
+      const { error } = await admin.from("app_error_reports").delete().eq("id", errorId);
+      if (error) return json({ error: error.message }, 500);
+      return json({ success: true, action: "error-deleted" });
     }
 
     // ── LIST ALL PROFILES (no targetUserId needed) ──

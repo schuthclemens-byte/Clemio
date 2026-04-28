@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
+import { logAppError } from "@/lib/appErrorLogging";
 
 type CaptionsStatus = "checking" | "ready" | "unsupported" | "permission-denied" | "error";
 
@@ -193,8 +194,15 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
           if (data.status === "stopped" && nativeListeningRef.current && isCurrentSession(sessionId)) {
             try {
               await SpeechRecognition.start({ language: lang, maxResults: 1, partialResults: true, popup: false });
-            } catch {
+        } catch (error) {
               if (!isCurrentSession(sessionId)) return;
+          void logAppError({
+            title: "Untertitel Neustart fehlgeschlagen",
+            message: error instanceof Error ? error.message : "Native SpeechRecognition restart failed",
+            stack: error instanceof Error ? error.stack : null,
+            severity: "warning",
+            details: { sessionId, mode: "native", lastStatus: `native-restart-error:${sessionId}` },
+          });
               cleanupCaptions();
               setStatus("error");
               setLastDebugStatus(`native-restart-error:${sessionId}`);
@@ -214,8 +222,15 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
         if (result.matches?.[0]) setCaption(result.matches[0]);
         setLastDebugStatus(`native-started:${sessionId}`);
         setIsEnabled(true);
-      })().catch(() => {
+      })().catch((error) => {
         if (!isCurrentSession(sessionId)) return;
+        void logAppError({
+          title: "Untertitel Start fehlgeschlagen",
+          message: error instanceof Error ? error.message : "Native SpeechRecognition start failed",
+          stack: error instanceof Error ? error.stack : null,
+          severity: "warning",
+          details: { sessionId, mode: "native", lastStatus: `native-start-error:${sessionId}` },
+        });
         cleanupCaptions();
         setStatus("error");
         setLastDebugStatus(`native-start-error:${sessionId}`);
@@ -273,7 +288,14 @@ export function useLiveCaptions(): UseLiveCaptionsReturn {
       recognitionRef.current = recognition;
       setLastDebugStatus(`browser-started:${sessionId}`);
       setIsEnabled(true);
-    } catch {
+    } catch (error) {
+      void logAppError({
+        title: "Untertitel Start fehlgeschlagen",
+        message: error instanceof Error ? error.message : "Browser SpeechRecognition start failed",
+        stack: error instanceof Error ? error.stack : null,
+        severity: "warning",
+        details: { sessionId, mode: "browser", lastStatus: `browser-start-error:${sessionId}` },
+      });
       cleanupCaptions();
       setStatus("error");
       setLastDebugStatus(`browser-start-error:${sessionId}`);

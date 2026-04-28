@@ -9,6 +9,7 @@ import IncomingCallOverlay from "@/components/IncomingCallOverlay";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PushPromptSheet from "@/components/PushPromptSheet";
 import AppUpdateBanner from "@/components/AppUpdateBanner";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
 import SparkleOverlay from "@/components/design/SparkleOverlay";
 import { I18nProvider } from "@/contexts/I18nContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
@@ -80,7 +81,8 @@ const SparkleOverlayWrapper = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <AppErrorBoundary>
+    <QueryClientProvider client={queryClient}>
     <I18nProvider>
       <ThemeProvider>
         <DesignSystemProvider>
@@ -138,7 +140,8 @@ const App = () => (
         </DesignSystemProvider>
       </ThemeProvider>
     </I18nProvider>
-  </QueryClientProvider>
+    </QueryClientProvider>
+  </AppErrorBoundary>
 );
 
 export default App;

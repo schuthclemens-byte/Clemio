@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_error_reports: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          details: Json
+          fingerprint: string
+          id: string
+          last_seen_at: string
+          message: string
+          occurrences: number
+          platform: string | null
+          route: string | null
+          severity: string
+          stack: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          details?: Json
+          fingerprint: string
+          id?: string
+          last_seen_at?: string
+          message: string
+          occurrences?: number
+          platform?: string | null
+          route?: string | null
+          severity?: string
+          stack?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          details?: Json
+          fingerprint?: string
+          id?: string
+          last_seen_at?: string
+          message?: string
+          occurrences?: number
+          platform?: string | null
+          route?: string | null
+          severity?: string
+          stack?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -1044,6 +1104,20 @@ export type Database = {
       is_conversation_member: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
+      }
+      log_app_error_report: {
+        Args: {
+          _details?: Json
+          _fingerprint?: string
+          _message: string
+          _platform?: string
+          _route?: string
+          _severity?: string
+          _stack?: string
+          _title: string
+          _user_agent?: string
+        }
+        Returns: string
       }
       mark_messages_read: {
         Args: { _conversation_id: string }
