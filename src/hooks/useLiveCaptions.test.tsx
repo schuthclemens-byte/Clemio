@@ -33,10 +33,9 @@ describe("useLiveCaptions cleanup", () => {
     const stop = vi.fn();
     let instance: any;
 
-    (window as any).SpeechRecognition = vi.fn(function SpeechRecognitionMock(this: any) {
-      instance = this;
-      this.start = start;
-      this.stop = stop;
+    (window as any).SpeechRecognition = vi.fn(function SpeechRecognitionMock() {
+      instance = { start, stop };
+      return instance;
     });
 
     const { useLiveCaptions } = await loadHook({ native: false });
