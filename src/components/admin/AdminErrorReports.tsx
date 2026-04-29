@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, CheckCircle, Eye, Loader2, Save, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, CheckCircle, Copy, Download, Eye, Loader2, Save, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface AppErrorReport {
@@ -104,6 +104,43 @@ const AdminErrorReports = () => {
       toast.success(tr("Fehler gelöscht", "Error deleted"));
       fetchErrors();
     }
+  };
+
+  const buildSupportTicket = (item: AppErrorReport) => [
+    `# Clemio Support-Ticket: ${item.title}`,
+    "",
+    `Status: ${item.status}`,
+    `Schweregrad: ${item.severity}`,
+    `Route: ${item.route || "—"}`,
+    `Plattform: ${item.platform || "—"}`,
+    `Betroffener Nutzer: ${item.user_name} (${item.user_id})`,
+    `Vorkommen: ${item.occurrences}`,
+    `Erstellt: ${new Date(item.created_at).toLocaleString("de")}`,
+    `Zuletzt gesehen: ${new Date(item.last_seen_at).toLocaleString("de")}`,
+    "",
+    "## Message",
+    item.message,
+    "",
+    "## Stack / Details",
+    item.stack || JSON.stringify(item.details, null, 2),
+    "",
+    "## Admin-Notiz",
+    notes[item.id] || item.admin_note || "—",
+  ].join("\n");
+
+  const copySupportTicket = async (item: AppErrorReport) => {
+    await navigator.clipboard.writeText(buildSupportTicket(item));
+    toast.success(tr("Support-Ticket kopiert", "Support ticket copied"));
+  };
+
+  const downloadSupportTicket = (item: AppErrorReport) => {
+    const blob = new Blob([buildSupportTicket(item)], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `clemio-error-${item.id}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const statusLabels: Record<StatusFilter, string> = {
