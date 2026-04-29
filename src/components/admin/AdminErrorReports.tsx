@@ -37,6 +37,7 @@ interface AppErrorReport {
   occurrences: number;
   created_at: string;
   last_seen_at: string;
+  total_count?: number;
 }
 
 type StatusFilter = "open" | "reviewed" | "resolved" | "all";
@@ -51,6 +52,13 @@ const AdminErrorReports = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("open");
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [routeFilter, setRouteFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [page, setPage] = useState(0);
+  const pageSize = 25;
+  const [totalCount, setTotalCount] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -61,26 +69,33 @@ const AdminErrorReports = () => {
     setLoading(true);
     const { data, error } = await (supabase as any).rpc("list_app_error_reports", {
       _status: statusFilter === "all" ? null : statusFilter,
-      _severity: severityFilter === "all" || severityFilter === "problematic" ? null : severityFilter,
+      _severity: severityFilter === "all" ? null : severityFilter,
       _search: debouncedSearch.trim() || null,
-      _limit: 100,
-      _offset: 0,
+      _limit: pageSize,
+      _offset: page * pageSize,
       _category: categoryFilter === "all" ? null : categoryFilter,
+      _route: routeFilter.trim() || null,
+      _source: sourceFilter.trim() || null,
+      _from: fromDate ? new Date(`${fromDate}T00:00:00`).toISOString() : null,
+      _to: toDate ? new Date(`${toDate}T23:59:59`).toISOString() : null,
     });
     if (!error) {
       const list = data || [];
       setErrors(list);
+      setTotalCount(Number(list[0]?.total_count || 0));
       setNotes(Object.fromEntries(list.map((item: AppErrorReport) => [item.id, item.admin_note || ""])));
     } else {
       toast.error(locale === "de" ? "Fehler konnten nicht geladen werden" : "Could not load errors");
     }
     setLoading(false);
-  }, [categoryFilter, debouncedSearch, locale, severityFilter, statusFilter]);
+  }, [categoryFilter, debouncedSearch, fromDate, locale, page, routeFilter, severityFilter, sourceFilter, statusFilter, toDate]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSearch(search), 250);
     return () => window.clearTimeout(timeout);
   }, [search]);
+
+  useEffect(() => { setPage(0); }, [categoryFilter, debouncedSearch, fromDate, routeFilter, severityFilter, sourceFilter, statusFilter, toDate]);
 
   useEffect(() => { fetchErrors(); }, [fetchErrors]);
 
@@ -181,18 +196,12 @@ const AdminErrorReports = () => {
     fatal: "border-destructive bg-destructive text-destructive-foreground",
   };
 
-  const matchesSeverity = (item: AppErrorReport) => {
-    if (severityFilter === "all") return true;
-    if (severityFilter === "problematic") return item.severity === "error" || item.severity === "fatal";
-    return item.severity === severityFilter;
-  };
-
   const openCount = errors.filter((item) => item.status === "open").length;
   const reviewedCount = errors.filter((item) => item.status === "reviewed").length;
   const resolvedCount = errors.filter((item) => item.status === "resolved").length;
   const problematicCount = errors.filter((item) => item.severity === "error" || item.severity === "fatal").length;
-  const filtered = errors.filter(matchesSeverity);
-  const isFiltered = statusFilter !== "open" || severityFilter !== "all" || categoryFilter !== "all" || search.trim().length > 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const isFiltered = statusFilter !== "open" || severityFilter !== "all" || categoryFilter !== "all" || routeFilter.trim().length > 0 || sourceFilter.trim().length > 0 || fromDate || toDate || search.trim().length > 0;
 
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
@@ -286,13 +295,29 @@ const AdminErrorReports = () => {
             </button>
           )}
         </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Input value={routeFilter} onChange={(event) => setRouteFilter(event.target.value)} placeholder={tr("Route filtern, z. B. /chat", "Filter route, e.g. /chat")} className="h-10 rounded-xl bg-card text-sm" />
+          <Input value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)} placeholder={tr("Quelle filtern, z. B. console.error", "Filter source, e.g. console.error")} className="h-10 rounded-xl bg-card text-sm" />
+          <Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="h-10 rounded-xl bg-card text-sm" aria-label={tr("Von Datum", "From date")} />
+          <Input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="h-10 rounded-xl bg-card text-sm" aria-label={tr("Bis Datum", "To date")} />
+        </div>
+
+        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>{tr("Treffer", "Results")}: {totalCount}</span>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="h-8 px-3 text-xs" disabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{tr("Zurück", "Prev")}</Button>
+            <span>{page + 1}/{totalPages}</span>
+            <Button size="sm" variant="outline" className="h-8 px-3 text-xs" disabled={page + 1 >= totalPages} onClick={() => setPage((current) => current + 1)}>{tr("Weiter", "Next")}</Button>
+          </div>
+        </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {errors.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">{tr("Keine Fehler für diesen Filter", "No errors for this filter")}</p>
       ) : (
         <div className="divide-y divide-border/50">
-          {filtered.map((item) => (
+          {errors.map((item) => (
             <div key={item.id} className={`space-y-2 px-4 py-3 ${item.severity === "fatal" ? "bg-destructive/5" : ""}`}>
               <div className="flex flex-wrap items-center gap-2">
                 <AlertTriangle className={`h-4 w-4 ${item.severity === "warning" ? "text-primary" : "text-destructive"}`} />

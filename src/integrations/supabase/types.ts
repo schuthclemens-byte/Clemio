@@ -1208,6 +1208,43 @@ export type Database = {
               user_phone: string
             }[]
           }
+        | {
+            Args: {
+              _category?: string
+              _from?: string
+              _limit?: number
+              _offset?: number
+              _route?: string
+              _search?: string
+              _severity?: string
+              _source?: string
+              _status?: string
+              _to?: string
+            }
+            Returns: {
+              admin_note: string
+              category: string
+              created_at: string
+              details: Json
+              fingerprint: string
+              id: string
+              last_seen_at: string
+              message: string
+              occurrences: number
+              platform: string
+              route: string
+              severity: string
+              stack: string
+              status: string
+              title: string
+              total_count: number
+              updated_at: string
+              user_agent: string
+              user_id: string
+              user_name: string
+              user_phone: string
+            }[]
+          }
       log_app_error_report:
         | {
             Args: {
