@@ -12,7 +12,10 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 describe("appErrorLogging", () => {
+  const nativeConsoleError = console.error;
+
   afterEach(() => {
+    console.error = nativeConsoleError;
     rpc.mockClear();
     getUser.mockClear();
     getUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
@@ -45,6 +48,19 @@ describe("appErrorLogging", () => {
 
     await vi.waitFor(() => expect(rpc).toHaveBeenCalledTimes(1));
     expect(rpc.mock.calls[0][1]).toMatchObject({ _title: "Nicht behandelte App-Aktion" });
+    cleanup();
+  });
+
+  it("logged console.error automatisch", async () => {
+    const cleanup = installGlobalErrorLogging();
+    console.error("Upload failed:", new Error("storage kaputt"));
+
+    await vi.waitFor(() => expect(rpc).toHaveBeenCalledTimes(1));
+    expect(rpc.mock.calls[0][1]).toMatchObject({
+      _title: "Konsolen-Fehler",
+      _details: { source: "console.error" },
+    });
+    expect(rpc.mock.calls[0][1]._message).toContain("Upload failed");
     cleanup();
   });
 

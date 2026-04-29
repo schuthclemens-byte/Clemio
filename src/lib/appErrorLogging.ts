@@ -11,6 +11,7 @@ interface AppErrorInput {
 const recentFingerprints = new Map<string, number>();
 const DEDUPE_MS = 30_000;
 let loggingInFlight = false;
+let originalConsoleError: typeof console.error | null = null;
 
 const SENSITIVE_PATTERNS: Array<[RegExp, string]> = [
   [/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]"],
@@ -95,7 +96,46 @@ const errorFromUnknown = (reason: unknown) => {
   return new Error(trim(reason, 1_000) || "Unhandled rejection");
 };
 
+const formatConsoleArgument = (value: unknown) => {
+  if (value instanceof Error) return `${value.name}: ${value.message}`;
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+};
+
+const installConsoleErrorLogging = () => {
+  if (originalConsoleError) return () => undefined;
+
+  originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    originalConsoleError?.(...args);
+
+    const message = args.map(formatConsoleArgument).filter(Boolean).join(" ").trim();
+    const stack = args.find((arg): arg is Error => arg instanceof Error)?.stack ?? new Error().stack;
+
+    void logAppError({
+      title: "Konsolen-Fehler",
+      message: message || "Unbekannter Konsolen-Fehler",
+      stack,
+      severity: "error",
+      details: { source: "console.error" },
+    });
+  };
+
+  return () => {
+    if (originalConsoleError) {
+      console.error = originalConsoleError;
+      originalConsoleError = null;
+    }
+  };
+};
+
 export function installGlobalErrorLogging() {
+  const cleanupConsoleError = installConsoleErrorLogging();
+
   const onError = (event: ErrorEvent) => {
     void logAppError({
       title: "Globaler App-Fehler",
@@ -121,6 +161,7 @@ export function installGlobalErrorLogging() {
   window.addEventListener("unhandledrejection", onUnhandledRejection);
 
   return () => {
+    cleanupConsoleError();
     window.removeEventListener("error", onError);
     window.removeEventListener("unhandledrejection", onUnhandledRejection);
   };
