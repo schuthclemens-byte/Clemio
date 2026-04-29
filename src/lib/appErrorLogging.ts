@@ -1,10 +1,12 @@
 type AppErrorSeverity = "warning" | "error" | "fatal";
+type AppErrorCategory = "ui" | "api" | "realtime" | "storage" | "auth" | "push" | "voice" | "unknown";
 
 interface AppErrorInput {
   title: string;
   message?: string;
   stack?: string | null;
   severity?: AppErrorSeverity;
+  category?: AppErrorCategory;
   details?: Record<string, unknown>;
 }
 
@@ -48,6 +50,18 @@ const safeDetails = (details?: Record<string, unknown>) => {
 const getRoute = () => (typeof window === "undefined" ? null : `${window.location.pathname}${window.location.search}`);
 const getPlatform = () => (typeof navigator === "undefined" ? null : navigator.platform || null);
 const getUserAgent = () => (typeof navigator === "undefined" ? null : navigator.userAgent.slice(0, 500));
+
+const inferCategory = (input: AppErrorInput): AppErrorCategory => {
+  if (input.category) return input.category;
+  const text = `${input.title} ${input.message ?? ""} ${input.stack ?? ""} ${getRoute() ?? ""}`.toLowerCase();
+  if (/storage|bucket|upload|download|signed url|object/.test(text)) return "storage";
+  if (/realtime|channel|presence|broadcast|postgres_changes|websocket/.test(text)) return "realtime";
+  if (/auth|login|logout|session|jwt|token|password|sign.?in|sign.?up/.test(text)) return "auth";
+  if (/push|notification|fcm|vapid|service worker/.test(text)) return "push";
+  if (/voice|audio|tts|transcri|elevenlabs|microphone|recorder/.test(text)) return "voice";
+  if (/api|rpc|function|fetch|network|request|response|http|edge/.test(text)) return "api";
+  return "ui";
+};
 
 const normalizeForFingerprint = (value: unknown, max = 500) =>
   redact(value, max)
@@ -126,6 +140,7 @@ export async function logAppError(input: AppErrorInput) {
       _severity: input.severity ?? "error",
       _fingerprint: fingerprint,
       _dedupe_window_seconds: Math.round(DEDUPE_MS / 1000),
+      _category: inferCategory(input),
     });
   } catch (error) {
     console.warn("[AppErrorLogging] failed:", error);
