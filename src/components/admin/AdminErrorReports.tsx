@@ -290,6 +290,12 @@ const AdminErrorReports = () => {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-1.5">
+                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => copySupportTicket(item)}>
+                  <Copy className="h-3 w-3" />{tr("Ticket kopieren", "Copy ticket")}
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => downloadSupportTicket(item)}>
+                  <Download className="h-3 w-3" />{tr("Ticket laden", "Download ticket")}
+                </Button>
                 {item.status === "open" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "reviewed")}><Eye className="h-3 w-3" />{tr("Als geprüft", "Mark reviewed")}</Button>}
                 {item.status !== "resolved" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "resolved")}><CheckCircle className="h-3 w-3" />{tr("Gelöst", "Resolved")}</Button>}
                 <AlertDialog>
