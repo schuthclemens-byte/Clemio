@@ -30,6 +30,7 @@ interface AppErrorReport {
   details: Record<string, unknown>;
   route: string | null;
   platform: string | null;
+  category: "ui" | "api" | "realtime" | "storage" | "auth" | "push" | "voice" | "unknown";
   severity: "warning" | "error" | "fatal";
   status: "open" | "reviewed" | "resolved";
   admin_note: string | null;
@@ -40,6 +41,7 @@ interface AppErrorReport {
 
 type StatusFilter = "open" | "reviewed" | "resolved" | "all";
 type SeverityFilter = "all" | "problematic" | "fatal" | "error" | "warning";
+type CategoryFilter = "all" | AppErrorReport["category"];
 
 const AdminErrorReports = () => {
   const { locale } = useI18n();
@@ -48,6 +50,7 @@ const AdminErrorReports = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("open");
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -62,6 +65,7 @@ const AdminErrorReports = () => {
       _search: debouncedSearch.trim() || null,
       _limit: 100,
       _offset: 0,
+      _category: categoryFilter === "all" ? null : categoryFilter,
     });
     if (!error) {
       const list = data || [];
@@ -71,7 +75,7 @@ const AdminErrorReports = () => {
       toast.error(locale === "de" ? "Fehler konnten nicht geladen werden" : "Could not load errors");
     }
     setLoading(false);
-  }, [debouncedSearch, locale, severityFilter, statusFilter]);
+  }, [categoryFilter, debouncedSearch, locale, severityFilter, statusFilter]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSearch(search), 250);
@@ -111,6 +115,7 @@ const AdminErrorReports = () => {
     "",
     `Status: ${item.status}`,
     `Schweregrad: ${item.severity}`,
+    `Kategorie: ${item.category}`,
     `Route: ${item.route || "—"}`,
     `Plattform: ${item.platform || "—"}`,
     `Betroffener Nutzer: ${item.user_name} (${item.user_id})`,
@@ -158,6 +163,18 @@ const AdminErrorReports = () => {
     warning: tr("Warnung", "Warning"),
   };
 
+  const categoryLabels: Record<CategoryFilter, string> = {
+    all: tr("Alle Kategorien", "All categories"),
+    ui: "UI",
+    api: "API",
+    realtime: "Realtime",
+    storage: "Storage",
+    auth: "Auth",
+    push: "Push",
+    voice: "Voice",
+    unknown: tr("Unklar", "Unknown"),
+  };
+
   const severityBadgeClass: Record<AppErrorReport["severity"], string> = {
     warning: "border-primary/30 bg-primary/10 text-primary",
     error: "border-destructive/30 bg-destructive/15 text-destructive",
@@ -175,7 +192,7 @@ const AdminErrorReports = () => {
   const resolvedCount = errors.filter((item) => item.status === "resolved").length;
   const problematicCount = errors.filter((item) => item.severity === "error" || item.severity === "fatal").length;
   const filtered = errors.filter(matchesSeverity);
-  const isFiltered = statusFilter !== "open" || severityFilter !== "all" || search.trim().length > 0;
+  const isFiltered = statusFilter !== "open" || severityFilter !== "all" || categoryFilter !== "all" || search.trim().length > 0;
 
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
