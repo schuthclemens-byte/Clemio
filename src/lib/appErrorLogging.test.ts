@@ -30,6 +30,19 @@ describe("appErrorLogging", () => {
     expect(rpc).toHaveBeenCalledTimes(1);
   });
 
+  it("behält Deduplizierung über Reloads per localStorage", async () => {
+    await logAppError({ title: "Reload-Test", message: "kaputt", stack: "stack" });
+    resetAppErrorLoggingForTests();
+    localStorage.setItem(
+      "clemio_error_fingerprints_v1",
+      JSON.stringify({ "Reload-Test|kaputt|/|stack": Date.now() })
+    );
+
+    await logAppError({ title: "Reload-Test", message: "kaputt", stack: "stack" });
+
+    expect(rpc).toHaveBeenCalledTimes(1);
+  });
+
   it("logged window.error", async () => {
     const cleanup = installGlobalErrorLogging();
     window.dispatchEvent(new ErrorEvent("error", { message: "boom", error: new Error("boom") }));
@@ -83,6 +96,7 @@ describe("appErrorLogging", () => {
 
     expect(rpc.mock.calls[0][1]._message).toContain("[email]");
     expect(rpc.mock.calls[0][1]._message).toContain("[phone]");
+    expect(rpc.mock.calls[0][1]._dedupe_window_seconds).toBe(1800);
     expect(rpc.mock.calls[0][1]._message).not.toContain("test@example.com");
     expect(rpc.mock.calls[0][1]._details).toEqual({ filename: "app.ts" });
   });
