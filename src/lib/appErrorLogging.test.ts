@@ -56,4 +56,18 @@ describe("appErrorLogging", () => {
 
     expect(rpc).toHaveBeenCalledTimes(2);
   });
+
+  it("maskiert sensible Daten vor dem Speichern", async () => {
+    await logAppError({
+      title: "Token leak",
+      message: "Mail test@example.com phone +49 170 1234567 token=secret-value",
+      stack: "Authorization: Bearer eyJabc.def.ghi",
+      details: { filename: "app.ts", ignored: "secret=abc" },
+    });
+
+    expect(rpc.mock.calls[0][1]._message).toContain("[email]");
+    expect(rpc.mock.calls[0][1]._message).toContain("[phone]");
+    expect(rpc.mock.calls[0][1]._message).not.toContain("test@example.com");
+    expect(rpc.mock.calls[0][1]._details).toEqual({ filename: "app.ts" });
+  });
 });

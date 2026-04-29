@@ -1,30 +1,169 @@
-Ich sehe auf deinem Screenshot: Die GitHub Actions CI schlägt im Job „Build, TypeScript, tests and security“ fehl. In der aktuellen Codeprüfung fallen besonders zwei Stellen auf, die sehr wahrscheinlich den CI-Lauf abbrechen können:
+## Kurzfazit
 
-1. `src/hooks/useLiveCaptions.ts`
-   - Im nativen SpeechRecognition-Neustart ist die Formatierung/Einrückung im `try/catch`-Block auffällig und fehleranfällig.
-   - Außerdem enthält die Datei leere `catch {}`-Blöcke. Eure CI führt `eslint . --quiet` aus; Warnungen brechen dabei zwar normalerweise nicht ab, aber ich würde die Stelle trotzdem sauber und robuster machen, damit daraus kein Folgeproblem wird.
+Die zuletzt geladene Sicherheitsprüfung zeigt aktuell keine offenen kritischen Findings. Der Datenbank-Linter meldet aber noch 19 Warnungen rund um `SECURITY DEFINER`-Funktionen. Viele davon sind wahrscheinlich bewusst nötig, sollten aber explizit gehärtet werden, damit nur die wirklich benötigten Rollen/Funktionen ausführbar bleiben.
 
-2. `supabase/functions/admin-manage-user/index.ts`
-   - Die Backend-Funktion enthält mehrere `catch (e)` / `catch {}`-Stellen, die bei TypeScript/ESLint je nach Regelstand problematisch sein können.
-   - Zusätzlich greifen manche `catch (e)`-Blöcke direkt auf `e.message` zu. In TypeScript ist ein gefangener Fehler nicht garantiert ein `Error`.
+Zusätzlich sehe ich mehrere sinnvolle Stabilitäts- und Sicherheitsverbesserungen, die Clemio robuster machen würden.
 
-Plan zur Behebung:
+## Empfohlene nächste Schritte
 
-1. Live-Captions-Code stabilisieren
-   - Den nativen `listeningState`-Neustart in `useLiveCaptions.ts` sauber strukturieren.
-   - Fehlerbehandlung vereinheitlichen, ohne die bestehende Funktionalität zu verändern.
-   - Leere `catch`-Blöcke durch sichere No-op-Fehlerbehandlung ersetzen.
+### 1. Backend-Funktionsrechte weiter einschränken
 
-2. Admin-Backend-Funktion CI-sicher machen
-   - In `admin-manage-user/index.ts` gefangene Fehler sicher in Text umwandeln, z. B. über eine kleine Helper-Funktion.
-   - Direkte `e.message`-Zugriffe ersetzen.
-   - Leere `catch`-Blöcke vermeiden oder mit einer bewusst benannten No-op-Hilfsfunktion absichern.
+- Alle `SECURITY DEFINER`-Funktionen inventarisieren.
+- Für jede Funktion festlegen:
+  - öffentlich nötig,
+  - nur eingeloggte Nutzer,
+  - nur Admins,
+  - nur Backend-Service,
+  - oder gar nicht direkt per API aufrufbar.
+- Migration erstellen, die `EXECUTE` standardmäßig von `PUBLIC`/`anon` entzieht und nur gezielt wieder vergibt.
+- Besonders prüfen:
+  - Queue-/Mail-Funktionen wie `enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`
+  - Trigger-only-Funktionen wie `notify_new_message`, `notify_admin_on_report`, `handle_new_subscription`
+  - administrative oder sensible RPCs.
 
-3. Admin-Fehlerübersicht unverändert lassen, außer nötig
-   - Die zuletzt gewünschten Features sind im UI bereits vorhanden: Statusfilter, Schwerefilter, Suche und Löschen.
-   - Ich ändere dort nur etwas, falls sich ein konkreter CI-Fehler aus dieser Datei ergibt.
+Ziel: Weniger Angriffsfläche und weniger Linter-Warnungen.
 
-4. Validierung nach der Umsetzung
-   - Keine manuellen Builds ausführen, weil die Umgebung den Build/Typecheck automatisch prüft.
-   - Falls erlaubt, gezielt betroffene Tests prüfen oder die bestehende Testabdeckung unangetastet lassen.
-   - Danach bekommst du eine kurze Zusammenfassung der behobenen Ursache und der geänderten Dateien.
+### 2. Admin-Funktion `admin-manage-user` absichern und stabilisieren
+
+Die Funktion ist mächtig, weil sie Nutzer sperren, löschen, Passwörter setzen und Reports verwalten kann. Ich würde sie weiter härten:
+
+- Request-Body serverseitig mit klaren erlaubten Actions validieren.
+- Eingaben wie `targetUserId`, `reportId`, `errorId`, `plan`, `status`, `premiumUntil`, `newPassword` prüfen.
+- Keine sensiblen internen Fehlermeldungen an den Client zurückgeben; intern loggen, extern neutrale Meldung.
+- Admin-Aktionen in eine Audit-Tabelle schreiben:
+  - Admin-ID
+  - Aktion
+  - Zielnutzer oder Report-ID
+  - Zeitpunkt
+  - Ergebnis
+- Für besonders gefährliche Aktionen wie Nutzer löschen oder Passwort resetten zusätzliche Schutzregeln einbauen, z. B. kein Löschen anderer Admins ohne separate Prüfung.
+
+Ziel: Bessere Nachvollziehbarkeit und weniger Risiko bei Admin-Bedienfehlern.
+
+### 3. Rollenprüfung im Frontend robuster machen
+
+Aktuell prüft `useAdminRole` direkt `user_roles`. Das ist durch RLS geschützt, aber aus Stabilitäts-/Sicherheitsgründen besser über eine kleine sichere RPC-Funktion:
+
+- Neue RPC `get_my_roles()` oder `is_current_user_admin()`.
+- Frontend nutzt diese statt direktem Tabellenzugriff.
+- Optional: Admin-Seiten zeigen bei Fehlern einen neutralen Zustand und retry statt falschem Admin/Non-Admin-Flackern.
+
+Ziel: Weniger direkte Rollen-Tabellenzugriffe und klarere Admin-Gates.
+
+### 4. Fehler-Übersicht produktionsreifer machen
+
+Die neue Fehler-Übersicht kann noch stabiler werden:
+
+- Serverseitige Suche/Filterung statt nur 200 neueste Fehler zu laden.
+- Pagination oder „Mehr laden“.
+- Query-Parameter: Status, Schwere, Suchtext.
+- Debounce für Suche.
+- Indizes auf `status`, `severity`, `last_seen_at`, optional Textsuche auf `title/message`.
+- Fehlergruppen besser zusammenführen, z. B. Fingerprint aus Route + Titel + normalisierter Message.
+
+Ziel: Admin bleibt schnell, auch wenn viele Fehlerberichte entstehen.
+
+### 5. Client-Error-Logging datenschutzfreundlicher machen
+
+Fehlerberichte können versehentlich sensible Inhalte enthalten. Ich würde ergänzen:
+
+- Redaction vor Speicherung:
+  - Telefonnummern maskieren
+  - E-Mails maskieren
+  - Tokens/JWTs/API-Keys entfernen
+  - sehr lange Stacktraces begrenzen
+- Allowlist für `details`, damit nicht beliebige App-Daten gespeichert werden.
+- Rate-Limit pro Nutzer/Fingerprint verschärfen, damit Fehler-Loops die Datenbank nicht fluten.
+
+Ziel: Bessere Privatsphäre und weniger Error-Spam.
+
+### 6. Storage und Medien-Uploads weiter absichern
+
+Die Policies sind schon deutlich strenger geworden. Sinnvolle nächste Härtung:
+
+- Dateityp- und Größenregeln clientseitig und serverseitig dokumentieren/erzwingen, soweit möglich.
+- Chat-Media-Pfade konsequent validieren:
+
+```text
+chat-media/{ownerUserId}/{conversationId}/{fileName}
+stimmen/{ownerUserId}/{fileName}
+voice-samples/{ownerUserId}/{fileName}
+```
+
+- Admin-/Cleanup-Flow für verwaiste Medien ergänzen.
+- Upload-Fehler besser abfangen und retry-fähig machen.
+
+Ziel: Weniger kaputte Uploads, weniger verwaiste Dateien, weniger Risiko durch falsche Pfade.
+
+### 7. Edge Functions einheitlich auf moderne Auth-Prüfung bringen
+
+Einige Backend-Funktionen verwenden noch `getUser()`. Für viele Fälle ist eine reine Token-Claims-Prüfung schneller und stabiler.
+
+- Funktionen prüfen und vereinheitlichen:
+  - `check-subscription` nutzt bereits Claims.
+  - andere Funktionen wie TTS, Voice Clone, Translate, TURN prüfen.
+- Wo keine vollständigen Userdaten nötig sind, `getClaims()` verwenden.
+- Überall einheitliche Antwortstruktur:
+
+```text
+401 Unauthorized
+403 Forbidden
+400 Invalid request
+429 Rate limited
+500 Internal error
+```
+
+Ziel: Schnellere Funktionen, weniger uneinheitliche Fehlerfälle.
+
+### 8. CI-/Regression-Schutz erweitern
+
+Es gibt bereits Scripts für Security-Scan und RLS-Matrix. Ich würde sie erweitern:
+
+- Security-Scan erweitert um:
+  - direkte `profiles`-Reads mit sensiblen Feldern
+  - Edge Functions, die Service Role verwenden ohne Auth-Check
+  - öffentliche Funktionen ohne explizite Permission-Entscheidung
+- RLS-Matrix um neue Tabellen ergänzen:
+  - `app_error_reports`
+  - `app_versions`
+  - `calls`
+  - `user_presence`
+  - `voice_secrets`
+  - `email_*` Tabellen
+- Tests für Admin Error Reports:
+  - Statusfilter
+  - Schwerefilter
+  - Suche
+  - leere Ergebnisse
+  - Lade-/Fehlerzustände.
+
+Ziel: Neue Änderungen brechen Sicherheit und Admin-Flows nicht unbemerkt.
+
+## Priorisierung
+
+### Hohe Priorität
+1. `SECURITY DEFINER`-Rechte auditieren und per Migration härten.
+2. `admin-manage-user` validieren, neutralere Fehler, Audit-Log.
+3. Error-Logging redaction/rate-limit verbessern.
+
+### Mittlere Priorität
+4. Admin-Fehlerliste serverseitig filter-/such-/paginierbar machen.
+5. Admin-Rollencheck über RPC kapseln.
+6. Edge Function Auth vereinheitlichen.
+
+### Danach
+7. Storage-Cleanup und Upload-Robustheit.
+8. CI-Security-Scripts und Tests erweitern.
+
+## Technische Umsetzung nach Freigabe
+
+Ich würde zuerst ein kompaktes Hardening-Paket umsetzen:
+
+1. Migration für Funktionsrechte und optional `admin_audit_log`.
+2. `admin-manage-user` mit serverseitiger Validierung und Audit-Logging refactoren.
+3. `appErrorLogging` um Redaction und strengere Payload-Grenzen ergänzen.
+4. Admin-Error-Reports auf serverseitige Filter/Search/Pagination vorbereiten.
+5. Security-Scan/RLS-Scripts um die neuen Regeln erweitern.
+6. Relevante Tests ergänzen bzw. bestehende Tests anpassen.
+
+Dabei würde ich keine bestehenden Kernfeatures entfernen, sondern die vorhandenen Flows schrittweise absichern und stabilisieren.

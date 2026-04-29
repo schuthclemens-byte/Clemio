@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json
+          success: boolean
+          target_resource: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          success?: boolean
+          target_resource?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          success?: boolean
+          target_resource?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       app_error_reports: {
         Row: {
           admin_note: string | null
@@ -1104,6 +1140,37 @@ export type Database = {
       is_conversation_member: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
+      }
+      is_current_user_admin: { Args: never; Returns: boolean }
+      list_app_error_reports: {
+        Args: {
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _severity?: string
+          _status?: string
+        }
+        Returns: {
+          admin_note: string
+          created_at: string
+          details: Json
+          fingerprint: string
+          id: string
+          last_seen_at: string
+          message: string
+          occurrences: number
+          platform: string
+          route: string
+          severity: string
+          stack: string
+          status: string
+          title: string
+          updated_at: string
+          user_agent: string
+          user_id: string
+          user_name: string
+          user_phone: string
+        }[]
       }
       log_app_error_report: {
         Args: {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/contexts/I18nContext";
 import { Badge } from "@/components/ui/badge";
@@ -49,22 +49,36 @@ const AdminErrorReports = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("open");
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  const fetchErrors = async () => {
+  const fetchErrors = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke("admin-manage-user", { body: { action: "list-errors" } });
+    const { data, error } = await (supabase as any).rpc("list_app_error_reports", {
+      _status: statusFilter === "all" ? null : statusFilter,
+      _severity: severityFilter === "all" || severityFilter === "problematic" ? null : severityFilter,
+      _search: debouncedSearch.trim() || null,
+      _limit: 100,
+      _offset: 0,
+    });
     if (!error) {
-      const list = data?.errors || [];
+      const list = data || [];
       setErrors(list);
       setNotes(Object.fromEntries(list.map((item: AppErrorReport) => [item.id, item.admin_note || ""])));
+    } else {
+      toast.error(locale === "de" ? "Fehler konnten nicht geladen werden" : "Could not load errors");
     }
     setLoading(false);
-  };
+  }, [debouncedSearch, locale, severityFilter, statusFilter]);
 
-  useEffect(() => { fetchErrors(); }, []);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(search), 250);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+
+  useEffect(() => { fetchErrors(); }, [fetchErrors]);
 
   const updateError = async (errorId: string, status?: string, adminNote?: string) => {
     setSaving(errorId);
@@ -119,17 +133,11 @@ const AdminErrorReports = () => {
     return item.severity === severityFilter;
   };
 
-  const matchesSearch = (item: AppErrorReport) => {
-    const query = search.trim().toLowerCase();
-    if (!query) return true;
-    return `${item.title} ${item.message}`.toLowerCase().includes(query);
-  };
-
   const openCount = errors.filter((item) => item.status === "open").length;
   const reviewedCount = errors.filter((item) => item.status === "reviewed").length;
   const resolvedCount = errors.filter((item) => item.status === "resolved").length;
   const problematicCount = errors.filter((item) => item.severity === "error" || item.severity === "fatal").length;
-  const filtered = errors.filter((item) => (statusFilter === "all" || item.status === statusFilter) && matchesSeverity(item) && matchesSearch(item));
+  const filtered = errors.filter(matchesSeverity);
   const isFiltered = statusFilter !== "open" || severityFilter !== "all" || search.trim().length > 0;
 
   if (loading) {

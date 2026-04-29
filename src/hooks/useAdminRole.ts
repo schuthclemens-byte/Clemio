@@ -15,16 +15,11 @@ export const useAdminRole = () => {
     }
 
     const check = async () => {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc("is_current_user_admin");
       if (error) {
         console.error("[useAdminRole] Failed to check admin role:", error.message);
       }
-      setIsAdmin(!!data);
+      setIsAdmin(data === true);
       setLoading(false);
     };
 
