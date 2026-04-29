@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
 const connectionString = process.env.RLS_DATABASE_URL || process.env.DATABASE_URL || process.env.SUPABASE_DB_URL;
+const hasAmbientPostgresEnv = Boolean(process.env.PGHOST && (process.env.PGUSER || process.env.PGDATABASE));
 const scriptPath = fileURLToPath(import.meta.url).replace(`${process.cwd()}/`, "");
 
 const query = `
@@ -214,6 +215,14 @@ function getPolicyLocations() {
   }
 
   return locations;
+}
+
+if (!connectionString && !hasAmbientPostgresEnv) {
+  const location = getMatrixLocation("contact_submissions");
+  const message = "RLS policy check skipped: no database credentials available. Add RLS_DATABASE_URL as a GitHub secret to enable this check.";
+  console.warn(`::warning file=${location.file},line=${location.line},title=RLS database connection::${annotationEscape(message)}`);
+  console.warn(message);
+  process.exit(0);
 }
 
 const psqlArgs = connectionString ? [connectionString, "-At", "-c", query] : ["-At", "-c", query];
