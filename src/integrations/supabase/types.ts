@@ -1172,20 +1172,36 @@ export type Database = {
           user_phone: string
         }[]
       }
-      log_app_error_report: {
-        Args: {
-          _details?: Json
-          _fingerprint?: string
-          _message: string
-          _platform?: string
-          _route?: string
-          _severity?: string
-          _stack?: string
-          _title: string
-          _user_agent?: string
-        }
-        Returns: string
-      }
+      log_app_error_report:
+        | {
+            Args: {
+              _details?: Json
+              _fingerprint?: string
+              _message: string
+              _platform?: string
+              _route?: string
+              _severity?: string
+              _stack?: string
+              _title: string
+              _user_agent?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _dedupe_window_seconds?: number
+              _details?: Json
+              _fingerprint?: string
+              _message: string
+              _platform?: string
+              _route?: string
+              _severity?: string
+              _stack?: string
+              _title: string
+              _user_agent?: string
+            }
+            Returns: string
+          }
       mark_messages_read: {
         Args: { _conversation_id: string }
         Returns: undefined
