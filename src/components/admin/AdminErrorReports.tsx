@@ -68,10 +68,10 @@ const AdminErrorReports = () => {
       setErrors(list);
       setNotes(Object.fromEntries(list.map((item: AppErrorReport) => [item.id, item.admin_note || ""])));
     } else {
-      toast.error(tr("Fehler konnten nicht geladen werden", "Could not load errors"));
+      toast.error(locale === "de" ? "Fehler konnten nicht geladen werden" : "Could not load errors");
     }
     setLoading(false);
-  }, [debouncedSearch, severityFilter, statusFilter]);
+  }, [debouncedSearch, locale, severityFilter, statusFilter]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSearch(search), 250);
