@@ -15,6 +15,18 @@ const json = (body: unknown, status = 200) =>
 
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : String(error || "Unknown error");
 const ignoreBestEffortError = (_error: unknown) => undefined;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const allowedActions = new Set([
+  "stats", "send-test-push", "list-reports", "update-report", "list-errors", "update-error", "delete-error", "list",
+  "block", "unblock", "set-subscription", "reset-password", "delete-voice", "delete",
+]);
+
+const invalidRequest = (message = "Invalid request") => json({ error: message }, 400);
+const isUuid = (value: unknown) => typeof value === "string" && uuidPattern.test(value);
+const safePublicError = (error: unknown) => {
+  console.error("admin-manage-user error:", error);
+  return json({ error: "Internal server error" }, 500);
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -45,6 +57,23 @@ serve(async (req) => {
     if (!roleRow) return json({ error: "Forbidden: admin role required" }, 403);
 
     const { action, targetUserId, reason, plan, premiumUntil, newPassword, reportId, errorId, status: reportStatus, adminNote } = await req.json();
+    if (typeof action !== "string" || !allowedActions.has(action)) return invalidRequest("Unknown action");
+
+    const audit = async (success: boolean, metadata: Record<string, unknown> = {}, err?: unknown) => {
+      try {
+        await admin.from("admin_audit_log").insert({
+          admin_user_id: user.id,
+          action,
+          target_user_id: isUuid(targetUserId) ? targetUserId : null,
+          target_resource: isUuid(reportId) ? `report:${reportId}` : isUuid(errorId) ? `app_error:${errorId}` : null,
+          metadata,
+          success,
+          error_message: err ? errorMessage(err).slice(0, 500) : null,
+        });
+      } catch (auditError) {
+        ignoreBestEffortError(auditError);
+      }
+    };
 
     // ── STATS ──
     if (action === "stats") {
@@ -154,12 +183,14 @@ serve(async (req) => {
 
     // ── UPDATE REPORT STATUS (no targetUserId needed) ──
     if (action === "update-report") {
-      if (!reportId) return json({ error: "reportId required" }, 400);
+      if (!isUuid(reportId)) return invalidRequest("reportId required");
+      if (reportStatus && !["open", "reviewed", "resolved"].includes(reportStatus)) return invalidRequest("Invalid status");
       const updateData: any = { updated_at: new Date().toISOString() };
       if (reportStatus) updateData.status = reportStatus;
-      if (adminNote !== undefined) updateData.admin_note = adminNote;
+      if (adminNote !== undefined) updateData.admin_note = String(adminNote).slice(0, 2_000);
       const { error } = await admin.from("reports").update(updateData).eq("id", reportId);
       if (error) return json({ error: error.message }, 500);
+      await audit(true, { reportId, reportStatus });
       return json({ success: true, action: "report-updated" });
     }
 
