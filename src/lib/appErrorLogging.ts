@@ -9,7 +9,9 @@ interface AppErrorInput {
 }
 
 const recentFingerprints = new Map<string, number>();
-const DEDUPE_MS = 30_000;
+const DEDUPE_MS = 30 * 60_000;
+const DEDUPE_STORAGE_KEY = "clemio_error_fingerprints_v1";
+const MAX_STORED_FINGERPRINTS = 80;
 let loggingInFlight = false;
 let originalConsoleError: typeof console.error | null = null;
 
@@ -47,13 +49,54 @@ const getRoute = () => (typeof window === "undefined" ? null : `${window.locatio
 const getPlatform = () => (typeof navigator === "undefined" ? null : navigator.platform || null);
 const getUserAgent = () => (typeof navigator === "undefined" ? null : navigator.userAgent.slice(0, 500));
 
+const normalizeForFingerprint = (value: unknown, max = 500) =>
+  redact(value, max)
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "[uuid]")
+    .replace(/:\d+:\d+/g, ":[line]:[col]")
+    .replace(/\?t=\d+/g, "?t=[ts]");
+
+const getStoredFingerprints = (): Record<string, number> => {
+  if (typeof localStorage === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem(DEDUPE_STORAGE_KEY) || "{}") || {};
+  } catch {
+    return {};
+  }
+};
+
+const rememberFingerprint = (fingerprint: string, now: number) => {
+  recentFingerprints.set(fingerprint, now);
+  if (typeof localStorage === "undefined") return;
+
+  const stored = getStoredFingerprints();
+  stored[fingerprint] = now;
+  const pruned = Object.fromEntries(
+    Object.entries(stored)
+      .filter(([, seenAt]) => now - seenAt < DEDUPE_MS)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, MAX_STORED_FINGERPRINTS)
+  );
+  try {
+    localStorage.setItem(DEDUPE_STORAGE_KEY, JSON.stringify(pruned));
+  } catch {
+    // Ignore storage limits; in-memory dedupe still works for this session.
+  }
+};
+
+const wasRecentlyLogged = (fingerprint: string, now: number) => {
+  const memorySeen = recentFingerprints.get(fingerprint) ?? 0;
+  const storageSeen = getStoredFingerprints()[fingerprint] ?? 0;
+  return now - Math.max(memorySeen, storageSeen) < DEDUPE_MS;
+};
+
 const fingerprintFor = (input: AppErrorInput) =>
-  [redact(input.title, 180), redact(input.message, 500), getRoute(), redact(input.stack?.split("\n")[0] ?? "", 500)]
+  [normalizeForFingerprint(input.title, 180), normalizeForFingerprint(input.message, 500), getRoute(), normalizeForFingerprint(input.stack?.split("\n")[0] ?? "", 500)]
     .join("|")
     .slice(0, 500);
 
 export const resetAppErrorLoggingForTests = () => {
   recentFingerprints.clear();
+  localStorage.removeItem(DEDUPE_STORAGE_KEY);
   loggingInFlight = false;
 };
 
@@ -62,9 +105,8 @@ export async function logAppError(input: AppErrorInput) {
 
   const fingerprint = fingerprintFor(input);
   const now = Date.now();
-  const lastSeen = recentFingerprints.get(fingerprint) ?? 0;
-  if (now - lastSeen < DEDUPE_MS) return;
-  recentFingerprints.set(fingerprint, now);
+  if (wasRecentlyLogged(fingerprint, now)) return;
+  rememberFingerprint(fingerprint, now);
 
   loggingInFlight = true;
   try {
@@ -83,6 +125,7 @@ export async function logAppError(input: AppErrorInput) {
       _platform: getPlatform(),
       _severity: input.severity ?? "error",
       _fingerprint: fingerprint,
+      _dedupe_window_seconds: Math.round(DEDUPE_MS / 1000),
     });
   } catch (error) {
     console.warn("[AppErrorLogging] failed:", error);
