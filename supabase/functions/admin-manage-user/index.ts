@@ -221,20 +221,23 @@ serve(async (req) => {
 
     // ── UPDATE APP ERROR STATUS / NOTE ──
     if (action === "update-error") {
-      if (!errorId) return json({ error: "errorId required" }, 400);
+      if (!isUuid(errorId)) return invalidRequest("errorId required");
+      if (reportStatus && !["open", "reviewed", "resolved"].includes(reportStatus)) return invalidRequest("Invalid status");
       const updateData: any = { updated_at: new Date().toISOString() };
       if (reportStatus) updateData.status = reportStatus;
-      if (adminNote !== undefined) updateData.admin_note = adminNote;
+      if (adminNote !== undefined) updateData.admin_note = String(adminNote).slice(0, 2_000);
       const { error } = await admin.from("app_error_reports").update(updateData).eq("id", errorId);
       if (error) return json({ error: error.message }, 500);
+      await audit(true, { errorId, reportStatus });
       return json({ success: true, action: "error-updated" });
     }
 
     // ── DELETE APP ERROR ──
     if (action === "delete-error") {
-      if (!errorId) return json({ error: "errorId required" }, 400);
+      if (!isUuid(errorId)) return invalidRequest("errorId required");
       const { error } = await admin.from("app_error_reports").delete().eq("id", errorId);
       if (error) return json({ error: error.message }, 500);
+      await audit(true, { errorId });
       return json({ success: true, action: "error-deleted" });
     }
 
@@ -282,11 +285,20 @@ serve(async (req) => {
     }
 
     // From here on, all actions require a valid targetUserId
-    if (!targetUserId || typeof targetUserId !== "string") {
-      return json({ error: "targetUserId required" }, 400);
+    if (!isUuid(targetUserId)) {
+      return invalidRequest("targetUserId required");
     }
     if (targetUserId === user.id) {
       return json({ error: "Cannot perform admin action on yourself" }, 400);
+    }
+    const { data: targetRole } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", targetUserId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (targetRole && ["block", "delete", "reset-password"].includes(action)) {
+      return json({ error: "Protected admin account" }, 403);
     }
 
     // ── BLOCK USER ──
@@ -299,6 +311,7 @@ serve(async (req) => {
       await admin.auth.admin.updateUserById(targetUserId, {
         ban_duration: "876600h",
       });
+      await audit(true, { reason: reason ? String(reason).slice(0, 500) : null });
       return json({ success: true, action: "blocked" });
     }
 
@@ -308,12 +321,13 @@ serve(async (req) => {
       await admin.auth.admin.updateUserById(targetUserId, {
         ban_duration: "none",
       });
+      await audit(true);
       return json({ success: true, action: "unblocked" });
     }
 
     // ── SET SUBSCRIPTION ──
     if (action === "set-subscription") {
-      if (!plan || !premiumUntil) {
+      if (!["free", "premium", "founding", "trial"].includes(plan) || !premiumUntil || Number.isNaN(Date.parse(premiumUntil))) {
         return json({ error: "plan and premiumUntil required" }, 400);
       }
       const { error: subError } = await admin
@@ -326,6 +340,7 @@ serve(async (req) => {
         })
         .eq("user_id", targetUserId);
       if (subError) return json({ error: subError.message }, 500);
+      await audit(true, { plan, premiumUntil });
       return json({ success: true, action: "subscription-updated" });
     }
 
@@ -338,6 +353,7 @@ serve(async (req) => {
         password: newPassword,
       });
       if (pwError) return json({ error: pwError.message }, 500);
+      await audit(true);
       return json({ success: true, action: "password-reset" });
     }
 
