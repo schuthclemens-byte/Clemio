@@ -271,8 +271,17 @@ const AdminErrorReports = () => {
               {key === "problematic" && ` (${errors.filter((item) => item.severity === "error" || item.severity === "fatal").length})`}
             </button>
           ))}
+        </div>
+
+        <div className="flex gap-1 overflow-x-auto">
+          {(["all", "ui", "api", "realtime", "storage", "auth", "push", "voice", "unknown"] as const).map((key) => (
+            <button key={key} onClick={() => setCategoryFilter(key)} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${categoryFilter === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {categoryLabels[key]}
+              {key !== "all" && ` (${errors.filter((item) => item.category === key).length})`}
+            </button>
+          ))}
           {isFiltered && (
-            <button onClick={() => { setStatusFilter("open"); setSeverityFilter("all"); setSearch(""); }} className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground underline-offset-2 hover:underline">
+            <button onClick={() => { setStatusFilter("open"); setSeverityFilter("all"); setCategoryFilter("all"); setSearch(""); }} className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground underline-offset-2 hover:underline">
               {tr("Zurücksetzen", "Reset")}
             </button>
           )}
@@ -288,6 +297,7 @@ const AdminErrorReports = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <AlertTriangle className={`h-4 w-4 ${item.severity === "warning" ? "text-primary" : "text-destructive"}`} />
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.title}</span>
+                <Badge variant="outline" className="px-1.5 text-[0.6rem] uppercase">{categoryLabels[item.category]}</Badge>
                 <Badge variant="outline" className={`px-1.5 text-[0.6rem] ${severityBadgeClass[item.severity]}`}>{item.severity === "fatal" ? tr("kritisch", "critical") : item.severity === "error" ? tr("Fehler", "error") : tr("Warnung", "warning")}</Badge>
                 <Badge variant="outline" className="px-1.5 text-[0.6rem]">{statusLabels[item.status]}</Badge>
               </div>
