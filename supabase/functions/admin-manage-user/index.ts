@@ -389,6 +389,7 @@ serve(async (req) => {
       // Also delete contact voice profiles that reference this user's voice
       await admin.from("contact_voice_profiles").delete().eq("contact_user_id", targetUserId);
 
+      await audit(true);
       return json({ success: true, action: "voice-deleted" });
     }
 
@@ -475,11 +476,11 @@ serve(async (req) => {
 
       await admin.auth.admin.deleteUser(targetUserId);
 
+      await audit(true, { deletedConversations: convIds.length });
       return json({ success: true, action: "deleted" });
     }
     return json({ error: "Unknown action" }, 400);
   } catch (err) {
-    console.error("admin-manage-user error:", err);
-    return json({ error: errorMessage(err) }, 500);
+    return safePublicError(err);
   }
 });
