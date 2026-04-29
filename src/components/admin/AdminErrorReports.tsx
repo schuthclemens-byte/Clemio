@@ -37,6 +37,7 @@ interface AppErrorReport {
   occurrences: number;
   created_at: string;
   last_seen_at: string;
+  total_count?: number;
 }
 
 type StatusFilter = "open" | "reviewed" | "resolved" | "all";
@@ -51,6 +52,13 @@ const AdminErrorReports = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("open");
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [routeFilter, setRouteFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [page, setPage] = useState(0);
+  const pageSize = 25;
+  const [totalCount, setTotalCount] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -61,26 +69,33 @@ const AdminErrorReports = () => {
     setLoading(true);
     const { data, error } = await (supabase as any).rpc("list_app_error_reports", {
       _status: statusFilter === "all" ? null : statusFilter,
-      _severity: severityFilter === "all" || severityFilter === "problematic" ? null : severityFilter,
+      _severity: severityFilter === "all" ? null : severityFilter,
       _search: debouncedSearch.trim() || null,
-      _limit: 100,
-      _offset: 0,
+      _limit: pageSize,
+      _offset: page * pageSize,
       _category: categoryFilter === "all" ? null : categoryFilter,
+      _route: routeFilter.trim() || null,
+      _source: sourceFilter.trim() || null,
+      _from: fromDate ? new Date(`${fromDate}T00:00:00`).toISOString() : null,
+      _to: toDate ? new Date(`${toDate}T23:59:59`).toISOString() : null,
     });
     if (!error) {
       const list = data || [];
       setErrors(list);
+      setTotalCount(Number(list[0]?.total_count || 0));
       setNotes(Object.fromEntries(list.map((item: AppErrorReport) => [item.id, item.admin_note || ""])));
     } else {
       toast.error(locale === "de" ? "Fehler konnten nicht geladen werden" : "Could not load errors");
     }
     setLoading(false);
-  }, [categoryFilter, debouncedSearch, locale, severityFilter, statusFilter]);
+  }, [categoryFilter, debouncedSearch, fromDate, locale, page, routeFilter, severityFilter, sourceFilter, statusFilter, toDate]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSearch(search), 250);
     return () => window.clearTimeout(timeout);
   }, [search]);
+
+  useEffect(() => { setPage(0); }, [categoryFilter, debouncedSearch, fromDate, routeFilter, severityFilter, sourceFilter, statusFilter, toDate]);
 
   useEffect(() => { fetchErrors(); }, [fetchErrors]);
 
