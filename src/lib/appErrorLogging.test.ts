@@ -72,6 +72,7 @@ describe("appErrorLogging", () => {
     expect(rpc.mock.calls[0][1]).toMatchObject({
       _title: "Konsolen-Fehler",
       _details: { source: "console.error" },
+      _category: "storage",
     });
     expect(rpc.mock.calls[0][1]._message).toContain("Upload failed");
     cleanup();
@@ -97,6 +98,7 @@ describe("appErrorLogging", () => {
     expect(rpc.mock.calls[0][1]._message).toContain("[email]");
     expect(rpc.mock.calls[0][1]._message).toContain("[phone]");
     expect(rpc.mock.calls[0][1]._dedupe_window_seconds).toBe(1800);
+    expect(rpc.mock.calls[0][1]._category).toBe("auth");
     expect(rpc.mock.calls[0][1]._message).not.toContain("test@example.com");
     expect(rpc.mock.calls[0][1]._details).toEqual({ filename: "app.ts" });
   });
