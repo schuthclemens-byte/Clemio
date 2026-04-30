@@ -22,7 +22,14 @@ const SENSITIVE_PATTERNS: Array<[RegExp, string]> = [
   [/(\+?\d[\d\s().-]{6,}\d)/g, "[phone]"],
   [/\b(?:eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)\b/g, "[token]"],
   [/\b(?:api[_-]?key|apikey|token|secret|authorization|password)\s*[:=]\s*[^\s,;}]+/gi, "$1=[redacted]"],
+  // Long base64 blobs (often media payloads or encoded credentials)
+  [/[A-Za-z0-9+/=]{200,}/g, "[base64]"],
+  // URL query params containing token / key / auth / sig
+  [/([?&](?:token|key|auth|sig|signature|access_token|refresh_token)=)[^&\s]+/gi, "$1[redacted]"],
 ];
+
+const MAX_CONSOLE_ARGS_LENGTH = 5_000;
+const CONSOLE_TRUNCATE_LENGTH = 2_000;
 
 const trim = (value: unknown, max = 2_000) => {
   const text = typeof value === "string" ? value : value == null ? "" : String(value);
