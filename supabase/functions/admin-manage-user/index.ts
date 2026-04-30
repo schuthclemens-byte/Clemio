@@ -236,13 +236,13 @@ serve(async (req) => {
       const profileMap: Record<string, any> = {};
       for (const profile of profiles || []) profileMap[profile.id] = profile;
 
-      return json({
-        errors: (errors || []).map((item: any) => ({
-          ...item,
-          user_name: profileMap[item.user_id]?.display_name || profileMap[item.user_id]?.phone_number || "Unknown",
-          user_phone: profileMap[item.user_id]?.phone_number || null,
-        })),
-      });
+      const enrichedErrors = (errors || []).map((item: any) => ({
+        ...item,
+        user_name: profileMap[item.user_id]?.display_name || profileMap[item.user_id]?.phone_number || "Unknown",
+        user_phone: profileMap[item.user_id]?.phone_number || null,
+      }));
+      await audit(true, { read: "list-errors", count: enrichedErrors.length });
+      return json({ errors: enrichedErrors });
     }
 
     // ── UPDATE APP ERROR STATUS / NOTE ──
