@@ -117,6 +117,7 @@ serve(async (req) => {
         admin.from("voice_profiles").select("id", { count: "exact", head: true }),
         admin.from("contact_autoplay").select("id", { count: "exact", head: true }).eq("auto_play", true),
       ]);
+      await audit(true, { read: "stats" });
       return json({
         totalUsers: totalUsers || 0,
         blockedUsers: blockedUsers || 0,
