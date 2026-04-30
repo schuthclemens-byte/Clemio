@@ -22,7 +22,14 @@ const SENSITIVE_PATTERNS: Array<[RegExp, string]> = [
   [/(\+?\d[\d\s().-]{6,}\d)/g, "[phone]"],
   [/\b(?:eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)\b/g, "[token]"],
   [/\b(?:api[_-]?key|apikey|token|secret|authorization|password)\s*[:=]\s*[^\s,;}]+/gi, "$1=[redacted]"],
+  // Long base64 blobs (often media payloads or encoded credentials)
+  [/[A-Za-z0-9+/=]{200,}/g, "[base64]"],
+  // URL query params containing token / key / auth / sig
+  [/([?&](?:token|key|auth|sig|signature|access_token|refresh_token)=)[^&\s]+/gi, "$1[redacted]"],
 ];
+
+const MAX_CONSOLE_ARGS_LENGTH = 5_000;
+const CONSOLE_TRUNCATE_LENGTH = 2_000;
 
 const trim = (value: unknown, max = 2_000) => {
   const text = typeof value === "string" ? value : value == null ? "" : String(value);
@@ -43,7 +50,11 @@ const safeDetails = (details?: Record<string, unknown>) => {
   return Object.fromEntries(
     Object.entries(details)
       .filter(([key]) => allowed.has(key))
-      .map(([key, value]) => [key, typeof value === "number" || typeof value === "boolean" ? value : redact(value, 500)])
+      .map(([key, value]) => {
+        if (typeof value === "number" || typeof value === "boolean") return [key, value];
+        const maxLen = key === "componentStack" ? 1_000 : 500;
+        return [key, redact(value, maxLen)];
+      })
   );
 };
 
@@ -171,7 +182,10 @@ const installConsoleErrorLogging = () => {
   console.error = (...args: unknown[]) => {
     originalConsoleError?.(...args);
 
-    const message = args.map(formatConsoleArgument).filter(Boolean).join(" ").trim();
+    let message = args.map(formatConsoleArgument).filter(Boolean).join(" ").trim();
+    if (message.length > MAX_CONSOLE_ARGS_LENGTH) {
+      message = message.slice(0, CONSOLE_TRUNCATE_LENGTH) + " …[truncated]";
+    }
     const stack = args.find((arg): arg is Error => arg instanceof Error)?.stack ?? new Error().stack;
 
     void logAppError({

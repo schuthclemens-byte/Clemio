@@ -1145,152 +1145,59 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_admin: { Args: never; Returns: boolean }
-      list_app_error_reports:
-        | {
-            Args: {
-              _limit?: number
-              _offset?: number
-              _search?: string
-              _severity?: string
-              _status?: string
-            }
-            Returns: {
-              admin_note: string
-              created_at: string
-              details: Json
-              fingerprint: string
-              id: string
-              last_seen_at: string
-              message: string
-              occurrences: number
-              platform: string
-              route: string
-              severity: string
-              stack: string
-              status: string
-              title: string
-              updated_at: string
-              user_agent: string
-              user_id: string
-              user_name: string
-              user_phone: string
-            }[]
-          }
-        | {
-            Args: {
-              _category?: string
-              _limit?: number
-              _offset?: number
-              _search?: string
-              _severity?: string
-              _status?: string
-            }
-            Returns: {
-              admin_note: string
-              category: string
-              created_at: string
-              details: Json
-              fingerprint: string
-              id: string
-              last_seen_at: string
-              message: string
-              occurrences: number
-              platform: string
-              route: string
-              severity: string
-              stack: string
-              status: string
-              title: string
-              updated_at: string
-              user_agent: string
-              user_id: string
-              user_name: string
-              user_phone: string
-            }[]
-          }
-        | {
-            Args: {
-              _category?: string
-              _from?: string
-              _limit?: number
-              _offset?: number
-              _route?: string
-              _search?: string
-              _severity?: string
-              _source?: string
-              _status?: string
-              _to?: string
-            }
-            Returns: {
-              admin_note: string
-              category: string
-              created_at: string
-              details: Json
-              fingerprint: string
-              id: string
-              last_seen_at: string
-              message: string
-              occurrences: number
-              platform: string
-              route: string
-              severity: string
-              stack: string
-              status: string
-              title: string
-              total_count: number
-              updated_at: string
-              user_agent: string
-              user_id: string
-              user_name: string
-              user_phone: string
-            }[]
-          }
-      log_app_error_report:
-        | {
-            Args: {
-              _details?: Json
-              _fingerprint?: string
-              _message: string
-              _platform?: string
-              _route?: string
-              _severity?: string
-              _stack?: string
-              _title: string
-              _user_agent?: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              _dedupe_window_seconds?: number
-              _details?: Json
-              _fingerprint?: string
-              _message: string
-              _platform?: string
-              _route?: string
-              _severity?: string
-              _stack?: string
-              _title: string
-              _user_agent?: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              _category?: string
-              _dedupe_window_seconds?: number
-              _details?: Json
-              _fingerprint?: string
-              _message: string
-              _platform?: string
-              _route?: string
-              _severity?: string
-              _stack?: string
-              _title: string
-              _user_agent?: string
-            }
-            Returns: string
-          }
+      list_app_error_reports: {
+        Args: {
+          _category?: string
+          _from?: string
+          _limit?: number
+          _offset?: number
+          _route?: string
+          _search?: string
+          _severity?: string
+          _source?: string
+          _status?: string
+          _to?: string
+        }
+        Returns: {
+          admin_note: string
+          category: string
+          created_at: string
+          details: Json
+          fingerprint: string
+          id: string
+          last_seen_at: string
+          message: string
+          occurrences: number
+          platform: string
+          route: string
+          severity: string
+          stack: string
+          status: string
+          title: string
+          total_count: number
+          updated_at: string
+          user_agent: string
+          user_id: string
+          user_name: string
+          user_phone: string
+        }[]
+      }
+      log_app_error_report: {
+        Args: {
+          _category?: string
+          _dedupe_window_seconds?: number
+          _details?: Json
+          _fingerprint?: string
+          _message: string
+          _platform?: string
+          _route?: string
+          _severity?: string
+          _stack?: string
+          _title: string
+          _user_agent?: string
+        }
+        Returns: string
+      }
       mark_messages_read: {
         Args: { _conversation_id: string }
         Returns: undefined

@@ -1,169 +1,97 @@
-## Kurzfazit
+## Sicherheits-Paket (Schritte 1+2+3)
 
-Die zuletzt geladene Sicherheitsprüfung zeigt aktuell keine offenen kritischen Findings. Der Datenbank-Linter meldet aber noch 19 Warnungen rund um `SECURITY DEFINER`-Funktionen. Viele davon sind wahrscheinlich bewusst nötig, sollten aber explizit gehärtet werden, damit nur die wirklich benötigten Rollen/Funktionen ausführbar bleiben.
+Ziel: Backend-Härtung in drei Bereichen — **Funktionsrechte**, **Admin-Nachvollziehbarkeit**, **Datenschutz im Error-Logging**. Keine bestehenden Features werden entfernt; nur Schutz wird verstärkt.
 
-Zusätzlich sehe ich mehrere sinnvolle Stabilitäts- und Sicherheitsverbesserungen, die Clemio robuster machen würden.
+### Aktueller Stand (geprüft)
 
-## Empfohlene nächste Schritte
+- `admin_audit_log` Tabelle existiert bereits mit RLS (Admins lesen, service_role schreibt).
+- `admin-manage-user` Edge Function hat bereits Action-Allowlist, UUID-Validierung, Self-Action-Schutz und schreibt Audit-Einträge für die meisten Aktionen.
+- DB-Funktionen sind bereits gegen `anon` und `PUBLIC` geschützt — nur `authenticated` und `service_role` haben EXECUTE. Allerdings existieren **3 veraltete Overloads** von `log_app_error_report` und `list_app_error_reports`, die aufgeräumt werden müssen.
+- Error-Logging hat bereits Redaction und Allowlist für `details`, aber **kein Rate-Limit pro Nutzer** — ein Fehler-Loop kann die DB fluten.
 
-### 1. Backend-Funktionsrechte weiter einschränken
+---
 
-- Alle `SECURITY DEFINER`-Funktionen inventarisieren.
-- Für jede Funktion festlegen:
-  - öffentlich nötig,
-  - nur eingeloggte Nutzer,
-  - nur Admins,
-  - nur Backend-Service,
-  - oder gar nicht direkt per API aufrufbar.
-- Migration erstellen, die `EXECUTE` standardmäßig von `PUBLIC`/`anon` entzieht und nur gezielt wieder vergibt.
-- Besonders prüfen:
-  - Queue-/Mail-Funktionen wie `enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq`
-  - Trigger-only-Funktionen wie `notify_new_message`, `notify_admin_on_report`, `handle_new_subscription`
-  - administrative oder sensible RPCs.
+### 1. Funktionsrechte aufräumen & härten
 
-Ziel: Weniger Angriffsfläche und weniger Linter-Warnungen.
+**Migration:**
 
-### 2. Admin-Funktion `admin-manage-user` absichern und stabilisieren
+- Alte Overloads von `log_app_error_report` und `list_app_error_reports` löschen (nur die aktuelle Signatur mit allen Filtern behalten).
+- `REVOKE EXECUTE ... FROM PUBLIC, anon` für **alle** SECURITY DEFINER Funktionen explizit setzen (defensive Härtung, falls je versehentlich neu vergeben).
+- Trigger-Funktionen (`notify_new_message`, `notify_admin_on_report`, `notify_chat_invitation`, `handle_new_user`, `handle_new_subscription`, `enforce_*`, `sync_profile_phone_normalized`, `update_*_timestamp`) explizit auf nur `service_role` beschränken — die werden nur von Triggern aufgerufen.
+- Queue-Funktionen (`enqueue_email`, `read_email_batch`, `delete_email`) auf `service_role` only beschränken.
 
-Die Funktion ist mächtig, weil sie Nutzer sperren, löschen, Passwörter setzen und Reports verwalten kann. Ich würde sie weiter härten:
+**Ergebnis:** Linter-Warnungen reduziert, klar dokumentiert wer was darf.
 
-- Request-Body serverseitig mit klaren erlaubten Actions validieren.
-- Eingaben wie `targetUserId`, `reportId`, `errorId`, `plan`, `status`, `premiumUntil`, `newPassword` prüfen.
-- Keine sensiblen internen Fehlermeldungen an den Client zurückgeben; intern loggen, extern neutrale Meldung.
-- Admin-Aktionen in eine Audit-Tabelle schreiben:
-  - Admin-ID
-  - Aktion
-  - Zielnutzer oder Report-ID
-  - Zeitpunkt
-  - Ergebnis
-- Für besonders gefährliche Aktionen wie Nutzer löschen oder Passwort resetten zusätzliche Schutzregeln einbauen, z. B. kein Löschen anderer Admins ohne separate Prüfung.
+---
 
-Ziel: Bessere Nachvollziehbarkeit und weniger Risiko bei Admin-Bedienfehlern.
+### 2. Admin-Audit-Log erweitern
 
-### 3. Rollenprüfung im Frontend robuster machen
+**Edge Function `admin-manage-user`:**
 
-Aktuell prüft `useAdminRole` direkt `user_roles`. Das ist durch RLS geschützt, aber aus Stabilitäts-/Sicherheitsgründen besser über eine kleine sichere RPC-Funktion:
+- Audit-Eintrag **immer** schreiben — auch bei `stats`, `list`, `list-reports`, `list-errors`, `send-test-push` (aktuell nur bei mutierenden Aktionen). So entsteht ein vollständiges Aktivitätsprotokoll.
+- Im Fehlerfall (try/catch um jede Aktion) `audit(false, {...}, error)` schreiben statt einfach 500 zurückzugeben.
+- Sensible Felder (`newPassword`) **niemals** in Metadaten schreiben — nur ein Marker `{ password_set: true }`.
+- Neutralere externe Fehlermeldungen: statt `error.message` durchreichen → generisch `"Aktion fehlgeschlagen"`, Detail nur in Audit-Log.
 
-- Neue RPC `get_my_roles()` oder `is_current_user_admin()`.
-- Frontend nutzt diese statt direktem Tabellenzugriff.
-- Optional: Admin-Seiten zeigen bei Fehlern einen neutralen Zustand und retry statt falschem Admin/Non-Admin-Flackern.
+**Admin-UI (`AdminPage.tsx` oder neuer Tab):**
 
-Ziel: Weniger direkte Rollen-Tabellenzugriffe und klarere Admin-Gates.
+- Neuer Read-Only Tab „Audit-Log": zeigt letzte 200 Admin-Aktionen mit Filter nach Aktion und Admin.
+- Nutzt bestehende RLS-Policy (Admins lesen).
 
-### 4. Fehler-Übersicht produktionsreifer machen
+**Ergebnis:** Jede Admin-Aktion ist nachvollziehbar, Passwörter erscheinen nie in Logs, Admins sehen ihre eigene Historie.
 
-Die neue Fehler-Übersicht kann noch stabiler werden:
+---
 
-- Serverseitige Suche/Filterung statt nur 200 neueste Fehler zu laden.
-- Pagination oder „Mehr laden“.
-- Query-Parameter: Status, Schwere, Suchtext.
-- Debounce für Suche.
-- Indizes auf `status`, `severity`, `last_seen_at`, optional Textsuche auf `title/message`.
-- Fehlergruppen besser zusammenführen, z. B. Fingerprint aus Route + Titel + normalisierter Message.
+### 3. Error-Logging Datenschutz & Rate-Limit
 
-Ziel: Admin bleibt schnell, auch wenn viele Fehlerberichte entstehen.
+**Migration:**
 
-### 5. Client-Error-Logging datenschutzfreundlicher machen
+- Neue Tabelle `error_log_rate_limit` (oder Spalte in vorhandener) zur Zählung pro User/Stunde — alternativ: Logik direkt in `log_app_error_report` RPC mit Window-Query gegen `app_error_reports.created_at`.
+- RPC `log_app_error_report` erweitern: vor Insert prüfen, wieviele **neue Fingerprints** (nicht Updates) der User in der letzten Stunde erzeugt hat. Limit: **50/Stunde**. Bei Überschreitung: stilles `RETURN NULL` ohne Fehler (Client soll nicht crashen).
+- Stack-Truncation in RPC von 8000 → **4000 Zeichen** reduzieren (Stacktraces enthalten häufig URLs/Parameter).
 
-Fehlerberichte können versehentlich sensible Inhalte enthalten. Ich würde ergänzen:
+**Client (`src/lib/appErrorLogging.ts`):**
 
-- Redaction vor Speicherung:
-  - Telefonnummern maskieren
-  - E-Mails maskieren
-  - Tokens/JWTs/API-Keys entfernen
-  - sehr lange Stacktraces begrenzen
-- Allowlist für `details`, damit nicht beliebige App-Daten gespeichert werden.
-- Rate-Limit pro Nutzer/Fingerprint verschärfen, damit Fehler-Loops die Datenbank nicht fluten.
+- Allowlist für `details` weiter verschärfen: `componentStack` auf 1000 Zeichen kürzen.
+- Zusätzliche Redaction-Patterns: lange Base64-Strings (>200 Zeichen → `[base64]`), URL-Query-Parameter mit `token=`/`key=` → `[redacted]`.
+- Bei `console.error`-Hook: wenn Argument-Sum >5000 Zeichen, nur ersten 2000 + Hinweis loggen.
 
-Ziel: Bessere Privatsphäre und weniger Error-Spam.
+**Ergebnis:** Keine sensiblen Daten in Logs, Fehler-Loops können DB nicht mehr fluten, Tabelle bleibt schlank.
 
-### 6. Storage und Medien-Uploads weiter absichern
+---
 
-Die Policies sind schon deutlich strenger geworden. Sinnvolle nächste Härtung:
-
-- Dateityp- und Größenregeln clientseitig und serverseitig dokumentieren/erzwingen, soweit möglich.
-- Chat-Media-Pfade konsequent validieren:
+### Technische Details
 
 ```text
-chat-media/{ownerUserId}/{conversationId}/{fileName}
-stimmen/{ownerUserId}/{fileName}
-voice-samples/{ownerUserId}/{fileName}
+Migration 1: function_permissions_hardening.sql
+  - DROP veraltete Overloads (log_app_error_report ohne _category, etc.)
+  - REVOKE EXECUTE ON FUNCTION ... FROM PUBLIC, anon (explizit für alle SD)
+  - REVOKE auch von authenticated für trigger-only und queue-only
+  - GRANT EXECUTE TO service_role wo nötig
+
+Migration 2: error_log_rate_limit.sql
+  - log_app_error_report RPC erweitert um Rate-Limit-Check
+  - Stack-Limit auf 4000
+
+Edge Function Update: admin-manage-user/index.ts
+  - audit() für alle Aktionen, auch reads
+  - Generic external error messages
+  - Password redaction in metadata
+
+Frontend Update: src/lib/appErrorLogging.ts
+  - Erweiterte Redaction-Patterns
+  - Client-side max-length Guard
+
+Frontend Add: src/components/admin/AdminAuditLog.tsx (neue Komponente)
+  - Read-only Tabelle, Filter nach Action/Admin
+  - Eingebunden in AdminPage.tsx als neuer Tab
 ```
 
-- Admin-/Cleanup-Flow für verwaiste Medien ergänzen.
-- Upload-Fehler besser abfangen und retry-fähig machen.
+### Tests
 
-Ziel: Weniger kaputte Uploads, weniger verwaiste Dateien, weniger Risiko durch falsche Pfade.
+- Vorhandene `appErrorLogging.test.ts` erweitern: Rate-Limit-Verhalten, neue Redaction-Patterns.
+- Manueller Test: Admin-Aktion durchführen → im neuen Audit-Log Tab sichtbar.
 
-### 7. Edge Functions einheitlich auf moderne Auth-Prüfung bringen
+### Was **nicht** Teil des Pakets ist (für später)
 
-Einige Backend-Funktionen verwenden noch `getUser()`. Für viele Fälle ist eine reine Token-Claims-Prüfung schneller und stabiler.
-
-- Funktionen prüfen und vereinheitlichen:
-  - `check-subscription` nutzt bereits Claims.
-  - andere Funktionen wie TTS, Voice Clone, Translate, TURN prüfen.
-- Wo keine vollständigen Userdaten nötig sind, `getClaims()` verwenden.
-- Überall einheitliche Antwortstruktur:
-
-```text
-401 Unauthorized
-403 Forbidden
-400 Invalid request
-429 Rate limited
-500 Internal error
-```
-
-Ziel: Schnellere Funktionen, weniger uneinheitliche Fehlerfälle.
-
-### 8. CI-/Regression-Schutz erweitern
-
-Es gibt bereits Scripts für Security-Scan und RLS-Matrix. Ich würde sie erweitern:
-
-- Security-Scan erweitert um:
-  - direkte `profiles`-Reads mit sensiblen Feldern
-  - Edge Functions, die Service Role verwenden ohne Auth-Check
-  - öffentliche Funktionen ohne explizite Permission-Entscheidung
-- RLS-Matrix um neue Tabellen ergänzen:
-  - `app_error_reports`
-  - `app_versions`
-  - `calls`
-  - `user_presence`
-  - `voice_secrets`
-  - `email_*` Tabellen
-- Tests für Admin Error Reports:
-  - Statusfilter
-  - Schwerefilter
-  - Suche
-  - leere Ergebnisse
-  - Lade-/Fehlerzustände.
-
-Ziel: Neue Änderungen brechen Sicherheit und Admin-Flows nicht unbemerkt.
-
-## Priorisierung
-
-### Hohe Priorität
-1. `SECURITY DEFINER`-Rechte auditieren und per Migration härten.
-2. `admin-manage-user` validieren, neutralere Fehler, Audit-Log.
-3. Error-Logging redaction/rate-limit verbessern.
-
-### Mittlere Priorität
-4. Admin-Fehlerliste serverseitig filter-/such-/paginierbar machen.
-5. Admin-Rollencheck über RPC kapseln.
-6. Edge Function Auth vereinheitlichen.
-
-### Danach
-7. Storage-Cleanup und Upload-Robustheit.
-8. CI-Security-Scripts und Tests erweitern.
-
-## Technische Umsetzung nach Freigabe
-
-Ich würde zuerst ein kompaktes Hardening-Paket umsetzen:
-
-1. Migration für Funktionsrechte und optional `admin_audit_log`.
-2. `admin-manage-user` mit serverseitiger Validierung und Audit-Logging refactoren.
-3. `appErrorLogging` um Redaction und strengere Payload-Grenzen ergänzen.
-4. Admin-Error-Reports auf serverseitige Filter/Search/Pagination vorbereiten.
-5. Security-Scan/RLS-Scripts um die neuen Regeln erweitern.
-6. Relevante Tests ergänzen bzw. bestehende Tests anpassen.
-
-Dabei würde ich keine bestehenden Kernfeatures entfernen, sondern die vorhandenen Flows schrittweise absichern und stabilisieren.
+- Storage-Cleanup, Daten-Export DSGVO, neue Nutzerfeatures, CI-Erweiterung — kommt in einem separaten Paket.

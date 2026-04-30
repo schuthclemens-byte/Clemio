@@ -59,6 +59,22 @@ serve(async (req) => {
     const { action, targetUserId, reason, plan, premiumUntil, newPassword, reportId, errorId, status: reportStatus, adminNote } = await req.json();
     if (typeof action !== "string" || !allowedActions.has(action)) return invalidRequest("Unknown action");
 
+    const sanitizeMetadata = (meta: Record<string, unknown>): Record<string, unknown> => {
+      const safe: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(meta)) {
+        if (k === "newPassword" || k === "password") {
+          safe.password_set = true;
+          continue;
+        }
+        if (typeof v === "string" && v.length > 500) {
+          safe[k] = v.slice(0, 500) + "…";
+        } else {
+          safe[k] = v;
+        }
+      }
+      return safe;
+    };
+
     const audit = async (success: boolean, metadata: Record<string, unknown> = {}, err?: unknown) => {
       try {
         await admin.from("admin_audit_log").insert({
@@ -66,13 +82,20 @@ serve(async (req) => {
           action,
           target_user_id: isUuid(targetUserId) ? targetUserId : null,
           target_resource: isUuid(reportId) ? `report:${reportId}` : isUuid(errorId) ? `app_error:${errorId}` : null,
-          metadata,
+          metadata: sanitizeMetadata(metadata),
           success,
           error_message: err ? errorMessage(err).slice(0, 500) : null,
         });
       } catch (auditError) {
         ignoreBestEffortError(auditError);
       }
+    };
+
+    // Generic error helper: log internally, return neutral message externally
+    const failPublic = async (err: unknown, meta: Record<string, unknown> = {}) => {
+      console.error(`admin-manage-user[${action}] failed:`, err);
+      await audit(false, meta, err);
+      return json({ error: "Aktion fehlgeschlagen" }, 500);
     };
 
     // ── STATS ──
@@ -94,6 +117,7 @@ serve(async (req) => {
         admin.from("voice_profiles").select("id", { count: "exact", head: true }),
         admin.from("contact_autoplay").select("id", { count: "exact", head: true }).eq("auto_play", true),
       ]);
+      await audit(true, { read: "stats" });
       return json({
         totalUsers: totalUsers || 0,
         blockedUsers: blockedUsers || 0,
@@ -138,6 +162,7 @@ serve(async (req) => {
           results.push({ endpoint: sub.endpoint.slice(-20), error: errorMessage(e) });
         }
       }
+      await audit(true, { read: "send-test-push", subscriptions: subs.length });
       return json({ success: true, action: "push-sent", results });
     }
 
@@ -147,7 +172,7 @@ serve(async (req) => {
         .from("reports")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { read: "list-reports" });
 
       const userIds = new Set<string>();
       for (const r of reports || []) {
@@ -178,6 +203,7 @@ serve(async (req) => {
         reported_user_name: nameMap[r.reported_user_id] || "Unknown",
         reported_message: r.message_id ? msgMap[r.message_id] || null : null,
       }));
+      await audit(true, { read: "list-reports", count: enriched.length });
       return json({ reports: enriched });
     }
 
@@ -189,7 +215,7 @@ serve(async (req) => {
       if (reportStatus) updateData.status = reportStatus;
       if (adminNote !== undefined) updateData.admin_note = String(adminNote).slice(0, 2_000);
       const { error } = await admin.from("reports").update(updateData).eq("id", reportId);
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { reportId, reportStatus });
       await audit(true, { reportId, reportStatus });
       return json({ success: true, action: "report-updated" });
     }
@@ -201,7 +227,7 @@ serve(async (req) => {
         .select("*")
         .order("last_seen_at", { ascending: false })
         .limit(200);
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { read: "list-errors" });
 
       const userIds = [...new Set((errors || []).map((item: any) => item.user_id).filter(Boolean))];
       const { data: profiles } = userIds.length
@@ -210,13 +236,13 @@ serve(async (req) => {
       const profileMap: Record<string, any> = {};
       for (const profile of profiles || []) profileMap[profile.id] = profile;
 
-      return json({
-        errors: (errors || []).map((item: any) => ({
-          ...item,
-          user_name: profileMap[item.user_id]?.display_name || profileMap[item.user_id]?.phone_number || "Unknown",
-          user_phone: profileMap[item.user_id]?.phone_number || null,
-        })),
-      });
+      const enrichedErrors = (errors || []).map((item: any) => ({
+        ...item,
+        user_name: profileMap[item.user_id]?.display_name || profileMap[item.user_id]?.phone_number || "Unknown",
+        user_phone: profileMap[item.user_id]?.phone_number || null,
+      }));
+      await audit(true, { read: "list-errors", count: enrichedErrors.length });
+      return json({ errors: enrichedErrors });
     }
 
     // ── UPDATE APP ERROR STATUS / NOTE ──
@@ -227,7 +253,7 @@ serve(async (req) => {
       if (reportStatus) updateData.status = reportStatus;
       if (adminNote !== undefined) updateData.admin_note = String(adminNote).slice(0, 2_000);
       const { error } = await admin.from("app_error_reports").update(updateData).eq("id", errorId);
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { errorId, reportStatus });
       await audit(true, { errorId, reportStatus });
       return json({ success: true, action: "error-updated" });
     }
@@ -236,7 +262,7 @@ serve(async (req) => {
     if (action === "delete-error") {
       if (!isUuid(errorId)) return invalidRequest("errorId required");
       const { error } = await admin.from("app_error_reports").delete().eq("id", errorId);
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { errorId });
       await audit(true, { errorId });
       return json({ success: true, action: "error-deleted" });
     }
@@ -247,7 +273,7 @@ serve(async (req) => {
         .from("profiles")
         .select("id, display_name, phone_number, created_at, avatar_url")
         .order("created_at", { ascending: false });
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { read: "list" });
 
       // Get blocked user ids
       const { data: blocked } = await admin.from("blocked_users").select("user_id");
@@ -281,6 +307,7 @@ serve(async (req) => {
         subscription: subMap[p.id] || null,
         voice_profile: voiceMap[p.id] || null,
       }));
+      await audit(true, { read: "list", count: result.length });
       return json({ profiles: result });
     }
 
@@ -339,7 +366,7 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq("user_id", targetUserId);
-      if (subError) return json({ error: subError.message }, 500);
+      if (subError) return failPublic(subError, { plan, premiumUntil });
       await audit(true, { plan, premiumUntil });
       return json({ success: true, action: "subscription-updated" });
     }
@@ -352,8 +379,8 @@ serve(async (req) => {
       const { error: pwError } = await admin.auth.admin.updateUserById(targetUserId, {
         password: newPassword,
       });
-      if (pwError) return json({ error: pwError.message }, 500);
-      await audit(true);
+      if (pwError) return failPublic(pwError, { password_set: true });
+      await audit(true, { password_set: true });
       return json({ success: true, action: "password-reset" });
     }
 
