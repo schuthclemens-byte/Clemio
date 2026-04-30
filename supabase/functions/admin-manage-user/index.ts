@@ -162,6 +162,7 @@ serve(async (req) => {
           results.push({ endpoint: sub.endpoint.slice(-20), error: errorMessage(e) });
         }
       }
+      await audit(true, { read: "send-test-push", subscriptions: subs.length });
       return json({ success: true, action: "push-sent", results });
     }
 
