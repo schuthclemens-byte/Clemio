@@ -50,7 +50,11 @@ const safeDetails = (details?: Record<string, unknown>) => {
   return Object.fromEntries(
     Object.entries(details)
       .filter(([key]) => allowed.has(key))
-      .map(([key, value]) => [key, typeof value === "number" || typeof value === "boolean" ? value : redact(value, 500)])
+      .map(([key, value]) => {
+        if (typeof value === "number" || typeof value === "boolean") return [key, value];
+        const maxLen = key === "componentStack" ? 1_000 : 500;
+        return [key, redact(value, maxLen)];
+      })
   );
 };
 
