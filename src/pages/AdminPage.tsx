@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
 import AdminReports from "@/components/admin/AdminReports";
 import AdminErrorReports from "@/components/admin/AdminErrorReports";
+import AdminAuditLog from "@/components/admin/AdminAuditLog";
 
 interface UserSubscription {
   plan: string;
