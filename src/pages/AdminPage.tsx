@@ -76,7 +76,7 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"users" | "reports" | "errors" | "analytics">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "errors" | "analytics" | "audit">("users");
   const [openReportsCount, setOpenReportsCount] = useState(0);
   const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const { comingSoon, loading: launchLoading } = useLaunchMode();
