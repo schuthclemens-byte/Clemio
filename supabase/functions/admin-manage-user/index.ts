@@ -379,8 +379,8 @@ serve(async (req) => {
       const { error: pwError } = await admin.auth.admin.updateUserById(targetUserId, {
         password: newPassword,
       });
-      if (pwError) return json({ error: pwError.message }, 500);
-      await audit(true);
+      if (pwError) return failPublic(pwError, { password_set: true });
+      await audit(true, { password_set: true });
       return json({ success: true, action: "password-reset" });
     }
 
