@@ -227,7 +227,7 @@ serve(async (req) => {
         .select("*")
         .order("last_seen_at", { ascending: false })
         .limit(200);
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { read: "list-errors" });
 
       const userIds = [...new Set((errors || []).map((item: any) => item.user_id).filter(Boolean))];
       const { data: profiles } = userIds.length
