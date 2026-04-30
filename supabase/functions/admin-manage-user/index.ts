@@ -273,7 +273,7 @@ serve(async (req) => {
         .from("profiles")
         .select("id, display_name, phone_number, created_at, avatar_url")
         .order("created_at", { ascending: false });
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { read: "list" });
 
       // Get blocked user ids
       const { data: blocked } = await admin.from("blocked_users").select("user_id");
