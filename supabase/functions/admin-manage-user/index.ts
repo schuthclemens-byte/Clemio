@@ -59,6 +59,22 @@ serve(async (req) => {
     const { action, targetUserId, reason, plan, premiumUntil, newPassword, reportId, errorId, status: reportStatus, adminNote } = await req.json();
     if (typeof action !== "string" || !allowedActions.has(action)) return invalidRequest("Unknown action");
 
+    const sanitizeMetadata = (meta: Record<string, unknown>): Record<string, unknown> => {
+      const safe: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(meta)) {
+        if (k === "newPassword" || k === "password") {
+          safe.password_set = true;
+          continue;
+        }
+        if (typeof v === "string" && v.length > 500) {
+          safe[k] = v.slice(0, 500) + "…";
+        } else {
+          safe[k] = v;
+        }
+      }
+      return safe;
+    };
+
     const audit = async (success: boolean, metadata: Record<string, unknown> = {}, err?: unknown) => {
       try {
         await admin.from("admin_audit_log").insert({
@@ -66,13 +82,20 @@ serve(async (req) => {
           action,
           target_user_id: isUuid(targetUserId) ? targetUserId : null,
           target_resource: isUuid(reportId) ? `report:${reportId}` : isUuid(errorId) ? `app_error:${errorId}` : null,
-          metadata,
+          metadata: sanitizeMetadata(metadata),
           success,
           error_message: err ? errorMessage(err).slice(0, 500) : null,
         });
       } catch (auditError) {
         ignoreBestEffortError(auditError);
       }
+    };
+
+    // Generic error helper: log internally, return neutral message externally
+    const failPublic = async (err: unknown, meta: Record<string, unknown> = {}) => {
+      console.error(`admin-manage-user[${action}] failed:`, err);
+      await audit(false, meta, err);
+      return json({ error: "Aktion fehlgeschlagen" }, 500);
     };
 
     // ── STATS ──
