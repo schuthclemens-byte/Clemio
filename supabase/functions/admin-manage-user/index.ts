@@ -215,7 +215,7 @@ serve(async (req) => {
       if (reportStatus) updateData.status = reportStatus;
       if (adminNote !== undefined) updateData.admin_note = String(adminNote).slice(0, 2_000);
       const { error } = await admin.from("reports").update(updateData).eq("id", reportId);
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { reportId, reportStatus });
       await audit(true, { reportId, reportStatus });
       return json({ success: true, action: "report-updated" });
     }
