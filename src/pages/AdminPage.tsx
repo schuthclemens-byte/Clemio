@@ -449,6 +449,8 @@ const AdminPage = () => {
         />
       ) : activeTab === "errors" ? (
         <AdminErrorReports />
+      ) : activeTab === "audit" ? (
+        <div className="p-4"><AdminAuditLog /></div>
       ) : activeTab === "analytics" ? (
         /* ── ANALYTICS TAB (Step 9) ── */
         <div className="p-4 space-y-4">
