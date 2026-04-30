@@ -307,6 +307,7 @@ serve(async (req) => {
         subscription: subMap[p.id] || null,
         voice_profile: voiceMap[p.id] || null,
       }));
+      await audit(true, { read: "list", count: result.length });
       return json({ profiles: result });
     }
 
