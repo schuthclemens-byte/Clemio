@@ -182,7 +182,10 @@ const installConsoleErrorLogging = () => {
   console.error = (...args: unknown[]) => {
     originalConsoleError?.(...args);
 
-    const message = args.map(formatConsoleArgument).filter(Boolean).join(" ").trim();
+    let message = args.map(formatConsoleArgument).filter(Boolean).join(" ").trim();
+    if (message.length > MAX_CONSOLE_ARGS_LENGTH) {
+      message = message.slice(0, CONSOLE_TRUNCATE_LENGTH) + " …[truncated]";
+    }
     const stack = args.find((arg): arg is Error => arg instanceof Error)?.stack ?? new Error().stack;
 
     void logAppError({
