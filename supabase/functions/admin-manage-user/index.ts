@@ -366,7 +366,7 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq("user_id", targetUserId);
-      if (subError) return json({ error: subError.message }, 500);
+      if (subError) return failPublic(subError, { plan, premiumUntil });
       await audit(true, { plan, premiumUntil });
       return json({ success: true, action: "subscription-updated" });
     }
