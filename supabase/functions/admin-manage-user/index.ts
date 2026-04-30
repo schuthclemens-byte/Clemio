@@ -203,6 +203,7 @@ serve(async (req) => {
         reported_user_name: nameMap[r.reported_user_id] || "Unknown",
         reported_message: r.message_id ? msgMap[r.message_id] || null : null,
       }));
+      await audit(true, { read: "list-reports", count: enriched.length });
       return json({ reports: enriched });
     }
 
