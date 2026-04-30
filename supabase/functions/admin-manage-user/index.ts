@@ -262,7 +262,7 @@ serve(async (req) => {
     if (action === "delete-error") {
       if (!isUuid(errorId)) return invalidRequest("errorId required");
       const { error } = await admin.from("app_error_reports").delete().eq("id", errorId);
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { errorId });
       await audit(true, { errorId });
       return json({ success: true, action: "error-deleted" });
     }
