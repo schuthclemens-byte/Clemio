@@ -172,7 +172,7 @@ serve(async (req) => {
         .from("reports")
         .select("*")
         .order("created_at", { ascending: false });
-      if (error) return json({ error: error.message }, 500);
+      if (error) return failPublic(error, { read: "list-reports" });
 
       const userIds = new Set<string>();
       for (const r of reports || []) {
