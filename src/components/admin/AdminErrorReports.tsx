@@ -16,7 +16,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, CheckCircle, Copy, Download, Eye, Loader2, Save, Search, Trash2, X } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AlertTriangle, CheckCircle, ChevronDown, Copy, Download, Eye, Loader2, Save, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface AppErrorReport {
