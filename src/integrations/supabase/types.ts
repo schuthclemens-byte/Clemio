@@ -913,6 +913,33 @@ export type Database = {
           },
         ]
       }
+      user_activity_log: {
+        Row: {
+          created_at: string
+          description: string
+          event_type: string
+          id: string
+          metadata: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           is_online: boolean
@@ -1182,6 +1209,28 @@ export type Database = {
           user_phone: string
         }[]
       }
+      list_user_activity: {
+        Args: {
+          _event_type?: string
+          _from?: string
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _to?: string
+        }
+        Returns: {
+          created_at: string
+          description: string
+          event_type: string
+          id: string
+          metadata: Json
+          total_count: number
+          user_avatar: string
+          user_id: string
+          user_name: string
+          user_phone: string
+        }[]
+      }
       log_app_error_report: {
         Args: {
           _category?: string
@@ -1248,6 +1297,10 @@ export type Database = {
           _message: string
           _name: string
         }
+        Returns: string
+      }
+      user_activity_display_name: {
+        Args: { _user_id: string }
         Returns: string
       }
     }
