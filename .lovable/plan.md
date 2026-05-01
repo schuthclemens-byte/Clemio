@@ -1,97 +1,83 @@
-## Sicherheits-Paket (Schritte 1+2+3)
+## Ziel
 
-Ziel: Backend-Härtung in drei Bereichen — **Funktionsrechte**, **Admin-Nachvollziehbarkeit**, **Datenschutz im Error-Logging**. Keine bestehenden Features werden entfernt; nur Schutz wird verstärkt.
+Im Admin-Bereich klar trennen:
 
-### Aktueller Stand (geprüft)
-
-- `admin_audit_log` Tabelle existiert bereits mit RLS (Admins lesen, service_role schreibt).
-- `admin-manage-user` Edge Function hat bereits Action-Allowlist, UUID-Validierung, Self-Action-Schutz und schreibt Audit-Einträge für die meisten Aktionen.
-- DB-Funktionen sind bereits gegen `anon` und `PUBLIC` geschützt — nur `authenticated` und `service_role` haben EXECUTE. Allerdings existieren **3 veraltete Overloads** von `log_app_error_report` und `list_app_error_reports`, die aufgeräumt werden müssen.
-- Error-Logging hat bereits Redaction und Allowlist für `details`, aber **kein Rate-Limit pro Nutzer** — ein Fehler-Loop kann die DB fluten.
+1. **Fehler & Probleme** (bestehender Tab) — bleibt für App-Fehler, wird aber überarbeitet, sodass jeder Eintrag aufklappbar ist und in Klartext erklärt, was passiert ist.
+2. **Aktivitäten** (neuer Tab) — zeigt menschliche Ereignisse: „Sabine hat sich angemeldet", „Tom hat Premium aktiviert", „Anna hat ihre Stimme geklont" usw. Auch hier alles aufklappbar mit Klartext.
 
 ---
 
-### 1. Funktionsrechte aufräumen & härten
+## Was wird gebaut
 
-**Migration:**
+### 1. Neue Tabelle `user_activity_log`
 
-- Alte Overloads von `log_app_error_report` und `list_app_error_reports` löschen (nur die aktuelle Signatur mit allen Filtern behalten).
-- `REVOKE EXECUTE ... FROM PUBLIC, anon` für **alle** SECURITY DEFINER Funktionen explizit setzen (defensive Härtung, falls je versehentlich neu vergeben).
-- Trigger-Funktionen (`notify_new_message`, `notify_admin_on_report`, `notify_chat_invitation`, `handle_new_user`, `handle_new_subscription`, `enforce_*`, `sync_profile_phone_normalized`, `update_*_timestamp`) explizit auf nur `service_role` beschränken — die werden nur von Triggern aufgerufen.
-- Queue-Funktionen (`enqueue_email`, `read_email_batch`, `delete_email`) auf `service_role` only beschränken.
-
-**Ergebnis:** Linter-Warnungen reduziert, klar dokumentiert wer was darf.
-
----
-
-### 2. Admin-Audit-Log erweitern
-
-**Edge Function `admin-manage-user`:**
-
-- Audit-Eintrag **immer** schreiben — auch bei `stats`, `list`, `list-reports`, `list-errors`, `send-test-push` (aktuell nur bei mutierenden Aktionen). So entsteht ein vollständiges Aktivitätsprotokoll.
-- Im Fehlerfall (try/catch um jede Aktion) `audit(false, {...}, error)` schreiben statt einfach 500 zurückzugeben.
-- Sensible Felder (`newPassword`) **niemals** in Metadaten schreiben — nur ein Marker `{ password_set: true }`.
-- Neutralere externe Fehlermeldungen: statt `error.message` durchreichen → generisch `"Aktion fehlgeschlagen"`, Detail nur in Audit-Log.
-
-**Admin-UI (`AdminPage.tsx` oder neuer Tab):**
-
-- Neuer Read-Only Tab „Audit-Log": zeigt letzte 200 Admin-Aktionen mit Filter nach Aktion und Admin.
-- Nutzt bestehende RLS-Policy (Admins lesen).
-
-**Ergebnis:** Jede Admin-Aktion ist nachvollziehbar, Passwörter erscheinen nie in Logs, Admins sehen ihre eigene Historie.
-
----
-
-### 3. Error-Logging Datenschutz & Rate-Limit
-
-**Migration:**
-
-- Neue Tabelle `error_log_rate_limit` (oder Spalte in vorhandener) zur Zählung pro User/Stunde — alternativ: Logik direkt in `log_app_error_report` RPC mit Window-Query gegen `app_error_reports.created_at`.
-- RPC `log_app_error_report` erweitern: vor Insert prüfen, wieviele **neue Fingerprints** (nicht Updates) der User in der letzten Stunde erzeugt hat. Limit: **50/Stunde**. Bei Überschreitung: stilles `RETURN NULL` ohne Fehler (Client soll nicht crashen).
-- Stack-Truncation in RPC von 8000 → **4000 Zeichen** reduzieren (Stacktraces enthalten häufig URLs/Parameter).
-
-**Client (`src/lib/appErrorLogging.ts`):**
-
-- Allowlist für `details` weiter verschärfen: `componentStack` auf 1000 Zeichen kürzen.
-- Zusätzliche Redaction-Patterns: lange Base64-Strings (>200 Zeichen → `[base64]`), URL-Query-Parameter mit `token=`/`key=` → `[redacted]`.
-- Bei `console.error`-Hook: wenn Argument-Sum >5000 Zeichen, nur ersten 2000 + Hinweis loggen.
-
-**Ergebnis:** Keine sensiblen Daten in Logs, Fehler-Loops können DB nicht mehr fluten, Tabelle bleibt schlank.
-
----
-
-### Technische Details
+Speichert alle nicht-fehler Ereignisse strukturiert.
 
 ```text
-Migration 1: function_permissions_hardening.sql
-  - DROP veraltete Overloads (log_app_error_report ohne _category, etc.)
-  - REVOKE EXECUTE ON FUNCTION ... FROM PUBLIC, anon (explizit für alle SD)
-  - REVOKE auch von authenticated für trigger-only und queue-only
-  - GRANT EXECUTE TO service_role wo nötig
-
-Migration 2: error_log_rate_limit.sql
-  - log_app_error_report RPC erweitert um Rate-Limit-Check
-  - Stack-Limit auf 4000
-
-Edge Function Update: admin-manage-user/index.ts
-  - audit() für alle Aktionen, auch reads
-  - Generic external error messages
-  - Password redaction in metadata
-
-Frontend Update: src/lib/appErrorLogging.ts
-  - Erweiterte Redaction-Patterns
-  - Client-side max-length Guard
-
-Frontend Add: src/components/admin/AdminAuditLog.tsx (neue Komponente)
-  - Read-only Tabelle, Filter nach Action/Admin
-  - Eingebunden in AdminPage.tsx als neuer Tab
+user_activity_log
+├── id, created_at
+├── user_id (wer)
+├── event_type (signup | premium_activated | premium_cancelled |
+│              voice_cloned | voice_deleted | account_deleted |
+│              profile_completed | first_chat_created)
+├── description (Klartext, z. B. „Sabine hat Premium aktiviert (Plan: Stripe Monatlich)")
+└── metadata (jsonb — Plan, Voice-Name, Quelle etc.)
 ```
 
-### Tests
+RLS: Nur Admins lesen (`has_role admin`). Inserts nur via `service_role` oder SECURITY-DEFINER-Funktionen.
 
-- Vorhandene `appErrorLogging.test.ts` erweitern: Rate-Limit-Verhalten, neue Redaction-Patterns.
-- Manueller Test: Admin-Aktion durchführen → im neuen Audit-Log Tab sichtbar.
+### 2. Automatische Erfassung
 
-### Was **nicht** Teil des Pakets ist (für später)
+Trigger und Edge-Function-Erweiterungen:
 
-- Storage-Cleanup, Daten-Export DSGVO, neue Nutzerfeatures, CI-Erweiterung — kommt in einem separaten Paket.
+- **Anmeldung** → Trigger auf `auth.users` insert (nutzt vorhandenen `handle_new_user`-Pfad) → `signup`-Event.
+- **Premium aktiviert/gekündigt** → `subscriptions` AFTER UPDATE Trigger → `premium_activated` / `premium_cancelled`.
+- **Stimme geklont/gelöscht** → Trigger auf `voice_profiles` insert/delete.
+- **Account gelöscht** → in der bestehenden `delete-account` Edge Function ergänzen.
+
+### 3. RPC `list_user_activity`
+
+Analog zu `list_app_error_reports`: Filter nach Zeitbereich, Event-Typ, Nutzer-Suche, Pagination, Total-Count. Liefert Klartext-Beschreibung + Nutzername.
+
+### 4. UI: Neuer Admin-Tab „Aktivitäten"
+
+- Sidebar-Eintrag in `AdminPage.tsx` (Icon `Activity`, neben Audit-Log).
+- Neue Komponente `AdminActivityLog.tsx`. Layout angelehnt an `AdminAuditLog` und `AdminErrorReports`:
+  - Filter: Zeitbereich-Presets (1h, 24h, 7T, 30T, eigen), Event-Typ-Dropdown, Nutzer-Suche.
+  - Liste mit Karten — pro Eintrag in zugeklappter Form:
+    - Icon je Event-Typ
+    - **Wer** (Avatar + Name)
+    - **Klartext-Beschreibung** („Sabine hat Premium aktiviert")
+    - Relative Zeit
+    - Chevron zum Aufklappen
+  - Aufklappen zeigt: vollständiger Zeitstempel, Plan/Detail aus Metadata, Telefonnummer, Quelle (Trigger/Function), JSON-Rohdaten als Unter-Akkordeon.
+
+### 5. UI: Bestehende Fehler-Liste aufklappbar machen
+
+`AdminErrorReports.tsx` umbauen:
+
+- Eintrag standardmäßig **kompakt**: Icon, Titel in Klartext, Nutzer, Schweregrad-Badge, Zeit, Chevron.
+- **Aufgeklappt** zeigt:
+  - **Was ist passiert** (Klartext-Beschreibung — heute steht da z. B. nur „TypeError: …", neu z. B. „Beim Laden des Chats ist die Verbindung zum Server abgebrochen.").
+  - Betroffener Nutzer mit Telefonnummer, Route, Gerät/Plattform, Häufigkeit + Zeitfenster.
+  - Admin-Notiz (editierbar) und Aktionen (geprüft / gelöst / löschen / Ticket exportieren).
+  - **Technische Details** als verschachtelter Akkordeon-Eintrag (Stack-Trace + JSON wie heute).
+- Mapping `errorTypeToHumanText(title, message, category)` für die Klartext-Zeile (Wörterbuch + Heuristik analog zu `ACTION_LABELS` im Audit-Log).
+- Kompaktdarstellung nutzt `Collapsible` aus `components/ui/collapsible.tsx`.
+
+---
+
+## Sichtbare Änderungen für dich
+
+- Admin-Sidebar: zusätzlicher Tab **„Aktivitäten"** zwischen Fehler und Audit-Log.
+- Tab **„Fehler"**: Liste deutlich aufgeräumter, jede Zeile aufklappbar, Klartext zuerst, technische Details nur auf Wunsch sichtbar.
+- Tab **„Aktivitäten"**: Zeitleiste à la „Sabine hat sich angemeldet · vor 2 Min.", aufklappbar für Details (Plan, Quelle, Metadaten).
+
+---
+
+## Technische Notizen
+
+- Migration: neue Tabelle, RLS, Indizes (`created_at desc`, `user_id`, `event_type`), 4 Trigger, 1 RPC.
+- Backfill optional: einmaliges Insert von `signup`-Events aus bestehenden `profiles.created_at` und `premium_activated` aus `subscriptions` mit Plan ≠ free.
+- Edge Function `delete-account`: zusätzlicher Insert in `user_activity_log` vor dem Löschen (mit Snapshot-Name in Metadata, da Profile danach weg).
+- Keine neuen Secrets nötig.
