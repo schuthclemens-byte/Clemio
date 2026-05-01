@@ -381,64 +381,110 @@ const AdminErrorReports = () => {
         <p className="py-8 text-center text-sm text-muted-foreground">{tr("Keine Fehler für diesen Filter", "No errors for this filter")}</p>
       ) : (
         <div className="divide-y divide-border/50">
-          {errors.map((item) => (
-            <div key={item.id} className={`space-y-2 px-4 py-3 ${item.severity === "fatal" ? "bg-destructive/5" : ""}`}>
-              <div className="flex flex-wrap items-center gap-2">
-                <AlertTriangle className={`h-4 w-4 ${item.severity === "warning" ? "text-primary" : "text-destructive"}`} />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.title}</span>
-                <Badge variant="outline" className="px-1.5 text-[0.6rem] uppercase">{categoryLabels[item.category]}</Badge>
-                <Badge variant="outline" className={`px-1.5 text-[0.6rem] ${severityBadgeClass[item.severity]}`}>{item.severity === "fatal" ? tr("kritisch", "critical") : item.severity === "error" ? tr("Fehler", "error") : tr("Warnung", "warning")}</Badge>
-                <Badge variant="outline" className="px-1.5 text-[0.6rem]">{statusLabels[item.status]}</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">{item.user_name}{item.user_phone ? ` · ${item.user_phone}` : ""} · {item.route || "—"}</p>
-              <p className="rounded-lg bg-muted/50 p-2 text-sm">{item.message}</p>
-              <details className="rounded-lg border border-border/60 bg-muted/30 p-2 text-xs">
-                <summary className="cursor-pointer text-muted-foreground">{tr("Technische Details", "Technical details")}</summary>
-                <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-mono text-[0.65rem]">{item.stack || JSON.stringify(item.details, null, 2)}</pre>
-              </details>
-              <div className="text-[0.65rem] text-muted-foreground">
-                {tr("Zuletzt", "Last")}: {new Date(item.last_seen_at).toLocaleString("de")} · {tr("Anzahl", "Count")}: {item.occurrences} · {item.platform || "—"}
-              </div>
-              <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-2">
-                <Textarea value={notes[item.id] || ""} onChange={(event) => setNotes((current) => ({ ...current, [item.id]: event.target.value }))} placeholder={tr("Admin-Notiz", "Admin note")} className="min-h-[64px] resize-none bg-background/80 text-xs" />
-                <Button size="sm" variant="outline" className="h-8 px-2" disabled={saving === item.id} onClick={() => updateError(item.id, "reviewed", notes[item.id] || "")}>
-                  {saving === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => copySupportTicket(item)}>
-                  <Copy className="h-3 w-3" />{tr("Ticket kopieren", "Copy ticket")}
-                </Button>
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => downloadSupportTicket(item)}>
-                  <Download className="h-3 w-3" />{tr("Ticket laden", "Download ticket")}
-                </Button>
-                {item.status === "open" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "reviewed")}><Eye className="h-3 w-3" />{tr("Als geprüft", "Mark reviewed")}</Button>}
-                {item.status !== "resolved" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "resolved")}><CheckCircle className="h-3 w-3" />{tr("Gelöst", "Resolved")}</Button>}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="outline" className="h-7 gap-1 text-xs text-destructive" disabled={deleting === item.id}>
-                      {deleting === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                      {tr("Löschen", "Delete")}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="max-h-[80dvh] overflow-y-auto">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{tr("Fehler löschen?", "Delete error?")}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {tr("Dieser Fehlereintrag wird dauerhaft aus dem Adminbereich entfernt.", "This error entry will be permanently removed from the admin area.")}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{tr("Abbrechen", "Cancel")}</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteError(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        {tr("Endgültig löschen", "Delete permanently")}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          ))}
+          {errors.map((item) => {
+            const isOpen = openId === item.id;
+            const human = humanizeError(item);
+            return (
+              <Collapsible
+                key={item.id}
+                open={isOpen}
+                onOpenChange={(open) => setOpenId(open ? item.id : null)}
+              >
+                <CollapsibleTrigger className={`flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-muted/30 ${item.severity === "fatal" ? "bg-destructive/5" : ""}`}>
+                  <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${item.severity === "warning" ? "text-primary" : "text-destructive"}`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="outline" className={`px-1.5 text-[0.6rem] ${severityBadgeClass[item.severity]}`}>
+                        {item.severity === "fatal" ? tr("kritisch", "critical") : item.severity === "error" ? tr("Fehler", "error") : tr("Warnung", "warning")}
+                      </Badge>
+                      <Badge variant="outline" className="px-1.5 text-[0.6rem] uppercase">{categoryLabels[item.category]}</Badge>
+                      <Badge variant="outline" className="px-1.5 text-[0.6rem]">{statusLabels[item.status]}</Badge>
+                      <span className="text-[0.65rem] text-muted-foreground">
+                        {item.user_name} · ×{item.occurrences} · {new Date(item.last_seen_at).toLocaleString("de", { dateStyle: "short", timeStyle: "short" })}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium leading-snug">{human}</p>
+                  </div>
+                  <ChevronDown className={`mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="space-y-2 bg-muted/20 px-4 pb-3">
+                    <dl className="grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
+                      <div>
+                        <dt className="text-muted-foreground">{tr("Was ist passiert", "What happened")}</dt>
+                        <dd className="font-medium">{human}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">{tr("Original-Meldung", "Original message")}</dt>
+                        <dd className="break-all font-medium">{item.title}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">{tr("Nutzer", "User")}</dt>
+                        <dd className="font-medium">{item.user_name}{item.user_phone ? ` · ${item.user_phone}` : ""}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">{tr("Route", "Route")}</dt>
+                        <dd className="break-all font-medium">{item.route || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">{tr("Plattform", "Platform")}</dt>
+                        <dd className="font-medium">{item.platform || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">{tr("Häufigkeit", "Frequency")}</dt>
+                        <dd className="font-medium">{item.occurrences}× · {tr("zuletzt", "last")} {new Date(item.last_seen_at).toLocaleString("de")}</dd>
+                      </div>
+                    </dl>
+                    <p className="rounded-lg bg-muted/50 p-2 text-xs">
+                      <span className="font-semibold">{tr("Originaltext", "Raw message")}: </span>{item.message}
+                    </p>
+                    <details className="rounded-lg border border-border/60 bg-background/40 p-2 text-xs">
+                      <summary className="cursor-pointer text-muted-foreground">{tr("Technische Details (Stack-Trace)", "Technical details (stack trace)")}</summary>
+                      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-mono text-[0.65rem]">{item.stack || JSON.stringify(item.details, null, 2)}</pre>
+                    </details>
+                    <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-background/40 p-2">
+                      <Textarea value={notes[item.id] || ""} onChange={(event) => setNotes((current) => ({ ...current, [item.id]: event.target.value }))} placeholder={tr("Admin-Notiz", "Admin note")} className="min-h-[64px] resize-none bg-background/80 text-xs" />
+                      <Button size="sm" variant="outline" className="h-8 px-2" disabled={saving === item.id} onClick={() => updateError(item.id, "reviewed", notes[item.id] || "")}>
+                        {saving === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => copySupportTicket(item)}>
+                        <Copy className="h-3 w-3" />{tr("Ticket kopieren", "Copy ticket")}
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => downloadSupportTicket(item)}>
+                        <Download className="h-3 w-3" />{tr("Ticket laden", "Download ticket")}
+                      </Button>
+                      {item.status === "open" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "reviewed")}><Eye className="h-3 w-3" />{tr("Als geprüft", "Mark reviewed")}</Button>}
+                      {item.status !== "resolved" && <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => updateError(item.id, "resolved")}><CheckCircle className="h-3 w-3" />{tr("Gelöst", "Resolved")}</Button>}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline" className="h-7 gap-1 text-xs text-destructive" disabled={deleting === item.id}>
+                            {deleting === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                            {tr("Löschen", "Delete")}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="max-h-[80dvh] overflow-y-auto">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{tr("Fehler löschen?", "Delete error?")}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {tr("Dieser Fehlereintrag wird dauerhaft aus dem Adminbereich entfernt.", "This error entry will be permanently removed from the admin area.")}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{tr("Abbrechen", "Cancel")}</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteError(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                              {tr("Endgültig löschen", "Delete permanently")}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
         </div>
       )}
     </div>
