@@ -29,6 +29,7 @@ import BottomTabBar from "@/components/BottomTabBar";
 import AdminReports from "@/components/admin/AdminReports";
 import AdminErrorReports from "@/components/admin/AdminErrorReports";
 import AdminAuditLog from "@/components/admin/AdminAuditLog";
+import AdminActivityLog from "@/components/admin/AdminActivityLog";
 
 interface UserSubscription {
   plan: string;
@@ -76,7 +77,7 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"users" | "reports" | "errors" | "analytics" | "audit">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "errors" | "activity" | "analytics" | "audit">("users");
   const [openReportsCount, setOpenReportsCount] = useState(0);
   const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const { comingSoon, loading: launchLoading } = useLaunchMode();
@@ -320,6 +321,7 @@ const AdminPage = () => {
             { key: "users" as const, icon: Users, label: tr("Nutzer", "Users"), badge: 0 },
             { key: "reports" as const, icon: Flag, label: "Reports", badge: openReportsCount },
             { key: "errors" as const, icon: AlertTriangle, label: tr("Fehler", "Errors"), badge: openErrorsCount },
+            { key: "activity" as const, icon: Activity, label: tr("Aktivitäten", "Activity"), badge: 0 },
             { key: "analytics" as const, icon: Activity, label: "Analytics", badge: 0 },
             { key: "audit" as const, icon: ShieldCheck, label: "Audit-Log", badge: 0 },
           ]).map(tab => (
@@ -449,6 +451,8 @@ const AdminPage = () => {
         />
       ) : activeTab === "errors" ? (
         <AdminErrorReports />
+      ) : activeTab === "activity" ? (
+        <AdminActivityLog />
       ) : activeTab === "audit" ? (
         <div className="p-4"><AdminAuditLog /></div>
       ) : activeTab === "analytics" ? (
