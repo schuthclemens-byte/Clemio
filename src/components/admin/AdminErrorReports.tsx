@@ -65,6 +65,69 @@ const AdminErrorReports = () => {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const humanizeError = (item: AppErrorReport): string => {
+    const text = `${item.title} ${item.message}`.toLowerCase();
+    if (text.includes("network") || text.includes("failed to fetch") || text.includes("econn")) {
+      return tr(
+        "Die Verbindung zum Server ist abgebrochen — Internet oder Backend war kurz nicht erreichbar.",
+        "Connection to the server was lost — internet or backend was briefly unreachable."
+      );
+    }
+    if (text.includes("rls") || text.includes("row-level security") || text.includes("permission denied")) {
+      return tr(
+        "Ein Datenbank-Zugriff wurde abgelehnt — fehlende Berechtigung für diese Aktion.",
+        "A database action was rejected — missing permission for this action."
+      );
+    }
+    if (text.includes("microphone") || text.includes("mediadevices") || text.includes("notallowed")) {
+      return tr(
+        "Mikrofon-Zugriff wurde verweigert oder ist auf dem Gerät nicht verfügbar.",
+        "Microphone access was denied or unavailable on the device."
+      );
+    }
+    if (text.includes("notification") || text.includes("push") || text.includes("vapid")) {
+      return tr(
+        "Push-Benachrichtigung konnte nicht zugestellt werden.",
+        "Push notification could not be delivered."
+      );
+    }
+    if (text.includes("elevenlabs") || text.includes("voice") || text.includes("tts")) {
+      return tr(
+        "Stimm-/Sprachausgabe ist fehlgeschlagen — der Voice-Anbieter hat einen Fehler gemeldet.",
+        "Voice/TTS failed — the voice provider returned an error."
+      );
+    }
+    if (text.includes("storage") || text.includes("bucket") || text.includes("upload")) {
+      return tr(
+        "Eine Datei konnte nicht hoch- oder heruntergeladen werden (Speicher-Bucket).",
+        "A file upload or download failed (storage bucket)."
+      );
+    }
+    if (text.includes("auth") || text.includes("session") || text.includes("jwt") || text.includes("token")) {
+      return tr(
+        "Ein Authentifizierungs-Problem — Sitzung abgelaufen oder Token ungültig.",
+        "Authentication problem — session expired or token invalid."
+      );
+    }
+    if (text.includes("typeerror") || text.includes("undefined") || text.includes("null")) {
+      return tr(
+        "Im UI hat ein Wert gefehlt, den der Code erwartet hat (Programmierfehler).",
+        "A value the code expected was missing in the UI (programming error)."
+      );
+    }
+    if (text.includes("realtime") || text.includes("websocket") || text.includes("channel")) {
+      return tr(
+        "Die Live-Verbindung (Realtime) wurde unterbrochen.",
+        "The live connection (realtime) was interrupted."
+      );
+    }
+    return tr(
+      "Unbekannter Fehler — Details siehe technische Daten unten.",
+      "Unknown error — see technical details below."
+    );
+  };
 
   const fetchErrors = useCallback(async () => {
     setLoading(true);
