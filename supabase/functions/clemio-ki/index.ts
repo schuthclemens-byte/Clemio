@@ -1,13 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeQuota, quotaErrorResponse } from "../_shared/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const FREE_DAILY_LIMIT = 3;
 
 const REPLY_SYSTEM_PROMPT = `Du bist Clemio-KI – eine KI, die direkt in Nachrichten integriert ist.
 Du hilfst Nutzern, genau die richtigen Worte zu finden – schnell, natürlich und menschlich.
@@ -135,52 +134,26 @@ serve(async (req) => {
     };
     const userLang = langNames[locale] || "German";
 
-    // Check subscription status
-    const { data: sub } = await supabaseClient
-      .from("subscriptions")
-      .select("plan, is_founding_user, premium_until")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    // Read usage summary (für UI-Anzeige) — Limits werden serverseitig im RPC durchgesetzt
+    const { data: summary } = await supabaseClient.rpc("get_user_usage_summary", { _user_id: user.id });
+    const limitVal = (summary as any)?.limits?.ki_improve ?? 0;
+    const usedVal = (summary as any)?.used?.ki_improve ?? 0;
+    const isPremium = (summary as any)?.is_premium ?? false;
+    const remaining = limitVal > 0 ? Math.max(0, limitVal - usedVal) : 0;
 
-    let isPremium = false;
-    if (sub) {
-      if (sub.plan === "founding" || sub.plan === "premium") isPremium = true;
-      if (sub.premium_until && new Date(sub.premium_until) > new Date()) isPremium = true;
-    }
-
-    // Check daily usage for free users
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    const { count: todayCount } = await supabaseClient
-      .from("clemio_ki_usage")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("used_at", todayStart.toISOString());
-
-    const usedToday = todayCount ?? 0;
-    const remaining = isPremium ? -1 : Math.max(0, FREE_DAILY_LIMIT - usedToday);
-
-    // If just checking usage status
     if (checkOnly) {
       return new Response(
-        JSON.stringify({ remaining, limit: FREE_DAILY_LIMIT, isPremium }),
+        JSON.stringify({ remaining, limit: limitVal, isPremium, used: usedVal }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Enforce limit for free users
-    if (!isPremium && usedToday >= FREE_DAILY_LIMIT) {
-      return new Response(
-        JSON.stringify({
-          error: "LIMIT_REACHED",
-          message: "Du hast dein Limit erreicht. Hol dir Premium für unbegrenzte Antworten.",
-          remaining: 0,
-          limit: FREE_DAILY_LIMIT,
-        }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Atomar prüfen + erhöhen (passiert hier zentral, ersetzt späteres .insert in clemio_ki_usage)
+    const quota = await consumeQuota(user.id, "ki_improve", 1);
+    if (!quota.ok) {
+      return quotaErrorResponse(quota, corsHeaders);
     }
+    const newRemaining = Math.max(0, quota.limit - quota.used);
 
     // ─── IMPROVE MODE: single styled rewrite ───
     const isImprove = mode === "improve" && improveText;
