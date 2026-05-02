@@ -183,8 +183,6 @@ serve(async (req) => {
         throw new Error("AI improve failed");
       }
 
-      await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
-
       const data = await response.json();
       let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
       raw = raw.replace(/^```json\s*/i, "").replace(/\s*```$/, "").trim();
@@ -192,9 +190,8 @@ serve(async (req) => {
       let parsed;
       try { parsed = JSON.parse(raw); } catch { parsed = { improved: raw }; }
 
-      const newRemaining = isPremium ? -1 : Math.max(0, FREE_DAILY_LIMIT - usedToday - 1);
       return new Response(
-        JSON.stringify({ improved: parsed.improved || raw, remaining: newRemaining, limit: FREE_DAILY_LIMIT, isPremium }),
+        JSON.stringify({ improved: parsed.improved || raw, remaining: newRemaining, limit: quota.limit, isPremium }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -282,8 +279,7 @@ Generiere passende Antworten auf ${userLang}.`;
       throw new Error("AI generation failed");
     }
 
-    // Track usage AFTER successful generation
-    await supabaseClient.from("clemio_ki_usage").insert({ user_id: user.id });
+    // Track usage AFTER successful generation — already consumed via consumeQuota above
 
     const data = await response.json();
     let raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
@@ -297,9 +293,8 @@ Generiere passende Antworten auf ${userLang}.`;
       parsed = { answers: [{ text: raw }] };
     }
 
-    const newRemaining = isPremium ? -1 : Math.max(0, FREE_DAILY_LIMIT - usedToday - 1);
     parsed.remaining = newRemaining;
-    parsed.limit = FREE_DAILY_LIMIT;
+    parsed.limit = quota.limit;
     parsed.isPremium = isPremium;
     parsed.isRefine = isRefine;
 
