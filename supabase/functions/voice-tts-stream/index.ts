@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeQuota, quotaErrorResponse } from "../_shared/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -146,6 +147,12 @@ serve(async (req) => {
       .download(key);
 
     if (cachedFile) {
+      // Cache HIT — voice_listen zählt nur bei fremder Stimme; tts_seconds NICHT (kein ElevenLabs-Call)
+      if (user.id !== senderId) {
+        const lq = await consumeQuota(user.id, "voice_listen", 1);
+        if (!lq.ok) return quotaErrorResponse(lq, corsHeaders);
+      }
+
       const arrayBuf = await cachedFile.arrayBuffer();
 
       if (messageId) {
@@ -167,6 +174,15 @@ serve(async (req) => {
           "X-TTS-Cache-Key": key,
         },
       });
+    }
+
+    // --- Cache MISS — verbrauche tts_seconds (Schätzung) und ggf. voice_listen ---
+    const estimatedSec = Math.max(1, Math.ceil((text || "").length / 13));
+    const tq = await consumeQuota(user.id, "tts_seconds", estimatedSec);
+    if (!tq.ok) return quotaErrorResponse(tq, corsHeaders);
+    if (user.id !== senderId) {
+      const lq = await consumeQuota(user.id, "voice_listen", 1);
+      if (!lq.ok) return quotaErrorResponse(lq, corsHeaders);
     }
 
     // --- Cache MISS – generate via ElevenLabs ---

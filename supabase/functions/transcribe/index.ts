@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.3";
+import { consumeQuota, quotaErrorResponse } from "../_shared/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -132,10 +133,24 @@ Deno.serve(async (req) => {
 
     const result = await sttResponse.json();
 
+    // Schätze Audiolänge in Sekunden — bevorzugt aus Wort-Timestamps
+    let durationSec = 1;
+    if (Array.isArray(result.words) && result.words.length > 0) {
+      const last = result.words[result.words.length - 1];
+      if (typeof last?.end === "number") durationSec = Math.max(1, Math.ceil(last.end));
+    } else if (audioFile?.size) {
+      // Fallback: ~16 KB/s für Opus
+      durationSec = Math.max(1, Math.ceil(audioFile.size / 16000));
+    }
+
+    const quota = await consumeQuota(user.id, "stt_seconds", durationSec);
+    if (!quota.ok) return quotaErrorResponse(quota, corsHeaders);
+
     return new Response(
       JSON.stringify({
         text: result.text || "",
         words: result.words || [],
+        duration_sec: durationSec,
       }),
       {
         status: 200,

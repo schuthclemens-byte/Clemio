@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { consumeQuota, quotaErrorResponse } from "../_shared/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -121,6 +122,17 @@ serve(async (req) => {
           voiceId = voiceProfile.elevenlabs_voice_id;
         }
       }
+    }
+
+    // Quota: Schätzung Audio-Sekunden ~ Textlänge / 13 (Mittelwert DE)
+    const estimatedSec = Math.max(1, Math.ceil((text || "").length / 13));
+    const ttsQuota = await consumeQuota(user.id, "tts_seconds", estimatedSec);
+    if (!ttsQuota.ok) return quotaErrorResponse(ttsQuota, corsHeaders);
+
+    // Wenn jemand anderes spricht (empfangene Voice-Nachricht) → voice_listen +1
+    if (user.id !== senderId) {
+      const listenQuota = await consumeQuota(user.id, "voice_listen", 1);
+      if (!listenQuota.ok) return quotaErrorResponse(listenQuota, corsHeaders);
     }
 
     // Generate TTS

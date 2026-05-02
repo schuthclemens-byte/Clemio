@@ -829,35 +829,53 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean
           created_at: string | null
+          current_period_end: string | null
           id: string
           is_founding_user: boolean
+          last_payment_failed_at: string | null
           plan: string
           premium_until: string | null
+          subscription_provider: string | null
+          subscription_status: string | null
           trial_end: string | null
           trial_start: string | null
+          trial_used: boolean
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
           created_at?: string | null
+          current_period_end?: string | null
           id?: string
           is_founding_user?: boolean
+          last_payment_failed_at?: string | null
           plan?: string
           premium_until?: string | null
+          subscription_provider?: string | null
+          subscription_status?: string | null
           trial_end?: string | null
           trial_start?: string | null
+          trial_used?: boolean
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean
           created_at?: string | null
+          current_period_end?: string | null
           id?: string
           is_founding_user?: boolean
+          last_payment_failed_at?: string | null
           plan?: string
           premium_until?: string | null
+          subscription_provider?: string | null
+          subscription_status?: string | null
           trial_end?: string | null
           trial_start?: string | null
+          trial_used?: boolean
           updated_at?: string | null
           user_id?: string
         }
@@ -912,6 +930,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      usage_counters: {
+        Row: {
+          ki_improve: number
+          period_start: string
+          storage_bytes: number
+          stt_seconds: number
+          translate: number
+          tts_seconds: number
+          updated_at: string
+          user_id: string
+          voice_listen: number
+          voice_retrain: number
+        }
+        Insert: {
+          ki_improve?: number
+          period_start: string
+          storage_bytes?: number
+          stt_seconds?: number
+          translate?: number
+          tts_seconds?: number
+          updated_at?: string
+          user_id: string
+          voice_listen?: number
+          voice_retrain?: number
+        }
+        Update: {
+          ki_improve?: number
+          period_start?: string
+          storage_bytes?: number
+          stt_seconds?: number
+          translate?: number
+          tts_seconds?: number
+          updated_at?: string
+          user_id?: string
+          voice_listen?: number
+          voice_retrain?: number
+        }
+        Relationships: []
+      }
+      usage_limits: {
+        Row: {
+          active_voice: number
+          ki_improve: number
+          plan: string
+          storage_mb: number
+          stt_minutes: number
+          translate: number
+          tts_minutes: number
+          updated_at: string
+          voice_listen: number
+          voice_retrain: number
+        }
+        Insert: {
+          active_voice?: number
+          ki_improve?: number
+          plan: string
+          storage_mb?: number
+          stt_minutes?: number
+          translate?: number
+          tts_minutes?: number
+          updated_at?: string
+          voice_listen?: number
+          voice_retrain?: number
+        }
+        Update: {
+          active_voice?: number
+          ki_improve?: number
+          plan?: string
+          storage_mb?: number
+          stt_minutes?: number
+          translate?: number
+          tts_minutes?: number
+          updated_at?: string
+          voice_listen?: number
+          voice_retrain?: number
+        }
+        Relationships: []
       }
       user_activity_log: {
         Row: {
@@ -1090,9 +1186,41 @@ export type Database = {
         Args: { _invitation_id: string }
         Returns: string
       }
+      admin_list_user_usage: {
+        Args: {
+          _limit?: number
+          _offset?: number
+          _over_limit_only?: boolean
+          _plan?: string
+          _search?: string
+        }
+        Returns: {
+          cancel_at_period_end: boolean
+          current_period_end: string
+          effective_plan: string
+          limits: Json
+          pct_max: number
+          plan: string
+          premium_until: string
+          subscription_provider: string
+          subscription_status: string
+          total_count: number
+          trial_end: string
+          trial_used: boolean
+          used: Json
+          user_id: string
+          user_name: string
+          user_phone: string
+        }[]
+      }
+      admin_plan_overview: { Args: never; Returns: Json }
       block_message_request: {
         Args: { _invitation_id: string; _reason?: string }
         Returns: undefined
+      }
+      check_and_consume_quota: {
+        Args: { _amount?: number; _metric: string; _user_id: string }
+        Returns: Json
       }
       create_direct_chat: { Args: { _target_user_id: string }; Returns: string }
       decline_message_request: {
@@ -1160,6 +1288,7 @@ export type Database = {
         Returns: Json
       }
       get_user_security_email: { Args: { _user_id: string }; Returns: string }
+      get_user_usage_summary: { Args: { _user_id?: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
