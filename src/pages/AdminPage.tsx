@@ -323,6 +323,7 @@ const AdminPage = () => {
             { key: "reports" as const, icon: Flag, label: "Reports", badge: openReportsCount },
             { key: "errors" as const, icon: AlertTriangle, label: tr("Fehler", "Errors"), badge: openErrorsCount },
             { key: "activity" as const, icon: Activity, label: tr("Aktivitäten", "Activity"), badge: 0 },
+            { key: "plan" as const, icon: Wallet, label: tr("Plan & Kosten", "Plan & Costs"), badge: 0 },
             { key: "analytics" as const, icon: Activity, label: "Analytics", badge: 0 },
             { key: "audit" as const, icon: ShieldCheck, label: "Audit-Log", badge: 0 },
           ]).map(tab => (
