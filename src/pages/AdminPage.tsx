@@ -455,6 +455,8 @@ const AdminPage = () => {
         <AdminErrorReports />
       ) : activeTab === "activity" ? (
         <AdminActivityLog />
+      ) : activeTab === "plan" ? (
+        <AdminPlanCosts />
       ) : activeTab === "audit" ? (
         <div className="p-4"><AdminAuditLog /></div>
       ) : activeTab === "analytics" ? (
