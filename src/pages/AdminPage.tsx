@@ -22,7 +22,7 @@ import {
 import {
   ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
   Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff, Flag,
-  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar, Rocket, Subtitles,
+  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar, Rocket, Subtitles, Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -30,6 +30,7 @@ import AdminReports from "@/components/admin/AdminReports";
 import AdminErrorReports from "@/components/admin/AdminErrorReports";
 import AdminAuditLog from "@/components/admin/AdminAuditLog";
 import AdminActivityLog from "@/components/admin/AdminActivityLog";
+import AdminPlanCosts from "@/components/admin/AdminPlanCosts";
 
 interface UserSubscription {
   plan: string;
@@ -77,7 +78,7 @@ const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"users" | "reports" | "errors" | "activity" | "analytics" | "audit">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "reports" | "errors" | "activity" | "plan" | "analytics" | "audit">("users");
   const [openReportsCount, setOpenReportsCount] = useState(0);
   const [openErrorsCount, setOpenErrorsCount] = useState(0);
   const { comingSoon, loading: launchLoading } = useLaunchMode();
@@ -322,6 +323,7 @@ const AdminPage = () => {
             { key: "reports" as const, icon: Flag, label: "Reports", badge: openReportsCount },
             { key: "errors" as const, icon: AlertTriangle, label: tr("Fehler", "Errors"), badge: openErrorsCount },
             { key: "activity" as const, icon: Activity, label: tr("Aktivitäten", "Activity"), badge: 0 },
+            { key: "plan" as const, icon: Wallet, label: tr("Plan & Kosten", "Plan & Costs"), badge: 0 },
             { key: "analytics" as const, icon: Activity, label: "Analytics", badge: 0 },
             { key: "audit" as const, icon: ShieldCheck, label: "Audit-Log", badge: 0 },
           ]).map(tab => (
@@ -453,6 +455,8 @@ const AdminPage = () => {
         <AdminErrorReports />
       ) : activeTab === "activity" ? (
         <AdminActivityLog />
+      ) : activeTab === "plan" ? (
+        <AdminPlanCosts />
       ) : activeTab === "audit" ? (
         <div className="p-4"><AdminAuditLog /></div>
       ) : activeTab === "analytics" ? (

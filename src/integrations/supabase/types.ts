@@ -827,6 +827,33 @@ export type Database = {
         }
         Relationships: []
       }
+      store_webhook_events: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          normalized: Json | null
+          payload: Json | null
+          provider: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          normalized?: Json | null
+          payload?: Json | null
+          provider: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          normalized?: Json | null
+          payload?: Json | null
+          provider?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
