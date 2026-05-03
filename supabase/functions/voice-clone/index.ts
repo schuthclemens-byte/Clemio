@@ -49,6 +49,13 @@ serve(async (req) => {
       });
     }
 
+
+    // Quota: voice cloning counts as voice_retrain (limited per month)
+    const quota = await consumeQuota(user.id, "voice_retrain", 1);
+    if (!quota.ok) {
+      return quotaErrorResponse(quota, corsHeaders);
+    }
+
     const isContactVoice = !!contactUserId;
     const cloneName = isContactVoice
       ? `clemio_contact_${user.id.slice(0, 8)}_${contactUserId!.slice(0, 8)}`
