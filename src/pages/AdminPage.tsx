@@ -22,7 +22,7 @@ import {
 import {
   ArrowLeft, Ban, Trash2, Unlock, Shield, Loader2, Search,
   Users, MessageSquare, Crown, ShieldAlert, Activity, KeyRound, Star, X, Mic, MicOff, Flag,
-  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar, Rocket, Subtitles,
+  Bell, Send, Headphones, ShieldCheck, AlertTriangle, Calendar, Rocket, Subtitles, Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -30,6 +30,7 @@ import AdminReports from "@/components/admin/AdminReports";
 import AdminErrorReports from "@/components/admin/AdminErrorReports";
 import AdminAuditLog from "@/components/admin/AdminAuditLog";
 import AdminActivityLog from "@/components/admin/AdminActivityLog";
+import AdminPlanCosts from "@/components/admin/AdminPlanCosts";
 
 interface UserSubscription {
   plan: string;
