@@ -255,6 +255,9 @@ export default function AdminPlanCosts() {
                             {Math.round(r.pct_max)}%
                           </Badge>
                         )}
+                        <Badge variant="outline" className="text-[0.6rem] px-1.5 text-rose-600 border-rose-500/30">
+                          € {userCost.toFixed(2)}
+                        </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground truncate">{r.user_phone}</div>
                     </div>
