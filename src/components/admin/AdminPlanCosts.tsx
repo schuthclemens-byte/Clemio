@@ -63,6 +63,23 @@ const METRICS: Array<{ key: string; label: string; suffix?: string }> = [
   { key: "voice_retrain", label: "Voice clones" },
 ];
 
+// Geschätzte Kosten in € pro Einheit (best-effort, basierend auf
+// ElevenLabs-Tarifen und Gemini-Flash). Anpassbar wenn echte Tarife bekannt.
+const COST_PER_UNIT: Record<string, number> = {
+  stt_seconds: 0.0001,    // ~€0.36/Stunde
+  tts_seconds: 0.00018,   // ~€0.65/Stunde mp3
+  ki_improve: 0.0003,     // Gemini Flash
+  translate: 0.0002,      // Gemini Flash
+  voice_retrain: 1.0,     // Voice-Clone Erstellung
+  voice_listen: 0,        // Kosten stecken in tts_seconds
+};
+
+const calcUserCost = (used: Record<string, number>) =>
+  Object.entries(COST_PER_UNIT).reduce(
+    (sum, [k, rate]) => sum + (Number(used?.[k] ?? 0) * rate),
+    0
+  );
+
 const planBadge = (plan: string) => {
   const map: Record<string, string> = {
     free: "bg-muted text-muted-foreground",
@@ -109,20 +126,25 @@ export default function AdminPlanCosts() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
+  const totalCost = useMemo(
+    () => rows.reduce((sum, r) => sum + calcUserCost(r.used), 0),
+    [rows]
+  );
+
   const kpis = useMemo(() => {
     if (!overview) return [];
     const avgCost = overview.active_subs > 0 ? overview.mrr_eur / overview.active_subs : 0;
     return [
       { icon: TrendingUp, label: "MRR", value: `€ ${overview.mrr_eur.toFixed(2)}`, color: "text-emerald-600" },
+      { icon: TrendingUp, label: "API-Kosten (sichtbar)", value: `€ ${totalCost.toFixed(2)}`, color: "text-rose-600" },
       { icon: Users, label: "Aktiv", value: overview.active_subs, color: "text-primary" },
       { icon: Crown, label: "Premium", value: overview.premium_users, color: "text-amber-600" },
       { icon: Users, label: "Trial", value: overview.trial_users, color: "text-blue-500" },
       { icon: Users, label: "Free", value: overview.free_users, color: "text-muted-foreground" },
       { icon: AlertTriangle, label: "Zahlung fehlgeschlagen", value: overview.payment_failed, color: "text-destructive" },
-      { icon: Users, label: "Gekündigt", value: overview.cancelled_subs, color: "text-orange-500" },
       { icon: TrendingUp, label: "ø Erlös/Abo", value: `€ ${avgCost.toFixed(2)}`, color: "text-emerald-600" },
     ];
-  }, [overview]);
+  }, [overview, totalCost]);
 
   return (
     <div className="p-4 space-y-4">
@@ -207,6 +229,7 @@ export default function AdminPlanCosts() {
         <div className="space-y-2">
           {rows.map((r) => {
             const overLimit = r.pct_max >= 80;
+            const userCost = calcUserCost(r.used);
             return (
               <Collapsible key={r.user_id}>
                 <div className={`rounded-xl border ${overLimit ? "border-destructive/40" : "border-border/50"} bg-card`}>
@@ -232,6 +255,9 @@ export default function AdminPlanCosts() {
                             {Math.round(r.pct_max)}%
                           </Badge>
                         )}
+                        <Badge variant="outline" className="text-[0.6rem] px-1.5 text-rose-600 border-rose-500/30">
+                          € {userCost.toFixed(2)}
+                        </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground truncate">{r.user_phone}</div>
                     </div>
