@@ -126,20 +126,25 @@ export default function AdminPlanCosts() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
+  const totalCost = useMemo(
+    () => rows.reduce((sum, r) => sum + calcUserCost(r.used), 0),
+    [rows]
+  );
+
   const kpis = useMemo(() => {
     if (!overview) return [];
     const avgCost = overview.active_subs > 0 ? overview.mrr_eur / overview.active_subs : 0;
     return [
       { icon: TrendingUp, label: "MRR", value: `€ ${overview.mrr_eur.toFixed(2)}`, color: "text-emerald-600" },
+      { icon: TrendingUp, label: "API-Kosten (sichtbar)", value: `€ ${totalCost.toFixed(2)}`, color: "text-rose-600" },
       { icon: Users, label: "Aktiv", value: overview.active_subs, color: "text-primary" },
       { icon: Crown, label: "Premium", value: overview.premium_users, color: "text-amber-600" },
       { icon: Users, label: "Trial", value: overview.trial_users, color: "text-blue-500" },
       { icon: Users, label: "Free", value: overview.free_users, color: "text-muted-foreground" },
       { icon: AlertTriangle, label: "Zahlung fehlgeschlagen", value: overview.payment_failed, color: "text-destructive" },
-      { icon: Users, label: "Gekündigt", value: overview.cancelled_subs, color: "text-orange-500" },
       { icon: TrendingUp, label: "ø Erlös/Abo", value: `€ ${avgCost.toFixed(2)}`, color: "text-emerald-600" },
     ];
-  }, [overview]);
+  }, [overview, totalCost]);
 
   return (
     <div className="p-4 space-y-4">
