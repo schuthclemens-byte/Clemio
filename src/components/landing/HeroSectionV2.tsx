@@ -188,14 +188,22 @@ const HeroSectionV2 = () => {
         className="relative z-10 mt-14 sm:mt-16 flex flex-col items-center gap-4"
       >
         {comingSoon ? (
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="relative inline-flex items-center gap-3 px-10 py-5 rounded-full bg-muted text-muted-foreground font-medium text-base sm:text-lg tracking-tight border border-border/40 opacity-80 cursor-not-allowed"
-          >
-            <span>{t("landing.comingSoon")}</span>
-          </button>
+          <div className="flex flex-col items-center gap-3">
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className="relative inline-flex items-center gap-3 px-10 py-5 rounded-full bg-muted text-muted-foreground font-medium text-base sm:text-lg tracking-tight border border-border/40 opacity-80 cursor-not-allowed"
+            >
+              <span>{t("landing.comingSoon")}</span>
+            </button>
+            <button
+              onClick={() => navigate("/login")}
+              className="text-xs text-muted-foreground/70 hover:text-foreground underline underline-offset-4 transition-colors"
+            >
+              Bereits Zugang? Anmelden
+            </button>
+          </div>
         ) : (
           <button
             onClick={() => navigate("/login")}
