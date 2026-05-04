@@ -229,6 +229,7 @@ export default function AdminPlanCosts() {
         <div className="space-y-2">
           {rows.map((r) => {
             const overLimit = r.pct_max >= 80;
+            const userCost = calcUserCost(r.used);
             return (
               <Collapsible key={r.user_id}>
                 <div className={`rounded-xl border ${overLimit ? "border-destructive/40" : "border-border/50"} bg-card`}>
