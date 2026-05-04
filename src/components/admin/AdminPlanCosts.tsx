@@ -63,6 +63,23 @@ const METRICS: Array<{ key: string; label: string; suffix?: string }> = [
   { key: "voice_retrain", label: "Voice clones" },
 ];
 
+// Geschätzte Kosten in € pro Einheit (best-effort, basierend auf
+// ElevenLabs-Tarifen und Gemini-Flash). Anpassbar wenn echte Tarife bekannt.
+const COST_PER_UNIT: Record<string, number> = {
+  stt_seconds: 0.0001,    // ~€0.36/Stunde
+  tts_seconds: 0.00018,   // ~€0.65/Stunde mp3
+  ki_improve: 0.0003,     // Gemini Flash
+  translate: 0.0002,      // Gemini Flash
+  voice_retrain: 1.0,     // Voice-Clone Erstellung
+  voice_listen: 0,        // Kosten stecken in tts_seconds
+};
+
+const calcUserCost = (used: Record<string, number>) =>
+  Object.entries(COST_PER_UNIT).reduce(
+    (sum, [k, rate]) => sum + (Number(used?.[k] ?? 0) * rate),
+    0
+  );
+
 const planBadge = (plan: string) => {
   const map: Record<string, string> = {
     free: "bg-muted text-muted-foreground",
