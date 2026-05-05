@@ -95,9 +95,30 @@ function parseGoogle(body: any): NormalizedEvent {
   };
 }
 
+// Shared-secret gate. Until full Apple JWS / Google OIDC verification is wired
+// up, only callers presenting the configured secret may POST events. This
+// prevents anonymous pollution of the audit table and blocks forged events.
+const WEBHOOK_SHARED_SECRET = Deno.env.get("STORE_WEBHOOK_SHARED_SECRET") ?? "";
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Reject all traffic until the shared secret is configured AND presented.
+  if (!WEBHOOK_SHARED_SECRET) {
+    return new Response("Webhook not configured", { status: 503, headers: corsHeaders });
+  }
+  const presented = req.headers.get("x-webhook-secret") ?? "";
+  if (!timingSafeEqual(presented, WEBHOOK_SHARED_SECRET)) {
+    return new Response("Unauthorized", { status: 401, headers: corsHeaders });
   }
 
   const url = new URL(req.url);
