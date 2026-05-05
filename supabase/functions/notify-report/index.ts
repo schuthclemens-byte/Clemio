@@ -1,11 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
-// Public endpoint (verify_jwt = false) — called by DB trigger via pg_net.
-// Forwards report data to send-transactional-email.
+// Internal endpoint — only callable by the DB trigger via pg_net with a shared secret.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-internal-secret',
 }
 
 Deno.serve(async (req) => {
@@ -19,6 +18,23 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'config' }), { status: 500, headers: corsHeaders })
   }
 
+  const supabase = createClient(supabaseUrl, serviceKey)
+
+  // Verify shared secret from DB trigger
+  const provided = req.headers.get('x-internal-secret') ?? ''
+  const { data: sec } = await supabase
+    .from('internal_secrets')
+    .select('value')
+    .eq('key', 'notify_report_secret')
+    .maybeSingle()
+  const expected = (sec as any)?.value ?? ''
+  if (!provided || !expected || provided !== expected) {
+    return new Response(JSON.stringify({ error: 'unauthorized' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   let payload: Record<string, unknown> = {}
   try {
     payload = await req.json()
@@ -29,8 +45,6 @@ Deno.serve(async (req) => {
   if (!payload.report_id) {
     return new Response(JSON.stringify({ error: 'missing_fields' }), { status: 400, headers: corsHeaders })
   }
-
-  const supabase = createClient(supabaseUrl, serviceKey)
 
   try {
     const { error } = await supabase.functions.invoke('send-transactional-email', {
