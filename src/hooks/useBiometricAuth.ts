@@ -50,37 +50,44 @@ function textToBuffer(text: string): ArrayBuffer {
   return new TextEncoder().encode(text).buffer as ArrayBuffer;
 }
 
-// --- AES-GCM encryption helpers ---
+// --- PRF-based key derivation -------------------------------------------------
+// The encryption key is derived from a WebAuthn PRF (pseudo-random function)
+// extension result. The PRF secret is bound to the authenticator and only
+// disclosed to the page after a successful user-verification gesture
+// (Face ID / Touch ID / Windows Hello). XSS scripts therefore cannot derive
+// the key without the user physically authenticating.
 
-async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
-  const seed = `${window.location.origin}|${navigator.userAgent}|clemio-biometric-v3`;
-  const encoded = new TextEncoder().encode(seed);
-  const keyMaterial = await crypto.subtle.importKey(
+async function deriveKeyFromPrf(prfOutput: ArrayBuffer, salt: Uint8Array): Promise<CryptoKey> {
+  const baseKey = await crypto.subtle.importKey(
     "raw",
-    encoded.buffer as ArrayBuffer,
-    "PBKDF2",
+    prfOutput,
+    "HKDF",
     false,
-    ["deriveKey"]
+    ["deriveKey"],
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt: salt.buffer as ArrayBuffer, iterations: 100000, hash: "SHA-256" },
-    keyMaterial,
+    {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: salt.buffer as ArrayBuffer,
+      info: new TextEncoder().encode("clemio-biometric-prf-v4"),
+    },
+    baseKey,
     { name: "AES-GCM", length: 256 },
     false,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 }
 
-async function encrypt(plaintext: string): Promise<string> {
+async function encryptWithPrf(plaintext: string, prfOutput: ArrayBuffer): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKey(salt);
+  const key = await deriveKeyFromPrf(prfOutput, salt);
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
-    new TextEncoder().encode(plaintext)
+    new TextEncoder().encode(plaintext),
   );
-  // Pack: salt (16) + iv (12) + ciphertext
   const packed = new Uint8Array(salt.length + iv.length + new Uint8Array(ciphertext).length);
   packed.set(salt, 0);
   packed.set(iv, salt.length);
@@ -88,45 +95,27 @@ async function encrypt(plaintext: string): Promise<string> {
   return bufferToBase64Url(packed.buffer as ArrayBuffer);
 }
 
-async function decrypt(encoded: string): Promise<string> {
+async function decryptWithPrf(encoded: string, prfOutput: ArrayBuffer): Promise<string> {
   const packed = new Uint8Array(base64UrlToBuffer(encoded));
   const salt = packed.slice(0, 16);
   const iv = packed.slice(16, 28);
   const ciphertext = packed.slice(28);
-  const key = await deriveKey(salt);
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    key,
-    ciphertext
-  );
+  const key = await deriveKeyFromPrf(prfOutput, salt);
+  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
   return new TextDecoder().decode(decrypted);
 }
 
-// --- Legacy v2 XOR helpers (for migration only) ---
+// Stable PRF input — same value every time so the same secret is produced.
+const PRF_INPUT = new TextEncoder().encode("clemio-biometric-prf-input-v1").buffer as ArrayBuffer;
 
-function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function legacyDeriveDeviceKey(): Promise<string> {
-  const seed = `${window.location.origin}|${navigator.userAgent}|clemio-biometric-v2`;
-  const digest = await crypto.subtle.digest("SHA-256", textToBuffer(seed));
-  return bytesToHex(new Uint8Array(digest));
-}
-
-function xorTransform(text: string, key: string): string {
-  let result = "";
-  for (let i = 0; i < text.length; i++) {
-    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-  }
-  return result;
-}
-
-async function legacyDeobfuscate(encoded: string): Promise<string> {
-  const key = await legacyDeriveDeviceKey();
-  return xorTransform(atob(encoded), key);
+function extractPrfOutput(credential: PublicKeyCredential | null): ArrayBuffer | null {
+  if (!credential) return null;
+  // deno-lint-ignore no-explicit-any
+  const ext: any = credential.getClientExtensionResults?.();
+  const first = ext?.prf?.results?.first;
+  if (first instanceof ArrayBuffer) return first;
+  if (ArrayBuffer.isView(first)) return (first as Uint8Array).buffer.slice(0) as ArrayBuffer;
+  return null;
 }
 
 export function useBiometricAuth() {
@@ -152,12 +141,11 @@ export function useBiometricAuth() {
       const userId = new Uint8Array(userIdSeed as ArrayBuffer);
       const challenge = generateChallenge();
 
-      const credential = await navigator.credentials.create({
+      // Step 1: Create the credential, requesting PRF support.
+      const credential = (await navigator.credentials.create({
         publicKey: {
           challenge,
-          rp: {
-            name: "Clemio Messenger",
-          },
+          rp: { name: "Clemio Messenger" },
           user: {
             id: userId.buffer as ArrayBuffer,
             name: phone.trim(),
@@ -174,16 +162,45 @@ export function useBiometricAuth() {
           },
           attestation: "none",
           timeout: 60000,
+          extensions: { prf: {} } as AuthenticationExtensionsClientInputs,
         },
-      }) as PublicKeyCredential | null;
+      })) as PublicKeyCredential | null;
 
       if (!credential) return false;
 
+      // Step 2: Immediately call get() to actually retrieve the PRF output —
+      // most authenticators only return PRF results on assertion, not creation.
+      const assertion = (await navigator.credentials.get({
+        publicKey: {
+          challenge: generateChallenge(),
+          allowCredentials: [
+            {
+              id: credential.rawId,
+              type: "public-key",
+              transports: ["internal", "hybrid"],
+            },
+          ],
+          userVerification: "required",
+          timeout: 60000,
+          extensions: {
+            prf: { eval: { first: PRF_INPUT } },
+          } as AuthenticationExtensionsClientInputs,
+        },
+      })) as PublicKeyCredential | null;
+
+      const prf = extractPrfOutput(assertion);
+      if (!prf) {
+        // Authenticator does not support PRF — refuse to enable biometric login
+        // rather than fall back to a key derivable from public browser data.
+        console.warn("Biometric: authenticator does not support PRF extension; refusing to store credentials.");
+        return false;
+      }
+
       const data = {
-        version: 3,
+        version: 4,
         credentialId: bufferToBase64Url(credential.rawId),
-        phone: await encrypt(phone.trim()),
-        password: await encrypt(password),
+        phone: await encryptWithPrf(phone.trim(), prf),
+        password: await encryptWithPrf(password, prf),
         createdAt: Date.now(),
       };
 
@@ -203,10 +220,19 @@ export function useBiometricAuth() {
       if (!stored) return null;
 
       const data = JSON.parse(stored);
+
+      // Older versions used a key derived from public browser properties — they
+      // are no longer considered safe. Clear them and force re-enrollment.
+      if (data.version !== 4) {
+        localStorage.removeItem(BIOMETRIC_CRED_KEY);
+        localStorage.removeItem(BIOMETRIC_ENABLED_KEY);
+        return null;
+      }
+
       const challenge = generateChallenge();
       const allowCredentialId = data?.credentialId ? base64UrlToBuffer(data.credentialId) : null;
 
-      const assertion = await navigator.credentials.get({
+      const assertion = (await navigator.credentials.get({
         publicKey: {
           challenge,
           ...(allowCredentialId
@@ -222,33 +248,17 @@ export function useBiometricAuth() {
             : {}),
           userVerification: "required",
           timeout: 60000,
+          extensions: {
+            prf: { eval: { first: PRF_INPUT } },
+          } as AuthenticationExtensionsClientInputs,
         },
-      });
+      })) as PublicKeyCredential | null;
 
-      if (!assertion) return null;
+      const prf = extractPrfOutput(assertion);
+      if (!prf) return null;
 
-      let phone: string;
-      let password: string;
-
-      if (data.version === 3) {
-        // Current AES-GCM format
-        phone = await decrypt(data.phone);
-        password = await decrypt(data.password);
-      } else {
-        // Legacy v2 XOR — migrate to v3
-        phone = await legacyDeobfuscate(data.phone);
-        password = await legacyDeobfuscate(data.password ?? data.token ?? "");
-
-        // Re-encrypt with AES-GCM and save
-        const migrated = {
-          version: 3,
-          credentialId: data.credentialId,
-          phone: await encrypt(phone),
-          password: await encrypt(password),
-          createdAt: data.createdAt || Date.now(),
-        };
-        localStorage.setItem(BIOMETRIC_CRED_KEY, JSON.stringify(migrated));
-      }
+      const phone = await decryptWithPrf(data.phone, prf);
+      const password = await decryptWithPrf(data.password, prf);
 
       if (!phone || !password) return null;
       return { phone, password };
