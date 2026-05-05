@@ -65,8 +65,16 @@ Deno.serve(async (req) => {
       language = body.language || null;
     }
 
-    // If we have a URL, fetch the audio first
+    // If we have a URL, fetch the audio first — restrict to Supabase Storage to prevent SSRF
     if (audioUrl && !audioFile) {
+      const supaUrl = Deno.env.get("SUPABASE_URL")!;
+      const allowedPrefix = `${supaUrl}/storage/v1/`;
+      if (!audioUrl.startsWith(allowedPrefix)) {
+        return new Response(
+          JSON.stringify({ error: "Invalid audio URL" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       const audioResponse = await fetch(audioUrl);
       if (!audioResponse.ok) {
         return new Response(
