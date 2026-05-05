@@ -20,6 +20,22 @@ const allTexts: Record<string, string> = {
 
 const supportedLangs = ["de", "en", "fr", "tr", "ar", "es"];
 
+// Per-IP rate limit: 20 requests per minute (in-memory, per edge instance).
+const RATE_LIMIT_MAX = 20;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const ipBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const bucket = ipBuckets.get(ip);
+  if (!bucket || bucket.resetAt < now) {
+    ipBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  bucket.count += 1;
+  return bucket.count <= RATE_LIMIT_MAX;
+}
+
 async function hashText(text: string): Promise<string> {
   const data = new TextEncoder().encode(text);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
