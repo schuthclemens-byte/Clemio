@@ -36,34 +36,32 @@ serve(async (req) => {
       });
     }
 
-    const { elevenlabs_voice_id } = await req.json();
-
-    if (!elevenlabs_voice_id) {
-      return new Response(JSON.stringify({ error: "No voice ID provided" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Delete voice from ElevenLabs
-    const elResponse = await fetch(
-      `https://api.elevenlabs.io/v1/voices/${elevenlabs_voice_id}`,
-      {
-        method: "DELETE",
-        headers: { "xi-api-key": ELEVENLABS_API_KEY },
-      }
-    );
-
-    if (!elResponse.ok && elResponse.status !== 404) {
-      const errBody = await elResponse.text();
-      console.error("ElevenLabs delete error:", errBody);
-    }
-
-    // Delete own voice profile only
+    // Look up the user's OWN voice profile — never trust client-supplied voice IDs.
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    const { data: profile } = await adminClient
+      .from("voice_profiles")
+      .select("elevenlabs_voice_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const ownVoiceId = profile?.elevenlabs_voice_id;
+    if (ownVoiceId) {
+      const elResponse = await fetch(
+        `https://api.elevenlabs.io/v1/voices/${ownVoiceId}`,
+        {
+          method: "DELETE",
+          headers: { "xi-api-key": ELEVENLABS_API_KEY },
+        }
+      );
+      if (!elResponse.ok && elResponse.status !== 404) {
+        const errBody = await elResponse.text();
+        console.error("ElevenLabs delete error:", errBody);
+      }
+    }
 
     await adminClient
       .from("voice_profiles")

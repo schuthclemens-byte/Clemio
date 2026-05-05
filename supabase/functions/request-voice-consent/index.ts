@@ -116,7 +116,10 @@ Deno.serve(async (req) => {
     try {
       const pushRes = await fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
+        },
         body: JSON.stringify({
           user_id: voiceOwnerId,
           title: senderName,
