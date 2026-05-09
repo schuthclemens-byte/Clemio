@@ -99,6 +99,7 @@ const ChatListPage = () => {
           .select("*")
           .in("id", convIds)
           .eq("is_archived", false)
+          .is("deleted_at" as any, null)
           .order("updated_at", { ascending: false }),
         supabase
           .from("conversation_members")
