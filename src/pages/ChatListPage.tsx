@@ -1,17 +1,26 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, Search, Plus, MessageSquare, Phone, X, UserPlus } from "lucide-react";
+import { Search, Plus, MessageSquare, X, UserPlus, MoreVertical, Archive, Trash2, CheckSquare } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
 import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
 import PendingInvitations from "@/components/chat/PendingInvitations";
 import MessageRequests from "@/components/chat/MessageRequests";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchAccessibleProfiles, searchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { findOrCreateDirectChat } from "@/lib/chatCreation";
+import { trashConversations, archiveConversations, restoreConversations } from "@/lib/chatManagement";
+import { cn } from "@/lib/utils";
 
 interface ConversationItem {
   id: string;
