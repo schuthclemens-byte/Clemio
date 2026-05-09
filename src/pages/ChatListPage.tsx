@@ -626,28 +626,61 @@ const ChatListPage = () => {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chats</p>
                   </div>
                 )}
-                {filtered.map((chat, i) => (
-                  <SwipeableChatListItem
-                    key={chat.id}
-                    onDelete={() => handleDeleteConversation(chat.id)}
-                    onArchive={() => handleArchiveConversation(chat.id)}
-                  >
+                {filtered.map((chat, i) => {
+                  const isChecked = selectedIds.has(chat.id);
+                  const inner = (
                     <div
-                      className="animate-reveal-up"
+                      className={cn("relative animate-reveal-up", isChecked && "bg-primary/10")}
                       style={{ animationDelay: `${i * 60}ms` }}
                       role="listitem"
                     >
-                      <ChatListItem
-                        name={chat.name}
-                        lastMessage={chat.lastMessage}
-                        time={chat.time}
-                        unread={chat.unread}
-                        avatar={chat.avatar}
-                        onClick={() => navigate(`/chat/${chat.id}`)}
-                      />
+                      {selectMode && (
+                        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                          <div
+                            className={cn(
+                              "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors",
+                              isChecked ? "border-primary bg-primary" : "border-muted-foreground/40 bg-background"
+                            )}
+                          >
+                            {isChecked && (
+                              <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <div className={cn(selectMode && "pl-9")}>
+                        <ChatListItem
+                          name={chat.name}
+                          lastMessage={chat.lastMessage}
+                          time={chat.time}
+                          unread={chat.unread}
+                          avatar={chat.avatar}
+                          onClick={() => {
+                            if (selectMode) toggleSelect(chat.id);
+                            else navigate(`/chat/${chat.id}`);
+                          }}
+                        />
+                      </div>
                     </div>
-                  </SwipeableChatListItem>
-                ))}
+                  );
+
+                  // No swipe in select mode
+                  if (selectMode) {
+                    return <div key={chat.id}>{inner}</div>;
+                  }
+
+                  return (
+                    <SwipeableChatListItem
+                      key={chat.id}
+                      onDelete={() => handleDeleteConversation(chat.id)}
+                      onArchive={() => handleArchiveConversation(chat.id)}
+                    >
+                      {inner}
+                    </SwipeableChatListItem>
+                  );
+                })}
               </>
             )}
 
