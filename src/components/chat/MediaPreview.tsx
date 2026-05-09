@@ -1,23 +1,7 @@
-import { X, Play, Download } from "lucide-react";
+import { X, Play, Download, Share2 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-
-const downloadImage = async (url: string) => {
-  try {
-    const res = await fetch(url, { mode: "cors" });
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = `clemio-${Date.now()}.${blob.type.includes("png") ? "png" : blob.type.includes("video") ? "mp4" : "jpg"}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(blobUrl);
-  } catch {
-    window.open(url, "_blank");
-  }
-};
+import { downloadMedia, shareMedia, isShareSupported } from "@/lib/mediaShare";
 
 interface MediaPreviewProps {
   file: File;
