@@ -265,13 +265,24 @@ const FullscreenImageViewer = ({ url, onClose }: FullscreenImageViewerProps) => 
         className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-10 transition-opacity duration-200"
         style={{ opacity: showControls ? 1 : 0, pointerEvents: showControls ? "auto" : "none" }}
       >
-        <button
-          onClick={(e) => { e.stopPropagation(); downloadImage(url); }}
-          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
-          aria-label="Herunterladen"
-        >
-          <Download className="w-5 h-5 text-white" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); downloadMedia(url); }}
+            className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
+            aria-label="Herunterladen"
+          >
+            <Download className="w-5 h-5 text-white" />
+          </button>
+          {isShareSupported() && (
+            <button
+              onClick={(e) => { e.stopPropagation(); shareMedia(url); }}
+              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
+              aria-label="Teilen"
+            >
+              <Share2 className="w-5 h-5 text-white" />
+            </button>
+          )}
+        </div>
 
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}
