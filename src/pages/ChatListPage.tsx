@@ -405,25 +405,95 @@ const ChatListPage = () => {
   const handleNewChat = () => setShowNewChat(true);
 
   const handleDeleteConversation = async (convId: string) => {
-    const { error } = await supabase.from("conversations").delete().eq("id", convId);
-    if (error) {
-      toast.error("Chat konnte nicht gelöscht werden");
-    } else {
+    try {
+      await trashConversations([convId]);
       setConversations((prev) => prev.filter((c) => c.id !== convId));
-      toast.success("Chat gelöscht");
+      toast.success("In Papierkorb verschoben", {
+        action: {
+          label: "Rückgängig",
+          onClick: async () => {
+            try {
+              await restoreConversations([convId]);
+              fetchConversations();
+            } catch {
+              toast.error("Wiederherstellen fehlgeschlagen");
+            }
+          },
+        },
+        duration: 8000,
+      });
+    } catch {
+      toast.error("Chat konnte nicht gelöscht werden");
     }
   };
 
   const handleArchiveConversation = async (convId: string) => {
-    const { error } = await supabase
-      .from("conversations")
-      .update({ is_archived: true } as any)
-      .eq("id", convId);
-    if (error) {
-      toast.error("Archivieren fehlgeschlagen");
-    } else {
+    try {
+      await archiveConversations([convId]);
       setConversations((prev) => prev.filter((c) => c.id !== convId));
-      toast.success("Chat archiviert");
+      toast.success("Chat archiviert", {
+        action: {
+          label: "Rückgängig",
+          onClick: async () => {
+            try {
+              await restoreConversations([convId]);
+              fetchConversations();
+            } catch {
+              toast.error("Wiederherstellen fehlgeschlagen");
+            }
+          },
+        },
+        duration: 8000,
+      });
+    } catch {
+      toast.error("Archivieren fehlgeschlagen");
+    }
+  };
+
+  // ── Multi-select mode ──
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === filtered.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filtered.map((c) => c.id)));
+  };
+
+  const bulkArchive = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      await archiveConversations(ids);
+      setConversations((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      toast.success(`${ids.length} archiviert`);
+      exitSelectMode();
+    } catch {
+      toast.error("Archivieren fehlgeschlagen");
+    }
+  };
+
+  const bulkTrash = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      await trashConversations(ids);
+      setConversations((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      toast.success(`${ids.length} in Papierkorb`);
+      exitSelectMode();
+    } catch {
+      toast.error("Verschieben fehlgeschlagen");
     }
   };
 
