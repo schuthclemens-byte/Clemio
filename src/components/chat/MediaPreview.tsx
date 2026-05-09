@@ -1,23 +1,7 @@
-import { X, Play, Download } from "lucide-react";
+import { X, Play, Download, Share2 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-
-const downloadImage = async (url: string) => {
-  try {
-    const res = await fetch(url, { mode: "cors" });
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = `clemio-${Date.now()}.${blob.type.includes("png") ? "png" : blob.type.includes("video") ? "mp4" : "jpg"}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(blobUrl);
-  } catch {
-    window.open(url, "_blank");
-  }
-};
+import { downloadMedia, shareMedia, isShareSupported } from "@/lib/mediaShare";
 
 interface MediaPreviewProps {
   file: File;
@@ -281,13 +265,24 @@ const FullscreenImageViewer = ({ url, onClose }: FullscreenImageViewerProps) => 
         className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-10 transition-opacity duration-200"
         style={{ opacity: showControls ? 1 : 0, pointerEvents: showControls ? "auto" : "none" }}
       >
-        <button
-          onClick={(e) => { e.stopPropagation(); downloadImage(url); }}
-          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
-          aria-label="Herunterladen"
-        >
-          <Download className="w-5 h-5 text-white" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); downloadMedia(url); }}
+            className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
+            aria-label="Herunterladen"
+          >
+            <Download className="w-5 h-5 text-white" />
+          </button>
+          {isShareSupported() && (
+            <button
+              onClick={(e) => { e.stopPropagation(); shareMedia(url); }}
+              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
+              aria-label="Teilen"
+            >
+              <Share2 className="w-5 h-5 text-white" />
+            </button>
+          )}
+        </div>
 
         <button
           onClick={(e) => { e.stopPropagation(); onClose(); }}

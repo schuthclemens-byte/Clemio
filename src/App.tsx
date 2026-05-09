@@ -47,6 +47,8 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const ImpressumPage = lazy(() => import("./pages/ImpressumPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const BlockedUsersPage = lazy(() => import("./pages/BlockedUsersPage"));
+const ArchivedChatsPage = lazy(() => import("./pages/ArchivedChatsPage"));
+const TrashPage = lazy(() => import("./pages/TrashPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -123,6 +125,8 @@ const App = () => (
                             <Route path="/call/:id" element={<ProtectedRoute><CallPage /></ProtectedRoute>} />
                             <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
                             <Route path="/blocked-users" element={<ProtectedRoute><BlockedUsersPage /></ProtectedRoute>} />
+                            <Route path="/archived-chats" element={<ProtectedRoute><ArchivedChatsPage /></ProtectedRoute>} />
+                            <Route path="/trash" element={<ProtectedRoute><TrashPage /></ProtectedRoute>} />
                             <Route path="/install" element={<InstallPage />} />
                             <Route path="/privacy" element={<PrivacyPolicyPage />} />
                             <Route path="/terms" element={<TermsPage />} />

@@ -1,17 +1,26 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, Search, Plus, MessageSquare, Phone, X, UserPlus } from "lucide-react";
+import { Search, Plus, MessageSquare, X, UserPlus, MoreVertical, Archive, Trash2, CheckSquare } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
 import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
 import PendingInvitations from "@/components/chat/PendingInvitations";
 import MessageRequests from "@/components/chat/MessageRequests";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { useI18n } from "@/contexts/I18nContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchAccessibleProfiles, searchAccessibleProfiles } from "@/lib/accessibleProfiles";
 import { findOrCreateDirectChat } from "@/lib/chatCreation";
+import { trashConversations, archiveConversations, restoreConversations } from "@/lib/chatManagement";
+import { cn } from "@/lib/utils";
 
 interface ConversationItem {
   id: string;
@@ -90,6 +99,7 @@ const ChatListPage = () => {
           .select("*")
           .in("id", convIds)
           .eq("is_archived", false)
+          .is("deleted_at" as any, null)
           .order("updated_at", { ascending: false }),
         supabase
           .from("conversation_members")
@@ -395,64 +405,198 @@ const ChatListPage = () => {
   const handleNewChat = () => setShowNewChat(true);
 
   const handleDeleteConversation = async (convId: string) => {
-    const { error } = await supabase.from("conversations").delete().eq("id", convId);
-    if (error) {
-      toast.error("Chat konnte nicht gelöscht werden");
-    } else {
+    try {
+      await trashConversations([convId]);
       setConversations((prev) => prev.filter((c) => c.id !== convId));
-      toast.success("Chat gelöscht");
+      toast.success("In Papierkorb verschoben", {
+        action: {
+          label: "Rückgängig",
+          onClick: async () => {
+            try {
+              await restoreConversations([convId]);
+              fetchConversations();
+            } catch {
+              toast.error("Wiederherstellen fehlgeschlagen");
+            }
+          },
+        },
+        duration: 8000,
+      });
+    } catch {
+      toast.error("Chat konnte nicht gelöscht werden");
     }
   };
 
   const handleArchiveConversation = async (convId: string) => {
-    const { error } = await supabase
-      .from("conversations")
-      .update({ is_archived: true } as any)
-      .eq("id", convId);
-    if (error) {
-      toast.error("Archivieren fehlgeschlagen");
-    } else {
+    try {
+      await archiveConversations([convId]);
       setConversations((prev) => prev.filter((c) => c.id !== convId));
-      toast.success("Chat archiviert");
+      toast.success("Chat archiviert", {
+        action: {
+          label: "Rückgängig",
+          onClick: async () => {
+            try {
+              await restoreConversations([convId]);
+              fetchConversations();
+            } catch {
+              toast.error("Wiederherstellen fehlgeschlagen");
+            }
+          },
+        },
+        duration: 8000,
+      });
+    } catch {
+      toast.error("Archivieren fehlgeschlagen");
+    }
+  };
+
+  // ── Multi-select mode ──
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === filtered.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filtered.map((c) => c.id)));
+  };
+
+  const bulkArchive = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      await archiveConversations(ids);
+      setConversations((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      toast.success(`${ids.length} archiviert`);
+      exitSelectMode();
+    } catch {
+      toast.error("Archivieren fehlgeschlagen");
+    }
+  };
+
+  const bulkTrash = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      await trashConversations(ids);
+      setConversations((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      toast.success(`${ids.length} in Papierkorb`);
+      exitSelectMode();
+    } catch {
+      toast.error("Verschieben fehlgeschlagen");
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 glass-strong border-b border-border/30" style={{ background: 'linear-gradient(135deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.8))' }}>
-        <div className="flex items-center justify-between px-5 py-4">
-          <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">{t("chat.chats")}</h1>
-          <div className="flex items-center gap-1.5">
+        {selectMode ? (
+          <div className="flex items-center gap-2 px-3 py-3">
             <button
-              onClick={handleNewChat}
-              className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-soft transition-all duration-200 active:scale-95"
-              aria-label="Neuer Chat"
+              onClick={exitSelectMode}
+              className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-95"
+              aria-label="Auswahl beenden"
             >
-              <Plus className="w-5 h-5 text-primary-foreground" />
+              <X className="w-5 h-5" />
+            </button>
+            <h1 className="text-lg font-bold flex-1">
+              {selectedIds.size === 0 ? "Auswählen" : `${selectedIds.size} ausgewählt`}
+            </h1>
+            <button
+              onClick={selectAll}
+              className="px-3 h-9 rounded-lg text-sm font-medium bg-secondary/70 active:scale-95"
+            >
+              {selectedIds.size === filtered.length && filtered.length > 0 ? "Keine" : "Alle"}
+            </button>
+            <button
+              onClick={bulkArchive}
+              disabled={selectedIds.size === 0}
+              className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center active:scale-95 disabled:opacity-40"
+              aria-label="Archivieren"
+            >
+              <Archive className="w-5 h-5" />
+            </button>
+            <button
+              onClick={bulkTrash}
+              disabled={selectedIds.size === 0}
+              className="w-10 h-10 rounded-xl bg-destructive/15 text-destructive flex items-center justify-center active:scale-95 disabled:opacity-40"
+              aria-label="In Papierkorb"
+            >
+              <Trash2 className="w-5 h-5" />
             </button>
           </div>
-        </div>
-        <div className="px-5 pb-3.5">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("chat.search")}
-              className="w-full h-11 rounded-xl bg-secondary/70 pl-10 pr-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:bg-card transition-all duration-200"
-              aria-label={t("chat.search")}
-            />
-            {search && (
+        ) : (
+          <div className="flex items-center justify-between px-5 py-4">
+            <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">{t("chat.chats")}</h1>
+            <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-muted-foreground/20 flex items-center justify-center"
+                onClick={handleNewChat}
+                className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-soft transition-all duration-200 active:scale-95"
+                aria-label="Neuer Chat"
               >
-                <X className="w-3 h-3 text-muted-foreground" />
+                <Plus className="w-5 h-5 text-primary-foreground" />
               </button>
-            )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="w-10 h-10 rounded-xl bg-secondary/70 flex items-center justify-center active:scale-95"
+                    aria-label="Mehr"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => setSelectMode(true)}>
+                    <CheckSquare className="w-4 h-4 mr-2" />
+                    Auswählen
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/archived-chats")}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archivierte Chats
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/trash")}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Papierkorb
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
+        )}
+        {!selectMode && (
+          <div className="px-5 pb-3.5">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("chat.search")}
+                className="w-full h-11 rounded-xl bg-secondary/70 pl-10 pr-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:bg-card transition-all duration-200"
+                aria-label={t("chat.search")}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-muted-foreground/20 flex items-center justify-center"
+                >
+                  <X className="w-3 h-3 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="flex-1" role="list" aria-label={t("chat.chats")}>
@@ -482,28 +626,61 @@ const ChatListPage = () => {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chats</p>
                   </div>
                 )}
-                {filtered.map((chat, i) => (
-                  <SwipeableChatListItem
-                    key={chat.id}
-                    onDelete={() => handleDeleteConversation(chat.id)}
-                    onArchive={() => handleArchiveConversation(chat.id)}
-                  >
+                {filtered.map((chat, i) => {
+                  const isChecked = selectedIds.has(chat.id);
+                  const inner = (
                     <div
-                      className="animate-reveal-up"
+                      className={cn("relative animate-reveal-up", isChecked && "bg-primary/10")}
                       style={{ animationDelay: `${i * 60}ms` }}
                       role="listitem"
                     >
-                      <ChatListItem
-                        name={chat.name}
-                        lastMessage={chat.lastMessage}
-                        time={chat.time}
-                        unread={chat.unread}
-                        avatar={chat.avatar}
-                        onClick={() => navigate(`/chat/${chat.id}`)}
-                      />
+                      {selectMode && (
+                        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                          <div
+                            className={cn(
+                              "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors",
+                              isChecked ? "border-primary bg-primary" : "border-muted-foreground/40 bg-background"
+                            )}
+                          >
+                            {isChecked && (
+                              <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <div className={cn(selectMode && "pl-9")}>
+                        <ChatListItem
+                          name={chat.name}
+                          lastMessage={chat.lastMessage}
+                          time={chat.time}
+                          unread={chat.unread}
+                          avatar={chat.avatar}
+                          onClick={() => {
+                            if (selectMode) toggleSelect(chat.id);
+                            else navigate(`/chat/${chat.id}`);
+                          }}
+                        />
+                      </div>
                     </div>
-                  </SwipeableChatListItem>
-                ))}
+                  );
+
+                  // No swipe in select mode
+                  if (selectMode) {
+                    return <div key={chat.id}>{inner}</div>;
+                  }
+
+                  return (
+                    <SwipeableChatListItem
+                      key={chat.id}
+                      onDelete={() => handleDeleteConversation(chat.id)}
+                      onArchive={() => handleArchiveConversation(chat.id)}
+                    >
+                      {inner}
+                    </SwipeableChatListItem>
+                  );
+                })}
               </>
             )}
 

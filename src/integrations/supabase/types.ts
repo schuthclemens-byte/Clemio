@@ -446,6 +446,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           created_by: string
+          deleted_at: string | null
           id: string
           is_archived: boolean
           is_group: boolean | null
@@ -456,6 +457,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           created_by: string
+          deleted_at?: string | null
           id?: string
           is_archived?: boolean
           is_group?: boolean | null
@@ -466,6 +468,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           created_by?: string
+          deleted_at?: string | null
           id?: string
           is_archived?: boolean
           is_group?: boolean | null
