@@ -450,53 +450,6 @@ const ChatListPage = () => {
     }
   };
 
-  // ── Multi-select mode ──
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  const exitSelectMode = () => {
-    setSelectMode(false);
-    setSelectedIds(new Set());
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const selectAll = () => {
-    if (selectedIds.size === filtered.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(filtered.map((c) => c.id)));
-  };
-
-  const bulkArchive = async () => {
-    const ids = Array.from(selectedIds);
-    try {
-      await archiveConversations(ids);
-      setConversations((prev) => prev.filter((c) => !selectedIds.has(c.id)));
-      toast.success(`${ids.length} archiviert`);
-      exitSelectMode();
-    } catch {
-      toast.error("Archivieren fehlgeschlagen");
-    }
-  };
-
-  const bulkTrash = async () => {
-    const ids = Array.from(selectedIds);
-    try {
-      await trashConversations(ids);
-      setConversations((prev) => prev.filter((c) => !selectedIds.has(c.id)));
-      toast.success(`${ids.length} in Papierkorb`);
-      exitSelectMode();
-    } catch {
-      toast.error("Verschieben fehlgeschlagen");
-    }
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 glass-strong border-b border-border/30" style={{ background: 'linear-gradient(135deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.8))' }}>
