@@ -139,6 +139,18 @@ serve(async (req) => {
       });
     }
 
+    // Stripe key invalid / expired / authentication issue → fail soft
+    if (
+      errorMessage.includes("Expired API Key") ||
+      errorMessage.includes("Invalid API Key") ||
+      errorMessage.includes("authentication")
+    ) {
+      return new Response(JSON.stringify({ subscribed: false, stripe_disabled: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
