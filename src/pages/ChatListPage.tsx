@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, MessageSquare, X, UserPlus, MoreVertical, Archive, Trash2, CheckSquare } from "lucide-react";
+import { Search, Plus, MessageSquare, X, UserPlus, MoreVertical, Archive, Trash2 } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
 import SwipeableChatListItem from "@/components/chat/SwipeableChatListItem";
 import NewChatDialog from "@/components/chat/NewChatDialog";
