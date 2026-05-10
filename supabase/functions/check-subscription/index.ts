@@ -33,7 +33,13 @@ serve(async (req) => {
     } catch { /* optional body */ }
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      logStep("Stripe disabled (no key) — returning subscribed:false");
+      return new Response(JSON.stringify({ subscribed: false, stripe_disabled: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
