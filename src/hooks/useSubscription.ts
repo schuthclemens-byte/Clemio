@@ -2,274 +2,129 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export interface Subscription {
-  plan: string;
-  is_founding_user: boolean;
-  trial_start: string | null;
-  trial_end: string | null;
-  premium_until: string | null;
+export interface PremiumStatusPayload {
+  status: "free" | "trial" | "premium" | "expired" | "canceled";
+  isPremium: boolean;
+  isTrialActive: boolean;
+  hasUsedTrial: boolean;
+  canStartTrial: boolean;
+  trialEndsAt: string | null;
+  periodEnd: string | null;
+  plan: string | null;
+  isFoundingUser: boolean;
+  isWhitelisted: boolean;
 }
 
-interface StripeStatus {
-  subscribed: boolean;
-  subscription_end: string | null;
-}
-
-interface RefreshSubscriptionResult {
-  ok: boolean;
-  subscribed: boolean;
-  error?: string;
-}
+const DEFAULT_STATUS: PremiumStatusPayload = {
+  status: "free",
+  isPremium: false,
+  isTrialActive: false,
+  hasUsedTrial: false,
+  canStartTrial: false,
+  trialEndsAt: null,
+  periodEnd: null,
+  plan: null,
+  isFoundingUser: false,
+  isWhitelisted: false,
+};
 
 export const useSubscription = () => {
   const { user } = useAuth();
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [stripeActive, setStripeActive] = useState(false);
-  const [stripeEnd, setStripeEnd] = useState<string | null>(null);
+  const [status, setStatus] = useState<PremiumStatusPayload>(DEFAULT_STATUS);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
+  const [trialStarting, setTrialStarting] = useState(false);
 
-  // Load local subscription (founding/trial)
-  useEffect(() => {
+  const refreshStatus = useCallback(async (): Promise<PremiumStatusPayload> => {
     if (!user) {
+      setStatus(DEFAULT_STATUS);
       setLoading(false);
-      return;
+      return DEFAULT_STATUS;
     }
-
-    const load = async () => {
-      const { data } = await supabase
-        .from("subscriptions" as any)
-        .select("plan, is_founding_user, trial_start, trial_end, premium_until")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      setSubscription(data as any);
-    };
-
-    load();
-  }, [user]);
-
-  // Check Stripe subscription (with client-side cache to avoid rate limits)
-  const checkStripe = useCallback(async (force = false): Promise<RefreshSubscriptionResult> => {
-    if (!user) {
-      setLoading(false);
-      return { ok: false, subscribed: false, error: "Keine aktive Sitzung" };
-    }
-
-    // Client-side cache: skip if last successful check was < 5 minutes ago
-    const CACHE_KEY = "clemio_stripe_cache";
-    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-    if (!force) {
-      try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          const { ts, subscribed, subscription_end } = JSON.parse(cached);
-          if (Date.now() - ts < CACHE_TTL) {
-            setStripeActive(subscribed);
-            setStripeEnd(subscription_end ?? null);
-            setLoading(false);
-            return { ok: true, subscribed };
-          }
-        }
-      } catch { /* ignore */ }
-    }
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      setLoading(false);
-      return { ok: false, subscribed: false, error: "Keine aktive Sitzung" };
-    }
-
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/check-subscription`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: force ? JSON.stringify({ notifyPremium: true }) : undefined,
-        }
-      );
-      
-      if (!res.ok) {
-        console.warn("check-subscription returned", res.status);
-        return {
-          ok: false,
-          subscribed: false,
-          error: `Statusprüfung fehlgeschlagen (${res.status})`,
-        };
+      const { data, error } = await supabase.rpc("get_premium_status" as any);
+      if (error) {
+        console.warn("get_premium_status error:", error.message);
+        setLoading(false);
+        return status;
       }
-      
-      const data: StripeStatus = await res.json();
-      if (data) {
-        setStripeActive(data.subscribed);
-        setStripeEnd(data.subscription_end ?? null);
-        // Cache successful result
-        try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            ts: Date.now(),
-            subscribed: data.subscribed,
-            subscription_end: data.subscription_end,
-          }));
-        } catch { /* ignore */ }
-        return {
-          ok: true,
-          subscribed: data.subscribed,
-        };
-      }
-
-      return { ok: true, subscribed: false };
-    } catch (err) {
-      console.error("check-subscription failed:", err);
-      return {
-        ok: false,
-        subscribed: false,
-        error: err instanceof Error ? err.message : "Unbekannter Fehler",
-      };
-    } finally {
+      const next = { ...DEFAULT_STATUS, ...(data as any) };
+      setStatus(next);
       setLoading(false);
+      return next;
+    } catch (err) {
+      console.error("get_premium_status failed:", err);
+      setLoading(false);
+      return status;
     }
   }, [user]);
 
   useEffect(() => {
+    refreshStatus();
     if (!user) return;
-    checkStripe();
-    const interval = setInterval(checkStripe, 5 * 60_000); // every 5 min instead of 1 min
+    const interval = setInterval(refreshStatus, 5 * 60_000);
     return () => clearInterval(interval);
-  }, [user, checkStripe]);
+  }, [user, refreshStatus]);
 
-  // Handle checkout success URL param
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("checkout") === "success") {
-      // Remove param and refresh
-      params.delete("checkout");
-      const newUrl = window.location.pathname + (params.toString() ? `?${params}` : "");
-      window.history.replaceState({}, "", newUrl);
-      setTimeout(() => checkStripe(true), 2000);
-    }
-  }, [checkStripe]);
-
-  const isPremium = (): boolean => {
-    // Stripe subscription takes priority
-    if (stripeActive) return true;
-    // Fallback to local DB (founding/trial)
-    if (!subscription) return false;
-    if (subscription.plan === "founding") {
-      if (subscription.premium_until) {
-        return new Date(subscription.premium_until) > new Date();
+  const startTrial = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
+    if (!user) return { ok: false, error: "not_authenticated" };
+    setTrialStarting(true);
+    try {
+      const { data, error } = await supabase.rpc("start_premium_trial" as any);
+      if (error) {
+        const code = error.message?.includes("phone_required_for_trial")
+          ? "phone_required_for_trial"
+          : error.message?.includes("trial_already_used")
+          ? "trial_already_used"
+          : "unknown";
+        return { ok: false, error: code };
       }
-      return true;
+      await refreshStatus();
+      return { ok: true };
+    } finally {
+      setTrialStarting(false);
     }
-    if (subscription.plan === "premium") return true;
-    if (subscription.plan === "trial" && subscription.premium_until) {
-      return new Date(subscription.premium_until) > new Date();
-    }
-    return false;
-  };
-
-  const isFoundingUser = (): boolean => {
-    return subscription?.is_founding_user ?? false;
-  };
+  }, [user, refreshStatus]);
 
   const daysRemaining = (): number => {
-    if (stripeActive && stripeEnd) {
-      const diff = new Date(stripeEnd).getTime() - Date.now();
-      return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-    }
-    if (!subscription?.premium_until) return 0;
-    // Whitelist users have premium_until far in the future - don't show countdown
-    if (new Date(subscription.premium_until).getFullYear() >= 2099) return -1;
-    const diff = new Date(subscription.premium_until).getTime() - Date.now();
+    const target = status.isTrialActive ? status.trialEndsAt : status.periodEnd;
+    if (!target) return 0;
+    if (new Date(target).getFullYear() >= 2099) return -1;
+    const diff = new Date(target).getTime() - Date.now();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   };
 
   const planLabel = (): string => {
-    if (stripeActive) return "Premium";
-    if (!subscription) return "Kostenlos";
-    if (subscription.plan === "founding") return "Founding User";
-    if (subscription.plan === "premium") return "Premium";
-    if (subscription.plan === "trial") {
-      if (isPremium()) return "Testphase";
-      return "Kostenlos";
-    }
+    if (status.isFoundingUser) return "Founding User";
+    if (status.status === "premium") return "Premium";
+    if (status.status === "trial") return "Testphase";
     return "Kostenlos";
   };
 
-  const startCheckout = async () => {
-    setCheckoutLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Keine Session");
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/create-checkout`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }
-      );
-      const data = await res.json();
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      } else if (data?.error) {
-        console.error("Checkout error:", data.error);
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-    } finally {
-      setCheckoutLoading(false);
-    }
-  };
-
-  const openPortal = async () => {
-    setPortalLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Keine Session");
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/customer-portal`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }
-      );
-      const data = await res.json();
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      } else if (data?.error) {
-        console.error("Portal error:", data.error);
-      }
-    } catch (err) {
-      console.error("Portal error:", err);
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
   return {
-    subscription,
     loading,
-    isPremium: isPremium(),
-    isFoundingUser: isFoundingUser(),
+    isPremium: status.isPremium,
+    isTrialActive: status.isTrialActive,
+    isFoundingUser: status.isFoundingUser,
+    hasUsedTrial: status.hasUsedTrial,
+    canStartTrial: status.canStartTrial,
+    premiumStatus: status.status,
+    trialEndsAt: status.trialEndsAt,
+    periodEnd: status.periodEnd,
     daysRemaining: daysRemaining(),
     planLabel: planLabel(),
-    stripeActive,
-    startCheckout,
-    openPortal,
-    checkoutLoading,
-    portalLoading,
-    refreshSubscription: checkStripe,
+    refreshSubscription: refreshStatus,
+    startTrial,
+    trialStarting,
+    // Legacy compat (PaywallDialog/usePremiumGate compatibility)
+    subscription: null,
+    stripeActive: status.status === "premium" && !status.isFoundingUser && !status.isWhitelisted,
+    startCheckout: async () => {
+      console.warn("Stripe checkout disabled — IAP integration pending");
+    },
+    openPortal: async () => {
+      console.warn("Customer portal disabled — IAP integration pending");
+    },
+    checkoutLoading: false,
+    portalLoading: false,
   };
 };
