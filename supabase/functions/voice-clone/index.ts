@@ -76,7 +76,7 @@ serve(async (req) => {
     if (!elResponse.ok) {
       const errBody = await elResponse.text();
       console.error("ElevenLabs error:", errBody);
-      return new Response(JSON.stringify({ error: "Voice cloning failed", details: errBody }), {
+      return new Response(JSON.stringify({ error: "Voice cloning failed", code: "el_error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
