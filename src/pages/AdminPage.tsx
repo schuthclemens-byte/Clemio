@@ -305,10 +305,25 @@ const AdminPage = () => {
 
   const getSubBadge = (sub: UserSubscription | null) => {
     if (!sub) return <Badge variant="secondary" className="text-[0.6rem] px-1.5">Free</Badge>;
-    const isPremium = sub.premium_until && new Date(sub.premium_until) > new Date();
+    const status = sub.premium_status;
+    const trialActive = sub.premium_trial_ends_at && new Date(sub.premium_trial_ends_at) > new Date();
     if (sub.is_founding_user) return <Badge className="text-[0.6rem] px-1.5 bg-amber-500/20 text-amber-600 border-amber-500/30">Founding</Badge>;
-    if (isPremium) return <Badge className="text-[0.6rem] px-1.5 bg-primary/20 text-primary border-primary/30">Premium</Badge>;
+    if (status === "premium" || (sub.premium_until && new Date(sub.premium_until) > new Date())) {
+      return <Badge className="text-[0.6rem] px-1.5 bg-primary/20 text-primary border-primary/30">Premium</Badge>;
+    }
+    if (status === "trial" || trialActive) {
+      return <Badge className="text-[0.6rem] px-1.5 bg-emerald-500/20 text-emerald-600 border-emerald-500/30">Trial</Badge>;
+    }
+    if (status === "expired" || sub.has_used_premium_trial) {
+      return <Badge className="text-[0.6rem] px-1.5 bg-muted text-muted-foreground">Trial benutzt</Badge>;
+    }
     return <Badge variant="secondary" className="text-[0.6rem] px-1.5">Free</Badge>;
+  };
+
+  const formatDt = (iso?: string | null) => {
+    if (!iso) return "—";
+    try { return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" }); }
+    catch { return "—"; }
   };
 
   const voiceUsers = profiles.filter(p => p.voice_profile);
