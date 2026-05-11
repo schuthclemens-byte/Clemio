@@ -128,6 +128,8 @@ serve(async (req) => {
     await admin.from("focus_contacts").delete().eq("user_id", userId);
 
     // Subscription & push
+    // Anonymize trial claim (keeps phone_trial_key as anti-reuse wall, drops user_id link)
+    await admin.rpc("anonymize_trial_claim_for_user", { _user_id: userId });
     await admin.from("subscriptions").delete().eq("user_id", userId);
     await admin.from("push_subscriptions").delete().eq("user_id", userId);
 
