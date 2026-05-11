@@ -151,7 +151,8 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    console.error("[check-subscription] unexpected error:", errorMessage);
+    return new Response(JSON.stringify({ subscribed: false, error: "Internal server error" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
