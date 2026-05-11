@@ -572,6 +572,9 @@ const AdminPage = () => {
             { icon: MessageSquare, label: tr("Nachr.", "Msgs"), value: stats.totalMessages, color: "text-blue-500" },
             { icon: Crown, label: "Premium", value: stats.premiumUsers, color: "text-amber-500" },
             { icon: Mic, label: "Voice", value: stats.voiceProfiles, color: "text-primary" },
+            { icon: Star, label: tr("Trial aktiv", "Trial active"), value: stats.trialActive ?? 0, color: "text-emerald-500" },
+            { icon: Calendar, label: tr("Trial benutzt", "Trial used"), value: stats.trialUsed ?? 0, color: "text-muted-foreground" },
+            { icon: TrendingUp ?? Activity, label: tr("Trial→Prem %", "Trial→Prem %"), value: `${stats.trialToPremiumPct ?? 0}%`, color: "text-primary" },
           ].map(({ icon: Icon, label, value, color }) => (
             <div key={label} className="flex flex-col items-center p-2 rounded-xl bg-muted/50 gap-1">
               <Icon className={`w-4 h-4 ${color}`} />
