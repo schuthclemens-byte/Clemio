@@ -277,6 +277,6 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("TTS stream error:", error);
-    return errorResponse(500, error.message, "internal_error");
+    return errorResponse(500, "Internal server error", "internal_error");
   }
 });

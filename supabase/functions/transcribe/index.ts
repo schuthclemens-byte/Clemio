@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
       const errText = await sttResponse.text();
       console.error("ElevenLabs STT error:", sttResponse.status, errText);
       return new Response(
-        JSON.stringify({ error: "Transcription failed", details: errText }),
+        JSON.stringify({ error: "Transcription failed" }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
