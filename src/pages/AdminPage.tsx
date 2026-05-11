@@ -36,6 +36,12 @@ interface UserSubscription {
   plan: string;
   premium_until: string | null;
   is_founding_user: boolean;
+  has_used_premium_trial?: boolean;
+  premium_trial_started_at?: string | null;
+  premium_trial_ends_at?: string | null;
+  premium_status?: string;
+  premium_plan?: string | null;
+  premium_current_period_end?: string | null;
 }
 
 interface VoiceProfile {
@@ -64,6 +70,11 @@ interface Stats {
   premiumUsers: number;
   voiceProfiles: number;
   autoplayUsers: number;
+  trialActive?: number;
+  trialUsed?: number;
+  trialExpired?: number;
+  trialClaimsTotal?: number;
+  trialToPremiumPct?: number;
 }
 
 const AdminPage = () => {
@@ -294,10 +305,25 @@ const AdminPage = () => {
 
   const getSubBadge = (sub: UserSubscription | null) => {
     if (!sub) return <Badge variant="secondary" className="text-[0.6rem] px-1.5">Free</Badge>;
-    const isPremium = sub.premium_until && new Date(sub.premium_until) > new Date();
+    const status = sub.premium_status;
+    const trialActive = sub.premium_trial_ends_at && new Date(sub.premium_trial_ends_at) > new Date();
     if (sub.is_founding_user) return <Badge className="text-[0.6rem] px-1.5 bg-amber-500/20 text-amber-600 border-amber-500/30">Founding</Badge>;
-    if (isPremium) return <Badge className="text-[0.6rem] px-1.5 bg-primary/20 text-primary border-primary/30">Premium</Badge>;
+    if (status === "premium" || (sub.premium_until && new Date(sub.premium_until) > new Date())) {
+      return <Badge className="text-[0.6rem] px-1.5 bg-primary/20 text-primary border-primary/30">Premium</Badge>;
+    }
+    if (status === "trial" || trialActive) {
+      return <Badge className="text-[0.6rem] px-1.5 bg-emerald-500/20 text-emerald-600 border-emerald-500/30">Trial</Badge>;
+    }
+    if (status === "expired" || sub.has_used_premium_trial) {
+      return <Badge className="text-[0.6rem] px-1.5 bg-muted text-muted-foreground">Trial benutzt</Badge>;
+    }
     return <Badge variant="secondary" className="text-[0.6rem] px-1.5">Free</Badge>;
+  };
+
+  const formatDt = (iso?: string | null) => {
+    if (!iso) return "—";
+    try { return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" }); }
+    catch { return "—"; }
   };
 
   const voiceUsers = profiles.filter(p => p.voice_profile);
@@ -546,6 +572,9 @@ const AdminPage = () => {
             { icon: MessageSquare, label: tr("Nachr.", "Msgs"), value: stats.totalMessages, color: "text-blue-500" },
             { icon: Crown, label: "Premium", value: stats.premiumUsers, color: "text-amber-500" },
             { icon: Mic, label: "Voice", value: stats.voiceProfiles, color: "text-primary" },
+            { icon: Star, label: tr("Trial aktiv", "Trial active"), value: stats.trialActive ?? 0, color: "text-emerald-500" },
+            { icon: Calendar, label: tr("Trial benutzt", "Trial used"), value: stats.trialUsed ?? 0, color: "text-muted-foreground" },
+            { icon: Activity, label: tr("Trial→Prem %", "Trial→Prem %"), value: `${stats.trialToPremiumPct ?? 0}%`, color: "text-primary" },
           ].map(({ icon: Icon, label, value, color }) => (
             <div key={label} className="flex flex-col items-center p-2 rounded-xl bg-muted/50 gap-1">
               <Icon className={`w-4 h-4 ${color}`} />
@@ -621,6 +650,19 @@ const AdminPage = () => {
                   {p.voice_profile && (
                     <div className="text-[0.6rem] text-muted-foreground mt-0.5">
                       Voice: {p.voice_profile.voice_name || "—"} · {p.voice_profile.created_at ? new Date(p.voice_profile.created_at).toLocaleDateString("de") : "—"}
+                    </div>
+                  )}
+                  {p.subscription && (p.subscription.has_used_premium_trial || p.subscription.premium_status) && (
+                    <div className="text-[0.6rem] text-muted-foreground mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                      <span>Status: <strong>{p.subscription.premium_status || "free"}</strong></span>
+                      {p.subscription.premium_plan && <span>Plan: {p.subscription.premium_plan}</span>}
+                      {p.subscription.premium_trial_started_at && (
+                        <span>Trial: {formatDt(p.subscription.premium_trial_started_at)} → {formatDt(p.subscription.premium_trial_ends_at)}</span>
+                      )}
+                      {p.subscription.premium_current_period_end && (
+                        <span>Bis: {formatDt(p.subscription.premium_current_period_end)}</span>
+                      )}
+                      {p.subscription.has_used_premium_trial && <span>· Trial benutzt</span>}
                     </div>
                   )}
                 </div>

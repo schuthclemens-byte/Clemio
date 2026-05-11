@@ -271,8 +271,7 @@ const SettingsPage = () => {
   const handleRefreshSubscription = async () => {
     setRefreshingSubscription(true);
     const result = await refreshSubscription();
-    if (!result?.ok) { toast.error(result?.error ?? t("settings.subNotFound")); setRefreshingSubscription(false); return; }
-    toast.success(result.subscribed ? t("settings.subRecognized") : t("settings.subNotFound"));
+    toast.success(result.isPremium ? t("settings.subRecognized") : t("settings.subNotFound"));
     setLastChecked(new Date());
     setRefreshingSubscription(false);
   };

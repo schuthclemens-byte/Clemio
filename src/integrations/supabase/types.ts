@@ -692,6 +692,33 @@ export type Database = {
           },
         ]
       }
+      premium_trial_claims: {
+        Row: {
+          created_at: string
+          id: string
+          phone_trial_key: string
+          trial_ends_at: string
+          trial_started_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone_trial_key: string
+          trial_ends_at: string
+          trial_started_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone_trial_key?: string
+          trial_ends_at?: string
+          trial_started_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       premium_whitelist: {
         Row: {
           created_at: string | null
@@ -880,10 +907,16 @@ export type Database = {
           cancel_at_period_end: boolean
           created_at: string | null
           current_period_end: string | null
+          has_used_premium_trial: boolean
           id: string
           is_founding_user: boolean
           last_payment_failed_at: string | null
           plan: string
+          premium_current_period_end: string | null
+          premium_plan: string | null
+          premium_status: string
+          premium_trial_ends_at: string | null
+          premium_trial_started_at: string | null
           premium_until: string | null
           subscription_provider: string | null
           subscription_status: string | null
@@ -897,10 +930,16 @@ export type Database = {
           cancel_at_period_end?: boolean
           created_at?: string | null
           current_period_end?: string | null
+          has_used_premium_trial?: boolean
           id?: string
           is_founding_user?: boolean
           last_payment_failed_at?: string | null
           plan?: string
+          premium_current_period_end?: string | null
+          premium_plan?: string | null
+          premium_status?: string
+          premium_trial_ends_at?: string | null
+          premium_trial_started_at?: string | null
           premium_until?: string | null
           subscription_provider?: string | null
           subscription_status?: string | null
@@ -914,10 +953,16 @@ export type Database = {
           cancel_at_period_end?: boolean
           created_at?: string | null
           current_period_end?: string | null
+          has_used_premium_trial?: boolean
           id?: string
           is_founding_user?: boolean
           last_payment_failed_at?: string | null
           plan?: string
+          premium_current_period_end?: string | null
+          premium_plan?: string | null
+          premium_status?: string
+          premium_trial_ends_at?: string | null
+          premium_trial_started_at?: string | null
           premium_until?: string | null
           subscription_provider?: string | null
           subscription_status?: string | null
@@ -1230,6 +1275,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _compute_phone_trial_key: {
+        Args: { _phone_normalized: string }
+        Returns: string
+      }
       accept_message_request: {
         Args: { _invitation_id: string }
         Returns: string
@@ -1262,6 +1311,10 @@ export type Database = {
         }[]
       }
       admin_plan_overview: { Args: never; Returns: Json }
+      anonymize_trial_claim_for_user: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       block_message_request: {
         Args: { _invitation_id: string; _reason?: string }
         Returns: undefined
@@ -1335,6 +1388,7 @@ export type Database = {
         Args: { _invitation_id: string }
         Returns: Json
       }
+      get_premium_status: { Args: never; Returns: Json }
       get_user_security_email: { Args: { _user_id: string }; Returns: string }
       get_user_usage_summary: { Args: { _user_id?: string }; Returns: Json }
       has_role: {
@@ -1466,6 +1520,7 @@ export type Database = {
           id: string
         }[]
       }
+      start_premium_trial: { Args: never; Returns: Json }
       submit_contact_form: {
         Args: {
           _category: string
