@@ -100,6 +100,7 @@ serve(async (req) => {
 
     // ── STATS ──
     if (action === "stats") {
+      const nowIso = new Date().toISOString();
       const [
         { count: totalUsers },
         { count: blockedUsers },
@@ -108,15 +109,23 @@ serve(async (req) => {
         { count: activeUsers },
         { count: voiceProfiles },
         { count: totalAutoplayEnabled },
+        { count: trialActive },
+        { count: trialUsed },
+        { count: trialClaimsTotal },
       ] = await Promise.all([
         admin.from("profiles").select("id", { count: "exact", head: true }),
         admin.from("blocked_users").select("id", { count: "exact", head: true }),
         admin.from("messages").select("id", { count: "exact", head: true }),
-        admin.from("subscriptions").select("id", { count: "exact", head: true }).gt("premium_until", new Date().toISOString()),
+        admin.from("subscriptions").select("id", { count: "exact", head: true }).eq("premium_status", "premium"),
         admin.from("user_presence").select("user_id", { count: "exact", head: true }).gt("last_seen", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
         admin.from("voice_profiles").select("id", { count: "exact", head: true }),
         admin.from("contact_autoplay").select("id", { count: "exact", head: true }).eq("auto_play", true),
+        admin.from("subscriptions").select("id", { count: "exact", head: true }).eq("premium_status", "trial").gt("premium_trial_ends_at", nowIso),
+        admin.from("subscriptions").select("id", { count: "exact", head: true }).eq("has_used_premium_trial", true),
+        admin.from("premium_trial_claims").select("id", { count: "exact", head: true }),
       ]);
+      const trialExpired = Math.max(0, (trialUsed || 0) - (trialActive || 0) - (premiumUsers || 0));
+      const conversionPct = (trialUsed || 0) > 0 ? Math.round(((premiumUsers || 0) / (trialUsed || 1)) * 100) : 0;
       await audit(true, { read: "stats" });
       return json({
         totalUsers: totalUsers || 0,
@@ -126,6 +135,11 @@ serve(async (req) => {
         activeUsers: activeUsers || 0,
         voiceProfiles: voiceProfiles || 0,
         autoplayUsers: totalAutoplayEnabled || 0,
+        trialActive: trialActive || 0,
+        trialUsed: trialUsed || 0,
+        trialExpired,
+        trialClaimsTotal: trialClaimsTotal || 0,
+        trialToPremiumPct: conversionPct,
       });
     }
 
