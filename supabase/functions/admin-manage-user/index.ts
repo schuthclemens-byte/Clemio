@@ -301,7 +301,7 @@ serve(async (req) => {
       }
 
       // Get subscriptions
-      const { data: subs } = await admin.from("subscriptions").select("user_id, plan, premium_until, is_founding_user");
+      const { data: subs } = await admin.from("subscriptions").select("user_id, plan, premium_until, is_founding_user, has_used_premium_trial, premium_trial_started_at, premium_trial_ends_at, premium_status, premium_plan, premium_current_period_end");
       const subMap: Record<string, any> = {};
       for (const s of subs || []) {
         subMap[s.user_id] = s;
