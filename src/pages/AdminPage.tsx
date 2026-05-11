@@ -649,6 +649,19 @@ const AdminPage = () => {
                       Voice: {p.voice_profile.voice_name || "—"} · {p.voice_profile.created_at ? new Date(p.voice_profile.created_at).toLocaleDateString("de") : "—"}
                     </div>
                   )}
+                  {p.subscription && (p.subscription.has_used_premium_trial || p.subscription.premium_status) && (
+                    <div className="text-[0.6rem] text-muted-foreground mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                      <span>Status: <strong>{p.subscription.premium_status || "free"}</strong></span>
+                      {p.subscription.premium_plan && <span>Plan: {p.subscription.premium_plan}</span>}
+                      {p.subscription.premium_trial_started_at && (
+                        <span>Trial: {formatDt(p.subscription.premium_trial_started_at)} → {formatDt(p.subscription.premium_trial_ends_at)}</span>
+                      )}
+                      {p.subscription.premium_current_period_end && (
+                        <span>Bis: {formatDt(p.subscription.premium_current_period_end)}</span>
+                      )}
+                      {p.subscription.has_used_premium_trial && <span>· Trial benutzt</span>}
+                    </div>
+                  )}
                 </div>
 
                 {!isMe && (
