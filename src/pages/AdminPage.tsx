@@ -36,6 +36,12 @@ interface UserSubscription {
   plan: string;
   premium_until: string | null;
   is_founding_user: boolean;
+  has_used_premium_trial?: boolean;
+  premium_trial_started_at?: string | null;
+  premium_trial_ends_at?: string | null;
+  premium_status?: string;
+  premium_plan?: string | null;
+  premium_current_period_end?: string | null;
 }
 
 interface VoiceProfile {
@@ -64,6 +70,11 @@ interface Stats {
   premiumUsers: number;
   voiceProfiles: number;
   autoplayUsers: number;
+  trialActive?: number;
+  trialUsed?: number;
+  trialExpired?: number;
+  trialClaimsTotal?: number;
+  trialToPremiumPct?: number;
 }
 
 const AdminPage = () => {
