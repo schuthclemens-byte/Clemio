@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("[notify-incoming-call] fatal", error);
-    return new Response(JSON.stringify({ error: String(error) }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
