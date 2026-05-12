@@ -244,9 +244,8 @@ serve(async (req) => {
       formatPrompt = REFINE_FORMAT;
 
       let contextStr = "";
-      if (chatHistory && chatHistory.length > 0) {
-        const last5 = chatHistory.slice(-5);
-        contextStr = "\n\nLetzter Chatverlauf:\n" + last5.map((m: any) =>
+      if (safeHistory.length > 0) {
+        contextStr = "\n\nLetzter Chatverlauf:\n" + safeHistory.map((m: any) =>
           `${m.isMine ? "Ich" : "Kontakt"}: ${m.text}`
         ).join("\n");
       }
