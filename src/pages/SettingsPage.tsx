@@ -19,6 +19,7 @@ import { usePushCapability } from "@/hooks/usePushCapability";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import PaywallDialog from "@/components/PaywallDialog";
 
 /** Reusable toggle row */
 const ToggleRow = ({
