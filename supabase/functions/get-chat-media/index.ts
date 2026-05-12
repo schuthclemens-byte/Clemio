@@ -84,11 +84,24 @@ Deno.serve(async (req: Request) => {
     const { path } = body;
 
     // Path format: {sender_user_id}/{filename}
-    // We need to find which conversation this media belongs to by looking up the message
+    // Validate format up-front to prevent path traversal / ambiguous lookups.
+    const firstSegment = path.split("/")[0];
+    if (!firstSegment || path.includes("..") || path.startsWith("/")) {
+      return new Response(
+        JSON.stringify({ error: "Invalid media path" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Find which conversation this media belongs to. Restrict to messages
+    // whose sender owns the file (path prefix == sender_id) so that an
+    // attacker cannot reference a victim's file by inserting a message
+    // with crafted content.
     const { data: messages, error: msgError } = await adminClient
       .from("messages")
       .select("conversation_id, sender_id")
       .eq("content", path)
+      .eq("sender_id", firstSegment)
       .in("message_type", ["image", "video", "audio", "voice"])
       .limit(1);
 

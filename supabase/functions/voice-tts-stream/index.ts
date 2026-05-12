@@ -52,6 +52,43 @@ function parseElevenLabsError(status: number, body: string): { error: string; co
   return { error: "TTS generation failed", code: "tts_failed" };
 }
 
+function normalizeText(s: string): string {
+  return (s ?? "").normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+/**
+ * Persist audio_url for a message only if:
+ *  - caller is the message sender
+ *  - senderId param matches message.sender_id (correct voice owner)
+ *  - text param matches message.content (no audio injection)
+ *  - audio_url is currently null (no overwrite of existing audio)
+ */
+async function maybePersistAudioUrl(
+  adminClient: any,
+  messageId: string,
+  callerId: string,
+  senderId: string,
+  text: string,
+  key: string,
+): Promise<void> {
+  if (callerId !== senderId) return; // only sender may cache audio for own message
+  const { data: msg } = await adminClient
+    .from("messages")
+    .select("sender_id, content, audio_url")
+    .eq("id", messageId)
+    .maybeSingle();
+  if (!msg) return;
+  if (msg.sender_id !== callerId) return;
+  if (msg.audio_url) return;
+  if (normalizeText(msg.content ?? "") !== normalizeText(text)) return;
+  const { error } = await adminClient
+    .from("messages")
+    .update({ audio_url: key })
+    .eq("id", messageId)
+    .is("audio_url", null);
+  if (error) console.error("Failed to set audio_url:", error.message);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -156,29 +193,7 @@ serve(async (req) => {
       const arrayBuf = await cachedFile.arrayBuffer();
 
       if (messageId) {
-        // Verify the message belongs to a conversation the caller is a member of
-        const { data: msg } = await adminClient
-          .from("messages")
-          .select("conversation_id")
-          .eq("id", messageId)
-          .maybeSingle();
-        if (msg?.conversation_id) {
-          const { count: memberCount } = await adminClient
-            .from("conversation_members")
-            .select("id", { count: "exact", head: true })
-            .eq("conversation_id", msg.conversation_id)
-            .eq("user_id", user.id);
-          if (memberCount && memberCount > 0) {
-            adminClient
-              .from("messages")
-              .update({ audio_url: key })
-              .eq("id", messageId)
-              .is("audio_url", null)
-              .then(({ error }) => {
-                if (error) console.error("Failed to set audio_url:", error.message);
-              });
-          }
-        }
+        await maybePersistAudioUrl(adminClient, messageId, user.id, senderId, text, key);
       }
 
       return new Response(arrayBuf, {
@@ -244,27 +259,7 @@ serve(async (req) => {
       });
 
     if (messageId) {
-      const { data: msg } = await adminClient
-        .from("messages")
-        .select("conversation_id")
-        .eq("id", messageId)
-        .maybeSingle();
-      if (msg?.conversation_id) {
-        const { count: memberCount } = await adminClient
-          .from("conversation_members")
-          .select("id", { count: "exact", head: true })
-          .eq("conversation_id", msg.conversation_id)
-          .eq("user_id", user.id);
-        if (memberCount && memberCount > 0) {
-          adminClient
-            .from("messages")
-            .update({ audio_url: key })
-            .eq("id", messageId)
-            .then(({ error }) => {
-              if (error) console.error("Failed to set audio_url:", error.message);
-            });
-        }
-      }
+      await maybePersistAudioUrl(adminClient, messageId, user.id, senderId, text, key);
     }
 
     return new Response(audioBytes, {
