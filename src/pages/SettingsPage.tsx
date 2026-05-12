@@ -150,7 +150,8 @@ const SettingsPage = () => {
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
   const { user, signOut } = useAuth();
-  const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
+  const { isPremium, planLabel, daysRemaining, isFoundingUser, refreshSubscription } = useSubscription();
+  const [paywallOpen, setPaywallOpen] = useState(false);
   const pushCap = usePushCapability();
   const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
   const { isAdmin } = useAdminRole();
