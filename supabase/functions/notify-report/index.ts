@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     .eq('key', 'notify_report_secret')
     .maybeSingle()
   const expected = (sec as any)?.value ?? ''
-  if (!provided || !expected || provided !== expected) {
+  if (!provided || !expected || !timingSafeEqual(provided, expected)) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), {
       status: 403,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
