@@ -156,29 +156,7 @@ serve(async (req) => {
       const arrayBuf = await cachedFile.arrayBuffer();
 
       if (messageId) {
-        // Verify the message belongs to a conversation the caller is a member of
-        const { data: msg } = await adminClient
-          .from("messages")
-          .select("conversation_id")
-          .eq("id", messageId)
-          .maybeSingle();
-        if (msg?.conversation_id) {
-          const { count: memberCount } = await adminClient
-            .from("conversation_members")
-            .select("id", { count: "exact", head: true })
-            .eq("conversation_id", msg.conversation_id)
-            .eq("user_id", user.id);
-          if (memberCount && memberCount > 0) {
-            adminClient
-              .from("messages")
-              .update({ audio_url: key })
-              .eq("id", messageId)
-              .is("audio_url", null)
-              .then(({ error }) => {
-                if (error) console.error("Failed to set audio_url:", error.message);
-              });
-          }
-        }
+        await maybePersistAudioUrl(adminClient, messageId, user.id, senderId, text, key);
       }
 
       return new Response(arrayBuf, {
