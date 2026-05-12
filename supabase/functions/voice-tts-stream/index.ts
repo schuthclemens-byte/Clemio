@@ -52,6 +52,43 @@ function parseElevenLabsError(status: number, body: string): { error: string; co
   return { error: "TTS generation failed", code: "tts_failed" };
 }
 
+function normalizeText(s: string): string {
+  return (s ?? "").normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+/**
+ * Persist audio_url for a message only if:
+ *  - caller is the message sender
+ *  - senderId param matches message.sender_id (correct voice owner)
+ *  - text param matches message.content (no audio injection)
+ *  - audio_url is currently null (no overwrite of existing audio)
+ */
+async function maybePersistAudioUrl(
+  adminClient: any,
+  messageId: string,
+  callerId: string,
+  senderId: string,
+  text: string,
+  key: string,
+): Promise<void> {
+  if (callerId !== senderId) return; // only sender may cache audio for own message
+  const { data: msg } = await adminClient
+    .from("messages")
+    .select("sender_id, content, audio_url")
+    .eq("id", messageId)
+    .maybeSingle();
+  if (!msg) return;
+  if (msg.sender_id !== callerId) return;
+  if (msg.audio_url) return;
+  if (normalizeText(msg.content ?? "") !== normalizeText(text)) return;
+  const { error } = await adminClient
+    .from("messages")
+    .update({ audio_url: key })
+    .eq("id", messageId)
+    .is("audio_url", null);
+  if (error) console.error("Failed to set audio_url:", error.message);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
