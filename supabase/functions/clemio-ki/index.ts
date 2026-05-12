@@ -140,16 +140,15 @@ serve(async (req) => {
         { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    let safeHistory: any[] | undefined = undefined;
+    let safeHistory: any[] = [];
     if (Array.isArray(chatHistory)) {
       const sliced = chatHistory.slice(-MAX_HISTORY_ENTRIES);
       let total = 0;
-      safeHistory = [];
       for (const entry of sliced) {
-        const content = typeof entry?.content === "string" ? entry.content.slice(0, MAX_FIELD_LEN) : "";
-        total += content.length;
+        const text = typeof entry?.text === "string" ? entry.text.slice(0, MAX_FIELD_LEN) : "";
+        total += text.length;
         if (total > MAX_HISTORY_TOTAL_LEN) break;
-        safeHistory.push({ ...entry, content });
+        safeHistory.push({ ...entry, text });
       }
     }
 
