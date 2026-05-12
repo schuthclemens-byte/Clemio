@@ -129,6 +129,30 @@ serve(async (req) => {
 
     const { receivedMessage, draftMessage, chatHistory, mode, checkOnly, locale, improveText, improveStyle } = await req.json();
 
+    // Hard size limits to prevent AI cost amplification
+    const MAX_FIELD_LEN = 4000;
+    const MAX_HISTORY_ENTRIES = 5;
+    const MAX_HISTORY_TOTAL_LEN = 8000;
+    const tooLong = (v: unknown) => typeof v === "string" && v.length > MAX_FIELD_LEN;
+    if (tooLong(receivedMessage) || tooLong(draftMessage) || tooLong(improveText)) {
+      return new Response(
+        JSON.stringify({ error: `field too long (max ${MAX_FIELD_LEN} chars)`, code: "text_too_long" }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    let safeHistory: any[] | undefined = undefined;
+    if (Array.isArray(chatHistory)) {
+      const sliced = chatHistory.slice(-MAX_HISTORY_ENTRIES);
+      let total = 0;
+      safeHistory = [];
+      for (const entry of sliced) {
+        const content = typeof entry?.content === "string" ? entry.content.slice(0, MAX_FIELD_LEN) : "";
+        total += content.length;
+        if (total > MAX_HISTORY_TOTAL_LEN) break;
+        safeHistory.push({ ...entry, content });
+      }
+    }
+
     const langNames: Record<string, string> = {
       de: "German", en: "English", fr: "French", tr: "Turkish", es: "Spanish", ar: "Arabic",
     };
