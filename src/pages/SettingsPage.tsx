@@ -19,6 +19,7 @@ import { usePushCapability } from "@/hooks/usePushCapability";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import PaywallDialog from "@/components/PaywallDialog";
 
 /** Reusable toggle row */
 const ToggleRow = ({
@@ -149,7 +150,8 @@ const SettingsPage = () => {
   const { locale, setLocale, t } = useI18n();
   const a11y = useAccessibility();
   const { user, signOut } = useAuth();
-  const { isPremium, planLabel, daysRemaining, isFoundingUser, stripeActive, startCheckout, openPortal, checkoutLoading, portalLoading, refreshSubscription } = useSubscription();
+  const { isPremium, planLabel, daysRemaining, isFoundingUser, refreshSubscription } = useSubscription();
+  const [paywallOpen, setPaywallOpen] = useState(false);
   const pushCap = usePushCapability();
   const { status: pushStatus, subscribe: pushSubscribe } = usePushSubscription();
   const { isAdmin } = useAdminRole();
@@ -709,7 +711,7 @@ const SettingsPage = () => {
                         <p className="font-semibold text-[0.938rem]">{planLabel}</p>
                         {isPremium && daysRemaining > 0 && (
                           <p className="text-xs text-muted-foreground">
-                            {stripeActive ? t("sub.nextPayment").replace("{n}", String(daysRemaining)) : t("sub.daysLeft").replace("{n}", String(daysRemaining))}
+                            {t("sub.daysLeft").replace("{n}", String(daysRemaining))}
                           </p>
                         )}
                       </div>
@@ -721,23 +723,16 @@ const SettingsPage = () => {
                     </button>
                   </div>
                   {!isPremium && (
-                    <button onClick={startCheckout} disabled={checkoutLoading}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 mt-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-60"
+                    <button onClick={() => setPaywallOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 mt-3 rounded-xl gradient-primary text-primary-foreground font-semibold text-sm transition-all active:scale-[0.97]"
                     >
-                      {checkoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                      <Crown className="w-4 h-4" />
                       {t("sub.subscribe")}
-                    </button>
-                  )}
-                  {stripeActive && (
-                    <button onClick={openPortal} disabled={portalLoading}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 mt-2 rounded-xl bg-secondary text-foreground font-medium text-sm transition-all active:scale-[0.97] disabled:opacity-60"
-                    >
-                      {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                      {t("sub.manage")}
                     </button>
                   )}
                 </div>
               )}
+              <PaywallDialog open={paywallOpen} onClose={() => setPaywallOpen(false)} />
 
               {/* Logout */}
               {!showLogoutConfirm ? (

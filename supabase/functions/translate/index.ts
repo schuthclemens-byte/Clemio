@@ -46,6 +46,15 @@ serve(async (req) => {
       );
     }
 
+    // Hard size limit to prevent AI cost amplification
+    const MAX_TEXT_LEN = 5000;
+    if (typeof text !== "string" || text.length > MAX_TEXT_LEN) {
+      return new Response(
+        JSON.stringify({ error: `text too long (max ${MAX_TEXT_LEN} chars)`, code: "text_too_long" }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Quota check
     const quota = await consumeQuota(user.id, "translate", 1);
     if (!quota.ok) return quotaErrorResponse(quota, corsHeaders);

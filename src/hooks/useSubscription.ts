@@ -117,14 +117,5 @@ export const useSubscription = () => {
     trialStarting,
     // Legacy compat (PaywallDialog/usePremiumGate compatibility)
     subscription: null,
-    stripeActive: status.status === "premium" && !status.isFoundingUser && !status.isWhitelisted,
-    startCheckout: async () => {
-      console.warn("Stripe checkout disabled — IAP integration pending");
-    },
-    openPortal: async () => {
-      console.warn("Customer portal disabled — IAP integration pending");
-    },
-    checkoutLoading: false,
-    portalLoading: false,
   };
 };
