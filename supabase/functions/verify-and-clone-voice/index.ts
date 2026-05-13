@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { consumeQuota, quotaErrorResponse } from "../_shared/quota.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,10 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Quota check (mirrors voice-clone): prevents bypassing monthly voice_retrain limit
+    const quota = await consumeQuota(user.id, "voice_retrain", 1);
+    if (!quota.ok) return quotaErrorResponse(quota, corsHeaders);
 
     const formData = await req.formData();
     const freeSpeechAudio = formData.get("free_speech") as File;
