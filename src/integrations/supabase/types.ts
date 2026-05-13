@@ -908,6 +908,13 @@ export type Database = {
           created_at: string | null
           current_period_end: string | null
           has_used_premium_trial: boolean
+          iap_environment: string | null
+          iap_last_event_at: string | null
+          iap_original_transaction_id: string | null
+          iap_product_id: string | null
+          iap_provider: string | null
+          iap_revenuecat_app_user_id: string | null
+          iap_will_renew: boolean
           id: string
           is_founding_user: boolean
           last_payment_failed_at: string | null
@@ -931,6 +938,13 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string | null
           has_used_premium_trial?: boolean
+          iap_environment?: string | null
+          iap_last_event_at?: string | null
+          iap_original_transaction_id?: string | null
+          iap_product_id?: string | null
+          iap_provider?: string | null
+          iap_revenuecat_app_user_id?: string | null
+          iap_will_renew?: boolean
           id?: string
           is_founding_user?: boolean
           last_payment_failed_at?: string | null
@@ -954,6 +968,13 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string | null
           has_used_premium_trial?: boolean
+          iap_environment?: string | null
+          iap_last_event_at?: string | null
+          iap_original_transaction_id?: string | null
+          iap_product_id?: string | null
+          iap_provider?: string | null
+          iap_revenuecat_app_user_id?: string | null
+          iap_will_renew?: boolean
           id?: string
           is_founding_user?: boolean
           last_payment_failed_at?: string | null
