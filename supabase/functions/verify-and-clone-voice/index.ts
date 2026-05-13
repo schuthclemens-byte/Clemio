@@ -40,6 +40,10 @@ serve(async (req) => {
       });
     }
 
+    // Quota check (mirrors voice-clone): prevents bypassing monthly voice_retrain limit
+    const quota = await consumeQuota(user.id, "voice_retrain", 1);
+    if (!quota.ok) return quotaErrorResponse(quota, corsHeaders);
+
     const formData = await req.formData();
     const freeSpeechAudio = formData.get("free_speech") as File;
     const sentenceAudio = formData.get("sentence_audio") as File;
