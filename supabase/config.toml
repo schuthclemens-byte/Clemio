@@ -19,3 +19,5 @@ project_id = "zvvjgkxtgtpniashvqsl"
     verify_jwt = false
   [functions.store-webhooks]
     verify_jwt = false
+  [functions.verify-iap]
+    verify_jwt = false
