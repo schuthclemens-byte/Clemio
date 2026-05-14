@@ -17,7 +17,7 @@ export type Database = {
       admin_audit_log: {
         Row: {
           action: string
-          admin_user_id: string
+          admin_user_id: string | null
           created_at: string
           error_message: string | null
           id: string
@@ -28,7 +28,7 @@ export type Database = {
         }
         Insert: {
           action: string
-          admin_user_id: string
+          admin_user_id?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
@@ -39,7 +39,7 @@ export type Database = {
         }
         Update: {
           action?: string
-          admin_user_id?: string
+          admin_user_id?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
@@ -1498,6 +1498,15 @@ export type Database = {
           _user_agent?: string
         }
         Returns: string
+      }
+      log_security_event: {
+        Args: {
+          _action: string
+          _metadata: Json
+          _target_resource: string
+          _target_user_id: string
+        }
+        Returns: undefined
       }
       mark_messages_read: {
         Args: { _conversation_id: string }

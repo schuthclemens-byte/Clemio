@@ -197,6 +197,29 @@ Deno.serve(async (req) => {
     error: dbError,
   });
 
+  // 5b. Admin audit trail for IAP webhook (system actor → admin_user_id NULL)
+  await admin.from("admin_audit_log").insert({
+    admin_user_id: null,
+    action: `iap_webhook_${ev.type.toLowerCase()}`,
+    target_user_id: userId,
+    target_resource: "subscriptions",
+    success: dbError === null,
+    error_message: dbError,
+    metadata: {
+      provider: "revenuecat",
+      store: ev.store ?? null,
+      product_id: ev.product_id ?? null,
+      environment: ev.environment ?? null,
+      original_transaction_id: ev.original_transaction_id ?? ev.transaction_id ?? null,
+      period_type: ev.period_type ?? null,
+      expiration_at_ms: ev.expiration_at_ms ?? null,
+      event_timestamp_ms: ev.event_timestamp_ms ?? Date.now(),
+      derived_status: premium_status,
+      will_renew,
+      cancel_at_period_end,
+    },
+  });
+
   if (dbError) {
     return new Response(JSON.stringify({ error: dbError }), {
       status: 500,
