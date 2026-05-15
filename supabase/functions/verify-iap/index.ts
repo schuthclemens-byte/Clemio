@@ -198,8 +198,21 @@ Deno.serve(async (req) => {
   });
 
   // 5b. Admin audit trail for IAP webhook (system actor → admin_user_id NULL)
+  const reqIp =
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-real-ip") ||
+    (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
+    null;
+  const reqUa = req.headers.get("user-agent");
+  const reqId = req.headers.get("x-request-id") || req.headers.get("cf-ray");
+
   await admin.from("admin_audit_log").insert({
     admin_user_id: null,
+    actor_role: "system",
+    source: "iap_webhook",
+    ip_address: reqIp,
+    user_agent: reqUa,
+    request_id: reqId,
     action: `iap_webhook_${ev.type.toLowerCase()}`,
     target_user_id: userId,
     target_resource: "subscriptions",

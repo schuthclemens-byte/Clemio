@@ -17,36 +17,51 @@ export type Database = {
       admin_audit_log: {
         Row: {
           action: string
+          actor_role: string | null
           admin_user_id: string | null
           created_at: string
           error_message: string | null
           id: string
+          ip_address: string | null
           metadata: Json
+          request_id: string | null
+          source: string | null
           success: boolean
           target_resource: string | null
           target_user_id: string | null
+          user_agent: string | null
         }
         Insert: {
           action: string
+          actor_role?: string | null
           admin_user_id?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
+          ip_address?: string | null
           metadata?: Json
+          request_id?: string | null
+          source?: string | null
           success?: boolean
           target_resource?: string | null
           target_user_id?: string | null
+          user_agent?: string | null
         }
         Update: {
           action?: string
+          actor_role?: string | null
           admin_user_id?: string | null
           created_at?: string
           error_message?: string | null
           id?: string
+          ip_address?: string | null
           metadata?: Json
+          request_id?: string | null
+          source?: string | null
           success?: boolean
           target_resource?: string | null
           target_user_id?: string | null
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -1336,6 +1351,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      audit_request_context: { Args: never; Returns: Json }
       block_message_request: {
         Args: { _invitation_id: string; _reason?: string }
         Returns: undefined
@@ -1499,15 +1515,26 @@ export type Database = {
         }
         Returns: string
       }
-      log_security_event: {
-        Args: {
-          _action: string
-          _metadata: Json
-          _target_resource: string
-          _target_user_id: string
-        }
-        Returns: undefined
-      }
+      log_security_event:
+        | {
+            Args: {
+              _action: string
+              _metadata: Json
+              _target_resource: string
+              _target_user_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _action: string
+              _metadata?: Json
+              _source?: string
+              _target_resource: string
+              _target_user_id: string
+            }
+            Returns: undefined
+          }
       mark_messages_read: {
         Args: { _conversation_id: string }
         Returns: undefined
