@@ -892,28 +892,49 @@ export type Database = {
       }
       store_webhook_events: {
         Row: {
+          app_user_id: string | null
           created_at: string
+          entitlement_id: string | null
+          environment: string | null
           error: string | null
+          event_type: string | null
           id: string
           normalized: Json | null
           payload: Json | null
+          processed_at: string | null
+          product_id: string | null
           provider: string
+          revenuecat_event_id: string | null
         }
         Insert: {
+          app_user_id?: string | null
           created_at?: string
+          entitlement_id?: string | null
+          environment?: string | null
           error?: string | null
+          event_type?: string | null
           id?: string
           normalized?: Json | null
           payload?: Json | null
+          processed_at?: string | null
+          product_id?: string | null
           provider: string
+          revenuecat_event_id?: string | null
         }
         Update: {
+          app_user_id?: string | null
           created_at?: string
+          entitlement_id?: string | null
+          environment?: string | null
           error?: string | null
+          event_type?: string | null
           id?: string
           normalized?: Json | null
           payload?: Json | null
+          processed_at?: string | null
+          product_id?: string | null
           provider?: string
+          revenuecat_event_id?: string | null
         }
         Relationships: []
       }
