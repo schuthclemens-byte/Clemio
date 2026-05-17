@@ -180,6 +180,15 @@ const HeroSectionV2 = () => {
         {t("landing.heroSubtitle")}
       </motion.p>
 
+      <motion.p
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
+        className="relative z-10 mt-3 max-w-[34ch] sm:max-w-xl mx-auto text-sm text-muted-foreground/70 font-light leading-relaxed text-balance"
+      >
+        {t("landing.heroDevNotice")}
+      </motion.p>
+
       {/* CTA */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
