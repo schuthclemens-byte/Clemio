@@ -32,6 +32,9 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
             <p className="text-sm text-muted-foreground leading-relaxed">
               {t("landing.footerTagline")}
             </p>
+            <p className="mt-3 text-xs text-muted-foreground/60 leading-relaxed">
+              {t("landing.footerDevNotice")}
+            </p>
             <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground/80">
               <MapPin className="w-3.5 h-3.5 text-primary/70" strokeWidth={2} />
               <span>{t("landing.footerMadeIn")}</span>
