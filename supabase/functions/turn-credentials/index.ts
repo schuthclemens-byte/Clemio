@@ -49,33 +49,22 @@ serve(async (req) => {
     });
   }
 
-  // Preferred path: time-limited HMAC-SHA1 ephemeral credentials (RFC TURN REST API)
-  // Requires the TURN server to be configured with `static-auth-secret = TURN_SECRET`.
+  // Time-limited HMAC-SHA1 ephemeral credentials (RFC TURN REST API).
+  // Requires the TURN server to be configured with `use-auth-secret` and `static-auth-secret = TURN_SECRET`.
+  // Static credential fallback was removed for security: long-lived creds could be captured and reused indefinitely.
   const turnSecret = Deno.env.get("TURN_SECRET");
   const turnHost = Deno.env.get("TURN_HOST"); // e.g. "a.relay.metered.ca"
 
-  let username: string;
-  let credential: string;
-
-  if (turnSecret) {
-    const expiry = Math.floor(Date.now() / 1000) + TTL_SECONDS;
-    username = `${expiry}:${user.id}`;
-    credential = await hmacSha1Base64(turnSecret, username);
-  } else {
-    // Fallback: legacy static credentials (kept so prod does not break before TURN_SECRET is configured).
-    // SECURITY: static creds never expire — migrate the TURN server to support `static-auth-secret`
-    // and set TURN_SECRET to enable per-user ephemeral tokens.
-    const staticUser = Deno.env.get("TURN_USERNAME");
-    const staticCred = Deno.env.get("TURN_CREDENTIAL");
-    if (!staticUser || !staticCred) {
-      return new Response(JSON.stringify({ error: "TURN credentials not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    username = staticUser;
-    credential = staticCred;
+  if (!turnSecret) {
+    return new Response(JSON.stringify({ error: "TURN credentials not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
+
+  const expiry = Math.floor(Date.now() / 1000) + TTL_SECONDS;
+  const username = `${expiry}:${user.id}`;
+  const credential = await hmacSha1Base64(turnSecret, username);
 
   const host = turnHost ?? "a.relay.metered.ca";
   const iceServers = [
@@ -88,7 +77,7 @@ serve(async (req) => {
   ];
 
   return new Response(
-    JSON.stringify({ iceServers, ttl: turnSecret ? TTL_SECONDS : undefined }),
+    JSON.stringify({ iceServers, ttl: TTL_SECONDS }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 });
