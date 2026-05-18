@@ -118,6 +118,11 @@ serve(async (req) => {
       return errorResponse(400, "Missing text or senderId", "bad_request");
     }
 
+    const MAX_TEXT_LEN = 5000;
+    if (typeof text !== "string" || text.length > MAX_TEXT_LEN) {
+      return errorResponse(413, `text too long (max ${MAX_TEXT_LEN} chars)`, "text_too_long");
+    }
+
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
