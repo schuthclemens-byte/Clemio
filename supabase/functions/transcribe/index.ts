@@ -99,6 +99,12 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Pre-flight quota check using file-size estimate to avoid wasting paid API credits
+    // when the user has no remaining STT quota. We reconcile the actual usage after STT returns.
+    const estimatedDurationSec = Math.max(1, Math.ceil((audioFile.size || 16000) / 16000));
+    const preQuota = await consumeQuota(user.id, "stt_seconds", estimatedDurationSec);
+    if (!preQuota.ok) return quotaErrorResponse(preQuota, corsHeaders);
+
     // Call ElevenLabs Speech-to-Text
     const apiFormData = new FormData();
     apiFormData.append("file", audioFile);
