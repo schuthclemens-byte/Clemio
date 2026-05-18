@@ -77,7 +77,7 @@ serve(async (req) => {
   ];
 
   return new Response(
-    JSON.stringify({ iceServers, ttl: turnSecret ? TTL_SECONDS : undefined }),
+    JSON.stringify({ iceServers, ttl: TTL_SECONDS }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 });
