@@ -147,18 +147,19 @@ Deno.serve(async (req) => {
 
     const result = await sttResponse.json();
 
-    // Schätze Audiolänge in Sekunden — bevorzugt aus Wort-Timestamps
-    let durationSec = 1;
+    // Schätze tatsächliche Audiolänge in Sekunden — bevorzugt aus Wort-Timestamps
+    let durationSec = estimatedDurationSec;
     if (Array.isArray(result.words) && result.words.length > 0) {
       const last = result.words[result.words.length - 1];
       if (typeof last?.end === "number") durationSec = Math.max(1, Math.ceil(last.end));
-    } else if (audioFile?.size) {
-      // Fallback: ~16 KB/s für Opus
-      durationSec = Math.max(1, Math.ceil(audioFile.size / 16000));
     }
 
-    const quota = await consumeQuota(user.id, "stt_seconds", durationSec);
-    if (!quota.ok) return quotaErrorResponse(quota, corsHeaders);
+    // Reconcile quota: if actual > estimate, consume the difference. If actual < estimate,
+    // we keep the over-estimate (acceptable — protects against abuse, small overhead).
+    const delta = durationSec - estimatedDurationSec;
+    if (delta > 0) {
+      await consumeQuota(user.id, "stt_seconds", delta);
+    }
 
     return new Response(
       JSON.stringify({
