@@ -58,6 +58,14 @@ serve(async (req) => {
       });
     }
 
+    const MAX_TEXT_LEN = 5000;
+    if (typeof text !== "string" || text.length > MAX_TEXT_LEN) {
+      return new Response(
+        JSON.stringify({ error: `text too long (max ${MAX_TEXT_LEN} chars)`, code: "text_too_long" }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
