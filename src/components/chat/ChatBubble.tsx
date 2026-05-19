@@ -47,6 +47,9 @@ interface ChatBubbleProps {
   onReport?: (msgId: string, senderId: string) => void;
   onReply?: () => void;
   onBlock?: (userId: string) => void;
+  audioTranscript?: string | null;
+  audioTranscriptStatus?: "none" | "processing" | "completed" | "failed" | null;
+  onTranscribe?: (msgId: string) => void;
 }
 
 /** Animated wave bars shown during playback */
