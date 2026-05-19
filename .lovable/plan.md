@@ -1,92 +1,114 @@
-## Ziel
+## Befund zur bestehenden Datenbank
 
-Nach dem 3-tägigen Trial sollen Nutzer Premium über **Apple App Store** (iOS) und **Google Play** (Android) für 4,99 €/Monat abonnieren können. Server validiert jeden Kauf, schreibt `subscriptions.premium_status = 'premium'` und setzt `premium_current_period_end`. Stripe ist endgültig raus.
+Die `messages`-Tabelle existiert mit u.a. diesen relevanten Spalten:
+- `message_type text default 'text'` — Sprachnachrichten haben `'audio'`
+- `audio_url text` — Pfad zur Audiodatei (Storage)
+- `content text not null` — bei Audio aktuell die Audio-URL (vom bestehenden Code so genutzt)
 
-## Architekturüberblick
+Es gibt bereits eine Edge Function `transcribe` (ElevenLabs, einmalige Inline-Transkription bei Aufnahme, kein DB-Persistieren). Diese bleibt unangetastet — wir bauen additiv die zweite, persistente On-Demand-Variante.
 
-```text
-App (Capacitor)              Edge Functions                Apple / Google
-─────────────────            ──────────────                ──────────────
-PaywallDialog
-  └─ "Abonnieren"
-       │
-       ▼
-@capgo/capacitor-purchases
-  (kauft via Store-SDK)
-       │
-       │  receipt / purchaseToken
-       ▼
-verify-iap ─────────► Apple App Store Server API
-                      Google Play Developer API
-       │
-       ▼
-subscriptions.premium_status = 'premium'
+**Keine Umbenennung**, keine Datenmigration. Nur neue Spalten.
 
-Server-Webhook:
-App Store Server Notifications V2 ──► iap-webhook ──► subscriptions update
-Google Real-time Developer Notifications (Pub/Sub HTTP) ──► iap-webhook
+## 1. Geänderte/neue Dateien
+
+| Datei | Art | Zweck |
+|---|---|---|
+| `supabase/functions/transcribe-voice-message/index.ts` | neu | Edge Function (Auth, Berechtigung, Status-Updates, Stub-Abbruch wenn Secrets fehlen) |
+| `src/components/chat/ChatBubble.tsx` | geändert | UI-Block für die 4 Status (none/processing/completed/failed) unterhalb des Audio-Players |
+| `src/pages/ChatPage.tsx` | geändert | Nachrichten-Query und Realtime-Mapping um neue Felder erweitern; Props an `ChatBubble` durchreichen; Invoke-Handler `onTranscribe(msgId)` |
+| `src/integrations/supabase/types.ts` | auto | wird nach Migration automatisch regeneriert |
+
+Keine Änderungen an: Auth, Push, Calls, Premium, Voice-Cloning, bestehender `transcribe`-Funktion, AudioPlayer.
+
+## 2. Datenbankmigration (additiv)
+
+```sql
+ALTER TABLE public.messages
+  ADD COLUMN IF NOT EXISTS audio_transcript text,
+  ADD COLUMN IF NOT EXISTS audio_transcript_status text NOT NULL DEFAULT 'none',
+  ADD COLUMN IF NOT EXISTS audio_transcript_language text,
+  ADD COLUMN IF NOT EXISTS audio_transcript_provider text DEFAULT 'self_hosted_faster_whisper',
+  ADD COLUMN IF NOT EXISTS audio_transcript_created_at timestamptz,
+  ADD COLUMN IF NOT EXISTS audio_duration_seconds integer;
+
+-- Validierungs-Trigger (statt CHECK, damit zukünftig erweiterbar)
+CREATE OR REPLACE FUNCTION public.validate_audio_transcript_status()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.audio_transcript_status NOT IN ('none','processing','completed','failed') THEN
+    RAISE EXCEPTION 'invalid audio_transcript_status: %', NEW.audio_transcript_status;
+  END IF;
+  RETURN NEW;
+END$$;
+
+CREATE TRIGGER trg_validate_audio_transcript_status
+BEFORE INSERT OR UPDATE OF audio_transcript_status ON public.messages
+FOR EACH ROW EXECUTE FUNCTION public.validate_audio_transcript_status();
 ```
 
-## Voraussetzungen (vom User zu liefern)
+RLS bleibt wie sie ist — die Edge Function schreibt mit Service Role; Leser sehen die neuen Spalten automatisch über die bestehenden `Members can read messages`-Policies.
 
-- Apple Developer Account + App-ID + IAP-Produkt `clemio_premium_monthly` konfiguriert
-- Google Play Console + IAP-Produkt mit gleicher ID
-- Apple: **In-App Purchase Key** (.p8 + Key-ID + Issuer-ID) für App Store Server API
-- Google: **Service-Account JSON** mit Zugriff auf Play Developer API
-- Apple: Shared Secret + App Bundle ID
-- Google: Pub/Sub-Topic für Real-time Developer Notifications
+**Wichtig zur bestehenden Edit-Policy:** `Sender can edit own messages` erlaubt nur 15 Min und nicht gelesen. Da die Edge Function via Service Role schreibt, wird RLS umgangen — kein Konflikt.
 
-## Schritte
+## 3. UI-Änderung in `ChatBubble.tsx`
 
-### 1. Capacitor-Plugin installieren
-- `@capgo/capacitor-purchases` (oder RevenueCat-Wrapper falls bevorzugt) hinzufügen
-- iOS und Android konfigurieren (Capabilities, Berechtigungen)
+Direkt unter dem `<AudioPlayer>`-Block (nur wenn `isAudio && !isUploading`), neue Props:
+- `audioTranscript?: string`
+- `audioTranscriptStatus?: 'none'|'processing'|'completed'|'failed'|null`
+- `onTranscribe?: (msgId: string) => void`
 
-### 2. Datenbank-Migration
-- `subscriptions`: Felder `iap_provider` (`apple`/`google`), `iap_product_id`, `iap_original_transaction_id` (Apple) / `iap_purchase_token` (Google), `iap_latest_receipt`
-- Index auf `iap_original_transaction_id` und `iap_purchase_token` (unique pro Provider) zur Verhinderung von Mehrfach-Aktivierung
-- RPC `apply_iap_subscription(_user_id, _provider, _product_id, _expires_at, _transaction_id)` (SECURITY DEFINER) — schreibt `premium_status = 'premium'` und Period-End
+Render-Logik:
+- `none`/null → Button „In Text umwandeln" (klein, dezent, gleicher Stil wie der „Anhören"-Chip)
+- `processing` → Text „Transkript wird erstellt …" mit Loader
+- `completed` → Transkript-Text + kleiner Hinweis „Automatisch erstellt – kann Fehler enthalten."
+- `failed` → „Transkription fehlgeschlagen – erneut versuchen" + Retry-Button
 
-### 3. Edge Function `verify-iap`
-- Auth-Check (JWT)
-- Input: `{ provider, receipt, productId }`
-- Apple-Pfad: ruft App Store Server API `/inApps/v1/transactions/{transactionId}` mit JWT-Bearer (signiert via .p8)
-- Google-Pfad: ruft `androidpublisher.purchases.subscriptionsv2.get` mit Service-Account-Token
-- Validiert Produkt-ID und Ablaufzeit; ruft `apply_iap_subscription` RPC auf
-- Secrets: `APPLE_IAP_KEY_P8`, `APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `APPLE_BUNDLE_ID`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `GOOGLE_PACKAGE_NAME`
+Bestehende `transcription`-Prop bleibt unverändert (wird vom Aufnahme-Flow gefüllt) und wird weiterhin separat angezeigt; die neuen Felder sind orthogonal dazu.
 
-### 4. Edge Function `iap-webhook` (öffentlich, signaturgeschützt)
-- Apple: Server Notifications V2 — JWS-Signatur mit Apple-Root-Cert verifizieren
-- Google: Pub/Sub Push — `Authorization`-Bearer prüfen + Subscription-Status nachladen via Play API
-- Bei `DID_RENEW`/`SUBSCRIPTION_RENEWED` → Period verlängern
-- Bei `EXPIRED`/`CANCEL` → `premium_status = 'expired'` oder `canceled`
-- Bei `REFUND` → sofort `expired`
+## 4. Edge Function `transcribe-voice-message`
 
-### 5. Frontend-Anpassung
-- `useIAP` Hook: kapselt Plugin-Aufruf, ruft danach `verify-iap`, dann `refreshSubscription`
-- `PaywallDialog`: bei abgelaufenem Trial Button „Premium für 4,99 €/Monat" startet `useIAP.purchase()`
-- iOS-Restore-Button („Käufe wiederherstellen") für App-Store-Pflicht
+```
+POST /functions/v1/transcribe-voice-message
+Body: { "message_id": "<uuid>" }
+```
 
-### 6. Trial-Ablauf-Cron (Bonus, klein)
-- pg_cron-Job alle 6 h: setzt abgelaufene Trials auf `premium_status = 'expired'` (für Stats und Push)
+Ablauf:
+1. CORS-Preflight
+2. `Authorization`-Header prüfen → `supabase.auth.getUser()` → 401 wenn fehlt
+3. Zod-Validation von `message_id`
+4. Service-Role-Client laden, `messages` per id selektieren
+5. Per `is_conversation_member(conversation_id, user.id)` RPC prüfen → sonst 403
+6. Prüfen: `message_type = 'audio'` und `audio_url` vorhanden → sonst 400
+7. Wenn `audio_duration_seconds > 120` → 413
+8. Status-Guard: wenn bereits `processing` oder `completed` → 409 (idempotent, keine Doppel-Jobs)
+9. `audio_transcript_status = 'processing'` setzen
+10. Secrets-Check: `SELF_HOSTED_STT_URL` und `SELF_HOSTED_STT_SECRET` lesen
+    - Fehlt eines → Status zurück auf `'failed'`, **kein** Löschen von Nachricht/Audio, Response 503: `{ error: "Transkriptionsserver ist noch nicht verbunden." }`
+11. (Platzhalter-Kommentar für späteren Hetzner-Aufruf — bleibt in diesem Schritt unimplementiert)
 
-### 7. Privacy-Policy + i18n aktualisieren
-- Stripe-Erwähnungen in `PrivacyPolicyPage.tsx` und allen 6 i18n-Files durch „Apple App Store / Google Play" ersetzen
+Logging: nur `message_id` + Statusübergänge, **niemals** Audio-URL, Audio-Inhalt oder Transkript.
 
-## Akzeptanzkriterien
+Config: `verify_jwt = false` (Standard); Auth wird im Code geprüft. Kein Eintrag in `supabase/config.toml` nötig.
 
-- Kauf im Sandbox-Tester führt innerhalb 3 s zu `premium_status = 'premium'` in DB
-- Doppel-Kauf oder geteiltes Receipt schlägt fehl (unique-Index)
-- Cancel im Store löst Webhook → DB-Update aus, App-UI aktualisiert sich beim nächsten Refresh
-- Kein Client kann `subscriptions` direkt schreiben (RLS bleibt no-update)
-- Refund → Premium sofort entzogen
-- Trial-Whitelist und Founding-User bleiben unangetastet
+## 5. Secrets (später vom Nutzer zu setzen)
 
-## Reihenfolge der Umsetzung
+- `SELF_HOSTED_STT_URL` = `https://api.clemio.app/transcribe`
+- `SELF_HOSTED_STT_SECRET` = `<vom Nutzer generiert>`
 
-1. Migration + RPC (klein)
-2. `verify-iap` Edge Function + Secrets (mittel)
-3. Capacitor-Plugin + `useIAP` + UI (mittel)
-4. `iap-webhook` Edge Function (groß — Crypto-Verifikation)
-5. Privacy/i18n-Update (klein)
-6. End-to-End-Test in Apple/Google Sandbox
+In diesem Schritt werden sie **nicht** angefragt — die Function liefert bewusst 503, bis sie vorhanden sind.
+
+## 6. Tests nach Umsetzung
+
+1. **Migration**: `supabase--read_query` → `\d messages` zeigt die 6 neuen Spalten und der Trigger existiert.
+2. **Edge Function deployment**: `supabase--deploy_edge_functions ["transcribe-voice-message"]` erfolgreich.
+3. **Auth-Test**: `curl_edge_functions` ohne Auth → 401.
+4. **Validation**: mit Auth aber `message_id: "abc"` → 400.
+5. **Berechtigung**: mit Auth, fremde `message_id` → 403.
+6. **Falscher Typ**: Text-Nachricht-ID → 400.
+7. **Happy-Stub-Path**: eigene Audio-Nachricht → Response 503 „Transkriptionsserver ist noch nicht verbunden.", `read_query` zeigt `audio_transcript_status='failed'`, Nachricht und `audio_url` unverändert.
+8. **UI-Smoke (Browser-Preview)**: Sprachnachricht zeigt Button → Klick → kurzer `processing`-Zustand → `failed` mit Retry sichtbar. Bestehende Audio-Wiedergabe, Reactions, Reply, Edit-Fenster, Push, Calls funktionieren unverändert.
+9. **Regression**: bestehende `transcribe`-Function (ElevenLabs Inline-Transkript bei Aufnahme) ungetestet aber unverändert — kurzer Aufnahme-Test bestätigt, dass Inline-Transkript weiter erscheint.
+
+**STATUS**
+- Plan: fertig.
+- Umsetzung: wartet auf deine Bestätigung.

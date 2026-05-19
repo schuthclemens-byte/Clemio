@@ -652,6 +652,12 @@ export type Database = {
       }
       messages: {
         Row: {
+          audio_duration_seconds: number | null
+          audio_transcript: string | null
+          audio_transcript_created_at: string | null
+          audio_transcript_language: string | null
+          audio_transcript_provider: string | null
+          audio_transcript_status: string
           audio_url: string | null
           content: string
           conversation_id: string
@@ -665,6 +671,12 @@ export type Database = {
           sender_id: string
         }
         Insert: {
+          audio_duration_seconds?: number | null
+          audio_transcript?: string | null
+          audio_transcript_created_at?: string | null
+          audio_transcript_language?: string | null
+          audio_transcript_provider?: string | null
+          audio_transcript_status?: string
           audio_url?: string | null
           content: string
           conversation_id: string
@@ -678,6 +690,12 @@ export type Database = {
           sender_id: string
         }
         Update: {
+          audio_duration_seconds?: number | null
+          audio_transcript?: string | null
+          audio_transcript_created_at?: string | null
+          audio_transcript_language?: string | null
+          audio_transcript_provider?: string | null
+          audio_transcript_status?: string
           audio_url?: string | null
           content?: string
           conversation_id?: string

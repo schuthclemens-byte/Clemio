@@ -50,6 +50,8 @@ interface Message {
   createdAt: string;
   isEdited: boolean;
   audioUrl?: string;
+  audioTranscript?: string | null;
+  audioTranscriptStatus?: "none" | "processing" | "completed" | "failed" | null;
 }
 
 interface ReplyTarget {
@@ -185,6 +187,8 @@ const ChatPage = () => {
     createdAt: m.created_at,
     isEdited: m.is_edited ?? false,
     audioUrl: (m as any).audio_url || undefined,
+    audioTranscript: (m as any).audio_transcript ?? null,
+    audioTranscriptStatus: ((m as any).audio_transcript_status ?? "none") as Message["audioTranscriptStatus"],
   }), [user?.id]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -255,6 +259,29 @@ const ChatPage = () => {
       setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, text: newContent, isEdited: true } : m));
     }
   };
+
+  // On-Demand-Transkription (persistent)
+  const handleTranscribeVoice = useCallback(async (msgId: string) => {
+    // Optimistic UI
+    setMessages((prev) => prev.map((m) => m.id === msgId
+      ? { ...m, audioTranscriptStatus: "processing" }
+      : m));
+    const { data, error } = await supabase.functions.invoke("transcribe-voice-message", {
+      body: { message_id: msgId },
+    });
+    if (error || (data && (data as any).error)) {
+      const msg = (data as any)?.error || error?.message || "Transkription fehlgeschlagen";
+      toast.error(msg);
+      setMessages((prev) => prev.map((m) => m.id === msgId
+        ? { ...m, audioTranscriptStatus: "failed" }
+        : m));
+      return;
+    }
+    // Server hat Status gesetzt – Realtime/Refresh übernimmt das finale Mapping.
+    await refreshConversationMessages();
+  }, [refreshConversationMessages]);
+
+
 
   // Voice message
   const handleSendVoiceMessage = async (file: File) => {
@@ -1249,6 +1276,9 @@ const ChatPage = () => {
                   replyToSender={replyMsg ? (replyMsg.isMine ? "Du" : (memberNames[replyMsg.senderId] || chatName)) : undefined}
                   replyToId={msg.replyTo || undefined}
                   onScrollToMessage={scrollToMessage}
+                  audioTranscript={msg.audioTranscript}
+                  audioTranscriptStatus={msg.audioTranscriptStatus}
+                  onTranscribe={msg.messageType === "audio" || msg.messageType === "voice" ? handleTranscribeVoice : undefined}
                 />
               </SwipeableBubble>
             );
