@@ -279,6 +279,75 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       {transcription}
                     </p>
                   )}
+                  {/* Persistente On-Demand-Transkription */}
+                  {msgId && onTranscribe && (() => {
+                    const s = audioTranscriptStatus ?? "none";
+                    const textCls = cn(
+                      "text-[0.75rem] mt-2 flex items-center gap-1.5",
+                      isMine ? "text-chat-mine-foreground/70" : "text-muted-foreground"
+                    );
+                    const btnCls = cn(
+                      "mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.688rem] font-medium transition-colors active:scale-95",
+                      isMine
+                        ? "bg-chat-mine-foreground/15 text-chat-mine-foreground/80 hover:bg-chat-mine-foreground/25"
+                        : "bg-primary/10 text-primary hover:bg-primary/20"
+                    );
+                    if (s === "processing") {
+                      return (
+                        <div className={textCls}>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Transkript wird erstellt …
+                        </div>
+                      );
+                    }
+                    if (s === "completed" && audioTranscript) {
+                      return (
+                        <div className="mt-2">
+                          <p className={cn(
+                            "text-[0.813rem] leading-relaxed",
+                            isMine ? "text-chat-mine-foreground/90" : "text-chat-theirs-foreground/90"
+                          )} style={{ overflowWrap: "anywhere" }}>
+                            {audioTranscript}
+                          </p>
+                          <p className={cn(
+                            "text-[0.688rem] mt-1 italic opacity-60",
+                            isMine ? "text-chat-mine-foreground/70" : "text-muted-foreground"
+                          )}>
+                            Automatisch erstellt – kann Fehler enthalten.
+                          </p>
+                        </div>
+                      );
+                    }
+                    if (s === "failed") {
+                      return (
+                        <div className="mt-2 flex flex-col items-start gap-1">
+                          <span className={cn(
+                            "text-[0.75rem]",
+                            isMine ? "text-chat-mine-foreground/80" : "text-muted-foreground"
+                          )}>
+                            Transkription fehlgeschlagen – erneut versuchen
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onTranscribe(msgId); }}
+                            className={btnCls}
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Erneut versuchen
+                          </button>
+                        </div>
+                      );
+                    }
+                    // none / null
+                    return (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onTranscribe(msgId); }}
+                        className={btnCls}
+                      >
+                        <FileText className="w-3 h-3" />
+                        In Text umwandeln
+                      </button>
+                    );
+                  })()}
                 </>
               )}
             </div>
