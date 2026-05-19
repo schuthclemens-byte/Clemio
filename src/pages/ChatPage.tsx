@@ -50,6 +50,8 @@ interface Message {
   createdAt: string;
   isEdited: boolean;
   audioUrl?: string;
+  audioTranscript?: string | null;
+  audioTranscriptStatus?: "none" | "processing" | "completed" | "failed" | null;
 }
 
 interface ReplyTarget {
