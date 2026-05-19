@@ -187,6 +187,8 @@ const ChatPage = () => {
     createdAt: m.created_at,
     isEdited: m.is_edited ?? false,
     audioUrl: (m as any).audio_url || undefined,
+    audioTranscript: (m as any).audio_transcript ?? null,
+    audioTranscriptStatus: ((m as any).audio_transcript_status ?? "none") as Message["audioTranscriptStatus"],
   }), [user?.id]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
