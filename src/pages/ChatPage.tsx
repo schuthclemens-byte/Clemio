@@ -260,6 +260,29 @@ const ChatPage = () => {
     }
   };
 
+  // On-Demand-Transkription (persistent)
+  const handleTranscribeVoice = useCallback(async (msgId: string) => {
+    // Optimistic UI
+    setMessages((prev) => prev.map((m) => m.id === msgId
+      ? { ...m, audioTranscriptStatus: "processing" }
+      : m));
+    const { data, error } = await supabase.functions.invoke("transcribe-voice-message", {
+      body: { message_id: msgId },
+    });
+    if (error || (data && (data as any).error)) {
+      const msg = (data as any)?.error || error?.message || "Transkription fehlgeschlagen";
+      toast.error(msg);
+      setMessages((prev) => prev.map((m) => m.id === msgId
+        ? { ...m, audioTranscriptStatus: "failed" }
+        : m));
+      return;
+    }
+    // Server hat Status gesetzt – Realtime/Refresh übernimmt das finale Mapping.
+    await refreshConversationMessages();
+  }, [refreshConversationMessages]);
+
+
+
   // Voice message
   const handleSendVoiceMessage = async (file: File) => {
     if (!user || !conversationId) return false;
