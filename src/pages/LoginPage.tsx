@@ -12,7 +12,10 @@ import CountryCodePicker, { countries, findCountryByDial, detectCountryFromBrows
 
 const getInitialCountry = (): Country => {
   const saved = localStorage.getItem("clemio_last_phone") || "";
-  return findCountryByDial(saved) || detectCountryFromBrowser();
+  const fromSaved = findCountryByDial(saved);
+  if (fromSaved) return fromSaved;
+  // Standard: immer Deutschland (+49)
+  return countries[0];
 };
 
 const getInitialLocalNumber = (): string => {
