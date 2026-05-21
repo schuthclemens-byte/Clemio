@@ -1,26 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function useMissedCallsCount() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
+  const subscriptionId = useId().replace(/:/g, "");
 
   useEffect(() => {
     if (!user) return;
-
-    const fetchCount = async () => {
-      const { data, error } = await (supabase as any)
-        .from("calls")
-        .select("id", { count: "exact", head: true })
-        .eq("receiver_id", user.id)
-        .eq("status", "missed")
-        .eq("is_read", false);
-      if (!error) {
-        // When head: true, count is in the response
-        setCount((data as any)?.length ?? 0);
-      }
-    };
 
     // Use raw count approach
     const fetchCountRaw = async () => {
@@ -35,7 +23,7 @@ export function useMissedCallsCount() {
 
     fetchCountRaw();
 
-    const channelName = `missed-calls-badge-${user.id}-${Date.now()}`;
+    const channelName = `missed-calls-badge-${user.id}-${subscriptionId}`;
     const channel = supabase
       .channel(channelName)
       .on("postgres_changes", { event: "*", schema: "public", table: "calls" }, () => {
@@ -44,7 +32,7 @@ export function useMissedCallsCount() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  }, [user, subscriptionId]);
 
   return count;
 }
