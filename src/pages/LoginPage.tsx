@@ -14,10 +14,8 @@ const getInitialCountry = (): Country => {
   const saved = localStorage.getItem("clemio_last_phone") || "";
   const fromSaved = findCountryByDial(saved);
   if (fromSaved) return fromSaved;
-  // Default: Deutschland (+49). Nur wenn Browser eindeutig nicht-deutsch ist, Browser-Erkennung nutzen.
-  const lang = (navigator.language || "de-DE").toLowerCase();
-  if (lang.startsWith("de")) return countries[0];
-  return detectCountryFromBrowser();
+  // Standard: immer Deutschland (+49)
+  return countries[0];
 };
 
 const getInitialLocalNumber = (): string => {
