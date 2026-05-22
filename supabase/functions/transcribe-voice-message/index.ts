@@ -151,26 +151,105 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 11. (Platzhalter) – Späterer Aufruf des Hetzner-STT-Servers:
-    //
-    //   const sttRes = await fetch(STT_URL, {
-    //     method: "POST",
-    //     headers: { Authorization: `Bearer ${STT_SECRET}` },
-    //     body: ... signed URL oder Multipart ...
-    //   });
-    //   ...dann Status -> completed, audio_transcript, language, created_at setzen.
-    //
-    // In diesem Schritt explizit nicht implementiert.
+    // 11. Signed URL für das Audio im Bucket "stimmen" erzeugen.
+    //     audio_url kann entweder ein Storage-Pfad ("userId/datei.webm")
+    //     oder eine vollständige URL sein. Wir extrahieren den Pfad robust.
+    let audioPath = message.audio_url as string;
+    const stimmenMarker = "/stimmen/";
+    const idx = audioPath.indexOf(stimmenMarker);
+    if (idx !== -1) {
+      audioPath = audioPath.substring(idx + stimmenMarker.length);
+    }
+    // Query-String entfernen
+    const qIdx = audioPath.indexOf("?");
+    if (qIdx !== -1) audioPath = audioPath.substring(0, qIdx);
 
-    await admin
+    const { data: signed, error: signErr } = await admin.storage
+      .from("stimmen")
+      .createSignedUrl(audioPath, 300); // 5 Min Gültigkeit
+
+    if (signErr || !signed?.signedUrl) {
+      console.error("[transcribe-voice-message] signed url failed");
+      await admin
+        .from("messages")
+        .update({ audio_transcript_status: "failed" })
+        .eq("id", messageId);
+      return json({ error: "Audio nicht zugänglich" }, 500);
+    }
+
+    // 12. Anfrage an selbst-gehosteten Whisper-Server
+    let sttRes: Response;
+    try {
+      sttRes = await fetch(STT_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${STT_SECRET}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          audio_url: signed.signedUrl,
+          message_id: messageId,
+        }),
+      });
+    } catch (e) {
+      console.error("[transcribe-voice-message] stt fetch failed:", (e as Error)?.message);
+      await admin
+        .from("messages")
+        .update({ audio_transcript_status: "failed" })
+        .eq("id", messageId);
+      return json({ error: "Transkriptionsserver nicht erreichbar" }, 502);
+    }
+
+    if (!sttRes.ok) {
+      console.error("[transcribe-voice-message] stt http", sttRes.status);
+      await sttRes.text().catch(() => "");
+      await admin
+        .from("messages")
+        .update({ audio_transcript_status: "failed" })
+        .eq("id", messageId);
+      return json({ error: "Transkription fehlgeschlagen" }, 502);
+    }
+
+    let sttJson: { text?: string; language?: string };
+    try {
+      sttJson = await sttRes.json();
+    } catch {
+      await admin
+        .from("messages")
+        .update({ audio_transcript_status: "failed" })
+        .eq("id", messageId);
+      return json({ error: "Ungültige Antwort vom Transkriptionsserver" }, 502);
+    }
+
+    const transcript = (sttJson.text ?? "").trim();
+    const language = sttJson.language ?? null;
+
+    if (!transcript) {
+      await admin
+        .from("messages")
+        .update({ audio_transcript_status: "failed" })
+        .eq("id", messageId);
+      return json({ error: "Leeres Transkript" }, 422);
+    }
+
+    // 13. Ergebnis speichern
+    const { error: saveErr } = await admin
       .from("messages")
-      .update({ audio_transcript_status: "failed" })
+      .update({
+        audio_transcript: transcript,
+        audio_transcript_status: "completed",
+        audio_transcript_language: language,
+        audio_transcript_provider: "self_hosted_faster_whisper",
+        audio_transcript_created_at: new Date().toISOString(),
+      })
       .eq("id", messageId);
 
-    return json(
-      { error: "Transkriptionsserver ist noch nicht verbunden." },
-      503,
-    );
+    if (saveErr) {
+      console.error("[transcribe-voice-message] save failed");
+      return json({ error: "Database error" }, 500);
+    }
+
+    return json({ status: "completed" }, 200);
   } catch (err) {
     console.error("[transcribe-voice-message] unexpected", (err as Error)?.message);
     return json({ error: "Internal server error" }, 500);
