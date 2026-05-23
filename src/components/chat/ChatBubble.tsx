@@ -296,7 +296,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                       return (
                         <div className={textCls}>
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          Transkript wird erstellt …
+                          {t("chat.transcribe.processing")}
                         </div>
                       );
                     }
@@ -313,7 +313,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                             "text-[0.688rem] mt-1 italic opacity-60",
                             isMine ? "text-chat-mine-foreground/70" : "text-muted-foreground"
                           )}>
-                            Automatisch erstellt – kann Fehler enthalten.
+                            {t("chat.transcribe.disclaimer")}
                           </p>
                         </div>
                       );
@@ -325,14 +325,14 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                             "text-[0.75rem]",
                             isMine ? "text-chat-mine-foreground/80" : "text-muted-foreground"
                           )}>
-                            Transkription fehlgeschlagen – erneut versuchen
+                            {t("chat.transcribe.failed")}
                           </span>
                           <button
                             onClick={(e) => { e.stopPropagation(); onTranscribe(msgId); }}
                             className={btnCls}
                           >
                             <RefreshCw className="w-3 h-3" />
-                            Erneut versuchen
+                            {t("chat.transcribe.retry")}
                           </button>
                         </div>
                       );
@@ -344,7 +344,7 @@ const ChatBubble = ({ message, timestamp, isMine, senderName, onSpeak, isSpeakin
                         className={btnCls}
                       >
                         <FileText className="w-3 h-3" />
-                        In Text umwandeln
+                        {t("chat.transcribe.button")}
                       </button>
                     );
                   })()}
