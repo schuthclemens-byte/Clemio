@@ -53,11 +53,13 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'missing_fields' }), { status: 400, headers: corsHeaders })
   }
 
+  const adminEmail = Deno.env.get('ADMIN_NOTIFICATION_EMAIL') ?? 'clemensschuth@outlook.de';
+
   try {
     const { error } = await supabase.functions.invoke('send-transactional-email', {
       body: {
         templateName: 'report-admin-alert',
-        recipientEmail: 'clemensschuth@outlook.de',
+        recipientEmail: adminEmail,
         idempotencyKey: `report-${payload.report_id}`,
         templateData: {
           reportId: payload.report_id,
