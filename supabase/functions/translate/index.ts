@@ -73,7 +73,14 @@ serve(async (req) => {
       ar: "Arabic",
     };
 
-    const targetLangName = langNames[targetLang] || targetLang;
+    if (typeof targetLang !== "string" || !Object.prototype.hasOwnProperty.call(langNames, targetLang)) {
+      return new Response(
+        JSON.stringify({ error: "Unsupported language", code: "unsupported_language" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const targetLangName = langNames[targetLang];
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
