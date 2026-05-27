@@ -1,12 +1,14 @@
-// On-Demand persistente Sprachnachrichten-Transkription (Stub).
-// Ruft (später) einen selbst-gehosteten faster-whisper-Endpunkt auf.
-// Solange SELF_HOSTED_STT_URL / SELF_HOSTED_STT_SECRET fehlen, antwortet die
-// Funktion bewusst mit 503 und setzt den Status auf "failed".
+// On-Demand persistente Sprachnachrichten-Transkription via RunPod Serverless.
+// Lädt das Audio aus dem Storage-Bucket "stimmen", schickt es base64-kodiert an
+// einen RunPod-Endpunkt (faster-whisper) und speichert das Transkript persistent
+// in der messages-Tabelle.
 //
 // Sicherheitsprinzipien:
 // - Nutzer-Auth wird im Code geprüft (verify_jwt=false als Default).
-// - Audio-URLs und Transkripte werden NIEMALS geloggt.
-// - Der STT-Server darf niemals direkt vom Frontend erreichbar sein.
+// - Nur der Besitzer (sender_id) der Nachricht darf transkribieren.
+// - Fremde / unbekannte message_id liefert 403.
+// - RunPod-Key wird ausschließlich serverseitig aus Secrets gelesen.
+// - Audio-URLs, Audio-Bytes und Transkripte werden NIEMALS geloggt.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.3";
 
@@ -16,6 +18,7 @@ const corsHeaders = {
 };
 
 const MAX_DURATION_SEC = 120; // 2 Minuten
+const RUNPOD_TIMEOUT_MS = 90_000; // 90 s hard timeout für runsync
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -25,6 +28,17 @@ function json(body: unknown, status: number) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// Wandelt einen ArrayBuffer ohne Stack-Overflow in base64 um.
+function toBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
 }
 
 Deno.serve(async (req) => {
@@ -55,7 +69,7 @@ Deno.serve(async (req) => {
     }
     const userId = userData.user.id;
 
-    // 2. Body lesen + validieren
+    // 2. Body validieren
     let body: any;
     try {
       body = await req.json();
@@ -67,8 +81,7 @@ Deno.serve(async (req) => {
       return json({ error: "Invalid message_id" }, 400);
     }
 
-    // 3. Service-Role-Client für DB-Operationen (RLS bewusst umgehen,
-    //    weil wir vorher explizit per RPC autorisieren).
+    // 3. Service-Role-Client für DB + Storage
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // 4. Nachricht laden
@@ -89,12 +102,8 @@ Deno.serve(async (req) => {
       return json({ error: "Forbidden" }, 403);
     }
 
-    // 5. Berechtigung prüfen (Mitglied der Konversation?)
-    const { data: isMember, error: memberErr } = await admin.rpc(
-      "is_conversation_member",
-      { _conversation_id: message.conversation_id, _user_id: userId },
-    );
-    if (memberErr || isMember !== true) {
+    // 5. Ownership: NUR der Sender darf transkribieren
+    if (message.sender_id !== userId) {
       return json({ error: "Forbidden" }, 403);
     }
 
@@ -108,10 +117,7 @@ Deno.serve(async (req) => {
       typeof message.audio_duration_seconds === "number" &&
       message.audio_duration_seconds > MAX_DURATION_SEC
     ) {
-      return json(
-        { error: "Audio zu lang (max. 2 Minuten)" },
-        413,
-      );
+      return json({ error: "Audio zu lang (max. 2 Minuten)" }, 413);
     }
 
     // 8. Idempotenz
@@ -135,41 +141,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 10. STT-Secrets prüfen
-    const STT_URL = Deno.env.get("SELF_HOSTED_STT_URL");
-    const STT_SECRET = Deno.env.get("SELF_HOSTED_STT_SECRET");
+    // 10. RunPod-Secrets
+    const RUNPOD_API_KEY = Deno.env.get("RUNPOD_API_KEY");
+    const RUNPOD_STT_ENDPOINT_ID = Deno.env.get("RUNPOD_STT_ENDPOINT_ID");
 
-    if (!STT_URL || !STT_SECRET) {
+    if (!RUNPOD_API_KEY || !RUNPOD_STT_ENDPOINT_ID) {
       await admin
         .from("messages")
         .update({ audio_transcript_status: "failed" })
         .eq("id", messageId);
-
       return json(
-        { error: "Transkriptionsserver ist noch nicht verbunden." },
+        { error: "Transkriptionsdienst ist nicht konfiguriert." },
         503,
       );
     }
 
-    // 11. Signed URL für das Audio im Bucket "stimmen" erzeugen.
-    //     audio_url kann entweder ein Storage-Pfad ("userId/datei.webm")
-    //     oder eine vollständige URL sein. Wir extrahieren den Pfad robust.
+    // 11. Storage-Pfad aus audio_url ableiten (akzeptiert vollen Public/Signed-URL oder Pfad)
     let audioPath = message.audio_url as string;
     const stimmenMarker = "/stimmen/";
     const idx = audioPath.indexOf(stimmenMarker);
-    if (idx !== -1) {
-      audioPath = audioPath.substring(idx + stimmenMarker.length);
-    }
-    // Query-String entfernen
+    if (idx !== -1) audioPath = audioPath.substring(idx + stimmenMarker.length);
     const qIdx = audioPath.indexOf("?");
     if (qIdx !== -1) audioPath = audioPath.substring(0, qIdx);
 
-    const { data: signed, error: signErr } = await admin.storage
+    // 12. Audio aus Storage ziehen
+    const { data: audioBlob, error: dlErr } = await admin.storage
       .from("stimmen")
-      .createSignedUrl(audioPath, 300); // 5 Min Gültigkeit
-
-    if (signErr || !signed?.signedUrl) {
-      console.error("[transcribe-voice-message] signed url failed");
+      .download(audioPath);
+    if (dlErr || !audioBlob) {
+      console.error("[transcribe-voice-message] storage download failed");
       await admin
         .from("messages")
         .update({ audio_transcript_status: "failed" })
@@ -177,32 +177,63 @@ Deno.serve(async (req) => {
       return json({ error: "Audio nicht zugänglich" }, 500);
     }
 
-    // 12. Anfrage an selbst-gehosteten Whisper-Server
-    let sttRes: Response;
+    const audioBuf = await audioBlob.arrayBuffer();
+    const audioBase64 = toBase64(audioBuf);
+
+    // Filename ableiten (nur letzter Pfadteil, kein PII-Leak)
+    const filenameFromPath = audioPath.split("/").pop() || "voice-message.wav";
+
+    // 13. RunPod runsync aufrufen (mit Timeout)
+    const runpodUrl = `https://api.runpod.ai/v2/${RUNPOD_STT_ENDPOINT_ID}/runsync`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), RUNPOD_TIMEOUT_MS);
+
+    let runpodRes: Response;
     try {
-      sttRes = await fetch(STT_URL, {
+      runpodRes = await fetch(runpodUrl, {
         method: "POST",
+        signal: controller.signal,
         headers: {
-          Authorization: `Bearer ${STT_SECRET}`,
+          Authorization: `Bearer ${RUNPOD_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          audio_url: signed.signedUrl,
-          message_id: messageId,
+          input: {
+            audio_base64: audioBase64,
+            filename: filenameFromPath,
+            language: null,
+            task: "transcribe",
+          },
         }),
       });
     } catch (e) {
-      console.error("[transcribe-voice-message] stt fetch failed:", (e as Error)?.message);
+      clearTimeout(timeoutId);
+      const aborted = (e as Error)?.name === "AbortError";
+      console.error(
+        "[transcribe-voice-message] runpod fetch failed:",
+        aborted ? "timeout" : (e as Error)?.message,
+      );
       await admin
         .from("messages")
         .update({ audio_transcript_status: "failed" })
         .eq("id", messageId);
-      return json({ error: "Transkriptionsserver nicht erreichbar" }, 502);
+      return json(
+        {
+          error: aborted
+            ? "Transkription hat zu lange gedauert."
+            : "Transkriptionsserver nicht erreichbar.",
+        },
+        aborted ? 504 : 502,
+      );
     }
+    clearTimeout(timeoutId);
 
-    if (!sttRes.ok) {
-      console.error("[transcribe-voice-message] stt http", sttRes.status);
-      await sttRes.text().catch(() => "");
+    if (!runpodRes.ok) {
+      console.error(
+        "[transcribe-voice-message] runpod http",
+        runpodRes.status,
+      );
+      await runpodRes.text().catch(() => "");
       await admin
         .from("messages")
         .update({ audio_transcript_status: "failed" })
@@ -210,9 +241,18 @@ Deno.serve(async (req) => {
       return json({ error: "Transkription fehlgeschlagen" }, 502);
     }
 
-    let sttJson: { text?: string; language?: string };
+    let runpodJson: {
+      status?: string;
+      output?: {
+        ok?: boolean;
+        text?: string;
+        language?: string | null;
+        error?: string;
+      };
+      error?: string;
+    };
     try {
-      sttJson = await sttRes.json();
+      runpodJson = await runpodRes.json();
     } catch {
       await admin
         .from("messages")
@@ -221,8 +261,30 @@ Deno.serve(async (req) => {
       return json({ error: "Ungültige Antwort vom Transkriptionsserver" }, 502);
     }
 
-    const transcript = (sttJson.text ?? "").trim();
-    const language = sttJson.language ?? null;
+    const runpodStatus = (runpodJson?.status ?? "").toUpperCase();
+    const output = runpodJson?.output;
+
+    if (runpodStatus !== "COMPLETED" || !output || output.ok !== true) {
+      console.error(
+        "[transcribe-voice-message] runpod not completed:",
+        runpodStatus,
+      );
+      await admin
+        .from("messages")
+        .update({ audio_transcript_status: "failed" })
+        .eq("id", messageId);
+
+      // Wenn RunPod selbst eine Fehlerbeschreibung mitliefert, an den Client
+      // weiterreichen — sonst neutrale Meldung.
+      const friendly =
+        output?.error ||
+        runpodJson?.error ||
+        "Transkription fehlgeschlagen.";
+      return json({ error: friendly }, 502);
+    }
+
+    const transcript = (output.text ?? "").trim();
+    const language = output.language ?? null;
 
     if (!transcript) {
       await admin
@@ -232,14 +294,14 @@ Deno.serve(async (req) => {
       return json({ error: "Leeres Transkript" }, 422);
     }
 
-    // 13. Ergebnis speichern
+    // 14. Ergebnis persistieren
     const { error: saveErr } = await admin
       .from("messages")
       .update({
         audio_transcript: transcript,
         audio_transcript_status: "completed",
         audio_transcript_language: language,
-        audio_transcript_provider: "self_hosted_faster_whisper",
+        audio_transcript_provider: "runpod_faster_whisper",
         audio_transcript_created_at: new Date().toISOString(),
       })
       .eq("id", messageId);
@@ -251,7 +313,10 @@ Deno.serve(async (req) => {
 
     return json({ status: "completed" }, 200);
   } catch (err) {
-    console.error("[transcribe-voice-message] unexpected", (err as Error)?.message);
+    console.error(
+      "[transcribe-voice-message] unexpected",
+      (err as Error)?.message,
+    );
     return json({ error: "Internal server error" }, 500);
   }
 });
