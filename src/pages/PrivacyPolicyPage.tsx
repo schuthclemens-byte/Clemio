@@ -432,6 +432,45 @@ const PrivacyPolicyPage = () => {
           <p>{t("privacy.s22Text")}</p>
         </Section>
 
+        {/* 23. Transkription von Sprachnachrichten */}
+        <Section title={t("privacy.s23Title")} delay={890}>
+          <p>{t("privacy.s23Intro")}</p>
+          <p className="font-medium text-foreground">{t("privacy.s23DataTitle")}</p>
+          <ul className="space-y-1">
+            <Bullet>{t("privacy.s23B1")}</Bullet>
+            <Bullet>{t("privacy.s23B2")}</Bullet>
+            <Bullet>{t("privacy.s23B3")}</Bullet>
+            <Bullet>{t("privacy.s23B4")}</Bullet>
+            <Bullet>{t("privacy.s23B5")}</Bullet>
+            <Bullet>{t("privacy.s23B6")}</Bullet>
+          </ul>
+          <p className="font-medium text-foreground">{t("privacy.s23PurposeTitle")}</p>
+          <ul className="space-y-1">
+            <Bullet>{t("privacy.s23P1")}</Bullet>
+            <Bullet>{t("privacy.s23P2")}</Bullet>
+            <Bullet>{t("privacy.s23P3")}</Bullet>
+            <Bullet>{t("privacy.s23P4")}</Bullet>
+            <Bullet>{t("privacy.s23P5")}</Bullet>
+          </ul>
+          <p className="font-medium text-foreground">{t("privacy.s23LegalTitle")}</p>
+          <ul className="space-y-1">
+            <Bullet accent>{t("privacy.s23L1")}</Bullet>
+            <Bullet accent>{t("privacy.s23L2")}</Bullet>
+            <Bullet accent>{t("privacy.s23L3")}</Bullet>
+          </ul>
+          <div className="bg-secondary/50 rounded-xl p-3 space-y-2">
+            <p><strong>{t("privacy.s23RunpodTitle")}</strong></p>
+            <p>{t("privacy.s23RunpodPurpose")}</p>
+            <p>{t("privacy.s23RunpodData")}</p>
+            <p>{t("privacy.s23RunpodNote")}</p>
+          </div>
+          <p>{t("privacy.s23SupabaseNote")}</p>
+          <p>{t("privacy.s23ThirdCountry")}</p>
+          <p className="font-medium text-foreground">{t("privacy.s23StorageTitle")}</p>
+          <p>{t("privacy.s23Storage")}</p>
+          <p><strong>{t("privacy.s23Legal")}</strong></p>
+        </Section>
+
         {/* Lösch-Hinweis */}
         <section className="bg-destructive/5 border border-destructive/10 rounded-2xl p-4 animate-reveal-up" style={{ animationDelay: "900ms" }}>
           <p className="text-sm text-foreground leading-relaxed">

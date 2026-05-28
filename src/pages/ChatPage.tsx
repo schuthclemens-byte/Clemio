@@ -262,6 +262,18 @@ const ChatPage = () => {
 
   // On-Demand-Transkription (persistent)
   const handleTranscribeVoice = useCallback(async (msgId: string) => {
+    // Beim allerersten Mal kurzer Datenschutzhinweis (RunPod / Speicherung im Chat).
+    try {
+      const seen = localStorage.getItem("clemio.transcribeHintSeen.v1");
+      if (!seen) {
+        const ok = window.confirm(t("chat.transcribe.firstHint"));
+        if (!ok) return;
+        localStorage.setItem("clemio.transcribeHintSeen.v1", "1");
+      }
+    } catch {
+      // localStorage nicht verfügbar – Hinweis überspringen, Funktion bleibt nutzbar.
+    }
+
     // Optimistic UI
     setMessages((prev) => prev.map((m) => m.id === msgId
       ? { ...m, audioTranscriptStatus: "processing" }
@@ -279,7 +291,7 @@ const ChatPage = () => {
     }
     // Server hat Status gesetzt – Realtime/Refresh übernimmt das finale Mapping.
     await refreshConversationMessages();
-  }, [refreshConversationMessages]);
+  }, [refreshConversationMessages, t]);
 
 
 

@@ -150,6 +150,7 @@ const TermsPage = () => {
             <Forbidden>{t("legal.terms8F4")}</Forbidden>
             <Forbidden>{t("legal.terms8F5")}</Forbidden>
             <Forbidden>{t("legal.terms8F6")}</Forbidden>
+            <Forbidden>{t("legal.terms8F7")}</Forbidden>
           </ul>
           <p>{t("legal.terms8Warn")}</p>
         </Section>
@@ -193,6 +194,13 @@ const TermsPage = () => {
         {/* 13 */}
         <Section title={t("legal.terms13Title")} delay={660}>
           <p>{t("legal.terms13Text")}</p>
+        </Section>
+
+        {/* 14 - Transkription */}
+        <Section title={t("legal.terms14Title")} delay={690}>
+          <p>{t("legal.terms14Text")}</p>
+          <p>{t("legal.terms14Caution")}</p>
+          <p className="font-medium text-foreground">{t("legal.terms14NoGuarantee")}</p>
         </Section>
 
         {/* Contact */}
