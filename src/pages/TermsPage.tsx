@@ -196,6 +196,13 @@ const TermsPage = () => {
           <p>{t("legal.terms13Text")}</p>
         </Section>
 
+        {/* 14 - Transkription */}
+        <Section title={t("legal.terms14Title")} delay={690}>
+          <p>{t("legal.terms14Text")}</p>
+          <p>{t("legal.terms14Caution")}</p>
+          <p className="font-medium text-foreground">{t("legal.terms14NoGuarantee")}</p>
+        </Section>
+
         {/* Contact */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "720ms" }}>
           <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.termsContactTitle")}</h3>
