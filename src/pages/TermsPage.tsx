@@ -150,6 +150,7 @@ const TermsPage = () => {
             <Forbidden>{t("legal.terms8F4")}</Forbidden>
             <Forbidden>{t("legal.terms8F5")}</Forbidden>
             <Forbidden>{t("legal.terms8F6")}</Forbidden>
+            <Forbidden>{t("legal.terms8F7")}</Forbidden>
           </ul>
           <p>{t("legal.terms8Warn")}</p>
         </Section>
