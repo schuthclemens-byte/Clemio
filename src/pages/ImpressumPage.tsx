@@ -1,6 +1,23 @@
 import { ArrowLeft, Building2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useI18n } from "@/contexts/I18nContext";
+
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://clemio.app/impressum#localbusiness",
+  name: "Clemio – Clemens Schuth",
+  url: "https://clemio.app/",
+  email: "support@clemio.app",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Ludwig-Erhard-Allee 3",
+    postalCode: "81739",
+    addressLocality: "München",
+    addressCountry: "DE",
+  },
+};
 
 const ImpressumPage = () => {
   const { goBack, swipeHandlers } = useSmartBack("/settings");
