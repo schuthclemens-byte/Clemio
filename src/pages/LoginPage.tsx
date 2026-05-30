@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, UserPlus, LogIn, Sparkles, Fingerprint, ChevronDown, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import PasswordRequirements, { isPasswordStrong } from "@/components/auth/PasswordRequirements";
@@ -201,6 +202,14 @@ const LoginPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
+      <Helmet>
+        <title>Anmelden – Clemio</title>
+        <meta name="description" content="Melde dich bei Clemio mit deiner Handynummer an oder erstelle ein neues Konto, um Sprachnachrichten und Echtzeit-Übersetzung zu nutzen." />
+        <link rel="canonical" href="https://clemio.app/login" />
+        <meta property="og:title" content="Anmelden – Clemio" />
+        <meta property="og:description" content="Anmelden oder Konto erstellen mit Handynummer." />
+        <meta property="og:url" content="https://clemio.app/login" />
+      </Helmet>
       {/* Decorative background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-primary/5 animate-float" />

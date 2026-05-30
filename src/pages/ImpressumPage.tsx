@@ -25,6 +25,15 @@ const ImpressumPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
+      <Helmet>
+        <title>Impressum – Clemio</title>
+        <meta name="description" content="Impressum von Clemio: Anbieterkennzeichnung gemäß § 5 DDG mit Kontakt, Anschrift und rechtlichen Hinweisen." />
+        <link rel="canonical" href="https://clemio.app/impressum" />
+        <meta property="og:title" content="Impressum – Clemio" />
+        <meta property="og:description" content="Anbieterkennzeichnung gemäß § 5 DDG." />
+        <meta property="og:url" content="https://clemio.app/impressum" />
+        <script type="application/ld+json">{JSON.stringify(localBusinessJsonLd)}</script>
+      </Helmet>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
