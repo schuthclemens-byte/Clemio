@@ -1,5 +1,6 @@
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { ArrowLeft, FileText } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import { useI18n } from "@/contexts/I18nContext";
 
 const Section = ({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) => (
@@ -32,6 +33,14 @@ const TermsPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
+      <Helmet>
+        <title>Nutzungsbedingungen – Clemio</title>
+        <meta name="description" content="Nutzungsbedingungen von Clemio: Regeln für Chats, Sprachnachrichten, Voice-Cloning, Transkription, Premium-Abonnement und Mindestalter." />
+        <link rel="canonical" href="https://clemio.app/terms" />
+        <meta property="og:title" content="Nutzungsbedingungen – Clemio" />
+        <meta property="og:description" content="Regeln, Premium-Konditionen und akzeptable Nutzung von Clemio." />
+        <meta property="og:url" content="https://clemio.app/terms" />
+      </Helmet>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button

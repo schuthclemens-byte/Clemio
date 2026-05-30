@@ -1,5 +1,6 @@
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { ArrowLeft, Shield } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import { useI18n } from "@/contexts/I18nContext";
 
 const Section = ({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) => (
@@ -25,6 +26,14 @@ const PrivacyPolicyPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
+      <Helmet>
+        <title>Datenschutzerklärung – Clemio</title>
+        <meta name="description" content="Datenschutzerklärung von Clemio: Wie wir Sprachnachrichten, Transkripte, KI-Übersetzung und personenbezogene Daten DSGVO-konform verarbeiten." />
+        <link rel="canonical" href="https://clemio.app/privacy" />
+        <meta property="og:title" content="Datenschutzerklärung – Clemio" />
+        <meta property="og:description" content="Wie Clemio personenbezogene Daten DSGVO-konform verarbeitet." />
+        <meta property="og:url" content="https://clemio.app/privacy" />
+      </Helmet>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button

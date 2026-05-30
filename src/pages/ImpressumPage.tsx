@@ -1,6 +1,23 @@
 import { ArrowLeft, Building2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useI18n } from "@/contexts/I18nContext";
+
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://clemio.app/impressum#localbusiness",
+  name: "Clemio – Clemens Schuth",
+  url: "https://clemio.app/",
+  email: "support@clemio.app",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Ludwig-Erhard-Allee 3",
+    postalCode: "81739",
+    addressLocality: "München",
+    addressCountry: "DE",
+  },
+};
 
 const ImpressumPage = () => {
   const { goBack, swipeHandlers } = useSmartBack("/settings");
@@ -8,6 +25,15 @@ const ImpressumPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
+      <Helmet>
+        <title>Impressum – Clemio</title>
+        <meta name="description" content="Impressum von Clemio: Anbieterkennzeichnung gemäß § 5 DDG mit Kontakt, Anschrift und rechtlichen Hinweisen." />
+        <link rel="canonical" href="https://clemio.app/impressum" />
+        <meta property="og:title" content="Impressum – Clemio" />
+        <meta property="og:description" content="Anbieterkennzeichnung gemäß § 5 DDG." />
+        <meta property="og:url" content="https://clemio.app/impressum" />
+        <script type="application/ld+json">{JSON.stringify(localBusinessJsonLd)}</script>
+      </Helmet>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button

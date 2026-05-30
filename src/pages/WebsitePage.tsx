@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
@@ -32,6 +33,14 @@ const WebsitePage = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
+      <Helmet>
+        <title>Clemio – Voice-first Messenger mit Echtzeit-Übersetzung</title>
+        <meta name="description" content="Clemio ist der Messenger zum Hören statt Lesen: Sprachnachrichten, KI-Stimme, Echtzeit-Übersetzung und barrierefreie Kommunikation für alle." />
+        <link rel="canonical" href="https://clemio.app/" />
+        <meta property="og:title" content="Clemio – Voice-first Messenger mit Echtzeit-Übersetzung" />
+        <meta property="og:description" content="Sprachnachrichten, KI-Stimme und Echtzeit-Übersetzung. Hören statt Lesen." />
+        <meta property="og:url" content="https://clemio.app/" />
+      </Helmet>
       <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[60]">
         <LanguageSwitcher />
       </div>

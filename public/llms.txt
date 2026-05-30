@@ -1,0 +1,17 @@
+# Clemio
+
+> Voice-first messenger with real-time translation and accessible communication. "Hören statt Lesen."
+
+Clemio is a mobile-first messaging app focused on voice notes, text-to-speech, voice cloning and real-time translation between chat partners. The app is built for accessibility and people who prefer listening over reading.
+
+## Pages
+
+- [Home](/): Product landing page with feature overview, voice demo and onboarding entry points.
+- [Install](/install): Instructions for installing the app on iOS, Android, Windows and as a PWA.
+- [Privacy Policy](/privacy): How Clemio handles personal data, voice recordings, transcripts and third-country processing.
+- [Terms of Service](/terms): Usage rules, subscription terms and acceptable use.
+- [Impressum](/impressum): Legal entity, contact details and liability disclosure (German law).
+
+## Optional
+
+- [Login](/login): Phone-number based sign-in and registration (auth-gated content beyond this point).
