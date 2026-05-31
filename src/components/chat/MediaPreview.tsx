@@ -15,7 +15,7 @@ const MediaPreview = ({ file, type, onRemove }: MediaPreviewProps) => {
   return (
     <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-border shrink-0">
       {type === "image" ? (
-        <img src={url} alt="Preview" className="w-full h-full object-cover" />
+        <img src={url} alt="Message attachment preview" className="w-full h-full object-cover" />
       ) : (
         <div className="relative w-full h-full bg-foreground">
           <video src={url} className="w-full h-full object-cover" />

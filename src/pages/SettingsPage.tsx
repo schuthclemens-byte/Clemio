@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
 import {
@@ -306,6 +307,12 @@ const SettingsPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background" {...swipeHandlers}>
+      <Helmet>
+        <title>Einstellungen – Clemio</title>
+        <meta name="description" content="Verwalte dein Clemio-Konto: Sprache, Stimme, Datenschutz, Benachrichtigungen und mehr." />
+        <link rel="canonical" href="https://clemio.app/settings" />
+        <meta name="robots" content="noindex,follow" />
+      </Helmet>
       {/* Header */}
       <header className="sticky top-0 z-20 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">

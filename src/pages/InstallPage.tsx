@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useNavigate } from "react-router-dom";
 import { Download, ArrowLeft, Smartphone, Monitor, Globe, Loader2 } from "lucide-react";
@@ -43,6 +44,14 @@ const InstallPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col" {...swipeHandlers}>
+      <Helmet>
+        <title>Clemio installieren – iOS, Android, Desktop & PWA</title>
+        <meta name="description" content="Lade Clemio als App auf dein iPhone, Android-Gerät oder Desktop. Schritt-für-Schritt-Anleitung für PWA-Installation und native Apps." />
+        <link rel="canonical" href="https://clemio.app/install" />
+        <meta property="og:title" content="Clemio installieren – iOS, Android, Desktop & PWA" />
+        <meta property="og:description" content="So holst du dir Clemio auf jedes Gerät – Voice-first Messenger mit Echtzeit-Übersetzung." />
+        <meta property="og:url" content="https://clemio.app/install" />
+      </Helmet>
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
