@@ -70,7 +70,7 @@ const ContactAdminEmail = ({ name, email, category, message, submissionId, ipAdd
 export const template = {
   component: ContactAdminEmail,
   subject: (data) => `[Clemio] Kontaktformular: ${CATEGORY_LABELS[data.category as string] || 'Neue Nachricht'}`,
-  to: 'clemensschuth@outlook.de',
+  // Recipient is provided by the caller (must pass ADMIN_NOTIFICATION_EMAIL env var).
   displayName: 'Kontakt: Admin-Benachrichtigung',
   previewData: {
     name: 'Max Mustermann',
