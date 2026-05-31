@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, MessageSquare, X, UserPlus, MoreVertical, Archive, Trash2 } from "lucide-react";
 import ChatListItem from "@/components/chat/ChatListItem";
@@ -452,6 +453,12 @@ const ChatListPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+      <Helmet>
+        <title>Chats – Clemio</title>
+        <meta name="description" content="Deine Clemio-Chats: Sprachnachrichten, Echtzeit-Übersetzung und Anrufe an einem Ort." />
+        <link rel="canonical" href="https://clemio.app/chats" />
+        <meta name="robots" content="noindex,follow" />
+      </Helmet>
       <header className="sticky top-0 z-10 glass-strong border-b border-border/30" style={{ background: 'linear-gradient(135deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.8))' }}>
         <div className="flex items-center justify-between px-5 py-4">
           <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">{t("chat.chats")}</h1>
