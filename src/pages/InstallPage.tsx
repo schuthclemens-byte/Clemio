@@ -57,7 +57,7 @@ const InstallPage = () => {
 
       <div className="flex-1 flex flex-col items-center px-6 pt-8 pb-12">
         <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center mb-6 shadow-lg">
-          <img src="/icon-192.png" alt="Clemio" className="w-20 h-20 rounded-2xl" />
+          <img src="/icon-192.png" alt="Clemio voice messenger app icon" className="w-20 h-20 rounded-2xl" />
         </div>
 
         <h2 className="text-2xl font-bold text-foreground mb-2">Clemio</h2>

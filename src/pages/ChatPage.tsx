@@ -1001,7 +1001,7 @@ const ChatPage = () => {
           </button>
           <div className="relative w-11 h-11 shrink-0">
             {isGroup && groupAvatarUrl ? (
-              <img src={groupAvatarUrl} alt="Gruppe" className="w-11 h-11 rounded-full object-cover" />
+              <img src={groupAvatarUrl} alt="Gruppenchat Profilbild" className="w-11 h-11 rounded-full object-cover" />
             ) : (
               <div className={cn(
                 "w-11 h-11 rounded-full flex items-center justify-center font-semibold text-sm",

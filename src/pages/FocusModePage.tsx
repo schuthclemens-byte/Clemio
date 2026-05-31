@@ -231,7 +231,7 @@ const FocusModePage = () => {
                 >
                   <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
                     {result.avatar_url ? (
-                      <img src={result.avatar_url} className="w-full h-full object-cover" />
+                      <img src={result.avatar_url} alt={`Profilbild von ${result.display_name || "Kontakt"}`} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground">
                         {initials(result.display_name || "")}
@@ -265,7 +265,7 @@ const FocusModePage = () => {
                 >
                   <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
                     {contact.avatar_url ? (
-                      <img src={contact.avatar_url} className="w-full h-full object-cover" />
+                      <img src={contact.avatar_url} alt={`Profilbild von ${contact.display_name}`} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
                         {initials(contact.display_name)}

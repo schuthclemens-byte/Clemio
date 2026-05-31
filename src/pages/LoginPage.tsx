@@ -252,7 +252,7 @@ const LoginPage = () => {
           {/* Logo & Header */}
           <div className="text-center mb-10">
             <div className="relative w-20 h-20 mx-auto mb-5">
-              <img src="/icon-512.png" alt="Clemio app logo" className="w-20 h-20 rounded-3xl shadow-soft" />
+              <img src="/icon-512.png" alt="Clemio voice messenger app icon" className="w-20 h-20 rounded-3xl shadow-soft" />
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight">
               {t("app.welcome")}

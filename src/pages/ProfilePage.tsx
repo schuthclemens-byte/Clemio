@@ -346,7 +346,7 @@ const ProfilePage = () => {
           <div className="relative">
             <div className="w-28 h-28 rounded-3xl overflow-hidden shadow-elevated">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={avatarUrl} alt="Eigenes Profilbild" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full gradient-primary flex items-center justify-center text-primary-foreground text-3xl font-bold">
                   {initials}
