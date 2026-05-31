@@ -53,7 +53,14 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'missing_fields' }), { status: 400, headers: corsHeaders })
   }
 
-  const adminEmail = Deno.env.get('ADMIN_NOTIFICATION_EMAIL') ?? 'clemensschuth@outlook.de';
+  const adminEmail = Deno.env.get('ADMIN_NOTIFICATION_EMAIL');
+  if (!adminEmail) {
+    console.error('ADMIN_NOTIFICATION_EMAIL is not configured; cannot dispatch report alert');
+    return new Response(JSON.stringify({ error: 'admin_email_not_configured' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     const { error } = await supabase.functions.invoke('send-transactional-email', {

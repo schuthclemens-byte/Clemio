@@ -102,7 +102,7 @@ const ReportAdminAlertEmail = ({
 export const template = {
   component: ReportAdminAlertEmail,
   subject: (data) => `[Clemio Report] ${REASON_LABELS[data.reason as string] || 'Neue Meldung'}`,
-  to: 'clemensschuth@outlook.de',
+  // Recipient is provided by the caller (must pass ADMIN_NOTIFICATION_EMAIL env var).
   displayName: 'Report: Admin-Alert',
   previewData: {
     reportId: 'rep-abc-123',
