@@ -178,6 +178,14 @@ const VoiceOnboardingPage = () => {
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-6 py-10 relative overflow-hidden">
+      <Helmet>
+        <title>{isDE ? "Stimme erstellen – Clemio" : "Create your voice – Clemio"}</title>
+        <meta name="description" content={isDE ? "Nimm deine Stimme auf, damit andere deine Nachrichten mit deiner KI-Stimme hören können." : "Record your voice so others can hear your messages with your AI voice."} />
+        <link rel="canonical" href="https://clemio.app/voice-setup" />
+        <meta property="og:title" content={isDE ? "Stimme erstellen – Clemio" : "Create your voice – Clemio"} />
+        <meta property="og:description" content={isDE ? "Sprachnachrichten mit deiner eigenen Stimme. KI-Voice-Cloning für Clemio." : "Voice messages with your own voice. AI voice cloning for Clemio."} />
+        <meta property="og:url" content="https://clemio.app/voice-setup" />
+      </Helmet>
       {/* Ambient glow */}
       {isRecording && (
         <div
