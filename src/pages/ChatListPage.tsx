@@ -507,6 +507,7 @@ const ChatListPage = () => {
               <button
                 onClick={() => setSearch("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-muted-foreground/20 flex items-center justify-center"
+                aria-label="Suche löschen"
               >
                 <X className="w-3 h-3 text-muted-foreground" />
               </button>
