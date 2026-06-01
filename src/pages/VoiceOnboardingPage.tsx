@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Mic, Square, RotateCcw, ArrowRight, CheckCircle, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
