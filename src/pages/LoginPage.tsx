@@ -255,7 +255,9 @@ const LoginPage = () => {
               <img src="/icon-512.png" alt="Clemio voice messenger app icon" className="w-20 h-20 rounded-3xl shadow-soft" />
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight">
-              {t("app.welcome")}
+              {mode === "login"
+                ? (t("app.loginTitle") || "Anmelden bei Clemio")
+                : (t("app.registerTitle") || "Konto bei Clemio erstellen")}
             </h1>
             <p className="text-muted-foreground mt-2.5 text-[0.938rem] leading-relaxed">
               {mode === "login"
