@@ -212,6 +212,52 @@ const TermsPage = () => {
           <p className="font-medium text-foreground">{t("legal.terms14NoGuarantee")}</p>
         </Section>
 
+        {/* 15 - Widerrufsrecht */}
+        <section
+          className="bg-card rounded-2xl shadow-sm border-2 border-primary/30 animate-reveal-up overflow-hidden"
+          style={{ animationDelay: "705ms" }}
+        >
+          <div className="bg-primary/10 px-5 py-3 flex items-center gap-2">
+            <span className="text-lg">↩️</span>
+            <h3 className="font-semibold text-[0.938rem]">{t("legal.terms15Title")}</h3>
+          </div>
+          <div className="p-5 text-sm text-muted-foreground leading-relaxed space-y-3">
+            <p>{t("legal.terms15Intro")}</p>
+
+            <p className="font-medium text-foreground">{t("legal.terms15PeriodTitle")}</p>
+            <p>{t("legal.terms15PeriodText")}</p>
+
+            <p className="font-medium text-foreground">{t("legal.terms15ExpiryTitle")}</p>
+            <p>{t("legal.terms15ExpiryText")}</p>
+
+            <p className="font-medium text-foreground">{t("legal.terms15HowTitle")}</p>
+            <p>{t("legal.terms15HowText")}</p>
+
+            <div className="bg-secondary/50 rounded-xl p-3 space-y-2">
+              <p><strong>{t("legal.terms15AppleTitle")}</strong></p>
+              <p>{t("legal.terms15AppleText")}</p>
+              <p>
+                <a href="https://reportaproblem.apple.com" className="text-primary hover:underline" target="_blank" rel="noopener">reportaproblem.apple.com</a>
+              </p>
+            </div>
+
+            <div className="bg-secondary/50 rounded-xl p-3 space-y-2">
+              <p><strong>{t("legal.terms15GoogleTitle")}</strong></p>
+              <p>{t("legal.terms15GoogleText")}</p>
+              <p>
+                <a href="https://play.google.com/store/account/subscriptions" className="text-primary hover:underline" target="_blank" rel="noopener">play.google.com/store/account/subscriptions</a>
+              </p>
+            </div>
+
+            <p className="font-medium text-foreground">{t("legal.terms15ConsequencesTitle")}</p>
+            <p>{t("legal.terms15ConsequencesText")}</p>
+
+            <p className="font-medium text-foreground">{t("legal.terms15FormTitle")}</p>
+            <pre className="bg-secondary/50 rounded-xl p-3 text-xs whitespace-pre-wrap font-mono">{t("legal.terms15FormText")}</pre>
+          </div>
+        </section>
+
+
         {/* Contact */}
         <section className="bg-card rounded-2xl p-5 shadow-sm border border-border animate-reveal-up" style={{ animationDelay: "720ms" }}>
           <h3 className="font-semibold text-[0.938rem] mb-3">{t("legal.termsContactTitle")}</h3>
