@@ -35,6 +35,14 @@ interface NormalizedEvent {
   raw: unknown;
 }
 
+// Hard safety flag. Must remain `false` until BOTH of the following are done:
+//   1. Apple JWS `signedPayload` verification against https://appleid.apple.com/auth/keys
+//   2. Google Pub/Sub OIDC token verification against Google's JWKS endpoint
+// While this is false, applyToSubscription() is a no-op even if a future code
+// change populates `user_id`. This prevents a leaked shared secret from being
+// used to forge subscription lifecycle events (granting/revoking premium).
+const STORE_SIGNATURE_VERIFICATION_IMPLEMENTED = false;
+
 async function logEvent(provider: string, payload: unknown, normalized: NormalizedEvent | null, error?: string) {
   await admin.from("store_webhook_events" as any).insert({
     provider,
@@ -45,6 +53,11 @@ async function logEvent(provider: string, payload: unknown, normalized: Normaliz
 }
 
 async function applyToSubscription(ev: NormalizedEvent) {
+  if (!STORE_SIGNATURE_VERIFICATION_IMPLEMENTED) {
+    // Refuse to mutate subscriptions until Apple JWS + Google OIDC verification
+    // are implemented. Shared-secret auth alone is not sufficient.
+    return;
+  }
   if (!ev.user_id) return; // Cannot map without a user
   const patch: Record<string, unknown> = {
     subscription_provider: ev.provider,
