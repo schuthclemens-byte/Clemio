@@ -312,6 +312,9 @@ const SettingsPage = () => {
         <meta name="description" content="Verwalte dein Clemio-Konto: Sprache, Stimme, Datenschutz, Benachrichtigungen und mehr." />
         <link rel="canonical" href="https://clemio.app/settings" />
         <meta name="robots" content="noindex,follow" />
+        <meta property="og:title" content="Einstellungen – Clemio" />
+        <meta property="og:description" content="Verwalte dein Clemio-Konto: Sprache, Stimme, Datenschutz, Benachrichtigungen und mehr." />
+        <meta property="og:url" content="https://clemio.app/settings" />
       </Helmet>
       {/* Header */}
       <header className="sticky top-0 z-20 bg-card/90 glass border-b border-border/50">
