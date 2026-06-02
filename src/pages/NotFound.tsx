@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Home } from "lucide-react";
 
 const NotFound = () => {
@@ -12,6 +13,13 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
+      <Helmet>
+        <title>Seite nicht gefunden – Clemio</title>
+        <meta name="description" content="Die gesuchte Seite existiert nicht oder wurde verschoben. Kehre zur Clemio-Startseite zurück." />
+        <meta name="robots" content="noindex,follow" />
+        <meta property="og:title" content="Seite nicht gefunden – Clemio" />
+        <meta property="og:description" content="Die gesuchte Seite existiert nicht oder wurde verschoben." />
+      </Helmet>
       <div className="text-center max-w-sm">
         <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
           <span className="text-3xl font-extrabold text-primary">404</span>
