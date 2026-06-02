@@ -172,15 +172,16 @@ const MediaGallerySheet = ({ open, onClose, conversationId }: MediaGallerySheetP
                     key={item.id}
                     onClick={() => setFullscreenUrl(item.mediaUrl || item.content)}
                     className="aspect-square rounded-lg overflow-hidden bg-secondary/50 hover:opacity-90 transition-opacity"
+                    aria-label={item.messageType === "video" ? "Video aus dem Chat öffnen" : "Bild aus dem Chat öffnen"}
                   >
                     {item.messageType === "video" ? (
                       <div className="w-full h-full flex items-center justify-center bg-secondary">
-                        <Film className="w-8 h-8 text-muted-foreground" />
+                        <Film className="w-8 h-8 text-muted-foreground" aria-hidden="true" />
                       </div>
                     ) : (
                       <img
                         src={item.mediaUrl || item.content}
-                        alt=""
+                        alt="Bild aus dem Chat-Verlauf"
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
@@ -202,18 +203,20 @@ const MediaGallerySheet = ({ open, onClose, conversationId }: MediaGallerySheetP
           <button
             onClick={() => setFullscreenUrl(null)}
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center z-10"
+            aria-label="Vorschau schließen"
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-5 h-5 text-white" aria-hidden="true" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); downloadMedia(fullscreenUrl); }}
             className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center z-10"
+            aria-label="Medien herunterladen"
           >
-            <Download className="w-5 h-5 text-white" />
+            <Download className="w-5 h-5 text-white" aria-hidden="true" />
           </button>
           <img
             src={fullscreenUrl}
-            alt=""
+            alt="Bild in voller Größe"
             className="max-w-full max-h-full object-contain"
           />
         </div>
