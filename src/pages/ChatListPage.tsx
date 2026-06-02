@@ -458,6 +458,9 @@ const ChatListPage = () => {
         <meta name="description" content="Deine Clemio-Chats: Sprachnachrichten, Echtzeit-Übersetzung und Anrufe an einem Ort." />
         <link rel="canonical" href="https://clemio.app/chats" />
         <meta name="robots" content="noindex,follow" />
+        <meta property="og:title" content="Chats – Clemio" />
+        <meta property="og:description" content="Deine Clemio-Chats: Sprachnachrichten, Echtzeit-Übersetzung und Anrufe an einem Ort." />
+        <meta property="og:url" content="https://clemio.app/chats" />
       </Helmet>
       <header className="sticky top-0 z-10 glass-strong border-b border-border/30" style={{ background: 'linear-gradient(135deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.8))' }}>
         <div className="flex items-center justify-between px-5 py-4">
