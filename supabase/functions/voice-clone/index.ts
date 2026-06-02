@@ -49,6 +49,43 @@ serve(async (req) => {
       });
     }
 
+    // SECURITY: This endpoint only handles CONTACT voice clones.
+    // Own-voice cloning MUST go through `verify-and-clone-voice` which enforces
+    // speaker verification (sentence match + Gemini speaker comparison).
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!contactUserId || !UUID_RE.test(contactUserId)) {
+      return new Response(JSON.stringify({
+        error: "contact_user_id_required",
+        message: "Own-voice cloning must use the verified flow (verify-and-clone-voice).",
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (contactUserId === user.id) {
+      return new Response(JSON.stringify({ error: "invalid_contact" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    {
+      const adminCheck = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const { data: contactProfile } = await adminCheck
+        .from("profiles")
+        .select("id")
+        .eq("id", contactUserId)
+        .maybeSingle();
+      if (!contactProfile) {
+        return new Response(JSON.stringify({ error: "contact_not_found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
 
     // Quota: voice cloning counts as voice_retrain (limited per month)
     const quota = await consumeQuota(user.id, "voice_retrain", 1);
