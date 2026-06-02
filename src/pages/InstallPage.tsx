@@ -56,6 +56,7 @@ const InstallPage = () => {
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={goBack}
+            aria-label="Zurück"
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
