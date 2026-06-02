@@ -32,7 +32,16 @@
     <meta name="twitter:description" content="Sprachnachrichten, Echtzeit-Übersetzung &amp; barrierefreie Kommunikation" />
     <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1632792c-3482-42cd-a77b-90e451c680a2/id-preview-652b1c0a--c52e8e1f-5ad4-47fe-b0e2-e8f9449395ee.lovable.app-1774113198296.png" />
 
-    <!-- Structured data: Organization + WebSite -->
+    <!-- hreflang: alternate language versions (same URL, content language switches client-side) -->
+    <link rel="alternate" hreflang="de" href="https://clemio.app/" />
+    <link rel="alternate" hreflang="en" href="https://clemio.app/" />
+    <link rel="alternate" hreflang="es" href="https://clemio.app/" />
+    <link rel="alternate" hreflang="fr" href="https://clemio.app/" />
+    <link rel="alternate" hreflang="tr" href="https://clemio.app/" />
+    <link rel="alternate" hreflang="ar" href="https://clemio.app/" />
+    <link rel="alternate" hreflang="x-default" href="https://clemio.app/" />
+
+    <!-- Structured data: Organization + WebSite + MobileApplication -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -43,7 +52,8 @@
           "name": "Clemio",
           "url": "https://clemio.app/",
           "logo": "https://clemio.app/icon-512.png",
-          "email": "support@clemio.app"
+          "email": "support@clemio.app",
+          "sameAs": ["https://clemio.app/"]
         },
         {
           "@type": "WebSite",
@@ -51,6 +61,24 @@
           "url": "https://clemio.app/",
           "name": "Clemio",
           "description": "Sprachnachrichten, Echtzeit-Übersetzung & barrierefreie Kommunikation",
+          "inLanguage": ["de","en","es","fr","tr","ar"],
+          "publisher": { "@id": "https://clemio.app/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://clemio.app/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "MobileApplication",
+          "@id": "https://clemio.app/#app",
+          "name": "Clemio",
+          "operatingSystem": "iOS, Android, Web, Windows",
+          "applicationCategory": "CommunicationApplication",
+          "description": "Voice-first Messenger mit Echtzeit-Übersetzung, KI-Stimme und barrierefreier Kommunikation.",
+          "url": "https://clemio.app/",
+          "image": "https://clemio.app/icon-512.png",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
           "publisher": { "@id": "https://clemio.app/#organization" }
         }
       ]
