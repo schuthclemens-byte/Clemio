@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Volume2 } from "lucide-react";
 import { useI18n } from "@/contexts/I18nContext";
-import { createPlayableAudio, prefetchLocalizedAudio } from "@/lib/landingAudio";
+import { createPlayableAudio, idlePrefetchLocalizedAudio, warmFallbackAudio } from "@/lib/landingAudio";
 
 interface IntroExperienceProps {
   /** Called once the user has tapped and the intro should fade away. */
@@ -18,9 +18,10 @@ const IntroExperience = ({ onEnter }: IntroExperienceProps) => {
   const [activated, setActivated] = useState(false);
   const triggeredRef = useRef(false);
 
-  // Warm up localized TTS in the background so the first tap plays immediately.
+  // Idle-time prefetch so the first tap plays immediately without blocking first paint.
   useEffect(() => {
-    if (locale !== "de") void prefetchLocalizedAudio(locale);
+    warmFallbackAudio();
+    idlePrefetchLocalizedAudio(locale);
   }, [locale]);
 
   const handleEnter = useCallback(async () => {
