@@ -3,7 +3,7 @@ import { Play, Pause, VolumeX, ArrowRight } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
-import { createPlayableAudio, prefetchLocalizedAudio } from "@/lib/landingAudio";
+import { createPlayableAudio, idlePrefetchLocalizedAudio, warmFallbackAudio } from "@/lib/landingAudio";
 import { useLaunchMode } from "@/hooks/useLaunchMode";
 
 const HeroSectionV2 = () => {
@@ -15,9 +15,10 @@ const HeroSectionV2 = () => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Warm up localized TTS on language change.
+  // Defer all audio prefetches to idle time — never block first paint.
   useEffect(() => {
-    if (locale !== "de") void prefetchLocalizedAudio(locale);
+    warmFallbackAudio();
+    idlePrefetchLocalizedAudio(locale);
   }, [locale]);
 
   // Cleanup
