@@ -91,6 +91,26 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /index
+Disallow: /landing
+Disallow: /auth/callback
+Disallow: /reset-password
+Disallow: /phone-onboarding
+Disallow: /chats
+Disallow: /chat/
+Disallow: /settings
+Disallow: /profile
+Disallow: /admin
+Disallow: /call/
+Disallow: /call-history
+Disallow: /voice-recordings
+Disallow: /voice-setup
+Disallow: /focus-mode
+Disallow: /contact-autoplay
+Disallow: /archived-chats
+Disallow: /blocked-users
+Disallow: /trash
+Disallow: /design-settings
 
 Sitemap: https://clemio.app/sitemap.xml
 Host: clemio.app
