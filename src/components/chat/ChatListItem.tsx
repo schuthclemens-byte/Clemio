@@ -44,7 +44,7 @@ const ChatListItem = forwardRef<HTMLButtonElement, ChatListItemProps>(({ name, l
         }}
       >
         {avatar ? (
-          <img src={avatar} alt={name} className="w-full h-full object-cover" />
+          <img src={avatar} alt={`Profilbild von ${name}`} className="w-full h-full object-cover" />
         ) : (
           initials
         )}

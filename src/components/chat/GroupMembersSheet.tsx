@@ -285,7 +285,7 @@ const GroupMembersSheet = ({ open, onClose, conversationId, creatorId, onLeft, g
                   className="relative w-20 h-20 rounded-full overflow-hidden group"
                 >
                   {groupAvatarUrl ? (
-                    <img src={groupAvatarUrl} alt="Gruppen-Avatar" className="w-full h-full object-cover" />
+                    <img src={groupAvatarUrl} alt="Avatar der Gruppe" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xl">
                       {avatarInitials}
