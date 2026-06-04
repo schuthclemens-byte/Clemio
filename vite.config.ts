@@ -89,4 +89,8 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    // Pre-bundle large icon barrel so dev/preview don't re-resolve each icon on first paint.
+    include: ["lucide-react"],
+  },
 }));
