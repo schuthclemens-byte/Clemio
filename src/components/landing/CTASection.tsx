@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { LogIn, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/contexts/I18nContext";
+
+// Direct public storage URL — avoids pulling the Supabase client into the landing bundle.
+const APK_URL = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/downloads/clemio.apk`;
 
 const CTASection = () => {
   const navigate = useNavigate();
@@ -12,12 +14,12 @@ const CTASection = () => {
   const [apkUrl, setApkUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data } = supabase.storage.from("downloads").getPublicUrl("clemio.apk");
-    if (data?.publicUrl) {
-      fetch(data.publicUrl, { method: "HEAD" }).then(r => {
-        if (r.ok) setApkUrl(data.publicUrl);
-      }).catch(() => {});
-    }
+    const id = (window.requestIdleCallback ?? ((cb: any) => setTimeout(cb, 1500)))(() => {
+      fetch(APK_URL, { method: "HEAD" })
+        .then(r => { if (r.ok) setApkUrl(APK_URL); })
+        .catch(() => {});
+    });
+    return () => (window.cancelIdleCallback ?? clearTimeout)(id as any);
   }, []);
 
   return (
