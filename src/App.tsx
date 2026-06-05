@@ -49,6 +49,7 @@ const AdminPage = lazy(() => import("./pages/AdminPage"));
 const BlockedUsersPage = lazy(() => import("./pages/BlockedUsersPage"));
 const ArchivedChatsPage = lazy(() => import("./pages/ArchivedChatsPage"));
 const TrashPage = lazy(() => import("./pages/TrashPage"));
+const BlogBestVoiceMessagingAppsPage = lazy(() => import("./pages/BlogBestVoiceMessagingAppsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
