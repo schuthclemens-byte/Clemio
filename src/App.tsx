@@ -132,6 +132,7 @@ const App = () => (
                             <Route path="/privacy" element={<PrivacyPolicyPage />} />
                             <Route path="/terms" element={<TermsPage />} />
                             <Route path="/impressum" element={<ImpressumPage />} />
+                            <Route path="/blog/best-voice-messaging-apps-2024" element={<BlogBestVoiceMessagingAppsPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </Suspense>
