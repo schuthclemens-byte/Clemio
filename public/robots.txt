@@ -91,11 +91,14 @@ Allow: /
 
 User-agent: *
 Allow: /
+# Redirect-Routen (zeigen auf /)
 Disallow: /index
 Disallow: /landing
+# Auth-/interne Flows (nicht indexierbar)
 Disallow: /auth/callback
 Disallow: /reset-password
 Disallow: /phone-onboarding
+# Geschützte App-Routen (nur eingeloggt erreichbar)
 Disallow: /chats
 Disallow: /chat/
 Disallow: /settings
@@ -104,13 +107,13 @@ Disallow: /admin
 Disallow: /call/
 Disallow: /call-history
 Disallow: /voice-recordings
-Disallow: /voice-setup
 Disallow: /focus-mode
 Disallow: /contact-autoplay
 Disallow: /archived-chats
 Disallow: /blocked-users
 Disallow: /trash
 Disallow: /design-settings
+# Öffentlich indexierbar (in sitemap.xml): /, /login, /install, /onboarding, /voice-setup, /privacy, /terms, /impressum
 
 Sitemap: https://clemio.app/sitemap.xml
 Host: clemio.app
