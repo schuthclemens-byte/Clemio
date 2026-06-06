@@ -14,7 +14,9 @@
     "typecheck": "tsc --noEmit",
     "lint:ci": "eslint . --quiet",
     "security:scan": "node scripts/security-scan.mjs",
-    "security:rls": "node scripts/rls-policy-check.mjs"
+    "security:rls": "node scripts/rls-policy-check.mjs",
+    "sitemap:validate": "node scripts/sitemap-validate.mjs",
+    "sitemap:validate:http": "node scripts/sitemap-validate.mjs --http"
   },
   "dependencies": {
     "@capacitor-community/speech-recognition": "^7.0.1",
