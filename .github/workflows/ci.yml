@@ -42,6 +42,14 @@ jobs:
       - name: App security rules
         run: bun run security:scan
 
+      - name: Sitemap validation (local)
+        run: bun run sitemap:validate
+
+      - name: Sitemap validation (HTTP 200 against production)
+        run: bun run sitemap:validate:http
+        env:
+          BASE_URL: https://clemio.app
+
       - name: RLS policy matrix
         env:
           RLS_DATABASE_URL: ${{ secrets.RLS_DATABASE_URL }}
