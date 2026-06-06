@@ -32,6 +32,37 @@ const itemListJsonLd = {
   ],
 };
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "Welche Voice-Messaging-App übersetzt automatisch?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Clemio – als bislang einzige App in Echtzeit und in deiner eigenen Stimme.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Gibt es eine Sprachnachrichten-App für Blinde?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Clemio bietet Fokus-Modus, Auto-Play, Vorlesen und große Bedienflächen – speziell für sehbehinderte Menschen entwickelt.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Ist Clemio kostenlos?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Ja, die Grundfunktionen sind kostenlos. Voice Cloning und Echtzeit-Übersetzung gibt es mit 3 Tagen Premium-Trial.",
+      },
+    },
+  ],
+};
+
 const Yes = () => <Check className="w-5 h-5 text-primary mx-auto" aria-label="Ja" />;
 const No = () => <Minus className="w-5 h-5 text-muted-foreground mx-auto" aria-label="Nein" />;
 
