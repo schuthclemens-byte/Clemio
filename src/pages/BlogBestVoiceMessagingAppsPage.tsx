@@ -90,6 +90,7 @@ const BlogBestVoiceMessagingAppsPage = () => {
         <meta name="robots" content="index,follow,max-image-preview:large" />
         <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(itemListJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
 
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur border-b border-border/50">
