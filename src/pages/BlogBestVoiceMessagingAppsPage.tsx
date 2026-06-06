@@ -72,14 +72,14 @@ const BlogBestVoiceMessagingAppsPage = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Beste Sprachnachrichten-App 2024: Clemio, Voxer & WhatsApp im Test</title>
+        <title>Beste Sprach-Apps 2024: Clemio, Voxer & WhatsApp im Test</title>
         <meta
           name="description"
           content="Welche Voice-Messaging-App ist 2024 die beste? Vergleich von Clemio, Voxer und WhatsApp – mit Echtzeit-Übersetzung, Voice Cloning und Barrierefreiheit."
         />
         <link rel="canonical" href={CANONICAL} />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content="Beste Sprachnachrichten-App 2024: Clemio, Voxer & WhatsApp im Test" />
+        <meta property="og:title" content="Beste Sprach-Apps 2024: Clemio, Voxer & WhatsApp im Test" />
         <meta
           property="og:description"
           content="Vergleich der besten Voice-Messaging-Apps 2024 – Funktionen, Übersetzung, Voice Cloning und Barrierefreiheit."
