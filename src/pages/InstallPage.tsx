@@ -61,7 +61,7 @@ const InstallPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="font-semibold text-lg">Clemio herunterladen</h1>
+          <h1 className="font-semibold text-lg">Clemio installieren – App für Handy & Computer</h1>
         </div>
       </header>
 
