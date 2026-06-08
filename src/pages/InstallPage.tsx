@@ -51,6 +51,11 @@ const InstallPage = () => {
         <meta property="og:title" content="Clemio installieren – iOS, Android, Desktop & PWA" />
         <meta property="og:description" content="So holst du dir Clemio auf jedes Gerät – Voice-first Messenger mit Echtzeit-Übersetzung." />
         <meta property="og:url" content="https://clemio.app/install" />
+        <meta property="og:image" content="https://clemio.app/og/clemio-default.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://clemio.app/og/clemio-default.jpg" />
       </Helmet>
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="flex items-center gap-3 px-4 py-3">

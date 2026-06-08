@@ -40,6 +40,10 @@ const WebsitePage = () => {
         <meta property="og:title" content="Clemio – Voice-first Messenger mit Echtzeit-Übersetzung" />
         <meta property="og:description" content="Sprachnachrichten, KI-Stimme und Echtzeit-Übersetzung. Hören statt Lesen." />
         <meta property="og:url" content="https://clemio.app/" />
+        <meta property="og:image" content="https://clemio.app/og/clemio-default.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:image" content="https://clemio.app/og/clemio-default.jpg" />
       </Helmet>
       <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[60]">
         <LanguageSwitcher />
