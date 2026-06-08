@@ -22,6 +22,16 @@ const articleJsonLd = {
   mainEntityOfPage: CANONICAL,
 };
 
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Startseite", item: "https://clemio.app/" },
+    { "@type": "ListItem", position: 2, name: "Blog", item: "https://clemio.app/" },
+    { "@type": "ListItem", position: 3, name: "Beste Sprach-Apps 2024", item: CANONICAL },
+  ],
+};
+
 const itemListJsonLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
@@ -85,10 +95,15 @@ const BlogBestVoiceMessagingAppsPage = () => {
           content="Vergleich der besten Voice-Messaging-Apps 2024 – Funktionen, Übersetzung, Voice Cloning und Barrierefreiheit."
         />
         <meta property="og:url" content={CANONICAL} />
+        <meta property="og:image" content="https://clemio.app/og/blog-voice-apps.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="article:published_time" content={PUBLISHED} />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://clemio.app/og/blog-voice-apps.jpg" />
         <meta name="robots" content="index,follow,max-image-preview:large" />
         <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(itemListJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
@@ -279,6 +294,20 @@ const BlogBestVoiceMessagingAppsPage = () => {
             Jetzt Clemio öffnen
           </Link>
         </section>
+
+        <aside aria-labelledby="related-heading" className="mt-12 pt-8 border-t border-border">
+          <h2 id="related-heading" className="text-xl font-semibold mb-4">Weitere hilfreiche Artikel</h2>
+          <ul className="space-y-3">
+            <li>
+              <Link to="/blog/hands-free-bluetooth-messaging-guide" className="text-primary underline underline-offset-4 hover:no-underline">
+                Hands-free Messaging mit Bluetooth-Headset: Der Clemio-Guide
+              </Link>
+              <p className="text-sm text-muted-foreground mt-1">
+                So nutzt du Clemio freihändig mit AirPods, Sony &amp; Co. – Auto-Play, Voice Cloning, Echtzeit-Übersetzung.
+              </p>
+            </li>
+          </ul>
+        </aside>
       </article>
     </div>
   );

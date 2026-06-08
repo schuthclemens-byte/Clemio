@@ -11,6 +11,11 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
     { to: "/install", label: t("landing.footerLinkInstall") },
   ];
 
+  const blogLinks = [
+    { to: "/blog/best-voice-messaging-apps-2024", label: "Beste Sprach-Apps 2024" },
+    { to: "/blog/hands-free-bluetooth-messaging-guide", label: "Hands-free mit Bluetooth" },
+  ];
+
   const legalLinks = [
     { to: "/privacy", label: t("landing.footerPrivacy") },
     { to: "/terms", label: t("landing.footerTerms") },
@@ -20,7 +25,7 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
   return (
     <footer ref={ref} className="border-t border-border bg-background">
       <div className="max-w-6xl mx-auto px-6 py-16 sm:py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-2 max-w-sm">
             <div className="flex items-center gap-2.5 mb-4">
@@ -66,6 +71,25 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
                   {t("landing.footerContact")}
                 </a>
               </li>
+            </ul>
+          </div>
+
+          {/* Blog */}
+          <div>
+            <h3 className="text-xs font-semibold tracking-[0.18em] uppercase text-foreground/70 mb-4">
+              Blog
+            </h3>
+            <ul className="space-y-2.5">
+              {blogLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

@@ -33,6 +33,11 @@ const PrivacyPolicyPage = () => {
         <meta property="og:title" content="Datenschutzerklärung – Clemio" />
         <meta property="og:description" content="Wie Clemio personenbezogene Daten DSGVO-konform verarbeitet." />
         <meta property="og:url" content="https://clemio.app/privacy" />
+        <meta property="og:image" content="https://clemio.app/og/clemio-default.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://clemio.app/og/clemio-default.jpg" />
       </Helmet>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">

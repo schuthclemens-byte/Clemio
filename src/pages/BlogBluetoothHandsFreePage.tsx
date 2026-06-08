@@ -22,6 +22,16 @@ const articleJsonLd = {
   mainEntityOfPage: CANONICAL,
 };
 
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Startseite", item: "https://clemio.app/" },
+    { "@type": "ListItem", position: 2, name: "Blog", item: "https://clemio.app/" },
+    { "@type": "ListItem", position: 3, name: "Hands-free Bluetooth Guide", item: CANONICAL },
+  ],
+};
+
 const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -72,10 +82,15 @@ const BlogBluetoothHandsFreePage = () => {
           content="Voice-first Messaging mit Bluetooth: Auto-Play, Voice Cloning und Echtzeit-Übersetzung."
         />
         <meta property="og:url" content={CANONICAL} />
+        <meta property="og:image" content="https://clemio.app/og/blog-bluetooth.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="article:published_time" content={PUBLISHED} />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://clemio.app/og/blog-bluetooth.jpg" />
         <meta name="robots" content="index,follow,max-image-preview:large" />
         <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
 
@@ -229,6 +244,20 @@ const BlogBluetoothHandsFreePage = () => {
             Jetzt Clemio öffnen
           </Link>
         </section>
+
+        <aside aria-labelledby="related-heading" className="mt-12 pt-8 border-t border-border">
+          <h2 id="related-heading" className="text-xl font-semibold mb-4">Weitere hilfreiche Artikel</h2>
+          <ul className="space-y-3">
+            <li>
+              <Link to="/blog/best-voice-messaging-apps-2024" className="text-primary underline underline-offset-4 hover:no-underline">
+                Die besten Sprachnachrichten-Apps 2024 im Vergleich
+              </Link>
+              <p className="text-sm text-muted-foreground mt-1">
+                Clemio, Voxer und WhatsApp im direkten Test – Funktionen, Übersetzung, Barrierefreiheit.
+              </p>
+            </li>
+          </ul>
+        </aside>
       </article>
     </div>
   );
