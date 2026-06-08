@@ -51,6 +51,7 @@ const ArchivedChatsPage = lazy(() => import("./pages/ArchivedChatsPage"));
 const TrashPage = lazy(() => import("./pages/TrashPage"));
 const BlogBestVoiceMessagingAppsPage = lazy(() => import("./pages/BlogBestVoiceMessagingAppsPage"));
 const BlogBluetoothHandsFreePage = lazy(() => import("./pages/BlogBluetoothHandsFreePage"));
+const BlogVoiceMessagingForBusinessPage = lazy(() => import("./pages/BlogVoiceMessagingForBusinessPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
