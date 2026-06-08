@@ -136,6 +136,7 @@ const App = () => (
                             <Route path="/impressum" element={<ImpressumPage />} />
                             <Route path="/blog/best-voice-messaging-apps-2024" element={<BlogBestVoiceMessagingAppsPage />} />
                             <Route path="/blog/hands-free-bluetooth-messaging-guide" element={<BlogBluetoothHandsFreePage />} />
+                            <Route path="/blog/voice-messaging-for-business-guide" element={<BlogVoiceMessagingForBusinessPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </Suspense>
