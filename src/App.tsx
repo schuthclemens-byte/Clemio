@@ -51,6 +51,7 @@ const ArchivedChatsPage = lazy(() => import("./pages/ArchivedChatsPage"));
 const TrashPage = lazy(() => import("./pages/TrashPage"));
 const BlogBestVoiceMessagingAppsPage = lazy(() => import("./pages/BlogBestVoiceMessagingAppsPage"));
 const BlogBluetoothHandsFreePage = lazy(() => import("./pages/BlogBluetoothHandsFreePage"));
+const BlogVoiceMessagingForBusinessPage = lazy(() => import("./pages/BlogVoiceMessagingForBusinessPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -135,6 +136,7 @@ const App = () => (
                             <Route path="/impressum" element={<ImpressumPage />} />
                             <Route path="/blog/best-voice-messaging-apps-2024" element={<BlogBestVoiceMessagingAppsPage />} />
                             <Route path="/blog/hands-free-bluetooth-messaging-guide" element={<BlogBluetoothHandsFreePage />} />
+                            <Route path="/blog/voice-messaging-for-business-guide" element={<BlogVoiceMessagingForBusinessPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </Suspense>
