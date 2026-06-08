@@ -11,6 +11,11 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
     { to: "/install", label: t("landing.footerLinkInstall") },
   ];
 
+  const blogLinks = [
+    { to: "/blog/best-voice-messaging-apps-2024", label: "Beste Sprach-Apps 2024" },
+    { to: "/blog/hands-free-bluetooth-messaging-guide", label: "Hands-free mit Bluetooth" },
+  ];
+
   const legalLinks = [
     { to: "/privacy", label: t("landing.footerPrivacy") },
     { to: "/terms", label: t("landing.footerTerms") },
@@ -20,7 +25,7 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
   return (
     <footer ref={ref} className="border-t border-border bg-background">
       <div className="max-w-6xl mx-auto px-6 py-16 sm:py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-2 max-w-sm">
             <div className="flex items-center gap-2.5 mb-4">
