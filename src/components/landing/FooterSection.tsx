@@ -74,6 +74,25 @@ const FooterSection = forwardRef<HTMLElement>((_, ref) => {
             </ul>
           </div>
 
+          {/* Blog */}
+          <div>
+            <h3 className="text-xs font-semibold tracking-[0.18em] uppercase text-foreground/70 mb-4">
+              Blog
+            </h3>
+            <ul className="space-y-2.5">
+              {blogLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Legal */}
           <div>
             <h3 className="text-xs font-semibold tracking-[0.18em] uppercase text-foreground/70 mb-4">
