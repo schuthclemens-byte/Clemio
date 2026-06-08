@@ -32,6 +32,11 @@ const ImpressumPage = () => {
         <meta property="og:title" content="Impressum – Clemio" />
         <meta property="og:description" content="Anbieterkennzeichnung gemäß § 5 DDG." />
         <meta property="og:url" content="https://clemio.app/impressum" />
+        <meta property="og:image" content="https://clemio.app/og/clemio-default.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://clemio.app/og/clemio-default.jpg" />
         <script type="application/ld+json">{JSON.stringify(localBusinessJsonLd)}</script>
       </Helmet>
       <header className="sticky top-0 z-10 bg-card/90 glass border-b border-border/50">
