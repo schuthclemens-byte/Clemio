@@ -75,6 +75,9 @@ const BlogVoiceMessagingForBusinessPage = () => {
           content="Wie Business-Teams mit Voice Messaging, Voice Cloning und Echtzeit-Übersetzung schneller, menschlicher und global kommunizieren – der Clemio-Guide."
         />
         <link rel="canonical" href={CANONICAL} />
+        <link rel="alternate" hrefLang="de" href={CANONICAL} />
+        <link rel="alternate" hrefLang="en" href="https://clemio.app/blog/en/voice-messaging-for-business" />
+        <link rel="alternate" hrefLang="x-default" href={CANONICAL} />
         <meta property="og:type" content="article" />
         <meta property="og:title" content="Voice Messaging für Business-Teams" />
         <meta
