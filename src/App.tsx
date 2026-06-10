@@ -137,8 +137,10 @@ const App = () => (
                             <Route path="/terms" element={<TermsPage />} />
                             <Route path="/impressum" element={<ImpressumPage />} />
                             <Route path="/blog/best-voice-messaging-apps-2024" element={<BlogBestVoiceMessagingAppsPage />} />
+                            <Route path="/blog/en/best-voice-messaging-apps" element={<BlogBestVoiceMessagingAppsEnPage />} />
                             <Route path="/blog/hands-free-bluetooth-messaging-guide" element={<BlogBluetoothHandsFreePage />} />
                             <Route path="/blog/voice-messaging-for-business-guide" element={<BlogVoiceMessagingForBusinessPage />} />
+                            <Route path="/blog/en/voice-messaging-for-business" element={<BlogVoiceMessagingForBusinessEnPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </Suspense>
