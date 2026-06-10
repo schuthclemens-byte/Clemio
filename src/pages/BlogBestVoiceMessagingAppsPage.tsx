@@ -88,6 +88,9 @@ const BlogBestVoiceMessagingAppsPage = () => {
           content="Welche Voice-Messaging-App ist 2024 die beste? Vergleich von Clemio, Voxer und WhatsApp – mit Echtzeit-Übersetzung, Voice Cloning und Barrierefreiheit."
         />
         <link rel="canonical" href={CANONICAL} />
+        <link rel="alternate" hrefLang="de" href={CANONICAL} />
+        <link rel="alternate" hrefLang="en" href="https://clemio.app/blog/en/best-voice-messaging-apps" />
+        <link rel="alternate" hrefLang="x-default" href={CANONICAL} />
         <meta property="og:type" content="article" />
         <meta property="og:title" content="Beste Sprach-Apps 2024: Clemio, Voxer & WhatsApp im Test" />
         <meta
