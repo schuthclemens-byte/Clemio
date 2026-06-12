@@ -4,9 +4,11 @@ import App from "./App.tsx";
 import "./index.css";
 import { initInstallPromptCapture } from "./lib/installPrompt";
 import { installGlobalErrorLogging } from "./lib/appErrorLogging";
+import { initWebVitalsReporter } from "./lib/webVitalsReporter";
 
 initInstallPromptCapture();
 installGlobalErrorLogging();
+initWebVitalsReporter();
 
 // Unregister service workers in iframe/preview contexts to prevent stale caches
 const isInIframe = (() => {
