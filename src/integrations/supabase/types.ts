@@ -1345,6 +1345,39 @@ export type Database = {
         }
         Relationships: []
       }
+      web_vitals_samples: {
+        Row: {
+          created_at: string
+          device: string | null
+          id: string
+          metric: string
+          navigation_type: string | null
+          rating: string | null
+          route: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          id?: string
+          metric: string
+          navigation_type?: string | null
+          rating?: string | null
+          route: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          id?: string
+          metric?: string
+          navigation_type?: string | null
+          rating?: string | null
+          route?: string
+          value?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1467,6 +1500,19 @@ export type Database = {
       get_premium_status: { Args: never; Returns: Json }
       get_user_security_email: { Args: { _user_id: string }; Returns: string }
       get_user_usage_summary: { Args: { _user_id?: string }; Returns: Json }
+      get_web_vitals_summary: {
+        Args: { _days?: number }
+        Returns: {
+          delta_pct: number
+          good_pct: number
+          metric: string
+          p75_current: number
+          p75_previous: number
+          route: string
+          sample_count_current: number
+          sample_count_previous: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
