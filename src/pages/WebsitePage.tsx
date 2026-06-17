@@ -49,12 +49,14 @@ const WebsitePage = () => {
         <LanguageSwitcher />
       </div>
 
-      <HeroSectionV2 />
-      <FeaturesSectionV2 />
-      <HowItWorksSection />
-      <EmotionSection />
-      <PrivacySection />
-      <FinalCTASection />
+      <main>
+        <HeroSectionV2 />
+        <FeaturesSectionV2 />
+        <HowItWorksSection />
+        <EmotionSection />
+        <PrivacySection />
+        <FinalCTASection />
+      </main>
       <FooterSection />
     </div>
   );
