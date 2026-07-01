@@ -99,6 +99,7 @@ const App = () => (
             <AccessibilityProvider>
               <AuthProvider>
                 <CallProvider>
+                  <AppLockProvider>
                   <PresenceTracker>
                     <TooltipProvider>
                       <Toaster />
@@ -109,6 +110,7 @@ const App = () => (
                         <IncomingCallOverlay />
                         <PushPromptSheet />
                         <AppUpdateBanner />
+                        <AppLockScreen />
                         <Suspense fallback={<PageLoader />}>
                           <Routes>
                             <Route path="/" element={<Index />} />
