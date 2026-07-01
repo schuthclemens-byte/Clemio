@@ -221,6 +221,13 @@ const SettingsPage = () => {
       t("settings.autoCorrect"), t("settings.autoCorrectDesc"),
       t("settings.compactMode"), t("settings.compactModeDesc"),
     ].join(" "),
+    security: [
+      tr("Sicherheit", "Security"),
+      tr("App-Sperre", "App lock"),
+      tr("Biometrie FaceID TouchID Fingerabdruck", "Biometric FaceID TouchID Fingerprint"),
+      tr("PIN-Code", "PIN code"),
+      tr("Automatisch sperren", "Auto-lock"),
+    ].join(" "),
     account: [
       tr("Konto", "Account"),
       t("settings.stayLoggedIn"), t("settings.stayLoggedInDesc"),
