@@ -18,6 +18,8 @@ import { ChatBackgroundProvider } from "@/contexts/ChatBackgroundContext";
 import { DesignSystemProvider, useDesignSystem } from "@/contexts/DesignSystemContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CallProvider } from "@/contexts/CallContext";
+import { AppLockProvider } from "@/contexts/AppLockContext";
+import AppLockScreen from "@/components/AppLockScreen";
 import { useAutoPush } from "@/hooks/useAutoPush";
 import { usePresence } from "@/hooks/usePresence";
 import { useCapacitorInit } from "@/hooks/useCapacitorInit";
