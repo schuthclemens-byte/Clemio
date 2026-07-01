@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import PaywallDialog from "@/components/PaywallDialog";
+import AppLockSettings from "@/components/AppLockSettings";
 
 /** Reusable toggle row */
 const ToggleRow = ({
