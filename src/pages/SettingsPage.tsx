@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import PaywallDialog from "@/components/PaywallDialog";
+import AppLockSettings from "@/components/AppLockSettings";
 
 /** Reusable toggle row */
 const ToggleRow = ({
@@ -143,7 +144,7 @@ const AccordionBody = ({ isOpen, children }: { isOpen: boolean; children: React.
 
 const savedToast = () => toast("Gespeichert ✓", { duration: 2000 });
 
-type SectionKey = "communication" | "playback" | "display" | "account" | "legal";
+type SectionKey = "communication" | "playback" | "display" | "security" | "account" | "legal";
 
 const SettingsPage = () => {
   const { goBack, swipeHandlers } = useSmartBack("/chats");
@@ -220,6 +221,13 @@ const SettingsPage = () => {
       t("settings.highContrast"), t("settings.highContrastDesc"),
       t("settings.autoCorrect"), t("settings.autoCorrectDesc"),
       t("settings.compactMode"), t("settings.compactModeDesc"),
+    ].join(" "),
+    security: [
+      tr("Sicherheit", "Security"),
+      tr("App-Sperre", "App lock"),
+      tr("Biometrie FaceID TouchID Fingerabdruck", "Biometric FaceID TouchID Fingerprint"),
+      tr("PIN-Code", "PIN code"),
+      tr("Automatisch sperren", "Auto-lock"),
     ].join(" "),
     account: [
       tr("Konto", "Account"),
@@ -691,6 +699,14 @@ const SettingsPage = () => {
                 </AccordionBody>
               </div>
             </div>
+          </AccordionBody>
+        </section>}
+
+        {/* ━━━ SICHERHEIT ━━━ */}
+        {sectionVisible("security") && <section>
+          <AccordionHeader icon={Shield} label={tr("Sicherheit", "Security")} isOpen={isSectionOpen("security")} onToggle={() => toggleSection("security")} />
+          <AccordionBody isOpen={isSectionOpen("security")}>
+            <AppLockSettings />
           </AccordionBody>
         </section>}
 

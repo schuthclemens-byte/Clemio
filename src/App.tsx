@@ -18,6 +18,8 @@ import { ChatBackgroundProvider } from "@/contexts/ChatBackgroundContext";
 import { DesignSystemProvider, useDesignSystem } from "@/contexts/DesignSystemContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CallProvider } from "@/contexts/CallContext";
+import { AppLockProvider } from "@/contexts/AppLockContext";
+import AppLockScreen from "@/components/AppLockScreen";
 import { useAutoPush } from "@/hooks/useAutoPush";
 import { usePresence } from "@/hooks/usePresence";
 import { useCapacitorInit } from "@/hooks/useCapacitorInit";
@@ -97,6 +99,7 @@ const App = () => (
             <AccessibilityProvider>
               <AuthProvider>
                 <CallProvider>
+                  <AppLockProvider>
                   <PresenceTracker>
                     <TooltipProvider>
                       <Toaster />
@@ -107,6 +110,7 @@ const App = () => (
                         <IncomingCallOverlay />
                         <PushPromptSheet />
                         <AppUpdateBanner />
+                        <AppLockScreen />
                         <Suspense fallback={<PageLoader />}>
                           <Routes>
                             <Route path="/" element={<Index />} />
@@ -147,6 +151,7 @@ const App = () => (
                       </BrowserRouter>
                     </TooltipProvider>
                   </PresenceTracker>
+                  </AppLockProvider>
                 </CallProvider>
               </AuthProvider>
             </AccessibilityProvider>
