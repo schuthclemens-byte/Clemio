@@ -143,7 +143,7 @@ const AccordionBody = ({ isOpen, children }: { isOpen: boolean; children: React.
 
 const savedToast = () => toast("Gespeichert ✓", { duration: 2000 });
 
-type SectionKey = "communication" | "playback" | "display" | "account" | "legal";
+type SectionKey = "communication" | "playback" | "display" | "security" | "account" | "legal";
 
 const SettingsPage = () => {
   const { goBack, swipeHandlers } = useSmartBack("/chats");
