@@ -701,6 +701,14 @@ const SettingsPage = () => {
           </AccordionBody>
         </section>}
 
+        {/* ━━━ SICHERHEIT ━━━ */}
+        {sectionVisible("security") && <section>
+          <AccordionHeader icon={Shield} label={tr("Sicherheit", "Security")} isOpen={isSectionOpen("security")} onToggle={() => toggleSection("security")} />
+          <AccordionBody isOpen={isSectionOpen("security")}>
+            <AppLockSettings />
+          </AccordionBody>
+        </section>}
+
         {/* ━━━ KONTO ━━━ */}
         {sectionVisible("account") && <section>
           <AccordionHeader icon={Settings2} label={tr("Konto", "Account")} isOpen={isSectionOpen("account")} onToggle={() => toggleSection("account")} />
