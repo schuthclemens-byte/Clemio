@@ -151,6 +151,7 @@ const App = () => (
                       </BrowserRouter>
                     </TooltipProvider>
                   </PresenceTracker>
+                  </AppLockProvider>
                 </CallProvider>
               </AuthProvider>
             </AccessibilityProvider>
