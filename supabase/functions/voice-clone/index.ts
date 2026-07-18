@@ -49,6 +49,14 @@ serve(async (req) => {
       });
     }
 
+    const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // 10 MB
+    if (audioFile.size > MAX_AUDIO_BYTES) {
+      return new Response(JSON.stringify({ error: "audio_too_large" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // SECURITY: This endpoint only handles CONTACT voice clones.
     // Own-voice cloning MUST go through `verify-and-clone-voice` which enforces
     // speaker verification (sentence match + Gemini speaker comparison).

@@ -57,6 +57,14 @@ serve(async (req) => {
       });
     }
 
+    const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // 10 MB pro Datei
+    if (freeSpeechAudio.size > MAX_AUDIO_BYTES || sentenceAudio.size > MAX_AUDIO_BYTES) {
+      return new Response(JSON.stringify({ error: "audio_too_large" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Step 1: Transcribe the sentence audio via ElevenLabs STT
     const sttFormData = new FormData();
     sttFormData.append("file", sentenceAudio);
