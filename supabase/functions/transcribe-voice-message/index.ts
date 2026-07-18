@@ -274,13 +274,13 @@ Deno.serve(async (req) => {
         .update({ audio_transcript_status: "failed" })
         .eq("id", messageId);
 
-      // Wenn RunPod selbst eine Fehlerbeschreibung mitliefert, an den Client
-      // weiterreichen — sonst neutrale Meldung.
-      const friendly =
-        output?.error ||
-        runpodJson?.error ||
-        "Transkription fehlgeschlagen.";
-      return json({ error: friendly }, 502);
+      // Rohe RunPod-Fehler nur serverseitig loggen, dem Client eine neutrale
+      // Meldung zurückgeben (keine Info-Leaks über interne Dienste).
+      console.error(
+        "[transcribe-voice-message] runpod output error:",
+        output?.error ?? runpodJson?.error ?? "(no detail)",
+      );
+      return json({ error: "Transkription fehlgeschlagen." }, 502);
     }
 
     const transcript = (output.text ?? "").trim();
